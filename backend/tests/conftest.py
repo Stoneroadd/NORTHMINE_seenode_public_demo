@@ -1,0 +1,88 @@
+from __future__ import annotations
+
+import os
+
+# BCRYPT_ROUNDS se lee una sola vez como constante de modulo en app.core.security,
+# asi que debe fijarse ANTES de importar app.main (que arrastra ese import).
+# Costo 12 (produccion) hashea ~250-300ms; _reset_state rehashea 4 passwords
+# de demo en CADA test (autouse), sumando ~1s/test de bcrypt puro. Con >30
+# tests eso son minutos de CPU redundante y, en maquinas con contencion (AV
+# escaneando el proceso python.exe recien lanzado, CPU compartida, etc.),
+# alcanza para que una sola llamada a bcrypt tarde mucho mas de lo normal y
+# la corrida completa parezca "colgada". Costo 4 es instantaneo y no cambia
+# la seguridad real (nunca se usa en produccion, solo en tests).
+os.environ.setdefault("BCRYPT_ROUNDS", "4")
+# app.main/config se importan durante la coleccion de tests. Declarar el
+# entorno antes de esos imports evita que el nuevo default fail-closed de
+# produccion interfiera con el perfil aislado de pruebas.
+os.environ.setdefault("ENVIRONMENT", "testing")
+os.environ.setdefault("NORTHMINE_MODE", "demo")
+os.environ.setdefault("NORTHMINE_DEMO_MODE", "true")
+os.environ.setdefault("NORTHMINE_ALLOW_DEMO_LOGIN", "true")
+
+from typing import Any, Generator
+
+import pytest
+from fastapi.testclient import TestClient
+
+from app.main import app
+from app.core.audit import _conn, _cleanup_pool, init_audit_db, init_security_tables
+from app.core.brute_force import _blocked_until, _failed_attempts
+from app.core.rate_limit import limiter
+from app.services.user_repository import DEMO_USER_SEEDS, get_user_repository
+
+
+@pytest.fixture(autouse=True)
+def _reset_state() -> Generator[None, None, None]:
+    _failed_attempts.clear()
+    _blocked_until.clear()
+    limiter.reset()
+    repo = get_user_repository()
+    repo.init_schema()
+    for seed in DEMO_USER_SEEDS:
+        repo.update_password(seed["username"], seed["password"])
+    yield
+
+
+@pytest.fixture(autouse=True)
+def _init_db(monkeypatch) -> Generator[None, None, None]:
+    monkeypatch.setenv("ENVIRONMENT", "testing")
+    _cleanup_pool()
+    conn = _conn()
+    for tbl in ("audit_log", "token_blacklist", "refresh_sessions", "mfa_store", "failed_logins", "active_sessions", "password_history"):
+        conn.execute(f"DROP TABLE IF EXISTS {tbl}")
+    conn.commit()
+    init_audit_db()
+    init_security_tables()
+    yield
+
+
+@pytest.fixture
+def client() -> Generator[TestClient, None, None]:
+    with TestClient(app) as c:
+        yield c
+
+
+@pytest.fixture
+def login_as_admin(client: TestClient) -> dict[str, Any]:
+    resp = client.post("/api/auth/login", json={"username": "admin", "password": "admin"})
+    assert resp.status_code == 200, f"Login admin failed: {resp.status_code} {resp.text}"
+    return resp.json()
+
+
+@pytest.fixture
+def login_as_supervisor(client: TestClient) -> dict[str, Any]:
+    resp = client.post("/api/auth/login", json={"username": "supervisor", "password": "supervisor"})
+    assert resp.status_code == 200, f"Login supervisor failed: {resp.status_code} {resp.text}"
+    return resp.json()
+
+
+@pytest.fixture
+def login_as_operador(client: TestClient) -> dict[str, Any]:
+    resp = client.post("/api/auth/login", json={"username": "operador", "password": "operador"})
+    assert resp.status_code == 200, f"Login operador failed: {resp.status_code} {resp.text}"
+    return resp.json()
+
+
+def auth_header(session: dict[str, Any]) -> dict[str, str]:
+    return {"Authorization": f"Bearer {session['access_token']}"}

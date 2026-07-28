@@ -1,0 +1,38 @@
+.env
+.env.local
+.env.*.local
+.env.demo
+backend/.env
+backend/.env.local
+backend/.env.*.local
+backend/.env.demo
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+.audit_encryption_key.local
+*.log
+*.backup
+*.backup-*
+__pycache__/
+.venv/
+node_modules/
+dist/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+logs/
+pids/
+backups_codex/
+captures/
+tmp_visual_checks/
+visual_checks/
+coverage/
+.vite/
+Averias/*.xls*
+data/aerial/
+
+# Copia paralela de staging/demo empaquetada aparte del codigo fuente actual.
+# Se deja fuera de version control por completo hasta que se decida su destino
+# final (ver auditoria 2026-07-26) - no se toca ni se borra ningun archivo.
+NORTHMINE_DEMO/

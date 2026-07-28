@@ -1,0 +1,751 @@
+﻿/* ══════════════════════════════════════════════════════════════════
+   NORTHMINE Intelligence v2.0 — Sistema de Temas
+   Mecanismo: html[data-theme="*"] sobreescribe :root
+   ══════════════════════════════════════════════════════════════════ */
+
+/* ── Transición global al cambiar tema ── */
+.theme-transitioning,
+.theme-transitioning *,
+.theme-transitioning *::before,
+.theme-transitioning *::after {
+  transition:
+    background-color 400ms ease,
+    color            400ms ease,
+    border-color     400ms ease,
+    box-shadow       400ms ease !important;
+}
+
+/* ════════════════════════════════════════
+   TEMA DARK — Startup Intelligence (default)
+   ════════════════════════════════════════ */
+:root,
+html[data-theme="dark"] {
+  --bg-void:        #030405;
+  --bg-deep:        #08090d;
+  --bg-panel:       rgba(10, 12, 18, 0.58);
+  --bg-card:        rgba(12, 15, 22, 0.68);
+  --bg-elevated:    rgba(14, 17, 24, 0.78);
+  --bg-hover:       rgba(18, 21, 30, 0.85);
+  --border-dim:     rgba(47,212,255,0.10);
+  --border-mid:     rgba(47,212,255,0.22);
+  --border-bright:  rgba(47,212,255,0.52);
+  --op-green:       #3ee58a;
+  --data-cyan:      #2fd4ff;
+  --vision-night:   #c98bff;
+  --alert-orange:   #f97316;
+  --warn-yellow:    #f59e0b;
+  --danger-red:     #ef4444;
+  --text-primary:   rgba(248,250,252,0.95);
+  --text-secondary: rgba(248,250,252,0.60);
+  --text-tertiary:  rgba(248,250,252,0.38);
+  --text-disabled:  rgba(248,250,252,0.20);
+  --shadow-card:    0 4px 6px -1px rgba(0,0,0,0.45), 0 2px 4px -2px rgba(0,0,0,0.3), 0 0 0 1px rgba(47,212,255,0.06);
+  --cursor-color:   #2fd4ff;
+  --cursor-inner:   #3ee58a;
+  --accent:         #2fd4ff;
+  --accent-rgb:     47,212,255;
+  --accent-pop:     #3ee58a;
+  --font-display:   'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono:      'JetBrains Mono', 'IBM Plex Mono', monospace;
+  --font-label:     'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* ════════════════════════════════════════
+   TEMA OPERACIONAL — negro, gris y superficies de vidrio
+   ════════════════════════════════════════ */
+html[data-theme="operational"] {
+  color-scheme: dark;
+  --bg-void:        #050607;
+  --bg-deep:        #0b0d0f;
+  --bg-panel:       #15181b;
+  --bg-card:        #1b1f23;
+  --bg-elevated:    #24282d;
+  --bg-hover:       #2c3137;
+  --border-dim:     rgba(198, 205, 212, 0.10);
+  --border-mid:     rgba(198, 205, 212, 0.18);
+  --border-bright:  rgba(224, 229, 234, 0.36);
+  --op-green:       #58d68d;
+  --data-cyan:      #72c7d8;
+  --vision-night:   #ad9bd1;
+  --alert-orange:   #e7a55b;
+  --warn-yellow:    #e5c36b;
+  --danger-red:     #ec7777;
+  --text-primary:   #f1f3f5;
+  --text-secondary: #aeb6bf;
+  --text-tertiary:  #77808a;
+  --text-disabled:  #4e555c;
+  --shadow-card:    0 14px 38px rgba(0,0,0,0.36), inset 0 1px 0 rgba(255,255,255,0.025);
+  --cursor-color:   #b8c0c8;
+  --cursor-inner:   #58d68d;
+  --accent:         #b8c0c8;
+  --accent-rgb:     184,192,200;
+  --accent-pop:     #d8dde2;
+}
+
+html[data-theme="operational"] body {
+  background:
+    radial-gradient(ellipse 80% 42% at 50% -10%, rgba(255,255,255,0.045), transparent 64%),
+    radial-gradient(rgba(255,255,255,0.05) 0.6px, transparent 0.6px) 0 0/3px 3px,
+    #050607 !important;
+}
+
+html[data-theme="operational"] .sidebar,
+html[data-theme="operational"] .topbar {
+  background: color-mix(in srgb, #0a0c0e 82%, transparent) !important;
+  border-color: rgba(198, 205, 212, 0.16) !important;
+  backdrop-filter: blur(20px) saturate(0.8) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(0.8) !important;
+}
+
+/* Vidrio esmerilado en todas las superficies — "negro, gris y superficies
+   transparentes": paneles, tarjetas y modales comparten el mismo cristal. */
+html[data-theme="operational"] .panel,
+html[data-theme="operational"] .kpi-card,
+html[data-theme="operational"] .hero-panel,
+html[data-theme="operational"] .module-header,
+html[data-theme="operational"] .report-card,
+html[data-theme="operational"] .state-card,
+html[data-theme="operational"] .command-card,
+html[data-theme="operational"] .login-card {
+  background: color-mix(in srgb, #17191c 74%, transparent) !important;
+  backdrop-filter: blur(18px) saturate(0.85);
+  -webkit-backdrop-filter: blur(18px) saturate(0.85);
+  border-color: rgba(198, 205, 212, 0.14) !important;
+}
+
+html[data-theme="operational"] .panel:hover,
+html[data-theme="operational"] .kpi-card:hover,
+html[data-theme="operational"] .command-card:hover {
+  border-color: rgba(224, 229, 234, 0.30) !important;
+  box-shadow: var(--shadow-card), 0 0 0 1px rgba(224, 229, 234, 0.08);
+}
+
+/* ════════════════════════════════════════
+   TEMA LIGHT — Executive Corporate
+   ════════════════════════════════════════ */
+html[data-theme="light"] {
+  color-scheme: light;
+  --bg-void:        #f8fafc;
+  --bg-deep:        #f1f5f9;
+  --bg-panel:       #ffffff;
+  --bg-card:        #ffffff;
+  --bg-elevated:    #f8fafc;
+  --bg-hover:       #f1f5f9;
+  --border-dim:     rgba(47,212,255,0.10);
+  --border-mid:     rgba(47,212,255,0.22);
+  --border-bright:  rgba(47,212,255,0.52);
+  --op-green:       #059669;
+  --data-cyan:      #0284c7;
+  --vision-night:   #7c3aed;
+  --alert-orange:   #ea580c;
+  --warn-yellow:    #d97706;
+  --danger-red:     #dc2626;
+  --text-primary:   #0f172a;
+  --text-secondary: #475569;
+  --text-tertiary:  #94a3b8;
+  --text-disabled:  #cbd5e1;
+  --shadow-card:    0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+  --cursor-color:   #2fd4ff;
+  --cursor-inner:   #059669;
+  --accent:         #2fd4ff;
+  --accent-rgb:     47,212,255;
+  --accent-pop:     #059669;
+  --font-display:   'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono:      'JetBrains Mono', 'IBM Plex Mono', monospace;
+  --font-label:     'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+html[data-theme="light"] body {
+  background: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+html[data-theme="light"] body::before,
+html[data-theme="light"] body::after {
+  display: none !important;
+}
+
+/* Topbar/Sidebar claros */
+html[data-theme="light"] .topbar {
+  background: rgba(255,255,255,0.97) !important;
+  border-bottom-color: rgba(0,80,160,0.18) !important;
+  color: #0f172a !important;
+}
+
+html[data-theme="light"] .sidebar {
+  background: #f1f5f9 !important;
+  border-right-color: rgba(0,80,160,0.18) !important;
+}
+
+html[data-theme="light"] .sidebar,
+html[data-theme="light"] .topbar,
+html[data-theme="light"] .hero-panel,
+html[data-theme="light"] .panel,
+html[data-theme="light"] .kpi-card,
+html[data-theme="light"] .login-card,
+html[data-theme="light"] .section-placeholder,
+html[data-theme="light"] .module-header,
+html[data-theme="light"] .report-card,
+html[data-theme="light"] .state-card,
+html[data-theme="light"] .command-card {
+  background: #FFFFFF !important;
+  border-color: rgba(0,80,160,0.14) !important;
+  color: #0f172a !important;
+}
+
+html[data-theme="light"] .nm-muted,
+html[data-theme="light"] [class*="muted"] {
+  color: rgba(0,0,0,0.55) !important;
+}
+
+/* ════════════════════════════════════════
+   TEMA FUTURISTIC — Deep Space
+   ════════════════════════════════════════ */
+html[data-theme="futuristic"] {
+  --bg-void:        #020208;
+  --bg-deep:        #050514;
+  --bg-panel:       #08081e;
+  --bg-card:        #0a0a24;
+  --bg-elevated:    #0d0d2c;
+  --bg-hover:       #111135;
+  --border-dim:     rgba(139,92,246,0.12);
+  --border-mid:     rgba(139,92,246,0.28);
+  --border-bright:  rgba(139,92,246,0.68);
+  --op-green:       #a78bfa;
+  --data-cyan:      #818cf8;
+  --vision-night:   #d946ef;
+  --alert-orange:   #fb7185;
+  --warn-yellow:    #fbbf24;
+  --danger-red:     #f43f5e;
+  --text-primary:   rgba(237,233,254,0.95);
+  --text-secondary: rgba(196,181,253,0.65);
+  --text-tertiary:  rgba(167,139,250,0.40);
+  --text-disabled:  rgba(167,139,250,0.20);
+  --shadow-card:    0 0 30px rgba(139,92,246,0.12), 0 0 60px rgba(139,92,246,0.05);
+  --cursor-color:   #a78bfa;
+  --cursor-inner:   #818cf8;
+  --accent:         #8b5cf6;
+  --accent-rgb:     139,92,246;
+  --accent-pop:     #a78bfa;
+  --font-display:   'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono:      'JetBrains Mono', 'IBM Plex Mono', monospace;
+  --font-label:     'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+html[data-theme="futuristic"] body {
+  background:
+    radial-gradient(ellipse 80% 50% at 20% 0%, rgba(0,255,255,0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 0%, rgba(255,0,170,0.05) 0%, transparent 50%),
+    #000308 !important;
+}
+
+/* Glitch en logo */
+@keyframes glitch-fx {
+  0%,89%,100% { clip-path:none; transform:none; }
+  90%  { clip-path:inset(10% 0 85% 0); transform:translate(-3px); color:#FF00AA; }
+  92%  { clip-path:inset(55% 0 35% 0); transform:translate(3px);  color:#00FFFF; }
+  94%  { clip-path:inset(80% 0  8% 0); transform:translate(-2px); color:#FFFF00; }
+  96%  { clip-path:none; transform:none; }
+}
+
+html[data-theme="futuristic"] .brand-name {
+  animation: glitch-fx 9s infinite;
+}
+
+/* Neon glow en KPIs */
+html[data-theme="futuristic"] .kpi-value,
+html[data-theme="futuristic"] .executive-tonnage {
+  text-shadow: 0 0 20px currentColor, 0 0 40px rgba(0,255,255,0.3);
+}
+
+/* Neon border pulse */
+@keyframes neon-border {
+  0%,100% { border-color: rgba(0,255,255,0.12); }
+  50%      { border-color: rgba(0,255,255,0.38); }
+}
+
+html[data-theme="futuristic"] .kpi-card,
+html[data-theme="futuristic"] .command-card {
+  animation: neon-border 3s ease-in-out infinite;
+}
+
+/* ════════════════════════════════════════
+   TEMA MINIMAL — B&W ejecutivo
+   ════════════════════════════════════════ */
+html[data-theme="minimal"] {
+  color-scheme: light;
+  --bg-void:        #FAFAFA;
+  --bg-deep:        #F2F2F2;
+  --bg-panel:       #FFFFFF;
+  --bg-card:        #FFFFFF;
+  --bg-elevated:    #F7F7F7;
+  --bg-hover:       #EFEFEF;
+  --border-dim:     rgba(0,0,0,0.07);
+  --border-mid:     rgba(0,0,0,0.14);
+  --border-bright:  rgba(0,0,0,0.32);
+  --op-green:       #111111;
+  --data-cyan:      #111111;
+  --vision-night:   #6b6b6b;
+  --alert-orange:   #444444;
+  --warn-yellow:    #777777;
+  --danger-red:     #111111;
+  --accent:         #111111;
+  --accent-rgb:     17,17,17;
+  --accent-pop:     #0055FF;
+  --text-primary:   #111111;
+  --text-secondary: #555555;
+  --text-tertiary:  #999999;
+  --text-disabled:  #CCCCCC;
+  --shadow-card:    0 1px 3px rgba(0,0,0,0.08);
+  --cursor-color:   transparent;
+  --cursor-inner:   transparent;
+  --font-display:   'Inter', sans-serif;
+  --font-mono:      'JetBrains Mono', monospace;
+  --font-label:     'Inter', sans-serif;
+}
+
+html[data-theme="minimal"] body {
+  background: #FAFAFA !important;
+  color: #111111 !important;
+}
+
+html[data-theme="minimal"] body::before,
+html[data-theme="minimal"] body::after {
+  display: none !important;
+}
+
+html[data-theme="minimal"] .nm-cursor,
+html[data-theme="minimal"] .nm-cursor-ring,
+html[data-theme="minimal"] .nm-cursor-dot {
+  display: none !important;
+}
+
+html[data-theme="minimal"] *,
+html[data-theme="minimal"] *::before,
+html[data-theme="minimal"] *::after {
+  text-shadow: none !important;
+}
+
+html[data-theme="minimal"] .kpi-card,
+html[data-theme="minimal"] .panel,
+html[data-theme="minimal"] .command-card,
+html[data-theme="minimal"] .hero-panel,
+html[data-theme="minimal"] .module-header,
+html[data-theme="minimal"] .report-card,
+html[data-theme="minimal"] .state-card,
+html[data-theme="minimal"] .login-card {
+  border-top: 2px solid #0055FF !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08) !important;
+  background: #FFFFFF !important;
+  background-image: none !important;
+  border-left-color: transparent !important;
+  color: #111111 !important;
+}
+
+html[data-theme="minimal"] .topbar,
+html[data-theme="minimal"] .sidebar {
+  background: #FFFFFF !important;
+  border-color: rgba(0,0,0,0.12) !important;
+  color: #111111 !important;
+}
+
+/* ════════════════════════════════════════
+   TEMA CARBON — Fibra de carbono + dorado
+   ════════════════════════════════════════ */
+html[data-theme="carbon"] {
+  --bg-void:        #0A0A0A;
+  --bg-deep:        #111111;
+  --bg-panel:       #161616;
+  --bg-card:        #1C1C1C;
+  --bg-elevated:    #222222;
+  --bg-hover:       #2A2A2A;
+  --border-dim:     rgba(255,200,0,0.08);
+  --border-mid:     rgba(255,200,0,0.20);
+  --border-bright:  rgba(255,200,0,0.50);
+  --op-green:       #FFD700;
+  --data-cyan:      #FFC200;
+  --vision-night:   #C87F3B;
+  --alert-orange:   #FF6600;
+  --warn-yellow:    #FFAA00;
+  --danger-red:     #FF3300;
+  --text-primary:   rgba(255,255,255,0.92);
+  --text-secondary: rgba(255,255,255,0.55);
+  --text-tertiary:  rgba(255,230,100,0.35);
+  --text-disabled:  rgba(255,255,255,0.18);
+  --shadow-card:    0 4px 20px rgba(0,0,0,0.6), 0 0 1px rgba(255,200,0,0.1);
+  --cursor-color:   #FFD700;
+  --cursor-inner:   #FFC200;
+  --accent:         #FFD700;
+  --accent-rgb:     255,215,0;
+  --accent-pop:     #FFC200;
+  --font-display:   'Inter', sans-serif;
+  --font-mono:      'JetBrains Mono', monospace;
+  --font-label:     'Inter', sans-serif;
+}
+
+html[data-theme="carbon"] body {
+  background-image:
+    repeating-linear-gradient(45deg,  rgba(255,255,255,0.015) 0, rgba(255,255,255,0.015) 1px, transparent 1px, transparent 50%),
+    repeating-linear-gradient(-45deg, rgba(255,255,255,0.015) 0, rgba(255,255,255,0.015) 1px, transparent 1px, transparent 50%) !important;
+  background-size: 4px 4px !important;
+}
+
+html[data-theme="carbon"] .nm-cursor-ring {
+  border-color: #FFD700 !important;
+}
+
+/* Trama de fibra de carbono también en paneles y tarjetas, no solo el fondo. */
+html[data-theme="carbon"] .panel,
+html[data-theme="carbon"] .kpi-card,
+html[data-theme="carbon"] .hero-panel,
+html[data-theme="carbon"] .module-header,
+html[data-theme="carbon"] .report-card,
+html[data-theme="carbon"] .state-card,
+html[data-theme="carbon"] .command-card,
+html[data-theme="carbon"] .login-card {
+  background-image:
+    repeating-linear-gradient(45deg,  rgba(255,255,255,0.02) 0, rgba(255,255,255,0.02) 1px, transparent 1px, transparent 50%),
+    repeating-linear-gradient(-45deg, rgba(255,255,255,0.02) 0, rgba(255,255,255,0.02) 1px, transparent 1px, transparent 50%),
+    linear-gradient(135deg, color-mix(in srgb, var(--accent) 5%, transparent), transparent 60%) !important;
+  background-size: 4px 4px, 4px 4px, auto !important;
+}
+
+html[data-theme="carbon"] .panel:hover,
+html[data-theme="carbon"] .kpi-card:hover,
+html[data-theme="carbon"] .command-card:hover {
+  border-color: rgba(255,200,0,0.42) !important;
+  box-shadow: var(--shadow-card), 0 0 24px rgba(255,200,0,0.14);
+}
+
+/* ════════════════════════════════════════
+   CLASES DE CONTROL DE EFECTOS
+   (aplicadas en body por useTheme)
+   ════════════════════════════════════════ */
+
+/* Scanlines — el pseudo-element ::after del body */
+body:not(.fx-scanlines) .cyber-grid-scanline,
+body:not(.fx-scanlines)::after {
+  display: none !important;
+}
+
+/* Hex grid */
+body:not(.fx-hexgrid) .cyber-grid-overlay,
+body:not(.fx-hexgrid) .command-center-background {
+  display: none !important;
+}
+
+/* Glow */
+body:not(.fx-glow) * {
+  text-shadow: none !important;
+  filter: none !important;
+}
+
+/* Cursor personalizado */
+body:not(.fx-cursor) .nm-cursor,
+body:not(.fx-cursor) .nm-cursor-ring,
+body:not(.fx-cursor) .nm-cursor-dot {
+  display: none !important;
+}
+body:not(.fx-cursor),
+body:not(.fx-cursor) * {
+  cursor: auto !important;
+}
+
+/* Animaciones */
+body:not(.fx-animations) *,
+body:not(.fx-animations) *::before,
+body:not(.fx-animations) *::after {
+  animation-duration:   0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration:  0.01ms !important;
+}
+
+/* RTL — árabe */
+html[dir="rtl"] .app-shell {
+  flex-direction: row-reverse;
+}
+
+/* LIGHT: paper-white workspace with dark, accessible typography. */
+html[data-theme="light"] {
+  --bg-void: #FFFFFF;
+  --bg-deep: #FFFFFF;
+  --bg-panel: #FFFFFF;
+  --bg-card: #FFFFFF;
+  --bg-elevated: #FFFFFF;
+  --bg-hover: #F8FAFC;
+  --panel: #FFFFFF;
+  --panel-strong: #FFFFFF;
+  --panel-soft: #FFFFFF;
+  --nm-panel: #FFFFFF;
+  --nm-panel-strong: #FFFFFF;
+  --text-primary: #111827;
+  --text-secondary: #334155;
+  --text-tertiary: #64748B;
+  --border-dim: rgba(15, 23, 42, 0.10);
+  --border-mid: rgba(15, 23, 42, 0.16);
+  --border-bright: rgba(3, 105, 161, 0.42);
+  --shadow-card: 0 1px 3px rgba(15, 23, 42, 0.08), 0 8px 24px rgba(15, 23, 42, 0.04);
+}
+
+html[data-theme="light"] body,
+html[data-theme="light"] #root,
+html[data-theme="light"] .app-shell,
+html[data-theme="light"] .main-content,
+html[data-theme="light"] .page-content,
+html[data-theme="light"] .module-page {
+  background: #FFFFFF !important;
+  color: #111827 !important;
+}
+
+html[data-theme="light"] .sidebar,
+html[data-theme="light"] .topbar,
+html[data-theme="light"] .panel,
+html[data-theme="light"] .kpi-card,
+html[data-theme="light"] .command-card,
+html[data-theme="light"] .module-header,
+html[data-theme="light"] .hero-panel,
+html[data-theme="light"] .report-card,
+html[data-theme="light"] .state-card,
+html[data-theme="light"] .table-wrap,
+html[data-theme="light"] .chart-card,
+html[data-theme="light"] .nm-avr-chart-card,
+html[data-theme="light"] .operator-ranking-drawer-panel,
+html[data-theme="light"] .modal-content,
+html[data-theme="light"] .settings-panel {
+  background: #FFFFFF !important;
+  background-image: none !important;
+  border-color: rgba(15, 23, 42, 0.14) !important;
+  color: #111827 !important;
+  box-shadow: var(--shadow-card) !important;
+}
+
+html[data-theme="light"] h1,
+html[data-theme="light"] h2,
+html[data-theme="light"] h3,
+html[data-theme="light"] h4,
+html[data-theme="light"] strong,
+html[data-theme="light"] .kpi-value,
+html[data-theme="light"] .executive-tonnage,
+html[data-theme="light"] .brand-name {
+  color: #111827 !important;
+  text-shadow: none !important;
+}
+
+html[data-theme="light"] p,
+html[data-theme="light"] span,
+html[data-theme="light"] small,
+html[data-theme="light"] td,
+html[data-theme="light"] th,
+html[data-theme="light"] label {
+  color: #334155;
+}
+
+html[data-theme="light"] .panel-kicker,
+html[data-theme="light"] .hero-kicker,
+html[data-theme="light"] .eyebrow,
+html[data-theme="light"] .nav-group-label {
+  color: #0369A1 !important;
+}
+
+html[data-theme="light"] input,
+html[data-theme="light"] select,
+html[data-theme="light"] textarea,
+html[data-theme="light"] .analysis-filter-bar,
+html[data-theme="light"] .analysis-filter-drawer,
+html[data-theme="light"] .recharts-surface,
+html[data-theme="light"] canvas {
+  background: #FFFFFF !important;
+  color: #111827 !important;
+  border-color: rgba(15, 23, 42, 0.16) !important;
+}
+
+html[data-theme="light"] table thead,
+html[data-theme="light"] table tr,
+html[data-theme="light"] .operator-score-row,
+html[data-theme="light"] .operator-drawer-section,
+html[data-theme="light"] .operator-drawer-summary-grid div {
+  background: #FFFFFF !important;
+  color: #111827 !important;
+  border-color: rgba(15, 23, 42, 0.12) !important;
+}
+
+html[dir="rtl"] .sidebar {
+  border-right: none !important;
+  border-left: 1px solid var(--border-mid) !important;
+}
+
+html[dir="rtl"] .topbar {
+  flex-direction: row-reverse;
+}
+
+html[dir="rtl"] .nav-item {
+  flex-direction: row-reverse;
+}
+
+html[dir="rtl"] .nav-active-line {
+  left: auto;
+  right: 0;
+}
+
+/* Fuente árabe */
+html[lang="ar"] {
+  font-family: 'Cairo', 'Inter', sans-serif;
+}
+
+/* Runtime bridge: variables consumed by tokens.css and Command Center components */
+:root,
+html[data-theme] {
+  --bg: var(--bg-void);
+  --bg-elevated: var(--bg-deep);
+  --panel: color-mix(in srgb, var(--bg-panel) 88%, transparent);
+  --panel-strong: color-mix(in srgb, var(--bg-card) 94%, transparent);
+  --panel-soft: color-mix(in srgb, var(--bg-elevated) 46%, transparent);
+  --border: var(--border-mid);
+  --border-strong: var(--border-bright);
+  --text: var(--text-primary);
+  --muted: var(--text-secondary);
+  --dim: var(--text-tertiary);
+  --mineral: var(--op-green);
+  --cyan: var(--data-cyan);
+  --amber: var(--warn-yellow);
+  --red: var(--danger-red);
+  --orange: var(--alert-orange);
+  --steel: var(--text-secondary);
+  --shadow: var(--shadow-card);
+
+  --nm-black: var(--bg-void);
+  --nm-bg: var(--bg-void);
+  --nm-panel: color-mix(in srgb, var(--bg-panel) 88%, transparent);
+  --nm-panel-strong: color-mix(in srgb, var(--bg-card) 94%, transparent);
+  --nm-grid: var(--border-dim);
+  --nm-green: var(--op-green);
+  --nm-green-soft: color-mix(in srgb, var(--op-green) 18%, transparent);
+  --nm-cyan: var(--data-cyan);
+  --nm-amber: var(--warn-yellow);
+  --nm-red: var(--danger-red);
+  --nm-border: var(--border-mid);
+  --nm-border-hot: var(--border-bright);
+  --nm-text: var(--text-primary);
+  --nm-muted: var(--text-secondary);
+}
+
+html[data-theme] body {
+  background: var(--bg-void) !important;
+  color: var(--text-primary) !important;
+  font-family: var(--font-label);
+}
+
+html[data-theme] .sidebar,
+html[data-theme] .topbar,
+html[data-theme] .hero-panel,
+html[data-theme] .panel,
+html[data-theme] .kpi-card,
+html[data-theme] .login-card,
+html[data-theme] .section-placeholder,
+html[data-theme] .module-header,
+html[data-theme] .report-card,
+html[data-theme] .state-card,
+html[data-theme] .command-card,
+html[data-theme] .compare-period-card,
+html[data-theme] .fleet-podium-card {
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--accent) 6%, transparent), color-mix(in srgb, var(--data-cyan) 3%, transparent)),
+    var(--panel) !important;
+  border-color: var(--border-mid) !important;
+  color: var(--text-primary) !important;
+  box-shadow: var(--shadow-card) !important;
+}
+
+html[data-theme] .topbar {
+  background: color-mix(in srgb, var(--bg-panel) 86%, transparent) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+}
+
+html[data-theme] .sidebar {
+  background: color-mix(in srgb, var(--bg-void) 96%, transparent) !important;
+}
+
+html[data-theme] input,
+html[data-theme] select,
+html[data-theme] textarea {
+  background: color-mix(in srgb, var(--bg-deep) 78%, transparent) !important;
+  border-color: var(--border-mid) !important;
+  color: var(--text-primary) !important;
+}
+
+html[data-theme] .brand-name,
+html[data-theme] .brand-hero-copy h1,
+html[data-theme] .kpi-value,
+html[data-theme] .executive-tonnage {
+  color: var(--text-primary);
+  font-family: var(--font-display);
+}
+
+html[data-theme] .eyebrow,
+html[data-theme] .hero-kicker,
+html[data-theme] .panel-kicker,
+html[data-theme] .nav-group-label,
+html[data-theme] .brand-hero-copy span {
+  color: var(--accent-pop) !important;
+}
+
+html[data-theme] .nav-icon {
+  color: var(--dim) !important;
+}
+
+html[data-theme] .nav-item.is-active .nav-icon {
+  color: color-mix(in srgb, var(--accent) 90%, white) !important;
+}
+
+html[data-theme] .topbar-terminal-line strong {
+  color: var(--accent) !important;
+}
+
+html[data-theme="light"] .command-center-background,
+html[data-theme="minimal"] .command-center-background,
+html[data-theme="light"] .matrix-rain,
+html[data-theme="minimal"] .matrix-rain,
+html[data-theme="light"] .cursor-glow,
+html[data-theme="minimal"] .cursor-glow,
+html[data-theme="light"] .nm-cursor,
+html[data-theme="minimal"] .nm-cursor {
+  display: none !important;
+}
+
+html[data-theme="light"] .login-canvas-panel,
+html[data-theme="minimal"] .login-canvas-panel {
+  background: var(--bg-panel) !important;
+}
+
+html[data-theme="futuristic"] .sidebar,
+html[data-theme="futuristic"] .topbar,
+html[data-theme="futuristic"] .panel,
+html[data-theme="futuristic"] .kpi-card,
+html[data-theme="futuristic"] .command-card {
+  box-shadow: var(--shadow-card), 0 0 32px color-mix(in srgb, var(--data-cyan) 18%, transparent) !important;
+}
+
+html[data-theme="carbon"] .sidebar,
+html[data-theme="carbon"] .topbar,
+html[data-theme="carbon"] .panel,
+html[data-theme="carbon"] .kpi-card,
+html[data-theme="carbon"] .command-card {
+  border-color: rgba(255,200,0,0.20) !important;
+}
+
+html[dir="rtl"] .app-shell {
+  flex-direction: row-reverse;
+}
+
+@media (max-width: 1180px) {
+  html[dir="rtl"] .sidebar {
+    left: auto !important;
+    right: 0 !important;
+    transform: translateX(104%) !important;
+  }
+
+  html[dir="rtl"] .sidebar.is-mobile-open {
+    transform: translateX(0) !important;
+  }
+}

@@ -1,0 +1,580 @@
+import type { ModuleDict } from '../useModuleT'
+
+export interface OperatorRankingT {
+  sin_causa: string
+  sin_modo: string
+  cargando_ranking: string
+  error_cargar_ranking: string
+
+  eyebrow: string
+  titulo: string
+  descripcion: string
+  btn_metodologia: string
+  btn_exportar: string
+  ethics_note: string
+  filtros_titulo: string
+
+  cmd_kicker: string
+  cmd_titulo_riesgo: (name: string) => string
+  cmd_titulo_sin_riesgo: string
+  cmd_texto_riesgo: (cause: string, tons: string, hours: string) => string
+  cmd_texto_sin_riesgo: string
+  cmd_mejor_score: (name: string) => string
+  cmd_foco: (n: number) => string
+  cmd_demoras: (h: string) => string
+  cmd_mayor_demora: (name: string) => string
+  cmd_causa: (cause: string) => string
+  cmd_next_titulo: string
+  cmd_next_fallback: string
+  cmd_next_small: (spread: string) => string
+  cmd_btn_auditar_foco: string
+
+  prod_kicker: string
+  prod_titulo: string
+  prod_tag: string
+  prod_top_titulo: string
+  prod_top_subtitulo: string
+  prod_low_titulo: string
+  prod_low_subtitulo: string
+  prod_score_label: string
+  prod_impacto_suffix: string
+  prod_nota: string
+
+  priority_kicker: string
+  priority_titulo: string
+  priority_tag: (n: number) => string
+  priority_metric_produccion: string
+  priority_metric_score: string
+  priority_metric_demoras: string
+  priority_metric_impacto: string
+  priority_btn_auditar: string
+
+  ranking_kicker: string
+  ranking_titulo: string
+  ranking_tag: (n: number) => string
+
+  score_kicker: string
+  score_titulo: string
+
+  correlacion_kicker: string
+  correlacion_titulo: string
+  impacto_kicker: string
+  impacto_titulo: string
+  heatmap_kicker: string
+  heatmap_titulo: string
+  evolucion_kicker: string
+  evolucion_titulo: string
+  evolucion_tag: (n: number) => string
+
+  chart_productividad: string
+  chart_demoras: string
+  chart_tooltip_scatter: (name: string, productividad: number, demoras: number, score: number) => string
+  heatmap_cat_bano: string
+  heatmap_cat_colacion: string
+  heatmap_cat_cambio: string
+  heatmap_cat_petroleo: string
+  heatmap_cat_sin_postura: string
+
+  kpi_mejor_titulo: string
+  kpi_mejor_trend: string
+  kpi_promedio_titulo: string
+  kpi_promedio_subtitulo: string
+  kpi_promedio_trend: string
+  kpi_foco_titulo: string
+  kpi_foco_subtitulo: string
+  kpi_foco_trend: string
+  kpi_impacto_titulo: string
+  kpi_impacto_subtitulo: string
+  kpi_impacto_trend: string
+  kpi_demoras_titulo: string
+  kpi_demoras_subtitulo: string
+  kpi_demoras_trend: string
+  kpi_causa_titulo: string
+  kpi_causa_subtitulo: string
+  kpi_causa_trend: string
+
+  tabla_col_rank: string
+  tabla_col_operador: string
+  tabla_col_produccion: string
+  tabla_col_demoras: string
+  tabla_col_impacto: string
+  tabla_col_riesgo: string
+  tabla_col_accion: string
+  tabla_col_acciones: string
+  tabla_ciclos: string
+  tabla_chip_bano: string
+  tabla_chip_colacion: string
+  tabla_chip_cambio_turno: string
+  tabla_chip_combustible: string
+  tabla_chip_sin_asignacion: string
+  tabla_min_gestionables: (n: string) => string
+  tabla_sin_demoras: string
+  tabla_perdida_estimada: string
+  tabla_ver_detalle: (name: string) => string
+  tabla_ver_auditoria: (name: string) => string
+
+  risk_excelente: string
+  risk_bueno: string
+  risk_seguimiento: string
+  risk_riesgo_alto: string
+  risk_critico: string
+
+  score_productividad: string
+  score_disponibilidad: string
+  score_utilizacion: string
+  score_control_demoras: string
+  score_seguridad: string
+  score_peso: (weight: string) => string
+  score_peso_pct: (pct: number) => string
+
+  trend_score: string
+  trend_disponibilidad: string
+  trend_toneladas: string
+
+  trace_col_componente: string
+  trace_col_formula: string
+  trace_col_valor: string
+  trace_col_score: string
+  trace_col_peso: string
+  trace_col_puntos: string
+
+  delay_col_categoria: string
+  delay_col_tipo: string
+  delay_col_esperado: string
+  delay_col_alerta: string
+  delay_col_critico: string
+  delay_col_criterio: string
+  delay_tipo_gestionable: string
+  delay_tipo_sistemica: string
+
+  audit_close: string
+  audit_kicker: string
+  audit_operador_fallback: string
+  audit_seed: (id: string) => string
+  audit_desc: string
+  audit_cargando: string
+  audit_error: string
+  audit_sin_datos: string
+  audit_resultado_titulo: string
+  audit_score_global: string
+  audit_periodo: string
+  audit_turnos_analizados: string
+  audit_modo: string
+  audit_filtros_titulo: string
+  audit_datos_base_titulo: string
+  audit_traza_titulo: string
+  audit_penalizaciones_titulo: string
+  audit_excesos_titulo: string
+  audit_recurrencia_titulo: string
+  audit_sistemicas_titulo: string
+  audit_explicacion_titulo: string
+  audit_recomendacion_titulo: string
+
+  pattern_kicker: string
+  pattern_titulo: string
+  pattern_tag: string
+  pattern_turnos: (n: number) => string
+  pattern_impacto: (n: string) => string
+  pattern_empty: string
+
+  method_close: string
+  method_kicker: string
+  method_titulo: string
+  method_desc: string
+  method_cargando: string
+  method_error: string
+  method_umbral_kicker: string
+  method_umbral_titulo: string
+  method_interp_kicker: string
+  method_interp_titulo: string
+
+  formula_kicker: string
+  formula_titulo: string
+}
+
+export const operatorRankingT: ModuleDict<OperatorRankingT> = {
+  es: {
+    sin_causa: 'Sin causa',
+    sin_modo: 'SIN MODO',
+    cargando_ranking: 'Cargando ranking real WENCO/SQL de operadores...',
+    error_cargar_ranking: 'No se pudo cargar /api/operator-ranking/global.',
+
+    eyebrow: 'Analitica operacional',
+    titulo: 'Ranking Global de Operadores',
+    descripcion: 'Lectura orientativa de productividad, disponibilidad, utilizacion, demoras gestionables y seguridad.',
+    btn_metodologia: 'Ver metodologia del score',
+    btn_exportar: 'Exportar ranking CSV',
+    ethics_note: 'Ranking orientativo. No usar como sancion directa: validar condiciones de frente, disponibilidad, flota, esperas sistemicas y relevo antes de concluir responsabilidad operacional.',
+    filtros_titulo: 'Filtros ranking operadores',
+
+    cmd_kicker: 'Lectura ejecutiva',
+    cmd_titulo_riesgo: (name) => `${name} requiere revision contextual`,
+    cmd_titulo_sin_riesgo: 'Sin operadores en seguimiento para el filtro activo',
+    cmd_texto_riesgo: (cause, tons, hours) => `Principal foco: ${cause}. Impacto estimado ${tons} y ${hours} de demoras gestionables.`,
+    cmd_texto_sin_riesgo: 'El ranking no detecta brechas relevantes con el filtro activo.',
+    cmd_mejor_score: (name) => `Mejor score: ${name}`,
+    cmd_foco: (n) => `Foco: ${n}`,
+    cmd_demoras: (h) => `Demoras: ${h}`,
+    cmd_mayor_demora: (name) => `Mayor demora: ${name}`,
+    cmd_causa: (cause) => `Causa: ${cause}`,
+    cmd_next_titulo: 'Que hacer ahora',
+    cmd_next_fallback: 'Mantener monitoreo preventivo del ranking.',
+    cmd_next_small: (spread) => `Comparar score contra auditoria del operador antes de decidir acciones. Brecha score max-min: ${spread} pts.`,
+    cmd_btn_auditar_foco: 'Auditar operador foco',
+
+    prod_kicker: 'Productividad operadores',
+    prod_titulo: 'Mas productivos vs menor productividad relativa',
+    prod_tag: 'tph / score / ciclos',
+    prod_top_titulo: 'Mas productivos',
+    prod_top_subtitulo: 'Ordenado por toneladas por hora',
+    prod_low_titulo: 'Menor productividad relativa',
+    prod_low_subtitulo: 'Revisar con contexto operacional',
+    prod_score_label: 'score prod.',
+    prod_impacto_suffix: 'impacto',
+    prod_nota: 'Lectura orientativa: baja productividad puede explicarse por frente, disponibilidad, cola, asignacion, mantencion o demoras sistemicas.',
+
+    priority_kicker: 'Prioridad operacional',
+    priority_titulo: 'Datos utiles para gestionar ahora',
+    priority_tag: (n) => `Top ${n}`,
+    priority_metric_produccion: 'produccion',
+    priority_metric_score: 'score',
+    priority_metric_demoras: 'demoras',
+    priority_metric_impacto: 'impacto',
+    priority_btn_auditar: 'Auditar evidencia',
+
+    ranking_kicker: 'Ranking operacional',
+    ranking_titulo: 'Lectura compacta por operador',
+    ranking_tag: (n) => `${n} operadores`,
+
+    score_kicker: 'Score',
+    score_titulo: 'Score global por operador',
+
+    correlacion_kicker: 'Correlacion',
+    correlacion_titulo: 'Productividad vs demoras gestionables',
+    impacto_kicker: 'Impacto',
+    impacto_titulo: 'Distribucion de causas de perdida',
+    heatmap_kicker: 'Heatmap',
+    heatmap_titulo: 'Operador vs categoria gestionable',
+    evolucion_kicker: 'Evolucion',
+    evolucion_titulo: 'Tendencia de score y toneladas',
+    evolucion_tag: (n) => `${n} puntos`,
+
+    chart_productividad: 'Productividad',
+    chart_demoras: 'Demoras',
+    chart_tooltip_scatter: (name, productividad, demoras, score) =>
+      `<strong>${name}</strong><br/>Productividad ${productividad}%<br/>Demoras gestionables ${demoras} min<br/>Score ${score}`,
+    heatmap_cat_bano: 'Bano',
+    heatmap_cat_colacion: 'Colacion',
+    heatmap_cat_cambio: 'Cambio',
+    heatmap_cat_petroleo: 'Petroleo',
+    heatmap_cat_sin_postura: 'Sin postura',
+
+    kpi_mejor_titulo: 'Mejor desempeno',
+    kpi_mejor_trend: 'score estimado',
+    kpi_promedio_titulo: 'Score promedio',
+    kpi_promedio_subtitulo: 'Ranking operacional',
+    kpi_promedio_trend: '0-100 ponderado',
+    kpi_foco_titulo: 'Foco seguimiento',
+    kpi_foco_subtitulo: 'requieren contexto',
+    kpi_foco_trend: 'requiere contexto',
+    kpi_impacto_titulo: 'Impacto estimado',
+    kpi_impacto_subtitulo: 'no atribuible directo',
+    kpi_impacto_trend: 'impacto acumulado',
+    kpi_demoras_titulo: 'Demoras gestionables',
+    kpi_demoras_subtitulo: 'Acumulado periodo',
+    kpi_demoras_trend: 'sobre categorias O',
+    kpi_causa_titulo: 'Causa principal',
+    kpi_causa_subtitulo: 'Mayor impacto estimado',
+    kpi_causa_trend: 'validar con operacion',
+
+    tabla_col_rank: 'Rank',
+    tabla_col_operador: 'Operador / equipo',
+    tabla_col_produccion: 'Produccion',
+    tabla_col_demoras: 'Demoras utiles',
+    tabla_col_impacto: 'Impacto',
+    tabla_col_riesgo: 'Riesgo / causa',
+    tabla_col_accion: 'Accion recomendada',
+    tabla_col_acciones: 'Acciones',
+    tabla_ciclos: 'ciclos',
+    tabla_chip_bano: 'Bano',
+    tabla_chip_colacion: 'Colacion',
+    tabla_chip_cambio_turno: 'Cambio turno',
+    tabla_chip_combustible: 'Combustible',
+    tabla_chip_sin_asignacion: 'Sin asignacion',
+    tabla_min_gestionables: (n) => `${n} min gestionables`,
+    tabla_sin_demoras: 'Sin demoras gestionables',
+    tabla_perdida_estimada: 'perdida estimada',
+    tabla_ver_detalle: (name) => `Ver detalle ${name}`,
+    tabla_ver_auditoria: (name) => `Ver auditoria ${name}`,
+
+    risk_excelente: 'Excelente',
+    risk_bueno: 'Bueno',
+    risk_seguimiento: 'Seguimiento',
+    risk_riesgo_alto: 'Riesgo alto',
+    risk_critico: 'Critico',
+
+    score_productividad: 'Productividad',
+    score_disponibilidad: 'Disponibilidad',
+    score_utilizacion: 'Utilizacion',
+    score_control_demoras: 'Control demoras',
+    score_seguridad: 'Seguridad',
+    score_peso: (weight) => `Peso ${weight}`,
+    score_peso_pct: (pct) => `${pct}% del score`,
+
+    trend_score: 'Score',
+    trend_disponibilidad: 'Disponibilidad',
+    trend_toneladas: 'Toneladas',
+
+    trace_col_componente: 'Componente',
+    trace_col_formula: 'Formula',
+    trace_col_valor: 'Valor',
+    trace_col_score: 'Score',
+    trace_col_peso: 'Peso',
+    trace_col_puntos: 'Puntos',
+
+    delay_col_categoria: 'Categoria',
+    delay_col_tipo: 'Tipo',
+    delay_col_esperado: 'Esperado',
+    delay_col_alerta: 'Alerta',
+    delay_col_critico: 'Critico',
+    delay_col_criterio: 'Criterio',
+    delay_tipo_gestionable: 'Gestionable',
+    delay_tipo_sistemica: 'Sistemica',
+
+    audit_close: 'Cerrar auditoria',
+    audit_kicker: 'Auditoria de KPI',
+    audit_operador_fallback: 'Operador',
+    audit_seed: (id) => `seed ${id}`,
+    audit_desc: 'Traza del calculo, filtros aplicados y separacion entre demoras gestionables y sistemicas.',
+    audit_cargando: 'Cargando auditoria...',
+    audit_error: 'No se pudo cargar la auditoria.',
+    audit_sin_datos: 'Sin datos para mostrar.',
+    audit_resultado_titulo: 'Resultado auditado',
+    audit_score_global: 'Score global',
+    audit_periodo: 'Periodo',
+    audit_turnos_analizados: 'Turnos analizados',
+    audit_modo: 'Modo',
+    audit_filtros_titulo: 'Filtros aplicados',
+    audit_datos_base_titulo: 'Datos base usados',
+    audit_traza_titulo: 'Traza del calculo',
+    audit_penalizaciones_titulo: 'Penalizaciones aplicadas',
+    audit_excesos_titulo: 'Excesos sobre umbral gestionable',
+    audit_recurrencia_titulo: 'Recurrencia',
+    audit_sistemicas_titulo: 'Demoras sistemicas informativas',
+    audit_explicacion_titulo: 'Explicacion narrativa',
+    audit_recomendacion_titulo: 'Recomendacion',
+
+    pattern_kicker: 'Recurrencia',
+    pattern_titulo: 'Patrones de demoras sobre umbral',
+    pattern_tag: 'Contexto operacional requerido',
+    pattern_turnos: (n) => `${n} turnos sobre umbral`,
+    pattern_impacto: (n) => `${n} t impacto estimado`,
+    pattern_empty: 'Sin patrones recurrentes con los filtros aplicados.',
+
+    method_close: 'Cerrar metodologia',
+    method_kicker: 'Metodologia y trazabilidad',
+    method_titulo: 'Como se calcula el score',
+    method_desc: 'Resumen operacional para supervisores, despacho, planificacion, gerencia y RRHH operacional.',
+    method_cargando: 'Cargando metodologia...',
+    method_error: 'No se pudo cargar la metodologia.',
+    method_umbral_kicker: 'Demoras y umbrales',
+    method_umbral_titulo: 'Que se considera gestionable y que es contexto sistemico',
+    method_interp_kicker: 'Interpretacion',
+    method_interp_titulo: 'Lectura de colores y rangos',
+
+    formula_kicker: 'Formula trazable',
+    formula_titulo: 'Score global 0-100',
+  },
+  en: {
+    sin_causa: 'No cause',
+    sin_modo: 'NO MODE',
+    cargando_ranking: 'Loading real WENCO/SQL operator ranking...',
+    error_cargar_ranking: 'Could not load /api/operator-ranking/global.',
+
+    eyebrow: 'Operational analytics',
+    titulo: 'Global Operator Ranking',
+    descripcion: 'Orientative read on productivity, availability, utilization, manageable delays and safety.',
+    btn_metodologia: 'View score methodology',
+    btn_exportar: 'Export ranking CSV',
+    ethics_note: 'Orientative ranking. Do not use as direct sanction: validate front conditions, availability, fleet, systemic waits and relief before concluding operational responsibility.',
+    filtros_titulo: 'Operator ranking filters',
+
+    cmd_kicker: 'Executive read',
+    cmd_titulo_riesgo: (name) => `${name} requires contextual review`,
+    cmd_titulo_sin_riesgo: 'No operators under watch for the active filter',
+    cmd_texto_riesgo: (cause, tons, hours) => `Main focus: ${cause}. Estimated impact ${tons} and ${hours} of manageable delays.`,
+    cmd_texto_sin_riesgo: 'The ranking does not detect relevant gaps with the active filter.',
+    cmd_mejor_score: (name) => `Best score: ${name}`,
+    cmd_foco: (n) => `Focus: ${n}`,
+    cmd_demoras: (h) => `Delays: ${h}`,
+    cmd_mayor_demora: (name) => `Highest delay: ${name}`,
+    cmd_causa: (cause) => `Cause: ${cause}`,
+    cmd_next_titulo: 'What to do now',
+    cmd_next_fallback: 'Keep preventive monitoring of the ranking.',
+    cmd_next_small: (spread) => `Compare score against the operator's audit before deciding actions. Max-min score gap: ${spread} pts.`,
+    cmd_btn_auditar_foco: 'Audit focus operator',
+
+    prod_kicker: 'Operator productivity',
+    prod_titulo: 'Most productive vs lowest relative productivity',
+    prod_tag: 'tph / score / cycles',
+    prod_top_titulo: 'Most productive',
+    prod_top_subtitulo: 'Ordered by tons per hour',
+    prod_low_titulo: 'Lowest relative productivity',
+    prod_low_subtitulo: 'Review with operational context',
+    prod_score_label: 'prod. score',
+    prod_impacto_suffix: 'impact',
+    prod_nota: 'Orientative read: low productivity can be explained by front, availability, queue, assignment, maintenance or systemic delays.',
+
+    priority_kicker: 'Operational priority',
+    priority_titulo: 'Useful data to manage now',
+    priority_tag: (n) => `Top ${n}`,
+    priority_metric_produccion: 'production',
+    priority_metric_score: 'score',
+    priority_metric_demoras: 'delays',
+    priority_metric_impacto: 'impact',
+    priority_btn_auditar: 'Audit evidence',
+
+    ranking_kicker: 'Operational ranking',
+    ranking_titulo: 'Compact read per operator',
+    ranking_tag: (n) => `${n} operators`,
+
+    score_kicker: 'Score',
+    score_titulo: 'Global score per operator',
+
+    correlacion_kicker: 'Correlation',
+    correlacion_titulo: 'Productivity vs manageable delays',
+    impacto_kicker: 'Impact',
+    impacto_titulo: 'Loss cause distribution',
+    heatmap_kicker: 'Heatmap',
+    heatmap_titulo: 'Operator vs manageable category',
+    evolucion_kicker: 'Trend',
+    evolucion_titulo: 'Score and tonnage trend',
+    evolucion_tag: (n) => `${n} points`,
+
+    chart_productividad: 'Productivity',
+    chart_demoras: 'Delays',
+    chart_tooltip_scatter: (name, productividad, demoras, score) =>
+      `<strong>${name}</strong><br/>Productivity ${productividad}%<br/>Manageable delays ${demoras} min<br/>Score ${score}`,
+    heatmap_cat_bano: 'Restroom',
+    heatmap_cat_colacion: 'Lunch',
+    heatmap_cat_cambio: 'Shift change',
+    heatmap_cat_petroleo: 'Fueling',
+    heatmap_cat_sin_postura: 'No assignment',
+
+    kpi_mejor_titulo: 'Best performance',
+    kpi_mejor_trend: 'estimated score',
+    kpi_promedio_titulo: 'Average score',
+    kpi_promedio_subtitulo: 'Operational ranking',
+    kpi_promedio_trend: '0-100 weighted',
+    kpi_foco_titulo: 'Focus / watch',
+    kpi_foco_subtitulo: 'need context',
+    kpi_foco_trend: 'needs context',
+    kpi_impacto_titulo: 'Estimated impact',
+    kpi_impacto_subtitulo: 'not directly attributable',
+    kpi_impacto_trend: 'accumulated impact',
+    kpi_demoras_titulo: 'Manageable delays',
+    kpi_demoras_subtitulo: 'Period accumulated',
+    kpi_demoras_trend: 'over O categories',
+    kpi_causa_titulo: 'Main cause',
+    kpi_causa_subtitulo: 'Highest estimated impact',
+    kpi_causa_trend: 'validate with operations',
+
+    tabla_col_rank: 'Rank',
+    tabla_col_operador: 'Operator / equipment',
+    tabla_col_produccion: 'Production',
+    tabla_col_demoras: 'Useful delays',
+    tabla_col_impacto: 'Impact',
+    tabla_col_riesgo: 'Risk / cause',
+    tabla_col_accion: 'Recommended action',
+    tabla_col_acciones: 'Actions',
+    tabla_ciclos: 'cycles',
+    tabla_chip_bano: 'Restroom',
+    tabla_chip_colacion: 'Lunch',
+    tabla_chip_cambio_turno: 'Shift change',
+    tabla_chip_combustible: 'Fuel',
+    tabla_chip_sin_asignacion: 'No assignment',
+    tabla_min_gestionables: (n) => `${n} manageable min`,
+    tabla_sin_demoras: 'No manageable delays',
+    tabla_perdida_estimada: 'estimated loss',
+    tabla_ver_detalle: (name) => `View detail ${name}`,
+    tabla_ver_auditoria: (name) => `View audit ${name}`,
+
+    risk_excelente: 'Excellent',
+    risk_bueno: 'Good',
+    risk_seguimiento: 'Monitoring',
+    risk_riesgo_alto: 'High risk',
+    risk_critico: 'Critical',
+
+    score_productividad: 'Productivity',
+    score_disponibilidad: 'Availability',
+    score_utilizacion: 'Utilization',
+    score_control_demoras: 'Delay control',
+    score_seguridad: 'Safety',
+    score_peso: (weight) => `Weight ${weight}`,
+    score_peso_pct: (pct) => `${pct}% of score`,
+
+    trend_score: 'Score',
+    trend_disponibilidad: 'Availability',
+    trend_toneladas: 'Tonnage',
+
+    trace_col_componente: 'Component',
+    trace_col_formula: 'Formula',
+    trace_col_valor: 'Value',
+    trace_col_score: 'Score',
+    trace_col_peso: 'Weight',
+    trace_col_puntos: 'Points',
+
+    delay_col_categoria: 'Category',
+    delay_col_tipo: 'Type',
+    delay_col_esperado: 'Expected',
+    delay_col_alerta: 'Alert',
+    delay_col_critico: 'Critical',
+    delay_col_criterio: 'Criterion',
+    delay_tipo_gestionable: 'Manageable',
+    delay_tipo_sistemica: 'Systemic',
+
+    audit_close: 'Close audit',
+    audit_kicker: 'KPI audit',
+    audit_operador_fallback: 'Operator',
+    audit_seed: (id) => `seed ${id}`,
+    audit_desc: 'Calculation trace, applied filters and separation between manageable and systemic delays.',
+    audit_cargando: 'Loading audit...',
+    audit_error: 'Could not load the audit.',
+    audit_sin_datos: 'No data to show.',
+    audit_resultado_titulo: 'Audited result',
+    audit_score_global: 'Global score',
+    audit_periodo: 'Period',
+    audit_turnos_analizados: 'Shifts analyzed',
+    audit_modo: 'Mode',
+    audit_filtros_titulo: 'Applied filters',
+    audit_datos_base_titulo: 'Base data used',
+    audit_traza_titulo: 'Calculation trace',
+    audit_penalizaciones_titulo: 'Applied penalties',
+    audit_excesos_titulo: 'Excess over manageable threshold',
+    audit_recurrencia_titulo: 'Recurrence',
+    audit_sistemicas_titulo: 'Informative systemic delays',
+    audit_explicacion_titulo: 'Narrative explanation',
+    audit_recomendacion_titulo: 'Recommendation',
+
+    pattern_kicker: 'Recurrence',
+    pattern_titulo: 'Delay patterns over threshold',
+    pattern_tag: 'Operational context required',
+    pattern_turnos: (n) => `${n} shifts over threshold`,
+    pattern_impacto: (n) => `${n} t estimated impact`,
+    pattern_empty: 'No recurring patterns with the applied filters.',
+
+    method_close: 'Close methodology',
+    method_kicker: 'Methodology and traceability',
+    method_titulo: 'How the score is calculated',
+    method_desc: 'Operational summary for supervisors, dispatch, planning, management and operational HR.',
+    method_cargando: 'Loading methodology...',
+    method_error: 'Could not load the methodology.',
+    method_umbral_kicker: 'Delays and thresholds',
+    method_umbral_titulo: 'What is considered manageable and what is systemic context',
+    method_interp_kicker: 'Interpretation',
+    method_interp_titulo: 'Reading colors and ranges',
+
+    formula_kicker: 'Traceable formula',
+    formula_titulo: 'Global score 0-100',
+  },
+}
