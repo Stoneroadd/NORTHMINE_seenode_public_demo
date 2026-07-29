@@ -9,7 +9,7 @@
     "build": "node scripts/build_public_demo.mjs",
     "preview": "npm --prefix frontend run preview",
     "lint": "npm --prefix frontend run lint",
-    "build:frontend": "npm --prefix frontend ci --legacy-peer-deps && npm --prefix frontend run build",
+    "build:frontend": "node scripts/build_public_demo.mjs",
     "start": "node scripts/start_public_demo.mjs",
     "start:api": "node scripts/start_public_demo.mjs",
     "start:frontend": "node frontend/server.mjs"
