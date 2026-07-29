@@ -19,6 +19,13 @@ import {
   uploadAveriasXls,
   type ActiveBreakdownItem,
 } from '../lib/api'
+import {
+  FAST_DEMO_AVERIAS_FLEET,
+  FAST_DEMO_AVERIAS_HISTORY,
+  FAST_DEMO_AVERIAS_INSIGHTS,
+  FAST_DEMO_AVERIAS_SUMMARY,
+  FAST_PUBLIC_DEMO,
+} from '../demo/fastDemo'
 
 function costFormatRate(value: number) {
   return value.toLocaleString('es-CL', { maximumFractionDigits: 2 })
@@ -164,13 +171,23 @@ export function AveriasPage() {
       const [detail, mailStatus] = await Promise.all([getAveriasFleetDetail(days), getAveriasMailStatus()])
       return { detail, mailStatus }
     },
-    refetchInterval: 120000,
+    enabled: !FAST_PUBLIC_DEMO,
+    initialData: FAST_PUBLIC_DEMO ? FAST_DEMO_AVERIAS_FLEET : undefined,
+    placeholderData: (previousData) => previousData,
+    staleTime: FAST_PUBLIC_DEMO ? Infinity : 120000,
+    gcTime: FAST_PUBLIC_DEMO ? Infinity : 30 * 60000,
+    refetchInterval: FAST_PUBLIC_DEMO ? false : 120000,
   })
 
   const insightsQuery = useQuery({
     queryKey: ['averias-insights', days],
     queryFn: () => getAveriasInsights(days),
-    refetchInterval: 300000,
+    enabled: !FAST_PUBLIC_DEMO,
+    initialData: FAST_PUBLIC_DEMO ? FAST_DEMO_AVERIAS_INSIGHTS : undefined,
+    placeholderData: (previousData) => previousData,
+    staleTime: FAST_PUBLIC_DEMO ? Infinity : 300000,
+    gcTime: FAST_PUBLIC_DEMO ? Infinity : 30 * 60000,
+    refetchInterval: FAST_PUBLIC_DEMO ? false : 300000,
   })
 
   const chartData = useMemo(() => {
@@ -252,6 +269,12 @@ export function AveriasPage() {
     if (!file) return
     setImporting(true)
     setImportMessage(null)
+    if (FAST_PUBLIC_DEMO) {
+      setImportMessage('Demo rapido: XLS simulado, la interfaz ya muestra una muestra liviana de averias.')
+      setImporting(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+      return
+    }
     try {
       const result = await uploadAveriasXls(file)
       setImportMessage(
@@ -269,6 +292,11 @@ export function AveriasPage() {
   const handleMailSync = async () => {
     setSyncing(true)
     setImportMessage(null)
+    if (FAST_PUBLIC_DEMO) {
+      setImportMessage('Demo rapido: sincronizacion simulada, sin descargar adjuntos ni procesar archivos pesados.')
+      setSyncing(false)
+      return
+    }
     try {
       const result = await postAveriasMailSync()
       const mailFiles = result.mail.imported_files.length
@@ -297,7 +325,14 @@ export function AveriasPage() {
       ])
       return { summary, history }
     },
-    refetchInterval: 60000,
+    enabled: !FAST_PUBLIC_DEMO,
+    initialData: FAST_PUBLIC_DEMO
+      ? { summary: FAST_DEMO_AVERIAS_SUMMARY, history: FAST_DEMO_AVERIAS_HISTORY }
+      : undefined,
+    placeholderData: (previousData) => previousData,
+    staleTime: FAST_PUBLIC_DEMO ? Infinity : 60000,
+    gcTime: FAST_PUBLIC_DEMO ? Infinity : 30 * 60000,
+    refetchInterval: FAST_PUBLIC_DEMO ? false : 60000,
   })
 
   // Solo mantencion: averias y mantenimientos WENCO. Se excluyen demoras
@@ -310,7 +345,7 @@ export function AveriasPage() {
     [query.data?.history.items],
   )
 
-  if (query.isLoading) return <LoadingState label="Cargando averias y mantenciones..." />
+  if (!FAST_PUBLIC_DEMO && query.isLoading) return <LoadingState label="Cargando averias y mantenciones..." />
   if (query.isError || !query.data) return <ErrorState detail="No se pudo cargar el modulo de averias." onRetry={() => query.refetch()} />
 
   const data = query.data
@@ -399,7 +434,7 @@ export function AveriasPage() {
           <p style={{ color: 'var(--nm-muted)', fontSize: '0.82rem', marginBottom: 12 }}>{importMessage}</p>
         )}
 
-        {fleetQuery.isLoading && <EmptyState title="Cargando desglose importado..." />}
+        {!FAST_PUBLIC_DEMO && fleetQuery.isLoading && <EmptyState title="Cargando desglose importado..." />}
         {fleetQuery.data && fleetQuery.data.detail.count_events === 0 && (
           <EmptyState title="Aun no hay reportes XLS importados. Carga uno con el boton o configura la casilla / carpeta vigilada." />
         )}

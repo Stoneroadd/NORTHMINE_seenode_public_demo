@@ -12,6 +12,7 @@ import { IdleTimeoutBanner } from './components/ui/IdleTimeoutBanner'
 import { useIdleTimeout } from './hooks/useIdleTimeout'
 import { useModuleT } from './i18n/useModuleT'
 import { appT, type AppT } from './i18n/modules/app'
+import { FAST_PUBLIC_DEMO } from './demo/fastDemo'
 
 const loadPrediction  = () => import('./pages/Prediction')
 const loadSimulator   = () => import('./pages/Simulator')
@@ -64,17 +65,32 @@ const ALL_MODULE_LOADERS = [
   loadAlerts,
 ]
 
-// Precarga en segundo plano el codigo JS de todos los modulos apenas hay
-// sesion, para que cambiar de modulo no tenga que esperar la descarga del
-// chunk — solo queda el fetch de datos (ya cacheado en el backend).
+const FAST_DEMO_MODULE_LOADERS = [
+  loadDecisionCockpit, loadDashboard, loadCurrentShift, loadProduction,
+  loadPerformance, loadFleet, loadLoadingUnits, loadAveriasPage, loadAerialView,
+  loadAlerts, loadReports,
+]
+
+// La demo publica debe sentirse instantanea. Precargamos los modulos livianos
+// de a uno para no competir con el primer cockpit ni evaluar chunks 3D pesados
+// cuando el usuario aun esta orientandose.
 function preloadAllModules() {
-  for (const load of ALL_MODULE_LOADERS) {
-    load().catch(() => {})
+  if (FAST_PUBLIC_DEMO) {
+    FAST_DEMO_MODULE_LOADERS.forEach((load, index) => {
+      window.setTimeout(() => load().catch(() => {}), index * 650)
+    })
+    return
   }
+
+  for (const load of ALL_MODULE_LOADERS) load().catch(() => {})
 }
 
 function schedulePreload(callback: () => void) {
   if (typeof window === 'undefined') return
+  if (FAST_PUBLIC_DEMO) {
+    window.setTimeout(callback, 3600)
+    return
+  }
   const idle = (window as typeof window & { requestIdleCallback?: (cb: () => void) => number }).requestIdleCallback
   if (idle) {
     idle(callback)

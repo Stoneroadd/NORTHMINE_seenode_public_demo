@@ -24,6 +24,17 @@ import { ErrorState } from '../components/common/ErrorState'
 import { LoadingState } from '../components/common/LoadingState'
 import { northmineApi, type MonthlyTargetResponse, type ShiftComparisonResponse } from '../lib/api'
 import { secureApi } from '../lib/secureApi'
+import {
+  FAST_DEMO_COCKPIT,
+  FAST_DEMO_DECISION_AUDIT,
+  FAST_DEMO_DISPATCHER,
+  FAST_DEMO_HIDDEN_LOSSES,
+  FAST_DEMO_MONTHLY_TARGET,
+  FAST_DEMO_NLP,
+  FAST_DEMO_PROFIT,
+  FAST_DEMO_SHIFT_COMPARISON,
+  FAST_PUBLIC_DEMO,
+} from '../demo/fastDemo'
 import { useModuleT } from '../i18n/useModuleT'
 import { cockpitT, type CockpitT } from '../i18n/modules/cockpit'
 
@@ -329,45 +340,88 @@ export function DecisionCockpit() {
   const query = useQuery({
     queryKey: ['decision-cockpit', 'v1', selectedDate, selectedShift],
     queryFn: () => northmineApi.cockpit({ date: selectedDateParam, shift: selectedShift }),
-    refetchInterval: 60000,
+    enabled: !FAST_PUBLIC_DEMO,
+    initialData: FAST_PUBLIC_DEMO ? FAST_DEMO_COCKPIT : undefined,
+    placeholderData: (previousData) => previousData,
+    staleTime: FAST_PUBLIC_DEMO ? Infinity : 60000,
+    gcTime: FAST_PUBLIC_DEMO ? Infinity : 30 * 60000,
+    refetchInterval: FAST_PUBLIC_DEMO ? false : 60000,
+    refetchOnMount: !FAST_PUBLIC_DEMO,
   })
   const profitQuery = useQuery({
     queryKey: ['profit-optimization', 'v1'],
     queryFn: northmineApi.profitOptimization,
-    refetchInterval: 300000,
+    enabled: !FAST_PUBLIC_DEMO,
+    initialData: FAST_PUBLIC_DEMO ? FAST_DEMO_PROFIT : undefined,
+    placeholderData: (previousData) => previousData,
+    staleTime: FAST_PUBLIC_DEMO ? Infinity : 300000,
+    gcTime: FAST_PUBLIC_DEMO ? Infinity : 30 * 60000,
+    refetchInterval: FAST_PUBLIC_DEMO ? false : 300000,
   })
   const hiddenLossesQuery = useQuery({
     queryKey: ['hidden-losses', 'v1'],
     queryFn: northmineApi.hiddenLosses,
-    refetchInterval: 300000,
+    enabled: !FAST_PUBLIC_DEMO,
+    initialData: FAST_PUBLIC_DEMO ? FAST_DEMO_HIDDEN_LOSSES : undefined,
+    placeholderData: (previousData) => previousData,
+    staleTime: FAST_PUBLIC_DEMO ? Infinity : 300000,
+    gcTime: FAST_PUBLIC_DEMO ? Infinity : 30 * 60000,
+    refetchInterval: FAST_PUBLIC_DEMO ? false : 300000,
   })
   const nlpQuery = useQuery({
     queryKey: ['operational-nlp', 'v1'],
     queryFn: northmineApi.operationalNlp,
-    refetchInterval: 300000,
+    enabled: !FAST_PUBLIC_DEMO,
+    initialData: FAST_PUBLIC_DEMO ? FAST_DEMO_NLP : undefined,
+    placeholderData: (previousData) => previousData,
+    staleTime: FAST_PUBLIC_DEMO ? Infinity : 300000,
+    gcTime: FAST_PUBLIC_DEMO ? Infinity : 30 * 60000,
+    refetchInterval: FAST_PUBLIC_DEMO ? false : 300000,
   })
   const dispatcherQuery = useQuery({
     queryKey: ['dispatcher-advisor', 'v1', selectedDate, selectedShift],
     queryFn: () => northmineApi.dispatcherAdvisor({ date: selectedDateParam, shift: selectedShift }),
-    refetchInterval: 300000,
+    enabled: !FAST_PUBLIC_DEMO,
+    initialData: FAST_PUBLIC_DEMO ? FAST_DEMO_DISPATCHER : undefined,
+    placeholderData: (previousData) => previousData,
+    staleTime: FAST_PUBLIC_DEMO ? Infinity : 300000,
+    gcTime: FAST_PUBLIC_DEMO ? Infinity : 30 * 60000,
+    refetchInterval: FAST_PUBLIC_DEMO ? false : 300000,
   })
   const decisionAuditQuery = useQuery({
     queryKey: ['decision-audit', 'v1', selectedDate, selectedShift],
     queryFn: () => northmineApi.decisionAudit({ date: selectedDateParam, shift: selectedShift }),
-    refetchInterval: 300000,
+    enabled: !FAST_PUBLIC_DEMO,
+    initialData: FAST_PUBLIC_DEMO ? FAST_DEMO_DECISION_AUDIT : undefined,
+    placeholderData: (previousData) => previousData,
+    staleTime: FAST_PUBLIC_DEMO ? Infinity : 300000,
+    gcTime: FAST_PUBLIC_DEMO ? Infinity : 30 * 60000,
+    refetchInterval: FAST_PUBLIC_DEMO ? false : 300000,
   })
   const monthlyTargetQuery = useQuery({
     queryKey: ['monthly-target', 'v1', selectedDate, 'F01'],
     queryFn: () => northmineApi.monthlyTarget({ date: selectedDateParam, sector: 'F01' }),
-    refetchInterval: 300000,
+    enabled: !FAST_PUBLIC_DEMO,
+    initialData: FAST_PUBLIC_DEMO ? FAST_DEMO_MONTHLY_TARGET : undefined,
+    placeholderData: (previousData) => previousData,
+    staleTime: FAST_PUBLIC_DEMO ? Infinity : 300000,
+    gcTime: FAST_PUBLIC_DEMO ? Infinity : 30 * 60000,
+    refetchInterval: FAST_PUBLIC_DEMO ? false : 300000,
   })
   const shiftComparisonQuery = useQuery({
     queryKey: ['shift-comparison', 'v1', selectedDate],
     queryFn: () => northmineApi.shiftComparison({ date: selectedDateParam }),
-    refetchInterval: 60000,
+    enabled: !FAST_PUBLIC_DEMO,
+    initialData: FAST_PUBLIC_DEMO ? FAST_DEMO_SHIFT_COMPARISON : undefined,
+    placeholderData: (previousData) => previousData,
+    staleTime: FAST_PUBLIC_DEMO ? Infinity : 60000,
+    gcTime: FAST_PUBLIC_DEMO ? Infinity : 30 * 60000,
+    refetchInterval: FAST_PUBLIC_DEMO ? false : 60000,
+    refetchOnMount: !FAST_PUBLIC_DEMO,
   })
 
   useEffect(() => {
+    if (FAST_PUBLIC_DEMO) return
     const resolvedDate = shiftComparisonQuery.data?.selected_date
     if (!selectedDate && resolvedDate) {
       setSelectedDate(resolvedDate)
@@ -421,7 +475,7 @@ export function DecisionCockpit() {
     return () => window.clearTimeout(timer)
   }, [data])
 
-  if (query.isLoading) return <LoadingState label={t.loading_cockpit} />
+  if (!FAST_PUBLIC_DEMO && query.isLoading) return <LoadingState label={t.loading_cockpit} />
 
   if (query.isError || !data) {
     const detail = query.error instanceof Error
@@ -475,8 +529,8 @@ export function DecisionCockpit() {
       <div className="nmcp-main">
         <CockpitHeader
           data={data}
-          fetching={query.isFetching}
-          onRefresh={() => query.refetch()}
+          fetching={!FAST_PUBLIC_DEMO && query.isFetching}
+          onRefresh={() => { if (!FAST_PUBLIC_DEMO) void query.refetch() }}
           downloadingReport={downloadingExecutiveReport}
           onDownloadReport={downloadExecutiveReport}
         />
@@ -492,7 +546,7 @@ export function DecisionCockpit() {
 
           <ShiftSummary data={data} />
           <CompactFilters
-            selectedDate={selectedDate}
+            selectedDate={selectedDate || data.shiftDate}
             selectedShift={selectedShift}
             resolvedShiftLabel={data.shiftLabel}
             onDateChange={setSelectedDate}
@@ -608,9 +662,9 @@ export function DecisionCockpit() {
             <MonthlyTargetPanel
               data={monthlyTargetQuery.data}
               error={monthlyTargetQuery.error instanceof Error ? monthlyTargetQuery.error : null}
-              fetching={monthlyTargetQuery.isFetching}
-              loading={monthlyTargetQuery.isLoading}
-              onRefresh={() => monthlyTargetQuery.refetch()}
+              fetching={!FAST_PUBLIC_DEMO && monthlyTargetQuery.isFetching}
+              loading={!FAST_PUBLIC_DEMO && monthlyTargetQuery.isLoading}
+              onRefresh={() => { if (!FAST_PUBLIC_DEMO) void monthlyTargetQuery.refetch() }}
             />
           </div>
 
@@ -618,11 +672,11 @@ export function DecisionCockpit() {
             <ShiftComparisonVisionPanel
               data={shiftComparisonQuery.data}
               error={shiftComparisonQuery.error instanceof Error ? shiftComparisonQuery.error : null}
-              fetching={shiftComparisonQuery.isFetching}
-              loading={shiftComparisonQuery.isLoading}
-              selectedDate={selectedDate}
+              fetching={!FAST_PUBLIC_DEMO && shiftComparisonQuery.isFetching}
+              loading={!FAST_PUBLIC_DEMO && shiftComparisonQuery.isLoading}
+              selectedDate={selectedDate || data.shiftDate}
               onDateChange={setSelectedDate}
-              onRefresh={() => shiftComparisonQuery.refetch()}
+              onRefresh={() => { if (!FAST_PUBLIC_DEMO) void shiftComparisonQuery.refetch() }}
             />
           </div>
 
@@ -684,9 +738,9 @@ export function DecisionCockpit() {
             <DispatcherAdvisorPanel
               data={dispatcherQuery.data}
               error={dispatcherQuery.error instanceof Error ? dispatcherQuery.error : null}
-              fetching={dispatcherQuery.isFetching}
-              loading={dispatcherQuery.isLoading}
-              onRefresh={() => dispatcherQuery.refetch()}
+              fetching={!FAST_PUBLIC_DEMO && dispatcherQuery.isFetching}
+              loading={!FAST_PUBLIC_DEMO && dispatcherQuery.isLoading}
+              onRefresh={() => { if (!FAST_PUBLIC_DEMO) void dispatcherQuery.refetch() }}
             />
 
             <section className="nmcp-intelligence-brief" aria-label={t.intelligence_brief_aria}>
@@ -701,34 +755,34 @@ export function DecisionCockpit() {
               <HiddenLossPanel
                 data={hiddenLossesQuery.data}
                 error={hiddenLossesQuery.error instanceof Error ? hiddenLossesQuery.error : null}
-                fetching={hiddenLossesQuery.isFetching}
-                loading={hiddenLossesQuery.isLoading}
-                onRefresh={() => hiddenLossesQuery.refetch()}
+                fetching={!FAST_PUBLIC_DEMO && hiddenLossesQuery.isFetching}
+                loading={!FAST_PUBLIC_DEMO && hiddenLossesQuery.isLoading}
+                onRefresh={() => { if (!FAST_PUBLIC_DEMO) void hiddenLossesQuery.refetch() }}
               />
 
               <OperationalNlpPanel
                 data={nlpQuery.data}
                 error={nlpQuery.error instanceof Error ? nlpQuery.error : null}
-                fetching={nlpQuery.isFetching}
-                loading={nlpQuery.isLoading}
-                onRefresh={() => nlpQuery.refetch()}
+                fetching={!FAST_PUBLIC_DEMO && nlpQuery.isFetching}
+                loading={!FAST_PUBLIC_DEMO && nlpQuery.isLoading}
+                onRefresh={() => { if (!FAST_PUBLIC_DEMO) void nlpQuery.refetch() }}
               />
             </section>
 
             <ProfitOptimizationPanel
               data={profitQuery.data}
               error={profitQuery.error instanceof Error ? profitQuery.error : null}
-              fetching={profitQuery.isFetching}
-              loading={profitQuery.isLoading}
-              onRefresh={() => profitQuery.refetch()}
+              fetching={!FAST_PUBLIC_DEMO && profitQuery.isFetching}
+              loading={!FAST_PUBLIC_DEMO && profitQuery.isLoading}
+              onRefresh={() => { if (!FAST_PUBLIC_DEMO) void profitQuery.refetch() }}
             />
 
             <DecisionAuditPanel
               data={decisionAuditQuery.data}
               error={decisionAuditQuery.error instanceof Error ? decisionAuditQuery.error : null}
-              fetching={decisionAuditQuery.isFetching}
-              loading={decisionAuditQuery.isLoading}
-              onRefresh={() => decisionAuditQuery.refetch()}
+              fetching={!FAST_PUBLIC_DEMO && decisionAuditQuery.isFetching}
+              loading={!FAST_PUBLIC_DEMO && decisionAuditQuery.isLoading}
+              onRefresh={() => { if (!FAST_PUBLIC_DEMO) void decisionAuditQuery.refetch() }}
             />
           </div>
 

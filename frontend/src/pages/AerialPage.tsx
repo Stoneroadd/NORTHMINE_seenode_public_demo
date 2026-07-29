@@ -7,6 +7,7 @@ import { ErrorState } from '../components/common/ErrorState'
 import { EmptyState } from '../components/common/EmptyState'
 import { ExecutiveKpiCard } from '../components/kpi/ExecutiveKpiCard'
 import { getAerialFiles, getAerialMailStatus, getAerialPreviewUrl, getAerialStatus, postAerialMailSync } from '../lib/api'
+import { FAST_DEMO_AERIAL, FAST_PUBLIC_DEMO } from '../demo/fastDemo'
 import { useModuleT } from '../i18n/useModuleT'
 import { aerialT } from '../i18n/modules/aerial'
 
@@ -177,6 +178,97 @@ function OrthomosaicViewer({ fileName }: { fileName: string }) {
   )
 }
 
+function DemoOrthomosaicViewer({ fileName }: { fileName: string }) {
+  const t = useModuleT(aerialT)
+  const [zoom, setZoom] = useState(1)
+  const clampZoom = (next: number) => setZoom(Math.min(2.4, Math.max(1, next)))
+  const assets = [
+    { id: 'CAEX01', x: '20%', y: '56%', tone: '#38BDF8' },
+    { id: 'CAEX07', x: '36%', y: '42%', tone: '#4ADE80' },
+    { id: 'CAEX12', x: '52%', y: '36%', tone: '#38BDF8' },
+    { id: 'CAEX22', x: '64%', y: '54%', tone: '#FBBF24' },
+    { id: 'PALA 1', x: '74%', y: '30%', tone: '#A78BFA' },
+    { id: 'CF 2', x: '58%', y: '68%', tone: '#F87171' },
+  ]
+
+  return (
+    <section className="panel">
+      <div className="panel-header">
+        <div><span className="panel-kicker">{t.viewer_kicker}</span><h2>{t.viewer_title(fileName)}</h2></div>
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+          <small style={{ color: 'var(--nm-muted)' }}>Capa demo</small>
+          <button className="command-button command-button-secondary" type="button" onClick={() => clampZoom(zoom / 1.25)} disabled={zoom <= 1} aria-label={t.zoom_out_aria}>
+            <ZoomOut size={15} />
+          </button>
+          <span className="panel-tag" style={{ minWidth: 52, textAlign: 'center' }}>{Math.round(zoom * 100)}%</span>
+          <button className="command-button command-button-secondary" type="button" onClick={() => clampZoom(zoom * 1.25)} disabled={zoom >= 2.4} aria-label={t.zoom_in_aria}>
+            <ZoomIn size={15} />
+          </button>
+        </div>
+      </div>
+      <div
+        style={{
+          overflow: 'hidden',
+          minHeight: 360,
+          maxHeight: '68vh',
+          borderRadius: 12,
+          border: '1px solid rgba(125,211,252,0.16)',
+          background: '#07111C',
+          position: 'relative',
+          isolation: 'isolate',
+        }}
+      >
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            transform: `scale(${zoom})`,
+            transformOrigin: 'center',
+            transition: 'transform 180ms ease-out',
+            background:
+              'radial-gradient(circle at 72% 32%, rgba(167,139,250,0.22), transparent 15%), radial-gradient(circle at 30% 62%, rgba(56,189,248,0.18), transparent 18%), linear-gradient(145deg, #0B1826 0%, #10263A 42%, #182A22 68%, #08121F 100%)',
+          }}
+        >
+          <div style={{ position: 'absolute', inset: '12% 9% 18% 11%', border: '1px solid rgba(125,211,252,0.18)', borderRadius: 999, transform: 'rotate(-15deg)' }} />
+          <div style={{ position: 'absolute', left: '10%', right: '12%', top: '54%', height: 3, background: 'linear-gradient(90deg, transparent, rgba(125,211,252,0.55), transparent)', transform: 'rotate(-10deg)' }} />
+          <div style={{ position: 'absolute', left: '42%', right: '14%', top: '42%', height: 3, background: 'linear-gradient(90deg, rgba(74,222,128,0.08), rgba(74,222,128,0.45), transparent)', transform: 'rotate(22deg)' }} />
+          {assets.map((asset) => (
+            <span
+              key={asset.id}
+              title={asset.id}
+              style={{
+                position: 'absolute',
+                left: asset.x,
+                top: asset.y,
+                transform: 'translate(-50%, -50%)',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '5px 7px',
+                borderRadius: 8,
+                border: `1px solid ${asset.tone}88`,
+                background: 'rgba(4,12,22,0.78)',
+                color: asset.tone,
+                fontSize: '0.68rem',
+                fontWeight: 800,
+                boxShadow: `0 0 20px ${asset.tone}33`,
+              }}
+            >
+              <i style={{ width: 8, height: 8, borderRadius: 99, background: asset.tone, boxShadow: `0 0 12px ${asset.tone}` }} />
+              {asset.id}
+            </span>
+          ))}
+        </div>
+        <div style={{ position: 'absolute', left: 14, bottom: 14, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <span className="panel-tag">Rajo norte</span>
+          <span className="panel-tag">6 activos</span>
+          <span className="panel-tag">alta fluidez</span>
+        </div>
+      </div>
+    </section>
+  )
+}
+
 export function AerialPage() {
   const t = useModuleT(aerialT)
   const [syncing, setSyncing] = useState(false)
@@ -192,12 +284,22 @@ export function AerialPage() {
       ])
       return { status, files, mailStatus }
     },
-    refetchInterval: 120000,
+    enabled: !FAST_PUBLIC_DEMO,
+    initialData: FAST_PUBLIC_DEMO ? FAST_DEMO_AERIAL : undefined,
+    placeholderData: (previousData) => previousData,
+    staleTime: FAST_PUBLIC_DEMO ? Infinity : 120000,
+    gcTime: FAST_PUBLIC_DEMO ? Infinity : 30 * 60000,
+    refetchInterval: FAST_PUBLIC_DEMO ? false : 120000,
   })
 
   const handleSync = async () => {
     setSyncing(true)
     setSyncMessage(null)
+    if (FAST_PUBLIC_DEMO) {
+      setSyncMessage('Demo rapido: sincronizacion simulada, sin descargar ortomosaicos pesados.')
+      setSyncing(false)
+      return
+    }
     try {
       const result = await postAerialMailSync()
       const downloaded = [...result.drive.imported_files, ...result.mail.imported_files]
@@ -217,7 +319,7 @@ export function AerialPage() {
     }
   }
 
-  if (query.isLoading) return <LoadingState label={t.loading_label} />
+  if (!FAST_PUBLIC_DEMO && query.isLoading) return <LoadingState label={t.loading_label} />
   if (query.isError || !query.data) return <ErrorState detail={t.error_detail} onRetry={() => query.refetch()} />
 
   const { status, files } = query.data
@@ -283,7 +385,7 @@ export function AerialPage() {
       )}
 
       {activeImageFile && (
-        <OrthomosaicViewer fileName={activeImageFile} />
+        FAST_PUBLIC_DEMO ? <DemoOrthomosaicViewer fileName={activeImageFile} /> : <OrthomosaicViewer fileName={activeImageFile} />
       )}
 
       <section className="kpi-grid compact">

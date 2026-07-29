@@ -5,6 +5,7 @@ import './styles/themes.css'
 import './styles/tokens.css'
 import './styles/northmine-tokens.css'
 import App from './App'
+import { FAST_PUBLIC_DEMO } from './demo/fastDemo'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -15,8 +16,11 @@ const queryClient = new QueryClient({
         if (status === 401 || status === 403) return false
         return failureCount < 1
       },
-      staleTime: 15000,
+      staleTime: FAST_PUBLIC_DEMO ? 10 * 60 * 1000 : 15000,
+      gcTime: FAST_PUBLIC_DEMO ? 30 * 60 * 1000 : 5 * 60 * 1000,
       refetchOnWindowFocus: false,
+      refetchOnReconnect: !FAST_PUBLIC_DEMO,
+      refetchOnMount: !FAST_PUBLIC_DEMO,
     },
   },
 })
