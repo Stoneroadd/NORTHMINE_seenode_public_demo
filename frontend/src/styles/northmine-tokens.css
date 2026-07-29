@@ -8008,3 +8008,620 @@
     grid-column: 2;
   }
 }
+
+/* Stage 18.0 - premium cockpit responsive polish */
+@media (min-width: 1025px) and (max-width: 1280px) {
+  .nmcp-header {
+    align-items: flex-start;
+    gap: 12px;
+    min-height: 0;
+    padding: 12px 16px;
+  }
+
+  .nmcp-title-block h1 {
+    font-size: 26px;
+    letter-spacing: 0;
+    text-shadow: none;
+  }
+
+  .nmcp-header-status {
+    justify-content: flex-end;
+    flex-wrap: nowrap;
+    gap: 6px;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    scrollbar-width: none;
+  }
+
+  .nmcp-header-status::-webkit-scrollbar {
+    display: none;
+  }
+
+  .nmcp-header-status > span:nth-child(3),
+  .nmcp-header-status > span:nth-child(4),
+  .nmcp-header-status > span:nth-child(6),
+  .nmcp-header-status > span:nth-child(7),
+  .nmcp-header-status > span:nth-child(8) {
+    display: none;
+  }
+
+  .nmcp-header-status span,
+  .nmcp-status-pill,
+  .nmcp-mode-pill {
+    flex: 0 0 auto;
+    min-height: 30px;
+    padding: 0 9px;
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .nmcp-shell {
+    overflow: clip;
+    border-radius: 14px;
+  }
+
+  .nmcp-main {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--bg-void) 35%, transparent), color-mix(in srgb, var(--bg-deep) 18%, transparent));
+  }
+
+  .nmcp-header {
+    align-items: flex-start;
+    gap: 10px;
+    min-height: 0;
+    padding: 12px;
+  }
+
+  .nmcp-title-block {
+    min-width: 0;
+  }
+
+  .nmcp-title-block span,
+  .nmcp-section-kicker {
+    font-size: 10px;
+    letter-spacing: 0.06em;
+  }
+
+  .nmcp-title-block h1 {
+    font-size: 24px;
+    letter-spacing: 0;
+    text-shadow: none;
+  }
+
+  .nmcp-title-block p {
+    max-width: 68ch;
+    font-size: 12px;
+  }
+
+  .nmcp-header-status {
+    justify-content: flex-start;
+    flex-wrap: nowrap;
+    gap: 6px;
+    max-width: 100%;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    scrollbar-width: none;
+  }
+
+  .nmcp-header-status::-webkit-scrollbar,
+  .nmcp-section-nav::-webkit-scrollbar,
+  .nmcp-detail-chart-card.is-compact .nmcp-shift-hourly-values::-webkit-scrollbar {
+    display: none;
+  }
+
+  .nmcp-header-status span,
+  .nmcp-status-pill,
+  .nmcp-mode-pill {
+    flex: 0 0 auto;
+    min-height: 30px;
+    padding: 0 9px;
+    font-size: 10px;
+  }
+
+  .nmcp-header-status > span:nth-child(3),
+  .nmcp-header-status > span:nth-child(4),
+  .nmcp-header-status > span:nth-child(6),
+  .nmcp-header-status > span:nth-child(7),
+  .nmcp-header-status > span:nth-child(8) {
+    display: none;
+  }
+
+  .nmcp-report-button,
+  .nmcp-icon-button {
+    min-height: 34px;
+    border-radius: 10px;
+  }
+
+  .nmcp-content {
+    gap: 12px;
+    padding: 12px;
+  }
+
+  .nmcp-section-nav {
+    top: 0;
+    flex-wrap: nowrap;
+    gap: 6px;
+    margin: 0;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    border-radius: 14px;
+    padding: 6px;
+    scroll-snap-type: x proximity;
+  }
+
+  .nmcp-section-nav button {
+    flex: 0 0 auto;
+    min-height: 36px;
+    padding: 0 13px;
+    font-size: 11px;
+    letter-spacing: 0;
+    scroll-snap-align: start;
+  }
+
+  .nmcp-panel,
+  .nmcp-shift-vision-panel,
+  .nmcp-shift-card,
+  .nmcp-kpi-card,
+  .nmcp-detail-chart-card,
+  .nmcp-detail-table-card,
+  .nmcp-detail-operational-card {
+    border-radius: 14px;
+  }
+
+  .nmcp-panel,
+  .nmcp-shift-vision-panel {
+    padding: 12px;
+  }
+
+  .nmcp-shift-card {
+    min-height: 0;
+    padding: 13px;
+  }
+
+  .nmcp-shift-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+  }
+
+  .nmcp-shift-main h2 {
+    font-size: 22px;
+    letter-spacing: 0;
+  }
+
+  .nmcp-shift-main p,
+  .nmcp-kpi-label,
+  .nmcp-kpi-meta,
+  .nmcp-shift-summary-card small {
+    font-size: 11px;
+  }
+
+  .nmcp-kpi-grid,
+  .nmcp-kpi-grid-secondary {
+    gap: 10px;
+  }
+
+  .nmcp-kpi-card {
+    min-height: 108px;
+    padding: 12px;
+  }
+
+  .nmcp-kpi-value {
+    font-size: 28px;
+    letter-spacing: 0;
+  }
+
+  .nmcp-hourly-chart,
+  .nmcp-shovel-chart,
+  .nmcp-shift-hourly-chart {
+    height: 236px;
+  }
+
+  .nmcp-shift-hourly-values {
+    overflow-x: auto;
+    grid-template-columns: repeat(12, minmax(64px, 1fr));
+    padding-bottom: 2px;
+    scrollbar-width: thin;
+  }
+
+  .nmcp-detail-modal {
+    width: min(900px, calc(100vw - 28px));
+    max-height: calc(100dvh - 28px);
+    border-radius: 16px;
+    padding: 14px;
+  }
+
+  .nmcp-detail-header .nmcp-equipment-visual {
+    width: 180px;
+    height: 126px;
+    flex-basis: 180px;
+  }
+
+  .nmcp-detail-header .nmcp-equipment-visual.is-pala-1 {
+    height: 160px;
+    flex-basis: 210px;
+  }
+
+  .nmcp-detail-kpis {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .nmcp-shell {
+    margin: 0;
+    border-radius: 12px;
+    box-shadow: 0 16px 42px rgba(0, 0, 0, 0.32);
+  }
+
+  .nmcp-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 9px;
+    padding: 12px;
+  }
+
+  .nmcp-title-block h1 {
+    font-size: 22px;
+    line-height: 1.05;
+  }
+
+  .nmcp-title-block p {
+    font-size: 11px;
+  }
+
+  .nmcp-header-status {
+    margin-right: -6px;
+    padding-right: 6px;
+  }
+
+  .nmcp-header-status > span:nth-child(3),
+  .nmcp-header-status > span:nth-child(4),
+  .nmcp-header-status > span:nth-child(6),
+  .nmcp-header-status > span:nth-child(7),
+  .nmcp-header-status > span:nth-child(8) {
+    display: none;
+  }
+
+  .nmcp-report-button {
+    width: 38px;
+    min-width: 38px;
+    padding: 0;
+    justify-content: center;
+  }
+
+  .nmcp-report-button span {
+    display: none;
+  }
+
+  .nmcp-icon-button {
+    width: 38px;
+    height: 38px;
+  }
+
+  .nmcp-content {
+    gap: 10px;
+    padding: 10px;
+  }
+
+  .nmcp-content > * + * {
+    margin-top: 0;
+  }
+
+  .nmcp-section-nav {
+    margin: 0 -1px;
+    border-radius: 14px;
+    padding: 5px;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
+  }
+
+  .nmcp-section-nav button {
+    min-height: 38px;
+    padding: 0 12px;
+    font-size: 10px;
+  }
+
+  .nmcp-shift-card {
+    gap: 12px;
+    padding: 12px;
+  }
+
+  .nmcp-shift-main {
+    align-items: flex-start;
+  }
+
+  .nmcp-shift-main h2 {
+    font-size: 20px;
+  }
+
+  .nmcp-shift-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .nmcp-shift-metrics div {
+    min-height: 58px;
+    padding: 9px;
+    border-radius: 12px;
+  }
+
+  .nmcp-shift-metrics strong {
+    font-size: 18px;
+    letter-spacing: 0;
+  }
+
+  .nmcp-filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    padding: 10px;
+  }
+
+  .nmcp-shift-date-filter input,
+  .nmcp-filters input,
+  .nmcp-filters select {
+    min-height: 42px;
+    font-size: 13px;
+  }
+
+  .nmcp-opening-read {
+    padding: 12px;
+  }
+
+  .nmcp-opening-read-grid {
+    gap: 8px;
+  }
+
+  .nmcp-opening-read-grid article {
+    min-height: 0;
+    padding: 11px;
+    border-radius: 13px;
+  }
+
+  .nmcp-opening-read-grid article strong {
+    font-size: 20px;
+    letter-spacing: 0;
+  }
+
+  .nmcp-kpi-card {
+    min-height: 98px;
+    padding: 11px;
+  }
+
+  .nmcp-kpi-top {
+    gap: 8px;
+  }
+
+  .nmcp-kpi-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 11px;
+  }
+
+  .nmcp-kpi-value {
+    font-size: 24px;
+  }
+
+  .nmcp-kpi-meta {
+    line-height: 1.35;
+  }
+
+  .nmcp-hourly-chart,
+  .nmcp-shovel-chart,
+  .nmcp-shift-hourly-chart {
+    height: 208px;
+  }
+
+  .nmcp-shift-summary-grid,
+  .nmcp-shift-equipment-overview,
+  .nmcp-shift-equipment-hero,
+  .nmcp-shift-equipment-values,
+  .nmcp-shift-phase-values {
+    gap: 8px;
+  }
+
+  .nmcp-shift-summary-card,
+  .nmcp-shift-hourly-values article,
+  .nmcp-shift-equipment-row,
+  .nmcp-shift-fair-card,
+  .nmcp-shift-diff-list article {
+    border-radius: 13px;
+  }
+
+  .nmcp-shift-equipment-row {
+    grid-template-columns: 54px minmax(0, 1fr);
+    gap: 10px;
+    padding: 10px;
+  }
+
+  .nmcp-shift-equipment-title strong,
+  .nmcp-shift-equipment-hero strong,
+  .nmcp-shift-equipment-values b {
+    letter-spacing: 0;
+  }
+
+  .nmcp-shift-detail-cta {
+    grid-column: 2;
+    justify-self: start;
+    min-height: 34px;
+  }
+
+  .nmcp-detail-layer,
+  .nmcp-detail-layer.is-anchored {
+    align-items: end;
+    place-items: end center;
+    padding: 0;
+  }
+
+  .nmcp-detail-backdrop {
+    background: color-mix(in srgb, var(--bg-void) 78%, transparent);
+  }
+
+  .nmcp-detail-modal,
+  .nmcp-detail-layer.is-anchored .nmcp-detail-modal {
+    width: 100vw;
+    max-height: 92dvh;
+    border-right: 0;
+    border-bottom: 0;
+    border-left: 0;
+    border-radius: 18px 18px 0 0;
+    padding: 12px;
+    box-shadow: 0 -18px 48px rgba(0, 0, 0, 0.46);
+  }
+
+  .nmcp-detail-header {
+    position: sticky;
+    top: -12px;
+    z-index: 3;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px;
+    margin: -12px -12px 0;
+    padding: 12px;
+    background: color-mix(in srgb, var(--bg-elevated) 96%, transparent);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border-bottom: 1px solid color-mix(in srgb, var(--nm-border) 78%, transparent);
+  }
+
+  .nmcp-shift-detail-title {
+    gap: 10px;
+  }
+
+  .nmcp-detail-header h2 {
+    font-size: 18px;
+    line-height: 1.1;
+  }
+
+  .nmcp-detail-header p {
+    font-size: 11px;
+    line-height: 1.35;
+  }
+
+  .nmcp-detail-header .nmcp-equipment-visual,
+  .nmcp-detail-header .nmcp-equipment-visual.is-pala-1 {
+    width: 108px !important;
+    height: 78px !important;
+    flex-basis: 108px !important;
+    border-radius: 12px;
+  }
+
+  .nmcp-detail-header .nmcp-equipment-visual img,
+  .nmcp-detail-header .nmcp-equipment-visual .nm-shift-modal-equipment-img,
+  .nmcp-detail-header .nmcp-equipment-visual.is-pala-1 img,
+  .nmcp-detail-header .nmcp-equipment-visual.is-pala-1 .nm-shift-modal-equipment-img {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    transform: scale(1.04) !important;
+  }
+
+  .nmcp-detail-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .nmcp-detail-kpis span {
+    min-height: 56px;
+    padding: 9px;
+    border-radius: 12px;
+  }
+
+  .nmcp-detail-kpis strong {
+    font-size: 18px;
+    letter-spacing: 0;
+  }
+
+  .nmcp-detail-chart-card,
+  .nmcp-detail-table-card,
+  .nmcp-detail-operational-card {
+    padding: 11px;
+  }
+
+  .nmcp-detail-chart,
+  .nmcp-detail-chart-card.is-compact .nmcp-detail-chart {
+    height: 184px;
+  }
+
+  .nmcp-detail-chart-card.is-compact .nmcp-shift-hourly-values {
+    overflow-x: auto;
+    grid-template-columns: repeat(12, minmax(58px, 1fr));
+    padding-bottom: 2px;
+    scrollbar-width: none;
+  }
+
+  .nmcp-status-grid,
+  .nmcp-operational-slot-grid,
+  .nmcp-operator-compare-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .nmcp-detail-table-card {
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+
+  .nmcp-detail-table-head,
+  .nmcp-detail-table-row {
+    min-width: 720px;
+  }
+}
+
+@media (max-width: 430px) {
+  .nmcp-title-block h1 {
+    font-size: 20px;
+  }
+
+  .nmcp-title-block span,
+  .nmcp-section-kicker {
+    font-size: 9px;
+  }
+
+  .nmcp-header-status > span:nth-child(2),
+  .nmcp-header-status > span:nth-child(5) {
+    display: none;
+  }
+
+  .nmcp-section-nav button {
+    min-height: 36px;
+    padding: 0 11px;
+  }
+
+  .nmcp-shift-metrics,
+  .nmcp-filters,
+  .nmcp-detail-kpis {
+    grid-template-columns: 1fr;
+  }
+
+  .nmcp-shift-metrics div,
+  .nmcp-detail-kpis span {
+    min-height: 52px;
+  }
+
+  .nmcp-kpi-card {
+    min-height: 94px;
+  }
+
+  .nmcp-kpi-value {
+    font-size: 22px;
+  }
+
+  .nmcp-hourly-chart,
+  .nmcp-shovel-chart,
+  .nmcp-shift-hourly-chart,
+  .nmcp-detail-chart,
+  .nmcp-detail-chart-card.is-compact .nmcp-detail-chart {
+    height: 188px;
+  }
+
+  .nmcp-detail-header {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .nmcp-detail-header .nmcp-equipment-visual,
+  .nmcp-detail-header .nmcp-equipment-visual.is-pala-1 {
+    width: 100% !important;
+    height: 96px !important;
+    flex-basis: auto !important;
+  }
+}

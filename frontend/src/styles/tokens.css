@@ -12917,3 +12917,318 @@ option,
     animation: none;
   }
 }
+
+/* Stage 18.0 - premium mobile/tablet command shell */
+@media (min-width: 1025px) and (max-width: 1280px) {
+  .topbar {
+    grid-template-columns: 44px minmax(260px, 1fr) auto;
+    align-items: center;
+    gap: 12px;
+    min-height: 0;
+    padding: 10px 28px;
+  }
+
+  .topbar-menu-button {
+    grid-column: 1;
+    width: 44px !important;
+    min-width: 44px;
+    height: 44px;
+    padding: 0 !important;
+    justify-content: center;
+    border-radius: 14px;
+  }
+
+  .topbar-menu-button .command-button-label,
+  .topbar-terminal-line,
+  .topbar > .status-strip,
+  .topbar-actions > .command-status-pill {
+    display: none;
+  }
+
+  .topbar > div:first-of-type {
+    grid-column: 2;
+    min-width: 0;
+  }
+
+  .topbar h1 {
+    overflow: hidden;
+    font-size: 19px;
+    letter-spacing: 0;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .topbar-actions {
+    grid-column: 3;
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: flex-end;
+    width: auto;
+  }
+
+  .topbar-actions > .topbar-command-button,
+  .topbar-actions > .command-button-secondary {
+    width: 44px;
+    min-width: 44px;
+    height: 44px;
+    padding: 0;
+    justify-content: center;
+    border-radius: 14px;
+  }
+
+  .topbar-actions > .topbar-command-button .command-button-label,
+  .topbar-actions > .command-button-secondary .command-button-label {
+    display: none;
+  }
+
+  .topbar-actions > .user-chip {
+    min-width: 0;
+    max-width: 260px;
+    min-height: 44px;
+  }
+
+  .topbar-actions > .user-chip > div {
+    min-width: 0;
+  }
+
+  .topbar-actions > .user-chip strong,
+  .topbar-actions > .user-chip span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 1024px) {
+  .topbar {
+    grid-template-columns: 48px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 8px 12px;
+    min-height: 0;
+    padding: 10px max(14px, env(safe-area-inset-right)) 10px max(14px, env(safe-area-inset-left));
+    background: color-mix(in srgb, var(--bg-elevated) 93%, transparent);
+  }
+
+  .topbar-menu-button {
+    grid-column: 1;
+    width: 44px !important;
+    min-width: 44px;
+    height: 44px;
+    padding: 0 !important;
+    justify-content: center;
+    border-radius: 14px;
+  }
+
+  .topbar-menu-button .command-button-label {
+    display: none;
+  }
+
+  .topbar > div:first-of-type {
+    grid-column: 2;
+    min-width: 0;
+  }
+
+  .topbar .eyebrow {
+    font-size: 9px;
+    letter-spacing: 0.08em;
+  }
+
+  .topbar h1 {
+    margin-top: 1px;
+    overflow: hidden;
+    color: var(--text);
+    font-size: 18px;
+    letter-spacing: 0;
+    line-height: 1.05;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .topbar-terminal-line {
+    display: none;
+  }
+
+  .topbar > .status-strip {
+    display: none;
+  }
+
+  .topbar > .status-strip::-webkit-scrollbar,
+  .topbar-actions::-webkit-scrollbar {
+    display: none;
+  }
+
+  .topbar > .status-strip .status-pill {
+    flex: 0 0 auto;
+    min-height: 30px;
+    padding: 0 9px;
+    font-size: 11px;
+  }
+
+  .topbar-actions {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: 44px 44px minmax(0, 1fr) 44px;
+    gap: 8px;
+    align-items: center;
+    width: 100%;
+  }
+
+  .topbar-actions > .topbar-command-button,
+  .topbar-actions > .command-button-secondary {
+    grid-column: auto !important;
+    width: 44px;
+    min-width: 44px;
+    height: 44px;
+    padding: 0;
+    justify-content: center;
+    border-radius: 14px;
+  }
+
+  .topbar-actions > .topbar-command-button .command-button-label,
+  .topbar-actions > .command-button-secondary .command-button-label {
+    display: none;
+  }
+
+  .topbar-actions > .user-chip {
+    grid-column: auto !important;
+    min-width: 0;
+    min-height: 44px;
+    padding: 7px 12px;
+    border-radius: 14px;
+    background: color-mix(in srgb, var(--bg-elevated) 70%, transparent);
+  }
+
+  .topbar-actions > .user-chip > div {
+    min-width: 0;
+  }
+
+  .topbar-actions > .user-chip strong,
+  .topbar-actions > .user-chip span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .topbar-actions > .command-status-pill {
+    display: none;
+  }
+
+  .content-area {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 760px) {
+  .topbar {
+    grid-template-columns: 42px minmax(0, 1fr);
+    gap: 7px 9px;
+    padding: 8px max(12px, env(safe-area-inset-right)) 9px max(12px, env(safe-area-inset-left));
+  }
+
+  .topbar-menu-button {
+    width: 42px !important;
+    min-width: 42px;
+    height: 42px;
+    border-radius: 13px;
+  }
+
+  .topbar .eyebrow {
+    font-size: 8px;
+    letter-spacing: 0.06em;
+  }
+
+  .topbar h1 {
+    font-size: 15px;
+    line-height: 1.05;
+  }
+
+  .topbar-terminal-line,
+  .topbar > .status-strip,
+  .topbar-actions > .status-pill,
+  .topbar-actions > .command-status-pill {
+    display: none;
+  }
+
+  .topbar-actions {
+    grid-template-columns: 42px 42px minmax(0, 1fr) 42px;
+    gap: 7px;
+  }
+
+  .topbar-actions > .topbar-command-button,
+  .topbar-actions > .command-button-secondary {
+    width: 42px;
+    min-width: 42px;
+    height: 42px;
+    border-radius: 13px;
+  }
+
+  .topbar-actions > .user-chip {
+    min-height: 42px;
+    gap: 7px;
+    padding: 6px 10px;
+  }
+
+  .topbar-actions > .user-chip svg {
+    flex: 0 0 auto;
+  }
+
+  .topbar-actions > .user-chip strong {
+    font-size: 11px;
+  }
+
+  .topbar-actions > .user-chip span {
+    display: none;
+  }
+
+  .content-area {
+    padding: 10px;
+  }
+
+  .sidebar {
+    width: min(88vw, 320px) !important;
+    padding: 18px 12px 14px;
+  }
+
+  .sidebar-nav {
+    gap: 5px;
+  }
+
+  .nav-item {
+    min-height: 46px;
+    padding: 9px 10px;
+    border-radius: 12px;
+  }
+
+  .nav-caption {
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 430px) {
+  .topbar {
+    grid-template-columns: 40px minmax(0, 1fr);
+    padding: 7px max(10px, env(safe-area-inset-right)) 8px max(10px, env(safe-area-inset-left));
+  }
+
+  .topbar-menu-button,
+  .topbar-actions > .topbar-command-button,
+  .topbar-actions > .command-button-secondary {
+    width: 40px !important;
+    min-width: 40px;
+    height: 40px;
+  }
+
+  .topbar h1 {
+    font-size: 14px;
+  }
+
+  .topbar-actions {
+    grid-template-columns: 40px 40px minmax(0, 1fr) 40px;
+    gap: 6px;
+  }
+
+  .topbar-actions > .user-chip {
+    min-height: 40px;
+    padding: 5px 9px;
+  }
+}
