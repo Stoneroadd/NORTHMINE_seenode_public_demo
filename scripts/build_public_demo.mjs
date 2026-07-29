@@ -13,6 +13,7 @@ function run(command, args, options = {}) {
   console.log(`> ${command} ${args.join(" ")}`);
   const result = spawnSync(commandName(command), args, {
     stdio: "inherit",
+    shell: isWindows && command === "npm",
     ...options,
   });
   if (result.status !== 0) {
@@ -24,6 +25,7 @@ function tryRun(command, args, options = {}) {
   console.log(`> ${command} ${args.join(" ")}`);
   return spawnSync(commandName(command), args, {
     stdio: "inherit",
+    shell: isWindows && command === "npm",
     ...options,
   });
 }
@@ -46,24 +48,36 @@ function venvPythonPath() {
     : resolve(".venv", "bin", "python");
 }
 
+function installAptPythonTooling() {
+  if (isWindows) return false;
+  if (tryRun("apt-get", ["--version"]).status !== 0) return false;
+  if (tryRun("apt-get", ["update"]).status !== 0) return false;
+  return tryRun("apt-get", ["install", "-y", "python3-pip", "python3-venv"]).status === 0;
+}
+
 function installBackendRequirements(systemPython) {
+  const requirementsFile = process.env.NORTHMINE_REQUIREMENTS_FILE || "backend/requirements.seenode.txt";
   const createVenv = tryRun(systemPython, ["-m", "venv", ".venv"]);
   const venvPython = venvPythonPath();
   if (createVenv.status === 0 && existsSync(venvPython)) {
-    run(venvPython, ["-m", "pip", "install", "-r", "backend/requirements.txt"]);
+    run(venvPython, ["-m", "pip", "install", "-r", requirementsFile]);
     return;
   }
 
   console.warn("No se pudo crear .venv; instalando requirements con pip del sistema.");
   const pipCheck = tryRun(systemPython, ["-m", "pip", "--version"]);
   if (pipCheck.status !== 0) {
-    run(systemPython, ["-m", "ensurepip", "--upgrade"]);
+    const ensurePip = tryRun(systemPython, ["-m", "ensurepip", "--upgrade"]);
+    if (ensurePip.status !== 0 && !installAptPythonTooling()) {
+      console.error("No se pudo instalar pip para Python en la imagen de build.");
+      process.exit(1);
+    }
   }
 
-  const pipInstall = tryRun(systemPython, ["-m", "pip", "install", "--user", "-r", "backend/requirements.txt"]);
+  const pipInstall = tryRun(systemPython, ["-m", "pip", "install", "-r", requirementsFile]);
   if (pipInstall.status === 0) return;
 
-  run(systemPython, ["-m", "pip", "install", "--break-system-packages", "--user", "-r", "backend/requirements.txt"]);
+  run(systemPython, ["-m", "pip", "install", "--break-system-packages", "-r", requirementsFile]);
 }
 
 const python = findPython();

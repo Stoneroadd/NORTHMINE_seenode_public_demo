@@ -44,23 +44,43 @@ function run(command, args, options = {}) {
   }
 }
 
+function tryRun(command, args, options = {}) {
+  console.log(`> ${command} ${args.join(" ")}`);
+  return spawnSync(commandName(command), args, {
+    stdio: "inherit",
+    ...options,
+  });
+}
+
+function installAptPythonTooling() {
+  if (isWindows) return false;
+  if (tryRun("apt-get", ["--version"]).status !== 0) return false;
+  if (tryRun("apt-get", ["update"]).status !== 0) return false;
+  return tryRun("apt-get", ["install", "-y", "python3-pip", "python3-venv"]).status === 0;
+}
+
 function ensureUvicorn(python) {
   if (commandOk(python, ["-c", "import uvicorn"])) return;
 
-  console.warn("uvicorn no esta instalado; instalando backend/requirements.txt antes de iniciar.");
+  const requirementsFile = process.env.NORTHMINE_REQUIREMENTS_FILE || "backend/requirements.seenode.txt";
+  console.warn(`uvicorn no esta instalado; instalando ${requirementsFile} antes de iniciar.`);
   if (!commandOk(python, ["-m", "pip", "--version"])) {
-    run(python, ["-m", "ensurepip", "--upgrade"]);
+    const ensurePip = tryRun(python, ["-m", "ensurepip", "--upgrade"]);
+    if (ensurePip.status !== 0 && !installAptPythonTooling()) {
+      console.error("No se pudo instalar pip para Python antes de iniciar.");
+      process.exit(1);
+    }
   }
 
   const pipArgs = python.includes(`${resolve(".venv")}`) || python.includes("/.venv/")
-    ? ["-m", "pip", "install", "-r", "backend/requirements.txt"]
-    : ["-m", "pip", "install", "--user", "-r", "backend/requirements.txt"];
+    ? ["-m", "pip", "install", "-r", requirementsFile]
+    : ["-m", "pip", "install", "-r", requirementsFile];
   const install = spawnSync(commandName(python), pipArgs, {
     stdio: "inherit",
   });
   if (install.status === 0 && commandOk(python, ["-c", "import uvicorn"])) return;
 
-  run(python, ["-m", "pip", "install", "--break-system-packages", "--user", "-r", "backend/requirements.txt"]);
+  run(python, ["-m", "pip", "install", "--break-system-packages", "-r", requirementsFile]);
 }
 
 const python = findPython();
