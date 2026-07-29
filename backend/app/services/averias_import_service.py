@@ -8,13 +8,10 @@ import json
 import os
 import sqlite3
 import unicodedata
-import zipfile
 from datetime import datetime, timedelta
 from email.header import decode_header
 from pathlib import Path
 from typing import Any
-
-from app.core.distributed import sync_lock
 
 # Ingesta de reportes de averias en Excel (XLS/XLSX) hacia NORTHMINE.
 # Fuentes soportadas:
@@ -35,33 +32,7 @@ from app.core.distributed import sync_lock
 # duracion, sistema, tipo, descripcion, OT, estado) en cualquier hoja y
 # posicion, para tolerar variaciones del formato del reporte.
 
-_DB_PATH = Path(os.getenv("NORTHMINE_AVERIAS_DB", str(Path(__file__).resolve().parents[2] / "northmine_averias.db")))
-_ALLOWED_WORKBOOK_EXTENSIONS = (".xls", ".xlsx", ".xlsm")
-MAX_WORKBOOK_BYTES = max(1, int(float(os.getenv("NORTHMINE_AVERIAS_MAX_MB", "25")) * 1024 * 1024))
-MAX_WORKBOOK_SHEETS = 50
-MAX_WORKBOOK_ROWS_PER_SHEET = 100_000
-MAX_WORKBOOK_COLUMNS = 200
-MAX_XLSX_UNCOMPRESSED_BYTES = max(MAX_WORKBOOK_BYTES * 8, 100 * 1024 * 1024)
-
-
-def validate_workbook_payload(data: bytes, filename: str) -> None:
-    """Reject oversized or structurally suspicious workbook uploads early."""
-    safe_name = Path(filename or "").name
-    if not safe_name.lower().endswith(_ALLOWED_WORKBOOK_EXTENSIONS):
-        raise ValueError("Formato no soportado. Se aceptan .xls, .xlsx y .xlsm.")
-    if not data:
-        raise ValueError("El archivo esta vacio.")
-    if len(data) > MAX_WORKBOOK_BYTES:
-        raise ValueError(f"El archivo supera el limite de {MAX_WORKBOOK_BYTES // (1024 * 1024)} MB.")
-    if safe_name.lower().endswith((".xlsx", ".xlsm")):
-        try:
-            with zipfile.ZipFile(io.BytesIO(data)) as archive:
-                entries = archive.infolist()
-                uncompressed = sum(entry.file_size for entry in entries)
-                if len(entries) > 2_000 or uncompressed > MAX_XLSX_UNCOMPRESSED_BYTES:
-                    raise ValueError("El libro excede los limites estructurales permitidos.")
-        except zipfile.BadZipFile as exc:
-            raise ValueError("El archivo XLSX/XLSM no es un libro valido.") from exc
+_DB_PATH = Path(__file__).resolve().parents[2] / "northmine_averias.db"
 
 _HEADER_ALIASES: dict[str, tuple[str, ...]] = {
     "equipment_id": (
@@ -241,16 +212,8 @@ def _load_rows(data: bytes, filename: str) -> list[tuple[str, list[tuple[Any, ..
         from openpyxl import load_workbook
 
         workbook = load_workbook(io.BytesIO(data), data_only=True, read_only=True)
-        if len(workbook.worksheets) > MAX_WORKBOOK_SHEETS:
-            workbook.close()
-            raise ValueError("El libro tiene demasiadas hojas.")
         for sheet in workbook.worksheets:
-            rows = []
-            for row_index, row in enumerate(sheet.iter_rows(values_only=True), start=1):
-                if row_index > MAX_WORKBOOK_ROWS_PER_SHEET or len(row) > MAX_WORKBOOK_COLUMNS:
-                    workbook.close()
-                    raise ValueError("El libro excede los limites de filas o columnas permitidos.")
-                rows.append(tuple(row))
+            rows = [tuple(row) for row in sheet.iter_rows(values_only=True)]
             sheets.append((sheet.title, rows, []))
         workbook.close()
     elif lower.endswith(".xls"):
@@ -262,11 +225,7 @@ def _load_rows(data: bytes, filename: str) -> list[tuple[str, list[tuple[Any, ..
                 "Instala 'xlrd' en el backend o guarda el reporte como .xlsx."
             ) from exc
         book = xlrd.open_workbook(file_contents=data)
-        if book.nsheets > MAX_WORKBOOK_SHEETS:
-            raise ValueError("El libro tiene demasiadas hojas.")
         for sheet in book.sheets():
-            if sheet.nrows > MAX_WORKBOOK_ROWS_PER_SHEET or sheet.ncols > MAX_WORKBOOK_COLUMNS:
-                raise ValueError("El libro excede los limites de filas o columnas permitidos.")
             rows = []
             for row_index in range(sheet.nrows):
                 values = []
@@ -556,7 +515,6 @@ def parse_workbook(data: bytes, filename: str) -> tuple[list[dict[str, Any]], li
 
 
 def import_workbook_bytes(data: bytes, filename: str, origen: str) -> dict[str, Any]:
-    validate_workbook_payload(data, filename)
     events, notes = parse_workbook(data, filename)
     imported = 0
     now = datetime.now().isoformat(timespec="seconds")
@@ -679,7 +637,7 @@ def sync_mailbox() -> dict[str, Any]:
             total_events = 0
             for part in message.walk():
                 attachment_name = _decode_mime(part.get_filename())
-                if not attachment_name or not attachment_name.lower().endswith(_ALLOWED_WORKBOOK_EXTENSIONS):
+                if not attachment_name or not attachment_name.lower().endswith((".xls", ".xlsx", ".xlsm")):
                     continue
                 payload = part.get_payload(decode=True)
                 if not payload:
@@ -723,9 +681,6 @@ def sync_watch_folder() -> dict[str, Any]:
     imported_files = []
     errors = []
     for path in sorted(folder.glob("*.xls*")):
-        if not path.is_file() or path.stat().st_size > MAX_WORKBOOK_BYTES:
-            errors.append(f"{path.name}: supera el limite de {MAX_WORKBOOK_BYTES // (1024 * 1024)} MB")
-            continue
         data = path.read_bytes()
         if hashlib.sha1(data).hexdigest() in seen:
             continue
@@ -736,7 +691,7 @@ def sync_watch_folder() -> dict[str, Any]:
     return {"status": "ok", "imported_files": imported_files, "errors": errors}
 
 
-def _sync_all_unlocked() -> dict[str, Any]:
+def sync_all() -> dict[str, Any]:
     folder_result = sync_watch_folder()
     mail_result = sync_mailbox()
     return {
@@ -744,12 +699,6 @@ def _sync_all_unlocked() -> dict[str, Any]:
         "mail": mail_result,
         "generated_at": datetime.now().isoformat(timespec="seconds"),
     }
-
-
-def sync_all() -> dict[str, Any]:
-    """Synchronize once, refusing overlapping manual/automatic executions."""
-    with sync_lock("averias", ttl_seconds=900):
-        return _sync_all_unlocked()
 
 
 # --- Sincronizacion automatica en segundo plano ----------------------------

@@ -311,7 +311,7 @@ export function AveriasPage() {
   )
 
   if (query.isLoading) return <LoadingState label="Cargando averias y mantenciones..." />
-  if (query.isError || !query.data) return <ErrorState detail="No se pudo cargar el modulo de averias." onRetry={() => query.refetch()} />
+  if (query.isError || !query.data) return <ErrorState detail="No se pudo cargar el modulo de averias." />
 
   const data = query.data
   const fleetDetail = fleetQuery.data?.detail

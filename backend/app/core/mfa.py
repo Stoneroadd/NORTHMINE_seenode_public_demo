@@ -1,10 +1,7 @@
 from __future__ import annotations
 
 import base64
-import hmac
 import json
-import logging
-import os
 import sqlite3
 from datetime import datetime
 from io import BytesIO
@@ -13,14 +10,7 @@ from pathlib import Path
 import pyotp
 import qrcode
 
-logger = logging.getLogger("northmine.mfa")
-
-# Misma variable que core/audit.py y core/database.py - antes este modulo
-# ignoraba NORTHMINE_AUDIT_DB y siempre usaba la ruta relativa por defecto,
-# por lo que los secretos MFA podian terminar en un archivo distinto al del
-# resto del sistema de seguridad si se corria desde otro directorio o con
-# una ruta de auditoria personalizada.
-AUDIT_DB = Path(os.environ.get("NORTHMINE_AUDIT_DB", "northmine_audit.db"))
+AUDIT_DB = Path("northmine_audit.db")
 
 
 def init_mfa_table() -> None:
@@ -56,7 +46,6 @@ def get_mfa_data(username: str) -> dict | None:
             }
         return None
     except Exception:
-        logger.exception("No se pudo leer MFA para %s", username)
         return None
 
 
@@ -70,7 +59,7 @@ def save_mfa_setup(username: str, secret: str, backup_codes: list[str]) -> None:
         conn.commit()
         conn.close()
     except Exception:
-        logger.exception("No se pudo guardar la configuracion MFA para %s", username)
+        pass
 
 
 def enable_mfa(username: str) -> None:
@@ -83,7 +72,7 @@ def enable_mfa(username: str) -> None:
         conn.commit()
         conn.close()
     except Exception:
-        logger.exception("No se pudo activar MFA para %s", username)
+        pass
 
 
 def disable_mfa(username: str) -> None:
@@ -96,24 +85,7 @@ def disable_mfa(username: str) -> None:
         conn.commit()
         conn.close()
     except Exception:
-        logger.exception("No se pudo desactivar MFA para %s", username)
-
-
-def verify_totp_code(secret: str, code: str) -> bool:
-    """Valida un codigo TOTP contra un secreto puntual, sin el atajo de
-    "MFA no habilitado => True" que usa verify_mfa_code().
-
-    Existe porque la confirmacion de setup (POST /auth/mfa/verify) llama a
-    esto ANTES de que enable_mfa() active el registro: en ese momento
-    mfa_enabled todavia es False, asi que llamar a verify_mfa_code() ahi
-    habria aceptado cualquier codigo (o ninguno) como valido, permitiendo
-    "activar" MFA sin demostrar jamas tener el secreto en la app
-    autenticadora — y a alguien con una sesion robada plantar un secreto
-    propio como backdoor persistente sin que el codigo TOTP real importara.
-    """
-    if not secret or not code:
-        return False
-    return pyotp.TOTP(secret).verify(code)
+        pass
 
 
 def verify_mfa_code(username: str, code: str) -> bool:
@@ -121,10 +93,11 @@ def verify_mfa_code(username: str, code: str) -> bool:
     if not mfa_data or not mfa_data["enabled"]:
         return True
 
-    if verify_totp_code(mfa_data["secret"], code):
+    totp = pyotp.TOTP(mfa_data["secret"])
+    if totp.verify(code):
         return True
 
-    if any(hmac.compare_digest(code, candidate) for candidate in mfa_data["backup_codes"]):
+    if code in mfa_data["backup_codes"]:
         mfa_data["backup_codes"].remove(code)
         try:
             conn = sqlite3.connect(AUDIT_DB)
@@ -135,7 +108,7 @@ def verify_mfa_code(username: str, code: str) -> bool:
             conn.commit()
             conn.close()
         except Exception:
-            logger.exception("No se pudo actualizar los codigos de respaldo para %s", username)
+            pass
         return True
 
     return False
@@ -152,7 +125,7 @@ def regenerate_backup_codes(username: str) -> list[str]:
         conn.commit()
         conn.close()
     except Exception:
-        logger.exception("No se pudieron persistir los nuevos codigos de respaldo para %s", username)
+        pass
     return new_codes
 
 

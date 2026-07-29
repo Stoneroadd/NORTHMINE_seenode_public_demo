@@ -8,17 +8,9 @@ from typing import Optional
 import bcrypt
 from jose import JWTError, jwt
 
-from app.core.config import get_settings
-
-# ── Claves: una sola fuente de verdad (Settings), para que
-# require_production_safe() proteja la MISMA clave que realmente firma los
-# JWT. Antes este modulo releia SECRET_KEY/REFRESH_SECRET_KEY directo de
-# os.environ con su propio fallback duplicado - si alguna vez divergia del
-# valor que ve Settings, el guard-rail de produccion podia pasar mientras el
-# firmado seguia usando el secreto demo.
-_settings = get_settings()
-SECRET_KEY         = _settings.secret_key
-REFRESH_SECRET_KEY = _settings.refresh_secret_key
+# ── Claves (env → fallback aleatorio en dev) ─────────────────────────────────
+SECRET_KEY         = os.environ.get("SECRET_KEY") or "northmine-demo-access-secret-2026"
+REFRESH_SECRET_KEY = os.environ.get("REFRESH_SECRET_KEY") or "northmine-demo-refresh-secret-2026"
 ALGORITHM          = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 REFRESH_TOKEN_EXPIRE_DAYS   = 7

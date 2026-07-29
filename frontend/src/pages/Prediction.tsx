@@ -1,10 +1,9 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Brain } from 'lucide-react'
 import ReactECharts from 'echarts-for-react'
 import type { EChartsOption } from 'echarts'
 import { apiFetch } from '../lib/api'
-import { premiumPalette, useChartPaletteKey } from '../components/charts/premium/chartTheme'
 import { ModuleHeader } from '../components/common/ModuleHeader'
 import { LoadingState } from '../components/common/LoadingState'
 import { ErrorState } from '../components/common/ErrorState'
@@ -94,27 +93,27 @@ function buildProjectionOption(d: MlPrediction, t: PredictionT): EChartsOption {
     grid: { top: 40, right: 24, bottom: 40, left: 80 },
     tooltip: {
       trigger: 'axis',
-      backgroundColor: premiumPalette.panel,
-      borderColor: premiumPalette.border,
-      textStyle: { color: premiumPalette.text, fontSize: 12 },
+      backgroundColor: 'rgba(2,4,3,0.88)',
+      borderColor: 'rgba(57,255,20,0.2)',
+      textStyle: { color: 'rgba(245,255,250,0.9)', fontSize: 12 },
     },
     legend: {
       top: 0,
       right: 0,
-      textStyle: { color: premiumPalette.muted, fontSize: 11 },
+      textStyle: { color: 'rgba(245,255,250,0.6)', fontSize: 11 },
     },
     xAxis: {
       type: 'category',
       data: labels,
-      axisLine: { lineStyle: { color: premiumPalette.border } },
+      axisLine: { lineStyle: { color: 'rgba(245,255,250,0.12)' } },
       axisTick: { show: false },
-      axisLabel: { color: premiumPalette.muted, fontSize: 10 },
+      axisLabel: { color: 'rgba(245,255,250,0.5)', fontSize: 10 },
     },
     yAxis: {
       type: 'value',
-      splitLine: { lineStyle: { color: premiumPalette.grid } },
+      splitLine: { lineStyle: { color: 'rgba(57,255,20,0.08)' } },
       axisLabel: {
-        color: premiumPalette.muted,
+        color: 'rgba(245,255,250,0.5)',
         fontSize: 10,
         formatter: (v: number) => `${(v / 1000).toFixed(0)}k`,
       },
@@ -125,7 +124,7 @@ function buildProjectionOption(d: MlPrediction, t: PredictionT): EChartsOption {
         type: 'line',
         data: upper,
         lineStyle: { opacity: 0 },
-        areaStyle: { color: premiumPalette.cyan, opacity: 0.08 },
+        areaStyle: { color: 'rgba(0,212,255,0.08)' },
         symbol: 'none',
         stack: 'confidence',
       },
@@ -134,11 +133,11 @@ function buildProjectionOption(d: MlPrediction, t: PredictionT): EChartsOption {
         type: 'line',
         data: central,
         smooth: true,
-        lineStyle: { width: 3, color: premiumPalette.mineral },
-        areaStyle: { color: premiumPalette.mineral, opacity: 0.08 },
+        lineStyle: { width: 3, color: '#00FF88' },
+        areaStyle: { color: 'rgba(0,255,136,0.08)' },
         symbol: 'circle',
         symbolSize: 5,
-        itemStyle: { color: premiumPalette.mineral },
+        itemStyle: { color: '#00FF88' },
         markPoint:
           elapsed > 0
             ? {
@@ -149,11 +148,11 @@ function buildProjectionOption(d: MlPrediction, t: PredictionT): EChartsOption {
                   },
                 ],
                 label: {
-                  color: premiumPalette.cyan,
+                  color: '#00D4FF',
                   fontSize: 10,
                   fontFamily: '"JetBrains Mono",monospace',
                 },
-                itemStyle: { color: premiumPalette.cyan },
+                itemStyle: { color: '#00D4FF' },
               }
             : undefined,
       },
@@ -161,9 +160,9 @@ function buildProjectionOption(d: MlPrediction, t: PredictionT): EChartsOption {
         name: t.series_meta_turno,
         type: 'line',
         data: meta,
-        lineStyle: { width: 2, color: premiumPalette.amber, type: 'dashed' },
+        lineStyle: { width: 2, color: '#FFD100', type: 'dashed' },
         symbol: 'none',
-        itemStyle: { color: premiumPalette.amber },
+        itemStyle: { color: '#FFD100' },
       },
     ] as EChartsOption['series']),
   }
@@ -172,9 +171,9 @@ function buildProjectionOption(d: MlPrediction, t: PredictionT): EChartsOption {
 function buildFeatureOption(features: MlPrediction['features'], t: PredictionT): EChartsOption {
   const sorted = [...features].sort((a, b) => b.importancia - a.importancia)
   const colorMap: Record<string, string> = {
-    operacional: premiumPalette.cyan,
-    acumulado: premiumPalette.mineral,
-    temporal: premiumPalette.amber,
+    operacional: '#00D4FF',
+    acumulado: '#00FF88',
+    temporal: '#FFD100',
   }
   return {
     backgroundColor: 'transparent',
@@ -182,9 +181,9 @@ function buildFeatureOption(features: MlPrediction['features'], t: PredictionT):
     tooltip: {
       trigger: 'axis',
       axisPointer: { type: 'shadow' },
-      backgroundColor: premiumPalette.panel,
-      borderColor: premiumPalette.border,
-      textStyle: { color: premiumPalette.text, fontSize: 12 },
+      backgroundColor: 'rgba(2,4,3,0.88)',
+      borderColor: 'rgba(57,255,20,0.2)',
+      textStyle: { color: 'rgba(245,255,250,0.9)', fontSize: 12 },
       formatter: (params: unknown) => {
         const row = params as [{ dataIndex: number }]
         const f = sorted[row[0].dataIndex]
@@ -196,16 +195,16 @@ function buildFeatureOption(features: MlPrediction['features'], t: PredictionT):
       max: 0.35,
       axisLabel: {
         formatter: (v: number) => `${(v * 100).toFixed(0)}%`,
-        color: premiumPalette.muted,
+        color: 'rgba(245,255,250,0.5)',
         fontSize: 10,
       },
-      splitLine: { lineStyle: { color: premiumPalette.grid } },
+      splitLine: { lineStyle: { color: 'rgba(57,255,20,0.08)' } },
     },
     yAxis: {
       type: 'category',
       data: sorted.map((f) => f.nombre),
       axisLabel: {
-        color: premiumPalette.text,
+        color: 'rgba(245,255,250,0.7)',
         fontSize: 11,
         fontFamily: '"JetBrains Mono",monospace',
       },
@@ -217,7 +216,7 @@ function buildFeatureOption(features: MlPrediction['features'], t: PredictionT):
         data: sorted.map((f) => ({
           value: f.importancia,
           itemStyle: {
-            color: colorMap[f.grupo] ?? premiumPalette.cyan,
+            color: colorMap[f.grupo] ?? '#00D4FF',
             borderRadius: [0, 4, 4, 0],
           },
         })),
@@ -225,7 +224,7 @@ function buildFeatureOption(features: MlPrediction['features'], t: PredictionT):
           show: true,
           position: 'right',
           formatter: (p: { value: number }) => `${(p.value * 100).toFixed(1)}%`,
-          color: premiumPalette.text,
+          color: 'rgba(245,255,250,0.7)',
           fontSize: 10,
           fontFamily: '"JetBrains Mono",monospace',
         },
@@ -241,27 +240,27 @@ function buildHistoricoOption(historico: MlPrediction['historico'], t: Predictio
     grid: { top: 32, right: 18, bottom: 40, left: 80 },
     tooltip: {
       trigger: 'axis',
-      backgroundColor: premiumPalette.panel,
-      borderColor: premiumPalette.border,
-      textStyle: { color: premiumPalette.text, fontSize: 12 },
+      backgroundColor: 'rgba(2,4,3,0.88)',
+      borderColor: 'rgba(57,255,20,0.2)',
+      textStyle: { color: 'rgba(245,255,250,0.9)', fontSize: 12 },
     },
     legend: {
       top: 0,
       right: 0,
-      textStyle: { color: premiumPalette.muted, fontSize: 11 },
+      textStyle: { color: 'rgba(245,255,250,0.6)', fontSize: 11 },
     },
     xAxis: {
       type: 'category',
       data: labels,
-      axisLabel: { color: premiumPalette.muted, fontSize: 9, rotate: 30 },
-      axisLine: { lineStyle: { color: premiumPalette.border } },
+      axisLabel: { color: 'rgba(245,255,250,0.5)', fontSize: 9, rotate: 30 },
+      axisLine: { lineStyle: { color: 'rgba(245,255,250,0.12)' } },
       axisTick: { show: false },
     },
     yAxis: {
       type: 'value',
-      splitLine: { lineStyle: { color: premiumPalette.grid } },
+      splitLine: { lineStyle: { color: 'rgba(57,255,20,0.08)' } },
       axisLabel: {
-        color: premiumPalette.muted,
+        color: 'rgba(245,255,250,0.5)',
         fontSize: 10,
         formatter: (v: number) => `${(v / 1000).toFixed(0)}k`,
       },
@@ -272,20 +271,20 @@ function buildHistoricoOption(historico: MlPrediction['historico'], t: Predictio
         type: 'line',
         data: historico.map((h) => h.predicho),
         smooth: true,
-        lineStyle: { width: 2, color: premiumPalette.cyan },
+        lineStyle: { width: 2, color: '#00D4FF' },
         symbol: 'circle',
         symbolSize: 5,
-        itemStyle: { color: premiumPalette.cyan },
+        itemStyle: { color: '#00D4FF' },
       },
       {
         name: t.series_real,
         type: 'line',
         data: historico.map((h) => h.real),
         smooth: true,
-        lineStyle: { width: 2, color: premiumPalette.mineral },
+        lineStyle: { width: 2, color: '#00FF88' },
         symbol: 'circle',
         symbolSize: 5,
-        itemStyle: { color: premiumPalette.mineral },
+        itemStyle: { color: '#00FF88' },
       },
     ] as EChartsOption['series']),
   }
@@ -421,7 +420,6 @@ function HistoricoTable({ historico, t }: { historico: MlPrediction['historico']
 
 export function Prediction() {
   const t = useModuleT(predictionT)
-  const paletteKey = useChartPaletteKey()
   const [fecha] = useState(() => new Date().toISOString().slice(0, 10))
   const [turno, setTurno] = useState<'DIA' | 'NOCHE'>('NOCHE')
 
@@ -435,25 +433,9 @@ export function Prediction() {
     durationMs: 700,
   })
 
-  // Los tres builders de ECharts reconstruian el option completo en cada
-  // render (incluidos cambios de estado sin relacion, como pasar el mouse
-  // sobre una fila), memoizados aca por data/t.
-  const projectionOption = useMemo(
-    () => (query.data ? buildProjectionOption(query.data, t) : null),
-    [query.data, t, paletteKey],
-  )
-  const featureOption = useMemo(
-    () => (query.data ? buildFeatureOption(query.data.features, t) : null),
-    [query.data, t, paletteKey],
-  )
-  const historicoOption = useMemo(
-    () => (query.data ? buildHistoricoOption(query.data.historico, t) : null),
-    [query.data, t, paletteKey],
-  )
-
   if (query.isLoading) return <LoadingState label={t.loading} />
   if (query.isError || !query.data)
-    return <ErrorState detail={t.error} onRetry={() => query.refetch()} />
+    return <ErrorState detail={t.error} />
 
   const data = query.data
   const pred = data.prediccion
@@ -472,8 +454,8 @@ export function Prediction() {
     data.recomendacion.estado === 'SOBRE_META' ||
     data.recomendacion.estado === 'OK' ||
     data.recomendacion.estado === 'NORMAL'
-      ? premiumPalette.mineral
-      : premiumPalette.amber
+      ? '#00FF88'
+      : '#FF9500'
 
   // Gauge option
   const gaugeOption: EChartsOption = {
@@ -490,16 +472,16 @@ export function Prediction() {
           lineStyle: {
             width: 18,
             color: [
-              [10 / 35, premiumPalette.red],
-              [19 / 35, premiumPalette.amber],
-              [1, premiumPalette.mineral],
+              [10 / 35, '#FF2D55'],
+              [19 / 35, '#FFD100'],
+              [1, '#00FF88'],
             ],
           },
         },
         pointer: { itemStyle: { color: 'auto' } },
         axisTick: { distance: -18, length: 6, lineStyle: { color: '#fff', width: 1 } },
         splitLine: { distance: -18, length: 14, lineStyle: { color: '#fff', width: 2 } },
-        axisLabel: { color: premiumPalette.muted, fontSize: 10, distance: -30 },
+        axisLabel: { color: 'rgba(245,255,250,0.6)', fontSize: 10, distance: -30 },
         detail: {
           valueAnimation: true,
           formatter: '{value}%',
@@ -674,7 +656,7 @@ export function Prediction() {
                     height: '100%',
                     borderRadius: 4,
                     width: `${transcurridoPct}%`,
-                    background: 'linear-gradient(90deg, var(--nm-cyan), var(--nm-green))',
+                    background: 'linear-gradient(90deg, #00D4FF, #00FF88)',
                     transition: 'width 600ms ease',
                   }}
                 />
@@ -712,7 +694,7 @@ export function Prediction() {
             <h2>{t.chart_proyeccion_title}</h2>
           </div>
         </div>
-        {projectionOption && <ReactECharts option={projectionOption} style={{ height: 300 }} />}
+        <ReactECharts option={buildProjectionOption(data, t)} style={{ height: 300 }} />
       </section>
 
       {/* ── SECCIÓN D — Feature importance ── */}
@@ -723,23 +705,21 @@ export function Prediction() {
             <h2>{t.chart_features_title}</h2>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
-            <span style={{ fontSize: 12, color: 'var(--nm-cyan)', fontFamily: '"JetBrains Mono",monospace' }}>
+            <span style={{ fontSize: 12, color: '#00D4FF', fontFamily: '"JetBrains Mono",monospace' }}>
               {t.legend_operacional}
             </span>
-            <span style={{ fontSize: 12, color: 'var(--nm-green)', fontFamily: '"JetBrains Mono",monospace' }}>
+            <span style={{ fontSize: 12, color: '#00FF88', fontFamily: '"JetBrains Mono",monospace' }}>
               {t.legend_acumulado}
             </span>
-            <span style={{ fontSize: 12, color: 'var(--nm-amber)', fontFamily: '"JetBrains Mono",monospace' }}>
+            <span style={{ fontSize: 12, color: '#FFD100', fontFamily: '"JetBrains Mono",monospace' }}>
               {t.legend_temporal}
             </span>
           </div>
         </div>
-        {featureOption && (
-          <ReactECharts
-            option={featureOption}
-            style={{ height: Math.max(200, data.features.length * 30) }}
-          />
-        )}
+        <ReactECharts
+          option={buildFeatureOption(data.features, t)}
+          style={{ height: Math.max(200, data.features.length * 30) }}
+        />
       </section>
 
       {/* ── SECCIÓN E — Histórico 14 turnos ── */}
@@ -750,7 +730,7 @@ export function Prediction() {
             <h2>{t.chart_historico_title(data.historico.length)}</h2>
           </div>
         </div>
-        {historicoOption && <ReactECharts option={historicoOption} style={{ height: 260 }} />}
+        <ReactECharts option={buildHistoricoOption(data.historico, t)} style={{ height: 260 }} />
         <HistoricoTable historico={data.historico} t={t} />
       </section>
 

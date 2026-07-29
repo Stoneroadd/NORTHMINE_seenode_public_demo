@@ -7,7 +7,6 @@ from pathlib import Path
 from typing import Any
 
 from app.core.config import get_settings
-from app.core.distributed import sync_lock
 from app.services.data_provider import get_dataset as _provider_get_dataset
 
 # Historizador de ciclos WENCO: el dataset vivo solo mira 2 dias hacia atras,
@@ -15,7 +14,7 @@ from app.services.data_provider import get_dataset as _provider_get_dataset
 # (toneladas perdidas por indisponibilidad, backtesting de metas, tendencias).
 # Un hilo en segundo plano sincroniza cada NORTHMINE_CICLOS_SYNC_MINUTES.
 
-_DB_PATH = Path(os.getenv("NORTHMINE_CICLOS_DB", str(Path(__file__).resolve().parents[2] / "northmine_ciclos.db")))
+_DB_PATH = Path(__file__).resolve().parents[2] / "northmine_ciclos.db"
 
 _sync_state: dict[str, Any] = {"enabled": False, "interval_min": 0, "last_run": None, "last_result": None}
 _auto_started = False
@@ -53,7 +52,7 @@ def _connect() -> sqlite3.Connection:
     return conn
 
 
-def _sync_cycles_unlocked(dias: int = 3) -> dict[str, Any]:
+def sync_cycles(dias: int = 3) -> dict[str, Any]:
     """Vuelca los ciclos de la ventana pedida al historico (upsert por id)."""
     dataset = _provider_get_dataset(dias=dias)
     now = datetime.now().isoformat(timespec="seconds")
@@ -80,12 +79,6 @@ def _sync_cycles_unlocked(dias: int = 3) -> dict[str, Any]:
             )
             inserted += cursor.rowcount
     return {"status": "ok", "ciclos_nuevos": inserted, "ventana_dias": dias, "generated_at": now}
-
-
-def sync_cycles(dias: int = 3) -> dict[str, Any]:
-    """Persist a cycle history window without overlapping other workers."""
-    with sync_lock("cycles", ttl_seconds=900):
-        return _sync_cycles_unlocked(dias=dias)
 
 
 def get_history_status() -> dict[str, Any]:

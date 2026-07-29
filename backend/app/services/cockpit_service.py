@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from datetime import datetime
 from typing import Any
@@ -55,14 +55,6 @@ def build_cockpit_response(
     summary = build_summary(dataset)
     alerts = build_operational_alerts(dataset)
     stale = bool(dataset.get("stale") or current.get("stale"))
-    dataset_source = str(dataset.get("source") or "wenco-sql-live")
-    dataset_data_source = str(dataset.get("data_source") or "").upper()
-    dataset_is_demo = (
-        demo_mode
-        or dataset_data_source == "DEMO"
-        or "demo" in dataset_source.lower()
-        or "synthetic" in dataset_source.lower()
-    )
 
     forecast = build_forecast_summary(current)
     records = current_shift_records(dataset, current["fecha"], current["turno"])
@@ -93,17 +85,17 @@ def build_cockpit_response(
         "status": "STALE" if stale else "OK",
         "generated_at": _now_iso(),
         "api_version": COCKPIT_API_VERSION,
-        "data_source": "DEMO" if dataset_is_demo else "REAL",
-        "source_system": "DEMO" if dataset_is_demo else "WENCO",
-        "source": dataset_source,
-        "mode": "DEMO" if dataset_is_demo else "CACHE" if stale else "DATOS_REALES",
+        "data_source": "REAL",
+        "source_system": "WENCO",
+        "source": dataset.get("source", "wenco-sql-live"),
+        "mode": "CACHE" if stale else "DATOS_REALES",
         "backend_status": "CONNECTED",
-        "data_source_status": "DEMO" if dataset_is_demo else "STALE" if stale else "CONNECTED",
+        "data_source_status": "STALE" if stale else "CONNECTED",
         "selected_date": current["fecha"],
         "selected_shift": current["turno"],
         "last_real_record": last_record_at,
         "data_freshness_seconds": data_freshness_seconds,
-        "is_demo": dataset_is_demo,
+        "is_demo": False,
         "stale": stale,
         "shift": {
             "name": current.get("shift_label") or f"Turno {current['turno']}",
@@ -178,4 +170,3 @@ def build_cockpit_response(
         "data_quality": data_quality,
         "availability": calculate_availability(current),
     }
-

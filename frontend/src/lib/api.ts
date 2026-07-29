@@ -51,6 +51,7 @@ export interface AuthSession {
   faena: string
   empresa: string
   access_token: string
+  refresh_token?: string
   token_type: string
   expires_in?: number
   modo: 'produccion' | 'sql'
@@ -1097,8 +1098,6 @@ export interface ProductionShift {
   expected_tonnes_now?: number | null
   actual_vs_expected_ton?: number | null
   proyeccion_fin_turno?: number
-  proyeccion_modelo?: string
-  proyeccion_r2?: number | null
   brecha_proyectada_ton?: number | null
   ritmo_actual_tph?: number
   ritmo_requerido_tph?: number | null
@@ -1622,13 +1621,11 @@ export interface CockpitQueryParams {
 
 export class ApiError extends Error {
   status: number
-  errorCode?: string
 
-  constructor(status: number, message: string, errorCode?: string) {
+  constructor(status: number, message: string) {
     super(message)
     this.name = 'ApiError'
     this.status = status
-    this.errorCode = errorCode
   }
 }
 
@@ -1655,28 +1652,14 @@ function normalizeBody(body: BodyInit | null | undefined): unknown {
   }
 }
 
-// El backend a veces responde con `detail` como string (FastAPI generico) y a
-// veces como objeto estructurado (p.ej. { error_code: "REAL_DATA_ONLY",
-// message: "..." } en los 410 del Decision Cockpit). Antes solo se leia el
-// caso string, asi que un 410 estructurado caia siempre al fallback "HTTP 410"
-// en vez de mostrar el mensaje real del backend.
-function extractErrorInfo(data: unknown, status: number): { message: string; errorCode?: string } {
-  if (typeof data === 'string' && data.trim()) return { message: data }
+function extractErrorMessage(data: unknown, status: number): string {
+  if (typeof data === 'string' && data.trim()) return data
   if (data && typeof data === 'object') {
     const maybeError = data as { detail?: unknown; message?: unknown }
-    if (typeof maybeError.detail === 'string') return { message: maybeError.detail }
-    if (maybeError.detail && typeof maybeError.detail === 'object') {
-      const detail = maybeError.detail as { message?: unknown; error_code?: unknown }
-      if (typeof detail.message === 'string') {
-        return {
-          message: detail.message,
-          errorCode: typeof detail.error_code === 'string' ? detail.error_code : undefined,
-        }
-      }
-    }
-    if (typeof maybeError.message === 'string') return { message: maybeError.message }
+    if (typeof maybeError.detail === 'string') return maybeError.detail
+    if (typeof maybeError.message === 'string') return maybeError.message
   }
-  return { message: status ? `HTTP ${status}` : 'Error de red' }
+  return status ? `HTTP ${status}` : 'Error de red'
 }
 
 function withCockpitQuery(path: string, params: CockpitQueryParams = {}): string {
@@ -1709,8 +1692,7 @@ export async function apiFetch<T>(
   } catch (error) {
     if (isAxiosError(error)) {
       const status = error.response?.status ?? 0
-      const info = extractErrorInfo(error.response?.data, status)
-      throw new ApiError(status, info.message, info.errorCode)
+      throw new ApiError(status, extractErrorMessage(error.response?.data, status))
     }
     throw error
   }

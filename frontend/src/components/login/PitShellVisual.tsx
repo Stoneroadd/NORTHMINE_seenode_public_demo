@@ -14,7 +14,7 @@ function RotatingPit() {
 
   useFrame((_, delta) => {
     if (groupRef.current) {
-      groupRef.current.rotation.y += delta * 0.32
+      groupRef.current.rotation.y += delta * 0.09
       groupRef.current.rotation.x = Math.sin(Date.now() * 0.00008) * 0.12
     }
   })
@@ -31,8 +31,8 @@ export function PitShellVisual() {
     <Canvas
       className="login-pit-canvas"
       camera={{ position: [0, 160, 520], fov: 42 }}
-      dpr={[1, 2]}
-      gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
+      dpr={[1, 1.75]}
+      gl={{ antialias: true, alpha: true }}
       style={{ pointerEvents: 'none' }}
     >
       <color attach="background" args={['#050B14']} />

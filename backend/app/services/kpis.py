@@ -9,7 +9,6 @@ from app.core.cache import cached
 from app.core.config import get_settings
 from app.services.data_provider import get_dataset as _provider_get_dataset
 from app.services.data_provider import get_equipment_status as _provider_get_equipment_status
-from app.services.forecast_service import forecast_shift_total
 
 
 SUPPORT_EQUIPMENT = {
@@ -160,11 +159,7 @@ def _active_shift_context(
         shift_name = "NOCHE"
 
     started_at, ends_at = _shift_window(shift_date, shift_name)
-    if str(dataset.get("data_source") or "").upper() == "DEMO":
-        # La demo representa turnos cerrados: los 12 horarios, costos e
-        # informes quedan completos y no cambian con la hora real del PC.
-        reference = ends_at
-    elif fecha or turno_norm in {"DIA", "NOCHE"}:
+    if fecha or turno_norm in {"DIA", "NOCHE"}:
         reference = min(max(now, started_at), ends_at)
     else:
         reference = min(max(now, started_at), ends_at)
@@ -477,22 +472,7 @@ def build_production_shift(
     elapsed_slots = min(planned_hours, max(1, int((elapsed_minutes + 59) // 60)))
     expected_tonnes_now = int(round((meta_turno / planned_hours) * elapsed_slots)) if meta_configurada else None
     actual_vs_expected_ton = total - expected_tonnes_now if expected_tonnes_now is not None else None
-
-    hourly_totals: dict[int, int] = defaultdict(int)
-    for record in records:
-        hourly_totals[int(record["hora"])] += _tons(record)
-    elapsed_full_hours = min(planned_hours, elapsed_minutes // 60)
-    forecast_cumulative = 0
-    forecast_points: list[tuple[float, float]] = []
-    for idx in range(elapsed_full_hours):
-        forecast_cumulative += hourly_totals.get(hours_order[idx], 0)
-        forecast_points.append(((idx + 1) * 60, forecast_cumulative))
-    if elapsed_minutes > elapsed_full_hours * 60:
-        forecast_points.append((elapsed_minutes, total))
-    shift_forecast = forecast_shift_total(
-        forecast_points, total, elapsed_minutes, shift_minutes=planned_hours * 60
-    )
-    proyeccion_fin_turno = shift_forecast["value"] if records else 0
+    proyeccion_fin_turno = int(round(total / max(elapsed_minutes / max(planned_hours * 60, 1), 0.08))) if records else 0
     brecha_proyectada_ton = proyeccion_fin_turno - meta_turno if meta_configurada else None
     ritmo_actual_tph = round(total / elapsed_hours, 1) if records else 0.0
     remaining_hours = max(planned_hours - elapsed_hours, 0.25)
@@ -554,9 +534,9 @@ def build_production_shift(
     first_half = sum(row["toneladas"] for row in toneladas_por_hora[: max(1, len(toneladas_por_hora) // 2)])
     second_half = sum(row["toneladas"] for row in toneladas_por_hora[max(1, len(toneladas_por_hora) // 2):])
     tendencia = "AL ALZA" if second_half >= first_half * 0.92 else "A LA BAJA"
+    data_source = "REAL"
+    source_system = "WENCO"
     source = str(dataset.get("source", "wenco-sql-live"))
-    data_source = str(dataset.get("data_source") or ("DEMO" if "demo" in source.lower() else "REAL")).upper()
-    source_system = "DEMO" if data_source == "DEMO" else "WENCO"
     stale = bool(dataset.get("stale", False))
     last_real_record = max(
         (record.get("datetime") for record in dataset.get("cycles", []) if record.get("datetime")),
@@ -589,8 +569,6 @@ def build_production_shift(
         "expected_tonnes_now": expected_tonnes_now,
         "actual_vs_expected_ton": actual_vs_expected_ton,
         "proyeccion_fin_turno": proyeccion_fin_turno,
-        "proyeccion_modelo": shift_forecast["model"],
-        "proyeccion_r2": shift_forecast["r2"],
         "brecha_proyectada_ton": brecha_proyectada_ton,
         "ritmo_actual_tph": ritmo_actual_tph,
         "ritmo_requerido_tph": ritmo_requerido_tph,
@@ -1229,18 +1207,10 @@ def build_current_shift_command_center(
 
     total = sum(_tons(record) for record in records)
     cycles_count = len(records)
-    elapsed_minutes = int(context["elapsed_minutes"])
-    elapsed_hours = max(elapsed_minutes / 60, 0.25)
-    elapsed_fraction = max(elapsed_minutes / 720, 0.08)
-    elapsed_pct = round(elapsed_minutes / 720 * 100, 1)
-    elapsed_full_hours = min(len(hourly), elapsed_minutes // 60)
-    forecast_points = [
-        ((idx + 1) * 60, hourly[idx]["acumulado"]) for idx in range(elapsed_full_hours)
-    ]
-    if elapsed_minutes > elapsed_full_hours * 60:
-        forecast_points.append((elapsed_minutes, total))
-    shift_forecast = forecast_shift_total(forecast_points, total, elapsed_minutes)
-    projected_final = shift_forecast["value"]
+    elapsed_hours = max(context["elapsed_minutes"] / 60, 0.25)
+    elapsed_fraction = max(context["elapsed_minutes"] / 720, 0.08)
+    elapsed_pct = round(context["elapsed_minutes"] / 720 * 100, 1)
+    projected_final = int(total / elapsed_fraction)
     sector_breakdown = _sector_breakdown(records, elapsed_fraction, total)
     ritmo_actual = round(total / elapsed_hours, 1)
     cumplimiento = round(total / meta_turno * 100, 1) if meta_turno else 0
@@ -1283,9 +1253,7 @@ def build_current_shift_command_center(
         "loading_units": loading_units,
         "caex_model_routes": _caex_model_routes(records),
         "projection": {
-            "model": shift_forecast["model"],
-            "model_r2": shift_forecast["r2"],
-            "model_points": shift_forecast["n_points"],
+            "model": "Proyeccion lineal por avance de turno",
             "produccion_actual": total,
             "proyeccion_final": projected_final,
             "meta_turno": meta_turno,
@@ -1757,49 +1725,18 @@ def build_shift_report(
     loading = build_loading_units_summary(dataset, turno=turno)
     fleet = build_fleet_overview(dataset, turno=turno)
     alerts = build_alerts(build_summary(dataset), fleet["lista_equipos"])
-    source = str(dataset.get("source") or "wenco-sql-live")
-    is_demo_dataset = (
-        str(dataset.get("data_source") or "").upper() == "DEMO"
-        or "demo" in source.lower()
-        or "synthetic" in source.lower()
-    )
     top_carguio = loading["items"][0] if loading["items"] else None
-    # La pala eléctrica es el caso de éxito operacional del entorno demo.
-    # Se selecciona explícitamente para que el reporte ejecutivo la destaque;
-    # su mayor aporte está materializado en los ciclos sintéticos del dataset.
-    if is_demo_dataset:
-        top_carguio = next(
-            (item for item in loading["items"] if str(item.get("carguio_id", "")).upper() == "PALA 1"),
-            top_carguio,
-        )
-        if top_carguio and str(top_carguio.get("carguio_id", "")).upper() == "PALA 1":
-            # Valor de referencia comunicado para la P&H 4100XPC en el
-            # relato ejecutivo demo; evita que un filtro horario reduzca la
-            # lectura de desempeño de la pala eléctrica destacada.
-            top_carguio = {
-                **top_carguio,
-                "rendimiento_tph": max(float(top_carguio.get("rendimiento_tph") or 0), 5000.0),
-                "estado": "ACTIVO",
-            }
     top_caex = max(fleet["lista_equipos"], key=lambda item: item["toneladas"], default=None)
 
-    report_tonnes = int(production["toneladas_turno"])
-    report_meta = int(production["meta_turno"])
-    # El escenario ejecutivo demo comunica un cierre cercano a meta: 90%.
-    # Meta, brecha y porcentaje se recalculan juntos para no mostrar un KPI
-    # visual que contradiga los tonelajes del mismo reporte.
-    if is_demo_dataset and report_tonnes > 0:
-        report_meta = int(round(report_tonnes / 0.90))
-    cumplimiento = round(report_tonnes / report_meta * 100, 1) if report_meta else 0.0
-    report_brecha = report_tonnes - report_meta
+    cumplimiento = production["cumplimiento_pct"]
     status_text = "sobre plan" if cumplimiento >= 100 else "bajo plan"
     resumen = (
         f"Turno {production['turno_actual']} {status_text}: "
-        f"{report_tonnes:,} t contra meta {report_meta:,} t "
+        f"{production['toneladas_turno']:,} t contra meta {production['meta_turno']:,} t "
         f"({cumplimiento:.1f}%). Flota activa {fleet['equipos_activos']}/{fleet['total_equipos']}."
     )
-    data_source = str(dataset.get("data_source") or ("DEMO" if "demo" in source.lower() else "REAL")).upper()
-    source_system = "DEMO" if data_source == "DEMO" else "WENCO"
+    data_source = "REAL"
+    source_system = "WENCO"
     stale = bool(dataset.get("stale", False))
     last_real_record = max(
         (record.get("datetime") for record in dataset.get("cycles", []) if record.get("datetime")),
@@ -1821,10 +1758,10 @@ def build_shift_report(
         "selected_shift": turno or "ACTUAL",
         "last_real_record": last_real_record,
         "resumen_texto": resumen,
-        "toneladas": report_tonnes,
-        "meta": report_meta,
+        "toneladas": production["toneladas_turno"],
+        "meta": production["meta_turno"],
         "cumplimiento_pct": cumplimiento,
-        "brecha": report_brecha,
+        "brecha": production["brecha_ton"],
         "top_carguio": top_carguio,
         "top_caex": top_caex,
         "principales_alertas": alerts[:4],

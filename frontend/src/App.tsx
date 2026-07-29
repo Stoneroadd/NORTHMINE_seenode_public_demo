@@ -3,8 +3,7 @@ import { useTheme } from './hooks/useTheme'
 import { SettingsPanel } from './components/settings/SettingsPanel'
 import { useAppStore } from './store'
 import type { AuthSession } from './lib/api'
-import { restoreSession } from './services/authService'
-import { LoadingState } from './components/common/LoadingState'
+import { getStoredSession } from './services/authService'
 import { AppShell } from './components/layout/AppShell'
 import type { SectionId } from './components/layout/Sidebar'
 import { Login } from './pages/Login'
@@ -13,75 +12,27 @@ import { useIdleTimeout } from './hooks/useIdleTimeout'
 import { useModuleT } from './i18n/useModuleT'
 import { appT, type AppT } from './i18n/modules/app'
 
-const loadPrediction  = () => import('./pages/Prediction')
-const loadSimulator   = () => import('./pages/Simulator')
-const loadAerialView  = () => import('./pages/AerialPage')
-const loadAuditLog    = () => import('./pages/AuditLog')
-const loadSystemPage  = () => import('./pages/SystemPage')
-const loadAdminUsersPage = () => import('./pages/AdminUsersPage')
-const loadCompare     = () => import('./pages/Compare')
-const loadOperatorRanking = () => import('./pages/OperatorRanking')
-const loadReports     = () => import('./pages/Reports')
-const loadDashboard   = () => import('./pages/Dashboard')
-const loadDecisionCockpit = () => import('./pages/DecisionCockpit')
-const loadOperationalMindMap3D = () => import('./pages/OperationalMindMap3D')
-const loadCurrentShift = () => import('./pages/CurrentShiftPage')
-const loadProduction  = () => import('./pages/Production')
-const loadPerformance = () => import('./pages/Performance')
-const loadFleet       = () => import('./pages/FleetPage')
-const loadLoadingUnits = () => import('./pages/LoadingUnitsPage')
-const loadAveriasPage = () => import('./pages/AveriasPage')
-const loadExpertAnalysisPage = () => import('./pages/ExpertAnalysisPage')
-const loadAlerts      = () => import('./pages/Alerts')
-
-const Prediction  = lazy(() => loadPrediction().then(m => ({ default: m.Prediction })))
-const Simulator   = lazy(() => loadSimulator().then(m => ({ default: m.Simulator })))
-const AerialView  = lazy(() => loadAerialView().then(m => ({ default: m.AerialPage })))
-const AuditLog    = lazy(() => loadAuditLog().then(m => ({ default: m.AuditLog })))
-const SystemPage  = lazy(() => loadSystemPage().then(m => ({ default: m.SystemPage })))
-const AdminUsersPage = lazy(() => loadAdminUsersPage().then(m => ({ default: m.AdminUsersPage })))
-const Compare     = lazy(() => loadCompare().then(m => ({ default: m.Compare })))
-const OperatorRanking = lazy(() => loadOperatorRanking().then(m => ({ default: m.OperatorRanking })))
-const Reports     = lazy(() => loadReports().then(m => ({ default: m.Reports })))
-const Dashboard   = lazy(() => loadDashboard().then(m => ({ default: m.Dashboard })))
-const DecisionCockpit = lazy(() => loadDecisionCockpit().then(m => ({ default: m.DecisionCockpit })))
-const OperationalMindMap3D = lazy(() => loadOperationalMindMap3D().then(m => ({ default: m.OperationalMindMap3D })))
-const CurrentShift = lazy(() => loadCurrentShift().then(m => ({ default: m.CurrentShiftPage })))
-const Production  = lazy(() => loadProduction().then(m => ({ default: m.Production })))
-const Performance = lazy(() => loadPerformance().then(m => ({ default: m.Performance })))
-const Fleet       = lazy(() => loadFleet().then(m => ({ default: m.FleetPage })))
-const LoadingUnits = lazy(() => loadLoadingUnits().then(m => ({ default: m.LoadingUnitsPage })))
-const AveriasPage = lazy(() => loadAveriasPage().then(m => ({ default: m.AveriasPage })))
-const ExpertAnalysisPage = lazy(() => loadExpertAnalysisPage().then(m => ({ default: m.ExpertAnalysisPage })))
-const Alerts      = lazy(() => loadAlerts().then(m => ({ default: m.Alerts })))
+const Prediction  = lazy(() => import('./pages/Prediction').then(m => ({ default: m.Prediction })))
+const Simulator   = lazy(() => import('./pages/Simulator').then(m => ({ default: m.Simulator })))
+const AerialView  = lazy(() => import('./pages/AerialPage').then(m => ({ default: m.AerialPage })))
+const AuditLog    = lazy(() => import('./pages/AuditLog').then(m => ({ default: m.AuditLog })))
+const SystemPage  = lazy(() => import('./pages/SystemPage').then(m => ({ default: m.SystemPage })))
+const AdminUsersPage = lazy(() => import('./pages/AdminUsersPage').then(m => ({ default: m.AdminUsersPage })))
+const Compare     = lazy(() => import('./pages/Compare').then(m => ({ default: m.Compare })))
+const OperatorRanking = lazy(() => import('./pages/OperatorRanking').then(m => ({ default: m.OperatorRanking })))
+const Reports     = lazy(() => import('./pages/Reports').then(m => ({ default: m.Reports })))
+const Dashboard   = lazy(() => import('./pages/Dashboard').then(m => ({ default: m.Dashboard })))
+const DecisionCockpit = lazy(() => import('./pages/DecisionCockpit').then(m => ({ default: m.DecisionCockpit })))
+const OperationalMindMap3D = lazy(() => import('./pages/OperationalMindMap3D').then(m => ({ default: m.OperationalMindMap3D })))
+const CurrentShift = lazy(() => import('./pages/CurrentShiftPage').then(m => ({ default: m.CurrentShiftPage })))
+const Production  = lazy(() => import('./pages/Production').then(m => ({ default: m.Production })))
+const Performance = lazy(() => import('./pages/Performance').then(m => ({ default: m.Performance })))
+const Fleet       = lazy(() => import('./pages/FleetPage').then(m => ({ default: m.FleetPage })))
+const LoadingUnits = lazy(() => import('./pages/LoadingUnitsPage').then(m => ({ default: m.LoadingUnitsPage })))
+const AveriasPage = lazy(() => import('./pages/AveriasPage').then(m => ({ default: m.AveriasPage })))
+const ExpertAnalysisPage = lazy(() => import('./pages/ExpertAnalysisPage').then(m => ({ default: m.ExpertAnalysisPage })))
+const Alerts      = lazy(() => import('./pages/Alerts').then(m => ({ default: m.Alerts })))
 import { Settings } from 'lucide-react'
-
-const ALL_MODULE_LOADERS = [
-  loadPrediction, loadSimulator, loadAerialView, loadAuditLog, loadSystemPage,
-  loadAdminUsersPage, loadCompare, loadOperatorRanking, loadReports, loadDashboard,
-  loadDecisionCockpit, loadOperationalMindMap3D, loadCurrentShift, loadProduction,
-  loadPerformance, loadFleet, loadLoadingUnits, loadAveriasPage, loadExpertAnalysisPage,
-  loadAlerts,
-]
-
-// Precarga en segundo plano el codigo JS de todos los modulos apenas hay
-// sesion, para que cambiar de modulo no tenga que esperar la descarga del
-// chunk — solo queda el fetch de datos (ya cacheado en el backend).
-function preloadAllModules() {
-  for (const load of ALL_MODULE_LOADERS) {
-    load().catch(() => {})
-  }
-}
-
-function schedulePreload(callback: () => void) {
-  if (typeof window === 'undefined') return
-  const idle = (window as typeof window & { requestIdleCallback?: (cb: () => void) => number }).requestIdleCallback
-  if (idle) {
-    idle(callback)
-  } else {
-    window.setTimeout(callback, 1200)
-  }
-}
 
 function wrap(node: React.ReactNode, key: string) {
   return <div key={key} className="page-content">{node}</div>
@@ -148,34 +99,33 @@ function renderSection(section: SectionId, session: AuthSession, t: AppT) {
     case 'dashboard':
       return wrap(_S(<Dashboard session={session} section={section} />), 'dashboard')
     case 'turno':
-      return wrap(_S(<CurrentShift />), 'turno')
+      return _S(<CurrentShift />)
     case 'produccion':
-      return wrap(_S(<Production />), 'produccion')
+      return _S(<Production />)
     case 'rendimiento':
-      return wrap(_S(<Performance />), 'rendimiento')
+      return _S(<Performance />)
     case 'flota':
-      return wrap(_S(<Fleet />), 'flota')
+      return _S(<Fleet />)
     case 'carguio':
-      return wrap(_S(<LoadingUnits />), 'carguio')
+      return _S(<LoadingUnits />)
     case 'averias':
-      return wrap(_S(<AveriasPage />), 'averias')
+      return _S(<AveriasPage />)
     case 'analisis':
-      return wrap(_S(<ExpertAnalysisPage />), 'analisis')
+      return _S(<ExpertAnalysisPage />)
     case 'aerea':
       return wrap(_S(<AerialView />), 'aerea')
     case 'alertas':
-      return wrap(_S(<Alerts />), 'alertas')
+      return _S(<Alerts />)
     case 'reportes':
-      return wrap(_S(<Reports />), 'reportes')
+      return _S(<Reports />)
     case 'admin':
-      return wrap(
+      return (
         <div className="section-placeholder">
           <Settings size={34} />
           <span>{t.admin_titulo}</span>
           <h2>{t.admin_subtitulo}</h2>
           <p>{t.admin_desc}</p>
-        </div>,
-        'admin',
+        </div>
       )
   }
 }
@@ -262,42 +212,22 @@ export default function App() {
   const settingsOpen    = useAppStore(s => s.settingsOpen)
   const setSettingsOpen = useAppStore(s => s.setSettingsOpen)
 
-  // El access token ya no se persiste (ver secureApi.ts / authService.ts):
-  // al cargar la app, se reconstruye la sesion canjeando la cookie httpOnly
-  // del refresh token por un access token fresco. Mientras eso resuelve,
-  // `bootstrapping` evita que se muestre el login antes de tiempo.
-  const [session, setSession] = useState<AuthSession | null>(null)
-  const [bootstrapping, setBootstrapping] = useState(true)
-
-  useEffect(() => {
-    let cancelled = false
-    restoreSession().then((restored) => {
-      if (cancelled) return
-      if (restored) {
-        useAppStore.getState().setUsuario(sessionToUsuario(restored))
-        setSession(restored)
-      }
-      setBootstrapping(false)
-    })
-    return () => {
-      cancelled = true
-    }
-  }, [])
+  // Inicializar desde localStorage â€” sincrÃ³nico para que apiFetch tenga token
+  // antes de que los componentes hijos disparen sus queries
+  const [session, setSession] = useState<AuthSession | null>(() => {
+    const s = getStoredSession()
+    if (s) useAppStore.getState().setUsuario(sessionToUsuario(s))
+    return s
+  })
 
   // useLayoutEffect garantiza sync antes de que React Query ejecute sus useEffect
   useLayoutEffect(() => {
-    if (bootstrapping) return
     if (session) {
       setUsuario(sessionToUsuario(session))
     } else {
       setUsuario(null)
     }
-  }, [session, setUsuario, bootstrapping])
-
-  useEffect(() => {
-    if (!session) return
-    schedulePreload(preloadAllModules)
-  }, [session])
+  }, [session, setUsuario])
 
   // Callbacks explÃ­citos: setUsuario ANTES de setSession para que el token
   // estÃ© en el store cuando Dashboard renderice por primera vez
@@ -321,10 +251,6 @@ export default function App() {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [settingsOpen, setSettingsOpen])
-
-  if (bootstrapping) {
-    return <LoadingState label={t.cargando} />
-  }
 
   if (!session) {
     return (

@@ -34,7 +34,6 @@ class User:
     created_at: str
     updated_at: str
     last_login_at: str | None
-    auth_version: int = 1
     faena: str = "Rajo DES"
     empresa: str = "NORTHMINE"
 

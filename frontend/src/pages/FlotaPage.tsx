@@ -1,0 +1,2 @@
+export { FlotaPage } from './PlaceholderPage'
+

@@ -92,7 +92,7 @@ function BarRow({ label, value, max, meta }: { label: string; value: number; max
     <div style={{ display: 'grid', gridTemplateColumns: '110px 1fr 110px', gap: 12, alignItems: 'center', padding: '9px 0' }}>
       <strong style={{ color: 'var(--nm-text)' }}>{label}</strong>
       <span style={{ height: 8, borderRadius: 999, background: 'rgba(255,255,255,0.08)', overflow: 'hidden' }}>
-        <i style={{ display: 'block', height: '100%', width: `${Math.min(100, value / Math.max(max, 1) * 100)}%`, background: 'linear-gradient(90deg, var(--nm-cyan), var(--nm-green))' }} />
+        <i style={{ display: 'block', height: '100%', width: `${Math.min(100, value / Math.max(max, 1) * 100)}%`, background: 'linear-gradient(90deg, #00D4FF, #00FF88)' }} />
       </span>
       <span style={{ textAlign: 'right', color: 'var(--nm-muted)', fontVariantNumeric: 'tabular-nums' }}>{meta ?? tons(value)}</span>
     </div>
@@ -299,7 +299,7 @@ export function CurrentShiftPage() {
   const loadingMax = useMemo(() => Math.max(...(query.data?.loadingUnits.map((item) => item.toneladas) ?? [1]), 1), [query.data?.loadingUnits])
 
   if (query.isLoading) return <LoadingState label={t.cargando_turno} />
-  if (query.isError || !query.data) return <ErrorState detail={t.error_turno} onRetry={() => query.refetch()} />
+  if (query.isError || !query.data) return <ErrorState detail={t.error_turno} />
 
   const data = query.data.current
   const lowAverage = data.caex_bajo_promedio ?? []

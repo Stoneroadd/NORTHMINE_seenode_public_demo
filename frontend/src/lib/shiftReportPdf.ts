@@ -8,7 +8,6 @@ import {
   type ShiftComparisonDistributionEntry,
   type ShiftComparisonEquipmentPoint,
 } from './api'
-import { formatTons } from './format'
 
 // Fuente del encabezado del reporte: sirve tanto el turno vigente
 // (ShiftCurrentResponse) como un snapshot historico (ShiftReportSnapshot).
@@ -29,6 +28,10 @@ export interface ShiftReportHeaderSource {
 
 const MARGIN = 12
 const GUTTER = 6
+
+function formatTons(value: number): string {
+  return `${Math.round(value).toLocaleString('es-CL')} t`
+}
 
 function formatInt(value: number): string {
   return Math.round(value).toLocaleString('es-CL')

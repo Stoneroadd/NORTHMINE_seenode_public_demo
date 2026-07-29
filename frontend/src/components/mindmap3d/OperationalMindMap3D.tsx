@@ -69,7 +69,7 @@ function statusClass(value: string | undefined) {
 export function OperationalMindMap3D() {
   const t = useModuleT(mindmap3dT)
   const [viewMode, setViewMode] = useState<MindMapViewMode>('CONSTELACION')
-  const [quality, setQuality] = useState<MindMapQuality>('ALTA')
+  const [quality, setQuality] = useState<MindMapQuality>('AUTO')
   const [paused, setPaused] = useState(false)
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>('northmine-root')
   const [focusedNodeId, setFocusedNodeId] = useState<string | null>(null)

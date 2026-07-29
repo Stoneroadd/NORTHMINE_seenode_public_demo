@@ -54,6 +54,7 @@ class LoginResponse(BaseModel):
     faena: str
     empresa: str
     access_token: str
+    refresh_token: str | None = None
     token_type: str = "bearer"
     expires_in: int | None = None
     modo: Literal["demo", "sql"] = "demo"

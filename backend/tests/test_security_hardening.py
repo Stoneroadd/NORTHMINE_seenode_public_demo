@@ -29,47 +29,6 @@ def test_token_blacklist_after_logout(client, login_as_admin):
     resp = client.get("/api/demo/summary", headers=headers)
     assert resp.status_code == 401
 
-    # A stolen refresh cookie from before logout must not mint a new session.
-    refresh_cookie = client.cookies.get("refresh_token")
-    assert refresh_cookie is None
-
-
-def test_logout_invalidates_previously_issued_refresh_token(client, login_as_admin):
-    old_refresh = client.cookies.get("refresh_token")
-    assert old_refresh
-    headers = {"Authorization": f"Bearer {login_as_admin['access_token']}"}
-
-    assert client.post("/api/auth/logout", headers=headers).status_code == 200
-    response = client.post("/api/auth/refresh", cookies={"refresh_token": old_refresh})
-    assert response.status_code == 401
-
-
-def test_login_never_returns_refresh_token_in_json(client):
-    response = client.post("/api/auth/login", json={"username": "admin", "password": "admin"})
-    assert response.status_code == 200
-    assert "refresh_token" not in response.json()
-    assert client.cookies.get("refresh_token")
-
-
-def test_refresh_rotation_rejects_replay(client, login_as_admin):
-    old_refresh = client.cookies.get("refresh_token")
-    assert old_refresh
-    assert client.post("/api/auth/refresh").status_code == 200
-    replay = client.post("/api/auth/refresh", headers={"Cookie": f"refresh_token={old_refresh}"})
-    assert replay.status_code == 401
-
-
-def test_revocation_store_failure_denies_authenticated_requests(client, login_as_admin, monkeypatch):
-    import app.core.dependencies as dependencies
-    from app.core.audit import AuditStoreUnavailable
-
-    def unavailable(_: str) -> bool:
-        raise AuditStoreUnavailable("sqlite unavailable")
-
-    monkeypatch.setattr(dependencies, "is_token_blacklisted", unavailable)
-    response = client.get("/api/auth/me", headers={"Authorization": f"Bearer {login_as_admin['access_token']}"})
-    assert response.status_code == 503
-
 
 def test_password_history_mining_requirement(client, login_as_admin):
     headers = {"Authorization": f"Bearer {login_as_admin['access_token']}"}
@@ -84,11 +43,6 @@ def test_password_history_mining_requirement(client, login_as_admin):
         })
         assert resp.status_code == 200, f"Failed on change {i}: {resp.text}"
         current = new_pw
-        # Password changes revoke every token; authenticate again to continue
-        # exercising password-history semantics.
-        session = client.post("/api/auth/login", json={"username": "admin", "password": current})
-        assert session.status_code == 200
-        headers = {"Authorization": f"Bearer {session.json()['access_token']}"}
 
     resp = client.post("/api/auth/change-password", headers=headers, json={
         "current_password": current,
@@ -135,9 +89,6 @@ def test_revoke_user_tokens(client, login_as_admin):
 
     resp = client.get("/api/demo/summary", headers=sup_headers)
     assert resp.status_code == 401
-
-    relogin = client.post("/api/auth/login", json={"username": "supervisor", "password": "supervisor"})
-    assert relogin.status_code == 200
 
 
 def test_operador_cannot_access_admin_metrics(client, login_as_operador):

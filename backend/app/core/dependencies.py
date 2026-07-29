@@ -3,7 +3,7 @@ from __future__ import annotations
 from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
-from app.core.audit import AuditStoreUnavailable, is_token_blacklisted, log_event, update_session_activity
+from app.core.audit import is_token_blacklisted, log_event, update_session_activity
 from app.core.security import verify_access_token
 from app.services.user_repository import get_user_repository
 
@@ -28,14 +28,7 @@ async def get_current_user(
             detail="Token inválido o expirado",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    try:
-        blacklisted = is_token_blacklisted(token)
-    except AuditStoreUnavailable as exc:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Verificacion de seguridad temporalmente no disponible",
-        ) from exc
-    if blacklisted:
+    if is_token_blacklisted(token):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Token revocado. Inicie sesión nuevamente.",
@@ -59,12 +52,6 @@ async def get_current_user(
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Token invalido o expirado",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
-        if payload.get("auth_version") != user.auth_version:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Token revocado. Inicie sesiÃ³n nuevamente.",
                 headers={"WWW-Authenticate": "Bearer"},
             )
 

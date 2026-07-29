@@ -4,7 +4,7 @@ import json
 import logging
 import os
 import sqlite3
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from app.core.database import close_db_connections, execute_query
@@ -14,10 +14,6 @@ audit_logger = logging.getLogger("northmine.audit")
 AUDIT_DB = Path(os.environ.get("NORTHMINE_AUDIT_DB", "northmine_audit.db"))
 
 LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO")
-
-
-class AuditStoreUnavailable(RuntimeError):
-    """Security state cannot be read or written safely."""
 
 
 def _conn() -> sqlite3.Connection:
@@ -103,15 +99,6 @@ def init_security_tables() -> None:
     """)
     conn.execute("CREATE INDEX IF NOT EXISTS idx_active_sessions_user ON active_sessions(username)")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_active_sessions_token ON active_sessions(token)")
-    conn.execute("""
-        CREATE TABLE IF NOT EXISTS refresh_sessions (
-            jti        TEXT PRIMARY KEY,
-            username   TEXT NOT NULL,
-            expires_at TEXT NOT NULL,
-            revoked_at TEXT
-        )
-    """)
-    conn.execute("CREATE INDEX IF NOT EXISTS idx_refresh_sessions_user ON refresh_sessions(username)")
     conn.commit()
     pass
 
@@ -127,9 +114,8 @@ def blacklist_token(token: str, user_id: str, expires_at: str) -> None:
         )
         conn.commit()
         pass
-    except Exception as exc:
-        logger.exception("No se pudo revocar el access token")
-        raise AuditStoreUnavailable("No se pudo revocar el token") from exc
+    except Exception:
+        pass
 
 
 def is_token_blacklisted(token: str) -> bool:
@@ -142,61 +128,36 @@ def is_token_blacklisted(token: str) -> bool:
         if row:
             pass
             return True
+        from app.core.security import verify_access_token
+        payload = verify_access_token(token)
+        if payload:
+            user_id = payload.get("sub")
+            row = conn.execute(
+                "SELECT 1 FROM token_blacklist WHERE token = ? AND expires_at > datetime('now')",
+                (f"revoke_all::{user_id}",),
+            ).fetchone()
+            if row:
+                pass
+                return True
         pass
         return False
-    except Exception as exc:
-        logger.exception("No se pudo consultar la blacklist de tokens")
-        raise AuditStoreUnavailable("No se pudo verificar la revocacion del token") from exc
-
-
-def register_refresh_session(payload: dict) -> bool:
-    jti = str(payload.get("jti", ""))
-    username = str(payload.get("sub", "")).strip().lower()
-    expires_at = payload.get("exp")
-    if not jti or not username or not isinstance(expires_at, (int, float)):
+    except Exception:
         return False
+
+
+def revoke_all_user_tokens(user_id: str) -> int:
     try:
         conn = _conn()
-        expiry = datetime.fromtimestamp(expires_at, tz=timezone.utc).isoformat()
+        far_future = (datetime.now(timezone.utc) + timedelta(days=365)).isoformat()
         conn.execute(
-            "INSERT INTO refresh_sessions (jti, username, expires_at) VALUES (?, ?, ?)",
-            (jti, username, expiry),
+            "INSERT OR IGNORE INTO token_blacklist (token, user_id, expires_at) VALUES (?, ?, ?)",
+            (f"revoke_all::{user_id}", user_id, far_future),
         )
         conn.commit()
-        return True
-    except Exception as exc:
-        logger.exception("No se pudo registrar refresh session")
-        raise AuditStoreUnavailable("No se pudo registrar la sesion de renovacion") from exc
-
-
-def rotate_refresh_session(previous_payload: dict, next_payload: dict) -> bool:
-    old_jti = str(previous_payload.get("jti", ""))
-    username = str(previous_payload.get("sub", "")).strip().lower()
-    new_jti = str(next_payload.get("jti", ""))
-    expires_at = next_payload.get("exp")
-    if not old_jti or not username or not new_jti or not isinstance(expires_at, (int, float)):
-        return False
-    try:
-        conn = _conn()
-        expiry = datetime.fromtimestamp(expires_at, tz=timezone.utc).isoformat()
-        # Conditional update makes rotation single-use even with concurrent
-        # requests: only the first request can revoke the old JTI.
-        updated = conn.execute(
-            "UPDATE refresh_sessions SET revoked_at = datetime('now') WHERE jti = ? AND username = ? AND revoked_at IS NULL AND expires_at > datetime('now')",
-            (old_jti, username),
-        )
-        if updated.rowcount != 1:
-            conn.rollback()
-            return False
-        conn.execute(
-            "INSERT INTO refresh_sessions (jti, username, expires_at) VALUES (?, ?, ?)",
-            (new_jti, username, expiry),
-        )
-        conn.commit()
-        return True
-    except Exception as exc:
-        logger.exception("No se pudo rotar refresh session")
-        raise AuditStoreUnavailable("No se pudo rotar la sesion de renovacion") from exc
+        pass
+        return 0
+    except Exception:
+        return -1
 
 
 def cleanup_expired_blacklist() -> None:
@@ -206,7 +167,7 @@ def cleanup_expired_blacklist() -> None:
         conn.commit()
         pass
     except Exception:
-        logger.exception("No se pudo limpiar la blacklist expirada")
+        pass
 
 
 # ── Password history ───────────────────────────────────────────────────────────
@@ -227,9 +188,8 @@ def save_password_history(user_id: str, password_hash: str) -> None:
         """, (user_id, int(os.environ.get("PASSWORD_HISTORY_COUNT", "5"))))
         conn.commit()
         pass
-    except Exception as exc:
-        logger.exception("No se pudo guardar historial de contrasenas")
-        raise AuditStoreUnavailable("No se pudo guardar el historial de contrasenas") from exc
+    except Exception:
+        pass
 
 
 def get_password_history(user_id: str) -> list[str]:
@@ -241,9 +201,8 @@ def get_password_history(user_id: str) -> list[str]:
         ).fetchall()
         pass
         return [row["password_hash"] for row in rows]
-    except Exception as exc:
-        logger.exception("No se pudo consultar historial de contrasenas")
-        raise AuditStoreUnavailable("No se pudo verificar el historial de contrasenas") from exc
+    except Exception:
+        return []
 
 
 def check_password_in_history(user_id: str, new_password: str) -> bool:

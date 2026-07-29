@@ -5,8 +5,6 @@ export interface ProductionT {
   error_prefix: string
   error_generic: string
   error_no_demo_suffix: string
-  error_no_session: string
-  error_session_invalid: string
   sin_plan_label: string
   sin_plan_title: string
   sin_plan_message: string
@@ -47,8 +45,6 @@ export interface ProductionT {
   lectura_ejecutiva: string
   registro_label: (value: string) => string
   proyeccion_fin_turno: string
-  proyeccion_modelo_regresion: (r2: string) => string
-  proyeccion_modelo_ritmo: string
   vs_meta: (value: string) => string
   que_hacer_ahora: string
   sin_ciclos_kicker: string
@@ -88,8 +84,6 @@ export const productionT: ModuleDict<ProductionT> = {
     error_prefix: 'No se pudo cargar /api/production/shift:',
     error_generic: 'No se pudo cargar /api/production/shift.',
     error_no_demo_suffix: 'No se usa demo sin modo explicito del backend.',
-    error_no_session: 'Sesion no disponible. Inicia sesion nuevamente para cargar Produccion real.',
-    error_session_invalid: 'la sesion no es valida o no tiene permisos para ver Produccion real.',
     sin_plan_label: 'Sin plan',
     sin_plan_title: 'Meta no configurada',
     sin_plan_message: 'La produccion real se muestra desde WENCO, pero no se evalua cumplimiento sin meta de turno.',
@@ -130,8 +124,6 @@ export const productionT: ModuleDict<ProductionT> = {
     lectura_ejecutiva: 'Lectura ejecutiva',
     registro_label: (value) => `Registro ${value}`,
     proyeccion_fin_turno: 'Proyeccion fin de turno',
-    proyeccion_modelo_regresion: (r2) => `Regresion lineal · R² ${r2}`,
-    proyeccion_modelo_ritmo: 'Ritmo promedio del turno',
     vs_meta: (value) => `${value} vs meta`,
     que_hacer_ahora: 'Que hacer ahora',
     sin_ciclos_kicker: 'Sin ciclos para el filtro',
@@ -169,8 +161,6 @@ export const productionT: ModuleDict<ProductionT> = {
     error_prefix: 'Could not load /api/production/shift:',
     error_generic: 'Could not load /api/production/shift.',
     error_no_demo_suffix: 'Demo data is not used without an explicit backend mode.',
-    error_no_session: 'Session not available. Sign in again to load actual Production.',
-    error_session_invalid: 'the session is not valid or does not have permission to view actual Production.',
     sin_plan_label: 'No plan',
     sin_plan_title: 'Target not configured',
     sin_plan_message: 'Actual production is shown from WENCO, but compliance is not evaluated without a shift target.',
@@ -211,8 +201,6 @@ export const productionT: ModuleDict<ProductionT> = {
     lectura_ejecutiva: 'Executive read',
     registro_label: (value) => `Record ${value}`,
     proyeccion_fin_turno: 'End-of-shift projection',
-    proyeccion_modelo_regresion: (r2) => `Linear regression · R² ${r2}`,
-    proyeccion_modelo_ritmo: 'Shift average pace',
     vs_meta: (value) => `${value} vs target`,
     que_hacer_ahora: 'What to do now',
     sin_ciclos_kicker: 'No cycles for the filter',

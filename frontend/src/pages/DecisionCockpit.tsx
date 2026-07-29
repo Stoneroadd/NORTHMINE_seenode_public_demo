@@ -23,7 +23,6 @@ import type { DetailModalAnchor } from '../components/cockpit/detailModalPositio
 import { ErrorState } from '../components/common/ErrorState'
 import { LoadingState } from '../components/common/LoadingState'
 import { northmineApi, type MonthlyTargetResponse, type ShiftComparisonResponse } from '../lib/api'
-import { secureApi } from '../lib/secureApi'
 import { useModuleT } from '../i18n/useModuleT'
 import { cockpitT, type CockpitT } from '../i18n/modules/cockpit'
 
@@ -324,7 +323,6 @@ export function DecisionCockpit() {
   const [selectedShift, setSelectedShift] = useState('ACTUAL')
   const [selectedLoadingUnitId, setSelectedLoadingUnitId] = useState<string | null>(null)
   const [selectedLoadingUnitAnchor, setSelectedLoadingUnitAnchor] = useState<DetailModalAnchor | null>(null)
-  const [downloadingExecutiveReport, setDownloadingExecutiveReport] = useState(false)
   const selectedDateParam = selectedDate || undefined
   const query = useQuery({
     queryKey: ['decision-cockpit', 'v1', selectedDate, selectedShift],
@@ -376,38 +374,6 @@ export function DecisionCockpit() {
 
   const data = useMemo(() => query.data ? buildCockpitViewModel(query.data) : null, [query.data])
 
-  const downloadExecutiveReport = async () => {
-    if (!data) return
-    setDownloadingExecutiveReport(true)
-    try {
-      const response = await secureApi.get<Blob>(
-        `/api/report/cockpit-executive-pdf?fecha=${encodeURIComponent(data.shiftDate)}&turno=${encodeURIComponent(data.selectedShift)}`,
-        {
-          responseType: 'blob',
-          timeout: 60_000,
-          headers: { Accept: 'application/pdf' },
-        },
-      )
-      if (!(response.data instanceof Blob) || response.data.size === 0) {
-        throw new Error('El backend no entrego un archivo PDF valido.')
-      }
-      const url = URL.createObjectURL(response.data)
-      const link = document.createElement('a')
-      link.href = url
-      link.download = `NORTHMINE_Informe_Ejecutivo_${data.selectedShift}_${data.shiftDate}.pdf`
-      link.style.display = 'none'
-      document.body.appendChild(link)
-      link.click()
-      link.remove()
-      window.setTimeout(() => URL.revokeObjectURL(url), 1_000)
-    } catch (error) {
-      console.error('No se pudo descargar el informe ejecutivo', error)
-      window.alert('No se pudo generar el informe. Verifica la conexión con el backend e inténtalo nuevamente.')
-    } finally {
-      setDownloadingExecutiveReport(false)
-    }
-  }
-
   // Deep-link desde el mapa 3D: /cockpit#sec-x desplaza a la seccion al cargar.
   const hashHandledRef = useRef(false)
   useEffect(() => {
@@ -427,7 +393,7 @@ export function DecisionCockpit() {
     const detail = query.error instanceof Error
       ? t.error_detail(query.error.message)
       : t.error_detail_generic
-    return <ErrorState title={t.error_title} detail={`${detail}${t.error_demo_suffix}`} onRetry={() => query.refetch()} />
+    return <ErrorState title={t.error_title} detail={`${detail}${t.error_demo_suffix}`} />
   }
 
   const hourlySpark = data.hourly.map((point) => point.tonnes)
@@ -473,13 +439,7 @@ export function DecisionCockpit() {
   return (
     <div className="nmcp-shell">
       <div className="nmcp-main">
-        <CockpitHeader
-          data={data}
-          fetching={query.isFetching}
-          onRefresh={() => query.refetch()}
-          downloadingReport={downloadingExecutiveReport}
-          onDownloadReport={downloadExecutiveReport}
-        />
+        <CockpitHeader data={data} fetching={query.isFetching} onRefresh={() => query.refetch()} />
 
         <main className="nmcp-content">
           <SectionNav />
@@ -505,103 +465,97 @@ export function DecisionCockpit() {
             comparison={shiftComparisonQuery.data}
           />
 
-          <section id="sec-turno" className="nmcp-kpi-section" aria-label={t.kpi_grid_aria}>
-            <div className="nmcp-kpi-hero-row">
-              <KpiCard
-                icon={Gauge}
-                label={t.kpi_produccion_actual_label}
-                value={formatTons(data.actualTonnes)}
-                subtext={progress === null ? t.kpi_produccion_actual_subtext_sin_meta : t.kpi_produccion_actual_subtext(formatNumber(progress, 1))}
-                indicator={data.dataSource}
-                tone="cyan"
-                progress={progress}
-                sparkline={hourlySpark}
-              >
-                <div className="nmcp-kpi-hero-details">
-                  {sectorBreakdown.length > 0 && (
-                    <div className="nmcp-kpi-sector-split" aria-label={t.sector_split_aria}>
-                      {sectorBreakdown.map((sector) => (
-                        <span key={sector.sector}>
-                          <small>{sector.sector}</small>
-                          <strong>{formatTons(sector.actualTonnes)}</strong>
-                          <em>
-                            {sector.forecastTonnes === null
-                              ? t.sector_split_pct(formatNumber(sector.pctOfTotal, 1))
-                              : t.sector_split_proyectado(formatTons(sector.forecastTonnes))}
-                          </em>
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                  <div className={`nmcp-kpi-forecast is-${projectionTone}`}>
-                    <span>{t.kpi_tonelaje_proyectado}</span>
-                    <strong>{formatTons(data.forecastTonnes)}</strong>
-                    <em>
-                      {projectedProgress === null
-                        ? t.kpi_meta_no_configurada
-                        : t.kpi_proyeccion_detalle(projectionStatus, deltaLabel(projectedDelta ?? 0), formatNumber(projectedProgress, 1))}
-                    </em>
-                    <small>
-                      {t.kpi_proyeccion_confianza(projectionConfidence.label, activeProjectionHours || 0)}
-                    </small>
-                    <small>
-                      {t.kpi_proyeccion_rango(formatTons(forecastLow), formatTons(forecastHigh))}
-                    </small>
-                  </div>
+          <section id="sec-turno" className="nmcp-kpi-grid" aria-label={t.kpi_grid_aria}>
+            <KpiCard
+              icon={Gauge}
+              label={t.kpi_produccion_actual_label}
+              value={formatTons(data.actualTonnes)}
+              subtext={progress === null ? t.kpi_produccion_actual_subtext_sin_meta : t.kpi_produccion_actual_subtext(formatNumber(progress, 1))}
+              indicator={data.dataSource}
+              tone="cyan"
+              progress={progress}
+              sparkline={hourlySpark}
+            >
+              {sectorBreakdown.length > 0 && (
+                <div className="nmcp-kpi-sector-split" aria-label={t.sector_split_aria}>
+                  {sectorBreakdown.map((sector) => (
+                    <span key={sector.sector}>
+                      <small>{sector.sector}</small>
+                      <strong>{formatTons(sector.actualTonnes)}</strong>
+                      <em>
+                        {sector.forecastTonnes === null
+                          ? t.sector_split_pct(formatNumber(sector.pctOfTotal, 1))
+                          : t.sector_split_proyectado(formatTons(sector.forecastTonnes))}
+                      </em>
+                    </span>
+                  ))}
                 </div>
-              </KpiCard>
-            </div>
-            <div className="nmcp-kpi-grid nmcp-kpi-grid-secondary">
-              <KpiCard
-                icon={Target}
-                label={t.kpi_meta_turno_label}
-                value={data.targetTonnes > 0 ? formatTons(data.targetTonnes) : t.kpi_meta_turno_sin_meta}
-                subtext={
-                  data.targetTonnes <= 0
-                    ? t.kpi_meta_turno_subtext_no_config
-                    : t.kpi_meta_turno_subtext(dailyTargetLabel)
-                }
-                indicator={shiftTargetLabel}
-                tone={projectionTone}
-                progress={progress}
-              />
-              <KpiCard
-                icon={Activity}
-                label={t.kpi_ciclos_label}
-                value={data.cycles.value === null ? t.kpi_dato_no_disponible : formatNumber(data.cycles.value)}
-                subtext={data.cycles.value === null ? t.kpi_no_informado_api : t.kpi_ciclos_subtext}
-                indicator={availabilityLabel(data.cycles.availability, t)}
-                tone="neutral"
-                unavailable={data.cycles.value === null}
-              />
-              <KpiCard
-                icon={Truck}
-                label={t.kpi_caex_activos_label}
-                value={data.activeCaex.value === null ? t.kpi_dato_no_disponible : formatNumber(data.activeCaex.value)}
-                subtext={data.activeCaex.value === null ? t.kpi_no_informado_api : t.kpi_caex_activos_subtext}
-                indicator={t.kpi_caex_disp_indicator(formatNumber(data.availabilityPct, 0))}
-                tone="green"
-                unavailable={data.activeCaex.value === null}
-              />
-              <KpiCard
-                icon={Timer}
-                label={t.kpi_promedio_ciclo_label}
-                value={data.averageCycle.value === null ? t.kpi_dato_no_disponible : `${formatNumber(data.averageCycle.value, 1)} t`}
-                subtext={data.averageCycle.value === null ? t.kpi_no_informado_api : t.kpi_promedio_ciclo_subtext(formatMoney(data.totalCost))}
-                indicator={`USD ${formatNumber(data.costPerTonne, 2)}/t`}
-                tone="yellow"
-                unavailable={data.averageCycle.value === null}
-              />
-              <KpiCard
-                icon={BarChart3}
-                label={t.kpi_promedio_caex_circuito_label}
-                value={data.averageCaexCircuit.value === null ? t.kpi_dato_no_disponible : formatNumber(data.averageCaexCircuit.value, 1)}
-                subtext={data.averageCaexCircuit.value === null ? t.kpi_no_informado_api : t.kpi_promedio_caex_circuito_subtext}
-                indicator={availabilityLabel(data.averageCaexCircuit.availability, t)}
-                tone="purple"
-                unavailable={data.averageCaexCircuit.value === null}
-              />
-            </div>
+              )}
+              <div className={`nmcp-kpi-forecast is-${projectionTone}`}>
+                <span>{t.kpi_tonelaje_proyectado}</span>
+                <strong>{formatTons(data.forecastTonnes)}</strong>
+                <em>
+                  {projectedProgress === null
+                    ? t.kpi_meta_no_configurada
+                    : t.kpi_proyeccion_detalle(projectionStatus, deltaLabel(projectedDelta ?? 0), formatNumber(projectedProgress, 1))}
+                </em>
+                <small>
+                  {t.kpi_proyeccion_confianza(projectionConfidence.label, activeProjectionHours || 0)}
+                </small>
+                <small>
+                  {t.kpi_proyeccion_rango(formatTons(forecastLow), formatTons(forecastHigh))}
+                </small>
+              </div>
+            </KpiCard>
+            <KpiCard
+              icon={Target}
+              label={t.kpi_meta_turno_label}
+              value={data.targetTonnes > 0 ? formatTons(data.targetTonnes) : t.kpi_meta_turno_sin_meta}
+              subtext={
+                data.targetTonnes <= 0
+                  ? t.kpi_meta_turno_subtext_no_config
+                  : t.kpi_meta_turno_subtext(dailyTargetLabel)
+              }
+              indicator={shiftTargetLabel}
+              tone={projectionTone}
+              progress={progress}
+            />
+            <KpiCard
+              icon={Activity}
+              label={t.kpi_ciclos_label}
+              value={data.cycles.value === null ? t.kpi_dato_no_disponible : formatNumber(data.cycles.value)}
+              subtext={data.cycles.value === null ? t.kpi_no_informado_api : t.kpi_ciclos_subtext}
+              indicator={availabilityLabel(data.cycles.availability, t)}
+              tone="neutral"
+              unavailable={data.cycles.value === null}
+            />
+            <KpiCard
+              icon={Truck}
+              label={t.kpi_caex_activos_label}
+              value={data.activeCaex.value === null ? t.kpi_dato_no_disponible : formatNumber(data.activeCaex.value)}
+              subtext={data.activeCaex.value === null ? t.kpi_no_informado_api : t.kpi_caex_activos_subtext}
+              indicator={t.kpi_caex_disp_indicator(formatNumber(data.availabilityPct, 0))}
+              tone="green"
+              unavailable={data.activeCaex.value === null}
+            />
+            <KpiCard
+              icon={Timer}
+              label={t.kpi_promedio_ciclo_label}
+              value={data.averageCycle.value === null ? t.kpi_dato_no_disponible : `${formatNumber(data.averageCycle.value, 1)} t`}
+              subtext={data.averageCycle.value === null ? t.kpi_no_informado_api : t.kpi_promedio_ciclo_subtext(formatMoney(data.totalCost))}
+              indicator={`USD ${formatNumber(data.costPerTonne, 2)}/t`}
+              tone="yellow"
+              unavailable={data.averageCycle.value === null}
+            />
+            <KpiCard
+              icon={BarChart3}
+              label={t.kpi_promedio_caex_circuito_label}
+              value={data.averageCaexCircuit.value === null ? t.kpi_dato_no_disponible : formatNumber(data.averageCaexCircuit.value, 1)}
+              subtext={data.averageCaexCircuit.value === null ? t.kpi_no_informado_api : t.kpi_promedio_caex_circuito_subtext}
+              indicator={availabilityLabel(data.averageCaexCircuit.availability, t)}
+              tone="purple"
+              unavailable={data.averageCaexCircuit.value === null}
+            />
           </section>
 
           <div id="sec-mensual" className="nmcp-section-anchor">

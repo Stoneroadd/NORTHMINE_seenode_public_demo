@@ -50,7 +50,7 @@ function canUseWebGL(): boolean {
 function qualityBudget(quality: MindMapQuality, nodeCount: number) {
   if (quality === 'BAJA') return { dpr: 1, segments: 16, particles: 34, stars: 90, bloom: false, pit: false }
   if (quality === 'MEDIA') return { dpr: 1.25, segments: 20, particles: 58, stars: 130, bloom: true, pit: true }
-  if (quality === 'ALTA') return { dpr: 2, segments: 32, particles: 110, stars: 220, bloom: true, pit: true }
+  if (quality === 'ALTA') return { dpr: 1.75, segments: 28, particles: 84, stars: 180, bloom: true, pit: true }
   return nodeCount > 150
     ? { dpr: 1.1, segments: 18, particles: 42, stars: 110, bloom: true, pit: true }
     : { dpr: 1.5, segments: 24, particles: 72, stars: 160, bloom: true, pit: true }

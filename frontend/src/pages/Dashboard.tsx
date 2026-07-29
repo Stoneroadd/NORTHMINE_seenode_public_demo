@@ -253,7 +253,6 @@ export function Dashboard({ session, section }: Props) {
   const projectedGap = monthlyPlanAvailable ? monthlyProjection - monthlyTargetTotal : null
   const requiredVsCurrentPct = requiredDailyToGreen > 0 ? (currentDailyAverage / requiredDailyToGreen) * 100 : monthlyPlanAvailable ? 160 : 0
   const projectionCompletionPct = monthlyTargetTotal > 0 ? (monthlyProjection / monthlyTargetTotal) * 100 : 0
-  const monthRealCompletionPct = monthlyTargetTotal > 0 ? (monthReal / monthlyTargetTotal) * 100 : 0
   const accumulatedGapPct = planAccumulatedToDate > 0 ? (Math.abs(accumulatedGap) / planAccumulatedToDate) * 100 : 0
   const greenStatusKey = !monthlyPlanAvailable
     ? 'no_plan'
@@ -490,10 +489,10 @@ export function Dashboard({ session, section }: Props) {
         <div className={`plan-hero-status is-${greenTone}`}>
           <span>Estado cierre F01</span>
           <strong>{greenStatus}</strong>
-          <div className="plan-radial-meter" style={meterStyle(projectionCompletionPct, 100)} aria-hidden="true">
-            <span>{monthlyPlanAvailable ? formatPct(projectionCompletionPct) : '--'}</span>
+          <div className="plan-radial-meter" style={meterStyle(accumulatedCompliance, 160)} aria-hidden="true">
+            <span>{monthlyPlanAvailable ? formatPct(accumulatedCompliance) : '--'}</span>
           </div>
-          <small>{monthlyPlanAvailable ? 'Proyeccion de cierre vs meta mes' : 'Plan requerido'}</small>
+          <small>{monthlyPlanAvailable ? `${formatPct(accumulatedCompliance)} vs acumulado` : 'Plan requerido'}</small>
         </div>
         <div className="plan-hero-metrics">
           <div className="plan-hero-metric is-required" style={meterStyle(requiredVsCurrentPct, 160)}>
@@ -520,37 +519,6 @@ export function Dashboard({ session, section }: Props) {
           <span className={(projectedGap ?? 0) >= 0 ? 'is-up' : 'is-down'}><b>Proy.</b>{formatSignedTons(projectedGap ?? 0)}</span>
           <span className="is-info"><b>F02</b>{formatTonsWithUnit(monthF02)}</span>
         </div>
-        {monthlyPlanAvailable && (
-          <div className="plan-close-runway" aria-label="Progreso mensual hacia la meta F01">
-            <div className="plan-close-runway-head">
-              <div>
-                <span>Progreso mensual F01</span>
-                <strong>Real, proyeccion y meta de cierre</strong>
-              </div>
-              <small>{remainingDays} dias restantes · faltan {formatTonsWithUnit(remainingToMonthlyTarget)}</small>
-            </div>
-            <div className="plan-close-runway-bars">
-              <article className="is-real" style={meterStyle(monthRealCompletionPct, 100)}>
-                <div><b /></div>
-                <strong>{formatTonsWithUnit(monthReal)}</strong>
-                <span>F01 real</span>
-                <small>{formatPct(monthRealCompletionPct)} de meta</small>
-              </article>
-              <article className={(projectedGap ?? 0) >= 0 ? 'is-positive' : 'is-risk'} style={meterStyle(projectionCompletionPct, 100)}>
-                <div><b /></div>
-                <strong>{formatTonsWithUnit(monthlyProjection)}</strong>
-                <span>Proyeccion</span>
-                <small>{formatSignedTons(projectedGap ?? 0)} al cierre</small>
-              </article>
-              <article className="is-target" style={meterStyle(100, 100)}>
-                <div><b /></div>
-                <strong>{formatTonsWithUnit(monthlyTargetTotal)}</strong>
-                <span>Meta mes</span>
-                <small>100% requerido</small>
-              </article>
-            </div>
-          </div>
-        )}
       </section>
 
       <section className="executive-kpi-grid">
@@ -598,7 +566,6 @@ export function Dashboard({ session, section }: Props) {
                 <strong>{item.equipment}</strong>
                 <span>{item.type} / {formatSignedPct(item.deviationPct)} vs referencia</span>
                 <small>Impacto estimado {formatTonsWithUnit(item.estimatedImpactTons)} - {item.detail}</small>
-                <i className="plan-cause-meter"><b /></i>
               </article>
             )) : (
               <div className="executive-empty-state">Sin desviaciones relevantes contra referencia.</div>

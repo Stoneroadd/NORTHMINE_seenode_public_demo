@@ -12,13 +12,6 @@ import os
 # la corrida completa parezca "colgada". Costo 4 es instantaneo y no cambia
 # la seguridad real (nunca se usa en produccion, solo en tests).
 os.environ.setdefault("BCRYPT_ROUNDS", "4")
-# app.main/config se importan durante la coleccion de tests. Declarar el
-# entorno antes de esos imports evita que el nuevo default fail-closed de
-# produccion interfiera con el perfil aislado de pruebas.
-os.environ.setdefault("ENVIRONMENT", "testing")
-os.environ.setdefault("NORTHMINE_MODE", "demo")
-os.environ.setdefault("NORTHMINE_DEMO_MODE", "true")
-os.environ.setdefault("NORTHMINE_ALLOW_DEMO_LOGIN", "true")
 
 from typing import Any, Generator
 
@@ -46,10 +39,11 @@ def _reset_state() -> Generator[None, None, None]:
 
 @pytest.fixture(autouse=True)
 def _init_db(monkeypatch) -> Generator[None, None, None]:
+    monkeypatch.delenv("ENVIRONMENT", raising=False)
     monkeypatch.setenv("ENVIRONMENT", "testing")
     _cleanup_pool()
     conn = _conn()
-    for tbl in ("audit_log", "token_blacklist", "refresh_sessions", "mfa_store", "failed_logins", "active_sessions", "password_history"):
+    for tbl in ("audit_log", "token_blacklist", "mfa_store", "failed_logins", "active_sessions", "password_history"):
         conn.execute(f"DROP TABLE IF EXISTS {tbl}")
     conn.commit()
     init_audit_db()

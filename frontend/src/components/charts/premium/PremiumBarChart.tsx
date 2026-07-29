@@ -2,7 +2,7 @@ import { memo, useMemo } from 'react'
 import ReactECharts from 'echarts-for-react'
 import type { EChartsOption } from 'echarts'
 import { PremiumChartFrame } from './PremiumChartFrame'
-import { axisLabel, baseGrid, formatNumber, hasValues, premiumPalette, tooltipBase, useChartPaletteKey } from './chartTheme'
+import { axisLabel, baseGrid, formatNumber, hasValues, premiumPalette, tooltipBase } from './chartTheme'
 import { useModuleT } from '../../../i18n/useModuleT'
 import { chartsT } from '../../../i18n/modules/charts'
 
@@ -32,12 +32,7 @@ function PremiumBarChartBase({
   horizontal = false,
 }: Props) {
   const t = useModuleT(chartsT)
-  const themeId = useChartPaletteKey()
   const option = useMemo<EChartsOption>(() => {
-    // Keep the default series colors consistent with the operational modules.
-    // Explicit colors are still supported for charts with a domain-specific state.
-    const moduleColors = [premiumPalette.cyan, premiumPalette.mineral, premiumPalette.amber, premiumPalette.red]
-    const seriesColor = (item: PremiumBarSeries, index: number) => item.color ?? moduleColors[index % moduleColors.length]
     const categories = data.map((item) => String(item[xKey] ?? t.notAvailable))
     const valueAxis = {
       type: 'value' as const,
@@ -56,7 +51,7 @@ function PremiumBarChartBase({
     }
 
     return {
-      color: series.map(seriesColor),
+      color: series.map((item) => item.color ?? premiumPalette.mineral),
       animationDuration: 820,
       animationEasing: 'quarticOut',
       grid: horizontal ? { top: 20, right: 28, bottom: 24, left: 92 } : baseGrid,
@@ -81,19 +76,19 @@ function PremiumBarChartBase({
       },
       xAxis: horizontal ? valueAxis : categoryAxis,
       yAxis: horizontal ? categoryAxis : valueAxis,
-      series: series.map((item, index) => ({
+      series: series.map((item) => ({
         name: item.name,
         type: 'bar',
         barMaxWidth: 28,
         emphasis: { focus: 'series' },
         itemStyle: {
-          color: seriesColor(item, index),
+          color: item.color ?? premiumPalette.mineral,
           borderRadius: horizontal ? [0, 6, 6, 0] : [6, 6, 0, 0],
         },
         data: data.map((row) => Number(row[item.key] ?? 0)),
       })),
     } as EChartsOption
-  }, [data, horizontal, series, xKey, t, themeId])
+  }, [data, horizontal, series, xKey, t])
 
   return (
     <PremiumChartFrame height={height} loading={loading} error={error} empty={!hasValues(data)}>

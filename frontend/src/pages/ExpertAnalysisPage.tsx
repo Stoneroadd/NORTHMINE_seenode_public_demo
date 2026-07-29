@@ -6,9 +6,6 @@ import { LoadingState } from '../components/common/LoadingState'
 import { ErrorState } from '../components/common/ErrorState'
 import { EmptyState } from '../components/common/EmptyState'
 import { getCyclesHistoryStatus, getExpertAnalysis } from '../lib/api'
-import { useModuleT } from '../i18n/useModuleT'
-import { expertAnalysisT } from '../i18n/modules/expertAnalysis'
-import { formatTons } from '../lib/format'
 
 // Analisis Experto: cruces produccion x mantencion presentados en lenguaje
 // simple. Cada hallazgo es una tarjeta con un numero grande y una explicacion
@@ -20,8 +17,11 @@ const TONE_COLORS: Record<string, string> = {
   verde: '#4ADE80',
 }
 
+function formatTons(value: number): string {
+  return `${Math.round(value).toLocaleString('es-CL')} t`
+}
+
 export function ExpertAnalysisPage() {
-  const t = useModuleT(expertAnalysisT)
   const [days, setDays] = useState(90)
 
   const query = useQuery({
@@ -36,8 +36,8 @@ export function ExpertAnalysisPage() {
     refetchInterval: 300000,
   })
 
-  if (query.isLoading) return <LoadingState label={t.loading_label} />
-  if (query.isError || !query.data) return <ErrorState detail={t.error_detail} onRetry={() => query.refetch()} />
+  if (query.isLoading) return <LoadingState label="Cruzando produccion y mantencion..." />
+  if (query.isError || !query.data) return <ErrorState detail="No se pudo cargar el analisis experto." />
 
   const { analysis, cycles } = query.data
   const perdidas = analysis.toneladas_perdidas
@@ -46,16 +46,16 @@ export function ExpertAnalysisPage() {
     <div className="module-page">
       <ModuleHeader
         icon={Brain}
-        eyebrow={t.eyebrow}
-        title={t.title}
-        description={t.description}
-        meta="API /api/analysis/expert"
+        eyebrow="Analisis Experto"
+        title="Produccion x Mantencion, en simple"
+        description="Cada tarjeta responde una pregunta de negocio con datos históricos sintéticos de la demo."
+        meta="Demo sintética · API /api/analysis/expert"
         actions={
           <>
             {cycles && (
               <span className="panel-tag">
                 <Database size={12} style={{ verticalAlign: 'text-top', marginRight: 4 }} />
-                {t.cycles_historized(cycles.total_ciclos.toLocaleString('es-CL'), cycles.desde ?? '', cycles.hasta ?? '')}
+                {cycles.total_ciclos.toLocaleString('es-CL')} ciclos historizados ({cycles.desde} a {cycles.hasta})
               </span>
             )}
             <span style={{ display: 'inline-flex', gap: 4 }}>
@@ -95,7 +95,7 @@ export function ExpertAnalysisPage() {
           )
         })}
         {!analysis.hallazgos.length && (
-          <EmptyState title={t.no_history_yet} />
+          <EmptyState title="Aun no hay suficiente historia para el analisis. Los ciclos se acumulan automaticamente." />
         )}
       </section>
 
@@ -104,13 +104,14 @@ export function ExpertAnalysisPage() {
         <section className="panel">
           <div className="panel-header">
             <div>
-              <span className="panel-kicker">{t.cost_of_unavailability_kicker}</span>
-              <h2>{t.lost_tons_by_breakdowns_title}</h2>
+              <span className="panel-kicker">Costo de indisponibilidad</span>
+              <h2>Toneladas perdidas por averias, por equipo</h2>
             </div>
-            <span className="panel-tag">{t.total_label(formatTons(perdidas.total))}</span>
+            <span className="panel-tag">Total: {formatTons(perdidas.total)}</span>
           </div>
           <p style={{ color: 'var(--nm-muted)', fontSize: '0.8rem', margin: '0 0 10px' }}>
-            {t.lost_tons_explanation}
+            Como se calcula: lo que el equipo mueve en un dia normal x los dias que estuvo detenido por averia.
+            Es un techo teorico (parte de la carga la absorben otros equipos), pero ordena las prioridades por plata, no por horas.
           </p>
           {perdidas.equipos.map((item, index) => (
             <div key={item.equipment_id} className="nm-avr-hbar">
@@ -129,7 +130,7 @@ export function ExpertAnalysisPage() {
             </div>
           ))}
           <small style={{ color: 'var(--nm-muted)', display: 'block', marginTop: 8 }}>
-            {t.lost_tons_detail}
+            Detalle: dias detenido x produccion diaria promedio de cada equipo (solo averias correctivas).
           </small>
         </section>
       )}
@@ -139,26 +140,27 @@ export function ExpertAnalysisPage() {
         <div className="panel">
           <div className="panel-header">
             <div>
-              <span className="panel-kicker">{t.maintenance_quality_kicker}</span>
-              <h2>{t.breakdowns_after_pm_title}</h2>
+              <span className="panel-kicker">Calidad de mantencion</span>
+              <h2>Averias justo despues de una PM</h2>
             </div>
             <span className="panel-tag">
-              {analysis.post_pm.pct_dentro_7_dias != null ? t.pct_within_7_days(analysis.post_pm.pct_dentro_7_dias) : t.no_data_tag}
+              {analysis.post_pm.pct_dentro_7_dias != null ? `${analysis.post_pm.pct_dentro_7_dias}% en 7 dias` : 'sin datos'}
             </span>
           </div>
           <p style={{ color: 'var(--nm-muted)', fontSize: '0.8rem', lineHeight: 1.5 }}>
-            {t.breakdowns_after_pm_explanation}
+            Si un equipo se avería a los pocos dias de salir de mantencion programada, la intervencion
+            probablemente no resolvio el problema de fondo. Estos son los equipos donde mas se repite:
           </p>
           {analysis.post_pm.equipos_repetidos.length ? (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
               {analysis.post_pm.equipos_repetidos.map((item) => (
                 <span key={item.equipment_id} className="panel-tag" style={{ borderColor: '#FBBF2488', color: '#FBBF24' }}>
-                  {item.equipment_id}: {item.casos} {item.casos === 1 ? t.case_singular : t.case_plural}
+                  {item.equipment_id}: {item.casos} {item.casos === 1 ? 'caso' : 'casos'}
                 </span>
               ))}
             </div>
           ) : (
-            <EmptyState title={t.no_repeated_cases} />
+            <EmptyState title="Sin casos repetidos en la ventana." />
           )}
         </div>
 
@@ -166,35 +168,36 @@ export function ExpertAnalysisPage() {
         <div className="panel">
           <div className="panel-header">
             <div>
-              <span className="panel-kicker">{t.backtesting_kicker}</span>
-              <h2>{t.shift_target_vs_reality_title}</h2>
+              <span className="panel-kicker">Backtesting</span>
+              <h2>La meta de turno contra la realidad</h2>
             </div>
-            <span className="panel-tag">{analysis.meta ? t.shifts_analyzed(analysis.meta.turnos_analizados) : t.no_data_tag}</span>
+            <span className="panel-tag">{analysis.meta ? `${analysis.meta.turnos_analizados} turnos` : 'sin datos'}</span>
           </div>
           {analysis.meta ? (
             <div style={{ display: 'grid', gap: 8 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: 'var(--nm-muted)' }}>{t.current_target}</span>
+                <span style={{ color: 'var(--nm-muted)' }}>Meta actual</span>
                 <strong>{formatTons(analysis.meta.meta_turno)}</strong>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: 'var(--nm-muted)' }}>{t.typical_shift}</span>
+                <span style={{ color: 'var(--nm-muted)' }}>Turno tipico (mediana real)</span>
                 <strong>{formatTons(analysis.meta.mediana_turno)}</strong>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: 'var(--nm-muted)' }}>{t.times_met}</span>
+                <span style={{ color: 'var(--nm-muted)' }}>Veces que se cumplio</span>
                 <strong>{analysis.meta.pct_turnos_cumplidos}%</strong>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: 'var(--nm-muted)' }}>{t.demand_percentile}</span>
-                <strong>{t.out_of_100(analysis.meta.percentil_meta)}</strong>
+                <span style={{ color: 'var(--nm-muted)' }}>Exigencia (percentil)</span>
+                <strong>{analysis.meta.percentil_meta} de 100</strong>
               </div>
               <small style={{ color: 'var(--nm-muted)', lineHeight: 1.5 }}>
-                {t.percentile_reading_hint}
+                Lectura: percentil bajo = meta facil (casi todos los turnos la superan); percentil 40-75 = exigente
+                pero alcanzable; sobre 75 = se cumple pocas veces y desmotiva.
               </small>
             </div>
           ) : (
-            <EmptyState title={t.needs_more_shifts} />
+            <EmptyState title="Se necesitan al menos 10 turnos historizados." />
           )}
         </div>
       </section>

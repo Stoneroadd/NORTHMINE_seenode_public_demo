@@ -1,0 +1,2 @@
+export { RendimientoPage } from './PlaceholderPage'
+

@@ -1,6 +1,5 @@
 ﻿from __future__ import annotations
 
-import os
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -51,7 +50,6 @@ def list_available_aerial_files(limit: int = 20) -> dict[str, Any]:
 
 _PREVIEW_DIR_NAME = "_previews"
 _PREVIEW_MAX_PX = 3000
-_PREVIEW_MAX_SOURCE_PIXELS = max(1, int(os.getenv("NORTHMINE_AERIAL_PREVIEW_MAX_PIXELS", "100000000")))
 
 
 def _find_source_file(file_name: str) -> Path | None:
@@ -79,12 +77,8 @@ def get_or_build_preview(file_name: str) -> Path | None:
 
     from PIL import Image
 
+    Image.MAX_IMAGE_PIXELS = None  # ortomosaicos legitimos superan el limite default
     with Image.open(source) as img:
-        width, height = img.size
-        if width * height > _PREVIEW_MAX_SOURCE_PIXELS:
-            raise ValueError(
-                f"El ortomosaico supera el limite de {_PREVIEW_MAX_SOURCE_PIXELS:,} pixeles para vista previa."
-            )
         img.thumbnail((_PREVIEW_MAX_PX, _PREVIEW_MAX_PX))
         if img.mode in ("RGBA", "LA", "P"):
             background = Image.new("RGB", img.size, (8, 18, 32))

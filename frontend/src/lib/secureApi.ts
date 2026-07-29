@@ -3,11 +3,8 @@ import { useAppStore } from '../store'
 import { settingsService } from '../services/settingsService'
 
 const BASE_URL = settingsService.apiBaseUrl
+const SESSION_KEY = 'northmine2.auth.session'
 
-// El access token vive solo en memoria (zustand), nunca en localStorage: un
-// script inyectado por XSS es lo primero que revisa el disco del navegador,
-// no la memoria del proceso. El refresh token, mas valioso porque dura 7
-// dias, vive solo en la cookie httpOnly que el navegador nunca expone a JS.
 function decodeJwtPayload(token: string): Record<string, unknown> | null {
   try {
     const payload = token.split('.')[1]
@@ -31,11 +28,46 @@ function isActiveJwt(token: string): boolean {
   return exp * 1000 > Date.now() + 30_000
 }
 
+function getStoredAccessToken(): string | null {
+  try {
+    const raw = localStorage.getItem(SESSION_KEY)
+    if (!raw) return null
+
+    const session = JSON.parse(raw) as { access_token?: unknown }
+    return typeof session.access_token === 'string' ? session.access_token : null
+  } catch {
+    localStorage.removeItem(SESSION_KEY)
+    return null
+  }
+}
+
 function getCurrentAccessToken(): string | null {
   const storeToken = useAppStore.getState().usuario?.token
   if (storeToken && isActiveJwt(storeToken)) return storeToken
 
+  const storedToken = getStoredAccessToken()
+  if (storedToken && isActiveJwt(storedToken)) return storedToken
+
   return null
+}
+
+function updateStoredAccessToken(token: string) {
+  try {
+    const raw = localStorage.getItem(SESSION_KEY)
+    if (!raw) return
+    const session = JSON.parse(raw)
+    localStorage.setItem(SESSION_KEY, JSON.stringify({ ...session, access_token: token }))
+  } catch {
+    localStorage.removeItem(SESSION_KEY)
+  }
+}
+
+function clearStoredSession() {
+  try {
+    localStorage.removeItem(SESSION_KEY)
+  } catch {
+    // Ignore storage errors; zustand logout below is the source of truth.
+  }
 }
 
 export const secureApi: AxiosInstance = axios.create({
@@ -71,27 +103,9 @@ function processQueue(error: AxiosError | null, token: string | null = null) {
   failedQueue = []
 }
 
-// El banner "SIN CONEXION" se disparaba con que UNA sola request sin
-// `error.response` fallara, aunque llegaran en el mismo instante otras
-// respuestas exitosas (p.ej. el Decision Cockpit dispara ~8 queries en
-// paralelo; que una sola se demore/expire no significa que el backend este
-// caido). Ahora se espera un breve margen antes de encender el aviso: si
-// llega una respuesta exitosa de CUALQUIER endpoint en ese margen, se
-// cancela — solo se muestra si de verdad no hay señal de vida.
-const UNREACHABLE_GRACE_MS = 1500
-let unreachableTimer: ReturnType<typeof setTimeout> | null = null
-
-function cancelPendingUnreachable() {
-  if (unreachableTimer) {
-    clearTimeout(unreachableTimer)
-    unreachableTimer = null
-  }
-}
-
 secureApi.interceptors.response.use(
   (response) => {
     const store = useAppStore.getState()
-    cancelPendingUnreachable()
     if (store.backendUnreachable) {
       store.setBackendUnreachable(false)
     }
@@ -120,15 +134,9 @@ secureApi.interceptors.response.use(
     const status   = error.response?.status
 
     // Sin `error.response` = la request nunca llego a destino (backend caido,
-    // timeout, red cortada, o simplemente se cancelo) — distinto de un error
-    // HTTP donde el backend si respondio (esos traen `error.response`, p.ej.
-    // los 410 intencionales del Decision Cockpit en modo demo).
-    if (!error.response && !axios.isCancel(error)) {
-      cancelPendingUnreachable()
-      unreachableTimer = setTimeout(() => {
-        unreachableTimer = null
-        useAppStore.getState().setBackendUnreachable(true)
-      }, UNREACHABLE_GRACE_MS)
+    // timeout, red cortada) — distinto de un error HTTP donde el backend si respondio.
+    if (!error.response) {
+      useAppStore.getState().setBackendUnreachable(true)
     }
 
     if (status === 401 && !original._retry && !original.url?.includes('/auth/')) {
@@ -154,6 +162,7 @@ secureApi.interceptors.response.use(
         const newToken = data.access_token
         const { usuario, setUsuario } = useAppStore.getState()
         if (usuario) setUsuario({ ...usuario, token: newToken })
+        updateStoredAccessToken(newToken)
 
         processQueue(null, newToken)
         original.headers = original.headers ?? {}
@@ -161,6 +170,7 @@ secureApi.interceptors.response.use(
         return secureApi(original)
       } catch (refreshError) {
         processQueue(refreshError as AxiosError, null)
+        clearStoredSession()
         useAppStore.getState().logout()
         window.location.href = '/'
         return Promise.reject(refreshError)

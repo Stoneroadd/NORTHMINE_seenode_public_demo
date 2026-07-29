@@ -18,7 +18,6 @@ interface Props {
 // ── Theme previews (hardcoded, NOT using CSS vars of active theme) ─────────
 const THEME_PREVIEWS: Record<ThemeId, { bg: string; mid: string; accent: string; text: string }> = {
   dark:        { bg: '#050810', mid: '#0C1220', accent: '#00FF88', text: 'rgba(255,255,255,0.9)' },
-  operational: { bg: '#050607', mid: '#17191C', accent: '#B8C0C8', text: 'rgba(245,247,250,0.94)' },
   light:       { bg: '#EEF1F5', mid: '#FFFFFF', accent: '#0052CC', text: 'rgba(0,0,0,0.87)' },
   futuristic:  { bg: '#000308', mid: '#020818', accent: '#00FFCC', text: 'rgba(0,255,255,0.95)' },
   minimal:     { bg: '#FAFAFA', mid: '#FFFFFF', accent: '#0055FF', text: '#111111' },
@@ -46,7 +45,7 @@ const EFFECT_ICONS = {
 
 function themeLabel(t: Translations, id: ThemeId): string {
   const map: Record<ThemeId, string> = {
-    dark: t.settings.tema_dark, operational: 'OSCURO NEGRO', light: t.settings.tema_light, futuristic: t.settings.tema_futuristic,
+    dark: t.settings.tema_dark, light: t.settings.tema_light, futuristic: t.settings.tema_futuristic,
     minimal: t.settings.tema_minimal, carbon: t.settings.tema_carbon,
   }
   return map[id]
@@ -54,7 +53,7 @@ function themeLabel(t: Translations, id: ThemeId): string {
 
 function themeDesc(t: Translations, id: ThemeId): string {
   const map: Record<ThemeId, string> = {
-    dark: t.settings.tema_dark_desc, operational: 'Negro, gris y superficies transparentes', light: t.settings.tema_light_desc, futuristic: t.settings.tema_futuristic_desc,
+    dark: t.settings.tema_dark_desc, light: t.settings.tema_light_desc, futuristic: t.settings.tema_futuristic_desc,
     minimal: t.settings.tema_minimal_desc, carbon: t.settings.tema_carbon_desc,
   }
   return map[id]

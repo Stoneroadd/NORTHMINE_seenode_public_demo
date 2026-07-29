@@ -28,8 +28,8 @@ export function ProductionTrendChart({ daily, hourly, planAvailable = true }: Pr
   }))
 
   return (
-    <section className="chart-grid production-trend-grid">
-      <div className="plan-board-card production-trend-card production-trend-card--plan">
+    <section className="chart-grid">
+      <div className="panel chart-panel">
         <div className="panel-header">
           <div>
             <span className="panel-kicker">{t.cumulativeProductionKicker}</span>
@@ -42,16 +42,16 @@ export function ProductionTrendChart({ daily, hourly, planAvailable = true }: Pr
           xKey="fecha"
           series={planAvailable
             ? [
-                { key: 'plan', name: t.planSeries },
-                { key: 'real', name: t.realSeries },
+                { key: 'plan', name: t.planSeries, color: 'rgba(255,184,77,0.48)' },
+                { key: 'real', name: t.realSeries, color: '#75D6A0' },
               ]
             : [
-                { key: 'real', name: t.realObservedSeries },
+                { key: 'real', name: t.realObservedSeries, color: '#75D6A0' },
               ]}
         />
       </div>
 
-      <div className="plan-board-card production-trend-card production-trend-card--live">
+      <div className="panel chart-panel">
         <div className="panel-header">
           <div>
             <span className="panel-kicker">{t.currentShiftKicker}</span>

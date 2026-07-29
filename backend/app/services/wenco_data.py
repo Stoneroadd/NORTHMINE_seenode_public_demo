@@ -1,4 +1,4 @@
-﻿"""
+"""
 NORTHMINE - Conector de datos reales WENCO SQL Server.
 Unico proveedor del dataset operacional (el modo demo fue eliminado).
 """
@@ -13,10 +13,7 @@ from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
-try:
-    import pyodbc
-except ImportError:  # pragma: no cover - optional in public demo mode
-    pyodbc = None
+import pyodbc
 
 from app.core.config import get_settings
 
@@ -90,45 +87,17 @@ def _streamlit_db_config() -> dict[str, str]:
 
 def _connection_config() -> dict[str, str]:
     settings = get_settings()
-    # Puente de conveniencia SOLO para desarrollo local (ver docstring de
-    # _streamlit_db_config). Nunca se consulta en produccion: ahi, credenciales
-    # SQL faltantes deben fallar explicito, no resolverse leyendo el codigo
-    # fuente de un proyecto legado sin vetar.
-    streamlit_config = {} if settings.is_production else _streamlit_db_config()
-    if streamlit_config:
-        logger.warning(
-            "Usando credenciales SQL leidas de streamlit/northmine_db.py (fallback de "
-            "desarrollo) porque NORTHMINE_SQL_* no esta configurado. No usar en produccion."
-        )
+    streamlit_config = _streamlit_db_config()
     return {
         "server": settings.sql_server or streamlit_config.get("server", ""),
         "database": settings.sql_db or streamlit_config.get("database", "WENCO"),
         "user": settings.sql_user or streamlit_config.get("user", ""),
         "password": settings.sql_password or streamlit_config.get("password", ""),
         "driver": os.getenv("NORTHMINE_SQL_DRIVER", streamlit_config.get("driver", "ODBC Driver 17 for SQL Server")),
-        # Certificate validation is mandatory in production. A temporary
-        # development exception is explicit and never inherited from a legacy
-        # Streamlit configuration.
-        "trust_server_certificate": "yes" if (not settings.is_production and settings.sql_trust_server_certificate) else "no",
     }
 
 
-def _connection_string(config: dict[str, str]) -> str:
-    """Build an encrypted, certificate-validating SQL Server connection."""
-    return (
-        f"DRIVER={{{config['driver']}}};"
-        f"SERVER={config['server']},1433;"
-        f"DATABASE={config['database']};"
-        f"UID={config['user']};"
-        f"PWD={config['password']};"
-        "Encrypt=yes;"
-        f"TrustServerCertificate={config['trust_server_certificate']};"
-    )
-
-
 def _get_connection():
-    if pyodbc is None:
-        raise RuntimeError("pyodbc is not installed; real WENCO/SQL mode requires the SQL Server ODBC dependency.")
     config = _connection_config()
     missing = [key for key in ("server", "database", "user", "password") if not config.get(key)]
     if missing:
@@ -136,11 +105,19 @@ def _get_connection():
             "Configuracion WENCO incompleta para modo REAL: "
             + ", ".join(f"NORTHMINE_SQL_{key.upper()}" for key in missing)
         )
-    conn = pyodbc.connect(_connection_string(config), timeout=15)
+    conn = pyodbc.connect(
+        f"DRIVER={{{config['driver']}}};"
+        f"SERVER={config['server']},1433;"
+        f"DATABASE={config['database']};"
+        f"UID={config['user']};"
+        f"PWD={config['password']};"
+        f"TrustServerCertificate=yes;",
+        timeout=15,
+    )
     # La coleccion de este WENCO guarda varchar en cp1252 (texto en espanol
     # con tildes/enies), no utf-8. Sin esto, pyodbc decodifica SQL_CHAR como
     # utf-8 por defecto y las tildes salen como el caracter de reemplazo
-    # (confirmado con evidencia real: "Averï¿½a"/"Camiï¿½n" en STATUS_DESC).
+    # (confirmado con evidencia real: "Aver�a"/"Cami�n" en STATUS_DESC).
     conn.setdecoding(pyodbc.SQL_CHAR, encoding="cp1252")
     conn.setdecoding(pyodbc.SQL_WCHAR, encoding="utf-16le")
     conn.setencoding(encoding="utf-8")
@@ -534,4 +511,3 @@ def test_connection() -> dict[str, Any]:
     except Exception as e:
         result["error"] = str(e)
     return result
-

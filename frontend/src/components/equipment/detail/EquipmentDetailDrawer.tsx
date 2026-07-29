@@ -1,5 +1,4 @@
 import { useEffect } from 'react'
-import { createPortal } from 'react-dom'
 import { useQuery } from '@tanstack/react-query'
 import { AnimatePresence, motion } from 'framer-motion'
 import { CircleAlert, Loader2 } from 'lucide-react'
@@ -39,7 +38,7 @@ export function EquipmentDetailDrawer({ equipmentId, open, onClose }: Props) {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [onClose, open])
 
-  const drawer = (
+  return (
     <AnimatePresence>
       {open && (
         <div className="equipment-drawer-layer" role="dialog" aria-modal="true" aria-label={t.equipmentDetailAria}>
@@ -92,8 +91,4 @@ export function EquipmentDetailDrawer({ equipmentId, open, onClose }: Props) {
       )}
     </AnimatePresence>
   )
-
-  if (typeof document === 'undefined') return drawer
-
-  return createPortal(drawer, document.body)
 }

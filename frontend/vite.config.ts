@@ -50,17 +50,14 @@ export default defineConfig({
     chunkSizeWarningLimit: 5000,
     rollupOptions: {
       output: {
-        // Vite 8 (Rollup) quito el soporte del atajo de objeto para
-        // manualChunks; misma agrupacion de antes, expresada como funcion.
-        manualChunks(id: string) {
-          if (!id.includes('node_modules')) return
-          if (/node_modules[\\/](react|react-dom)[\\/]/.test(id)) return 'vendor-react'
-          if (/node_modules[\\/]recharts[\\/]/.test(id)) return 'vendor-charts'
-          if (/node_modules[\\/](echarts|echarts-for-react)[\\/]/.test(id)) return 'vendor-echarts'
-          if (/node_modules[\\/](three|@react-three)[\\/]/.test(id)) return 'vendor-three'
-          if (/node_modules[\\/](zustand|@tanstack[\\/]react-query)[\\/]/.test(id)) return 'vendor-store'
-          if (/node_modules[\\/]framer-motion[\\/]/.test(id)) return 'vendor-animation'
-          if (/node_modules[\\/]lucide-react[\\/]/.test(id)) return 'vendor-icons'
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom'],
+          'vendor-charts': ['recharts'],
+          'vendor-echarts': ['echarts', 'echarts-for-react'],
+          'vendor-three': ['three', '@react-three/fiber', '@react-three/drei'],
+          'vendor-store': ['zustand', '@tanstack/react-query'],
+          'vendor-animation': ['framer-motion'],
+          'vendor-icons': ['lucide-react'],
         },
       },
     },

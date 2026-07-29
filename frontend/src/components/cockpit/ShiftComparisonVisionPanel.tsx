@@ -25,12 +25,9 @@ import { formatNumber, formatTons } from './cockpitModel'
 import { getDetailModalAnchor, getDetailModalStyle, type DetailModalAnchor } from './detailModalPosition'
 import { useModuleT } from '../../i18n/useModuleT'
 import { cockpitT, type CockpitT } from '../../i18n/modules/cockpit'
-import { premiumPalette, useChartPaletteKey } from '../charts/premium/chartTheme'
 
-// Dia/noche son un codigo de color semantico fijo (no un accent de marca),
-// por eso usan su propio token --vision-night en vez de premiumPalette.amber
-// o .red: cada apariencia lo redefine a su manera (violeta en dark/light,
-// gris en minimal, bronce en carbon) para no chocar con su propio cyan.
+const DAY_COLOR = '#2FD4FF'
+const NIGHT_COLOR = '#C98BFF'
 const SHIFT_HOURS = 12
 
 type ShiftFocus = 'DIA' | 'NOCHE' | 'AMBOS'
@@ -1274,7 +1271,6 @@ function EquipmentComparisonDetailModal({
   onClose: () => void
 }) {
   const t = useModuleT(cockpitT)
-  useChartPaletteKey()
   useEffect(() => {
     if (!item) return
     const onKeyDown = (event: KeyboardEvent) => {
@@ -1303,8 +1299,6 @@ function EquipmentComparisonDetailModal({
   const avgLoadingTph = type === 'loader' && activeHourlyRows > 0 ? displayTonnes / activeHourlyRows : null
   const image = getEquipmentImage(item.id, item.model)
   const label = getEquipmentLabel(item.id, item.model)
-  const isPala1 = type === 'loader' && item.id.replace(/\s/g, '').toUpperCase() === 'PALA1'
-  const displayModel = isPala1 ? 'P&H 4100XPC AC' : item.model
   const peak = equipmentRows.reduce<ShiftComparisonEquipmentHourlyPoint | null>(
     (best, row) => (!best || selectedHourlyTonnes(row, focusShift) > selectedHourlyTonnes(best, focusShift) ? row : best),
     null,
@@ -1343,13 +1337,13 @@ function EquipmentComparisonDetailModal({
       <aside className="nmcp-detail-modal">
         <header className="nmcp-detail-header">
           <div className="nmcp-shift-detail-title">
-            <span className={`nmcp-equipment-visual is-${type}${isPala1 ? ' is-pala-1' : ''}`}>
+            <span className={`nmcp-equipment-visual is-${type}`}>
               <img src={image} alt={label} loading="lazy" />
             </span>
             <div>
               <span className="nmcp-section-kicker">{type === 'loader' ? t.sc_detalle_uc : t.sc_detalle_caex}</span>
               <h2>{item.id}</h2>
-              <p>{displayModel} - {focusLabel(focusShift, t)}</p>
+              <p>{item.model} - {focusLabel(focusShift, t)}</p>
               <p>{t.loading_modal_operador(displayOperator)}</p>
             </div>
           </div>
@@ -1364,7 +1358,6 @@ function EquipmentComparisonDetailModal({
           {focusShift === 'AMBOS' && <span><small>{t.sc_diferencia_label}</small><strong>{formatTons(item.difference_tonnes)}</strong></span>}
           <span><small>{t.sc_ciclos_kv}</small><strong>{formatNumber(displayCycles)}</strong></span>
           {type === 'loader' && <span><small>{t.sc_rend_carguio_kv}</small><strong>{avgLoadingTph === null ? t.common_sin_dato : `${formatNumber(avgLoadingTph, 1)} t/h`}</strong></span>}
-          {isPala1 && <span><small>Meta P&H 4100</small><strong>5.000 t/h</strong></span>}
           <span><small>{t.sc_dist_od}</small><strong>{formatMetric(avgLoadedDistance, 'km', t)}</strong></span>
           {type === 'truck' && <span><small>{t.sc_transp_n04}</small><strong>{formatMetric(avgTransportN04, 'min', t)}</strong></span>}
           {type === 'truck' && <span><small>{t.sc_retorno_n03}</small><strong>{formatMetric(avgEmptyReturnN03, 'min', t)}</strong></span>}
@@ -1415,7 +1408,7 @@ function EquipmentComparisonDetailModal({
                           <Bar
                             dataKey="dia_tonnes"
                             name="Dia"
-                            fill={premiumPalette.cyan}
+                            fill={DAY_COLOR}
                             radius={[6, 6, 0, 0]}
                             maxBarSize={28}
                             shape={<RisingBarShape variant="day" />}
@@ -1427,7 +1420,7 @@ function EquipmentComparisonDetailModal({
                           >
                             <LabelList
                               dataKey="dia_tonnes"
-                              content={<HourlyBarValueLabel fill={premiumPalette.cyan} animationId={`${detailAnimationId}-dia`} />}
+                              content={<HourlyBarValueLabel fill={DAY_COLOR} animationId={`${detailAnimationId}-dia`} />}
                             />
                           </Bar>
                         )}
@@ -1435,7 +1428,7 @@ function EquipmentComparisonDetailModal({
                           <Bar
                             dataKey="noche_tonnes"
                             name="Noche"
-                            fill={premiumPalette.night}
+                            fill={NIGHT_COLOR}
                             radius={[6, 6, 0, 0]}
                             maxBarSize={28}
                             shape={<RisingBarShape variant="night" />}
@@ -1447,7 +1440,7 @@ function EquipmentComparisonDetailModal({
                           >
                             <LabelList
                               dataKey="noche_tonnes"
-                              content={<HourlyBarValueLabel fill={premiumPalette.night} animationId={`${detailAnimationId}-noche`} />}
+                              content={<HourlyBarValueLabel fill={NIGHT_COLOR} animationId={`${detailAnimationId}-noche`} />}
                             />
                           </Bar>
                         )}
@@ -1661,7 +1654,6 @@ export function ShiftComparisonVisionPanel({
   onRefresh,
 }: ShiftComparisonVisionPanelProps) {
   const t = useModuleT(cockpitT)
-  useChartPaletteKey()
   const [focusShift, setFocusShift] = useState<ShiftFocus>('AMBOS')
   const [selectedEquipment, setSelectedEquipment] = useState<{
     type: 'loader' | 'truck'
@@ -1862,7 +1854,7 @@ export function ShiftComparisonVisionPanel({
                   <Bar
                     dataKey="dia_tonnes"
                     name="Dia"
-                    fill={premiumPalette.cyan}
+                    fill={DAY_COLOR}
                     radius={[5, 5, 0, 0]}
                     maxBarSize={24}
                     shape={<RisingBarShape variant="day" />}
@@ -1875,7 +1867,7 @@ export function ShiftComparisonVisionPanel({
                     {showHourlyBarLabels && (
                       <LabelList
                         dataKey="dia_tonnes"
-                        content={<HourlyBarValueLabel fill={premiumPalette.cyan} animationId={`${mainHourlyAnimationId}-dia`} />}
+                        content={<HourlyBarValueLabel fill={DAY_COLOR} animationId={`${mainHourlyAnimationId}-dia`} />}
                       />
                     )}
                   </Bar>
@@ -1884,7 +1876,7 @@ export function ShiftComparisonVisionPanel({
                   <Bar
                     dataKey="noche_tonnes"
                     name="Noche"
-                    fill={premiumPalette.night}
+                    fill={NIGHT_COLOR}
                     radius={[5, 5, 0, 0]}
                     maxBarSize={24}
                     shape={<RisingBarShape variant="night" />}
@@ -1897,7 +1889,7 @@ export function ShiftComparisonVisionPanel({
                     {showHourlyBarLabels && (
                       <LabelList
                         dataKey="noche_tonnes"
-                        content={<HourlyBarValueLabel fill={premiumPalette.night} animationId={`${mainHourlyAnimationId}-noche`} />}
+                        content={<HourlyBarValueLabel fill={NIGHT_COLOR} animationId={`${mainHourlyAnimationId}-noche`} />}
                       />
                     )}
                   </Bar>

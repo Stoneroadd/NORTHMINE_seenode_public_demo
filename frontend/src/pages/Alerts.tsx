@@ -23,7 +23,7 @@ import { EmptyState } from '../components/common/EmptyState'
 import { AlertSeverityBadge, normalizeSeverity } from '../components/alerts/AlertSeverityBadge'
 import { EquipmentDetailDrawer } from '../components/equipment/detail/EquipmentDetailDrawer'
 import { getEquipmentFamilyLabel, getEquipmentImage, getEquipmentLabel } from '../data/equipmentAssets'
-import { axisLabel, formatNumber, formatTons, premiumPalette, tooltipBase, useChartPaletteKey } from '../components/charts/premium/chartTheme'
+import { axisLabel, formatNumber, formatTons, premiumPalette, tooltipBase } from '../components/charts/premium/chartTheme'
 import type { DestinationDistribution, LowCaexAlert, OperationalAlertsResponse, SmartAlert } from '../lib/api'
 import { useModuleT } from '../i18n/useModuleT'
 import { alertsT, type AlertsT } from '../i18n/modules/alerts'
@@ -435,14 +435,13 @@ export function Alerts() {
     return severity === 'TODAS' ? sortedAlerts : sortedAlerts.filter((item) => normalizeSeverity(item) === severity)
   }, [sortedAlerts, severity])
 
-  const themeId = useChartPaletteKey()
-  const weekdayOption = useMemo(() => query.data ? buildWeekdayOption(query.data, t) : undefined, [query.data, t, themeId])
-  const destinationOption = useMemo(() => query.data ? buildDestinationOption(query.data.destination_distribution, t) : undefined, [query.data, t, themeId])
+  const weekdayOption = useMemo(() => query.data ? buildWeekdayOption(query.data, t) : undefined, [query.data, t])
+  const destinationOption = useMemo(() => query.data ? buildDestinationOption(query.data.destination_distribution, t) : undefined, [query.data, t])
   const grouped = useMemo(() => groupAlertsByDomain(filtered), [filtered])
   const priorityActions = useMemo(() => sortAlerts(filtered, t).slice(0, 5), [filtered, t])
 
   if (query.isLoading) return <LoadingState label="Cargando alertas operacionales..." />
-  if (query.isError || !query.data) return <ErrorState detail="No se pudo cargar /api/alerts/operational." onRetry={() => query.refetch()} />
+  if (query.isError || !query.data) return <ErrorState detail="No se pudo cargar /api/alerts/operational." />
 
   const data = query.data
   const summary = buildExecutiveSummary(data, t)

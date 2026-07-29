@@ -8,7 +8,7 @@ import { ModuleHeader } from '../components/common/ModuleHeader'
 import { LoadingState } from '../components/common/LoadingState'
 import { ErrorState } from '../components/common/ErrorState'
 import { EquipmentDetailDrawer } from '../components/equipment/detail/EquipmentDetailDrawer'
-import { axisLabel, formatNumber, formatTons, premiumPalette, tooltipBase, useChartPaletteKey } from '../components/charts/premium/chartTheme'
+import { axisLabel, formatNumber, formatTons, premiumPalette, tooltipBase } from '../components/charts/premium/chartTheme'
 import type { CompareResponse } from '../lib/api'
 import { useModuleT } from '../i18n/useModuleT'
 import { compareT, type CompareT } from '../i18n/modules/compare'
@@ -55,7 +55,7 @@ function buildHourlyCompareOption(data: CompareResponse, t: CompareT): EChartsOp
 
   return {
     animationDuration: 850,
-    color: [premiumPalette.cyan, premiumPalette.mineral],
+    color: ['#00D4FF', '#00FF88'],
     grid: { top: 30, right: 24, bottom: 42, left: 76 },
     tooltip: {
       ...tooltipBase(),
@@ -71,8 +71,8 @@ function buildHourlyCompareOption(data: CompareResponse, t: CompareT): EChartsOp
     xAxis: { type: 'category', data: labels, axisLabel, axisTick: { show: false }, axisLine: { lineStyle: { color: premiumPalette.grid } } },
     yAxis: { type: 'value', splitLine: { lineStyle: { color: premiumPalette.grid } }, axisLabel: { ...axisLabel, formatter: (value: number) => formatNumber(value) } },
     series: [
-      { name: t.period_a, type: 'line', smooth: true, lineStyle: { width: 3 }, areaStyle: { color: premiumPalette.cyan, opacity: 0.08 }, data: aValues },
-      { name: t.period_b, type: 'line', smooth: true, lineStyle: { width: 3 }, areaStyle: { color: premiumPalette.mineral, opacity: 0.08 }, data: bValues },
+      { name: t.period_a, type: 'line', smooth: true, lineStyle: { width: 3 }, areaStyle: { color: 'rgba(0,212,255,0.08)' }, data: aValues },
+      { name: t.period_b, type: 'line', smooth: true, lineStyle: { width: 3 }, areaStyle: { color: 'rgba(0,255,136,0.08)' }, data: bValues },
     ],
   } as EChartsOption
 }
@@ -81,7 +81,7 @@ function buildLoaderCompareOption(data: CompareResponse, t: CompareT): EChartsOp
   const loaders = data.por_pala_a.map((item) => item.carguio_id)
   return {
     animationDuration: 850,
-    color: [premiumPalette.cyan, premiumPalette.mineral],
+    color: ['#00D4FF', '#00FF88'],
     grid: { top: 34, right: 24, bottom: 38, left: 74 },
     tooltip: tooltipBase(),
     legend: { top: 0, right: 0, textStyle: { color: premiumPalette.muted, fontSize: 11 } },
@@ -102,12 +102,11 @@ export function Compare() {
   const params = defaultRanges(preset, custom)
   const query = useQuery({ queryKey: ['compare', params], queryFn: () => getCompare(params) })
 
-  const themeId = useChartPaletteKey()
-  const hourlyOption = useMemo(() => query.data ? buildHourlyCompareOption(query.data, t) : undefined, [query.data, t, themeId])
-  const loaderOption = useMemo(() => query.data ? buildLoaderCompareOption(query.data, t) : undefined, [query.data, t, themeId])
+  const hourlyOption = useMemo(() => query.data ? buildHourlyCompareOption(query.data, t) : undefined, [query.data, t])
+  const loaderOption = useMemo(() => query.data ? buildLoaderCompareOption(query.data, t) : undefined, [query.data, t])
 
   if (query.isLoading) return <LoadingState label={t.loading} />
-  if (query.isError || !query.data) return <ErrorState detail={t.error_detail} onRetry={() => query.refetch()} />
+  if (query.isError || !query.data) return <ErrorState detail={t.error_detail} />
 
   const data = query.data
   const tonRow = data.tabla[0]

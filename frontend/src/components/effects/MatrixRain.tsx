@@ -21,11 +21,6 @@ export function MatrixRain() {
     let columns: number[] = []
     const chars = '01NORTHMINEEXCAEX'
     const fontSize = 14
-    // Puramente decorativo: 24fps es indistinguible del ojo a esta velocidad
-    // de caida, pero evita competir por CPU/GPU con el resto de la app (y con
-    // el software de grabacion de pantalla) en pantallas de alta frecuencia.
-    const frameIntervalMs = 1000 / 24
-    let lastDraw = 0
 
     const resize = () => {
       const ratio = window.devicePixelRatio || 1
@@ -39,12 +34,7 @@ export function MatrixRain() {
       columns = Array.from({ length: Math.ceil(width / fontSize) }, () => Math.random() * -40)
     }
 
-    const draw = (timestamp: number) => {
-      frame = window.requestAnimationFrame(draw)
-
-      if (timestamp - lastDraw < frameIntervalMs) return
-      lastDraw = timestamp
-
+    const draw = () => {
       context.fillStyle = 'rgba(7, 11, 20, 0.14)'
       context.fillRect(0, 0, width, height)
       context.font = `${fontSize}px "JetBrains Mono", monospace`
@@ -55,10 +45,12 @@ export function MatrixRain() {
         context.fillText(char, index * fontSize, y * fontSize)
         columns[index] = y * fontSize > height && Math.random() > 0.985 ? 0 : y + 0.28
       })
+
+      frame = window.requestAnimationFrame(draw)
     }
 
     resize()
-    draw(0)
+    draw()
     window.addEventListener('resize', resize)
 
     return () => {

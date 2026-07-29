@@ -3,7 +3,7 @@ import ReactECharts from 'echarts-for-react'
 import type { EChartsOption } from 'echarts'
 import { useDemoLivePulse } from '../../../hooks/useDemoLivePulse'
 import { PremiumChartFrame } from './PremiumChartFrame'
-import { formatNumber, hasValues, premiumPalette, tooltipBase, useChartPaletteKey } from './chartTheme'
+import { formatNumber, hasValues, premiumPalette, tooltipBase } from './chartTheme'
 import { useModuleT } from '../../../i18n/useModuleT'
 import { chartsT } from '../../../i18n/modules/charts'
 
@@ -33,7 +33,6 @@ function PremiumDonutChartBase({
   onSegmentClick,
 }: Props) {
   const t = useModuleT(chartsT)
-  const themeId = useChartPaletteKey()
   const pulse = useDemoLivePulse({ enabled: pulseNames.length > 0, intervalMs: 2800, amplitude: 0.018 })
   const total = data.reduce((sum, item) => sum + item.value, 0)
 
@@ -93,7 +92,7 @@ function PremiumDonutChartBase({
         })),
       },
     ],
-  }), [centerLabel, data, pulse, pulseNames, total, t, themeId])
+  }), [centerLabel, data, pulse, pulseNames, total, t])
 
   return (
     <PremiumChartFrame height={height} loading={loading} error={error} empty={!hasValues(data)}>

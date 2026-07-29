@@ -2,7 +2,7 @@ import { memo, useMemo } from 'react'
 import ReactECharts from 'echarts-for-react'
 import type { EChartsOption } from 'echarts'
 import { PremiumChartFrame } from './PremiumChartFrame'
-import { axisLabel, formatNumber, formatTons, hasValues, premiumPalette, tooltipBase, useChartPaletteKey } from './chartTheme'
+import { axisLabel, formatNumber, formatTons, hasValues, premiumPalette, tooltipBase } from './chartTheme'
 import { useModuleT } from '../../../i18n/useModuleT'
 import { chartsT } from '../../../i18n/modules/charts'
 
@@ -30,7 +30,6 @@ function PremiumHeatmapChartBase({
   metric = 'toneladas',
 }: Props) {
   const t = useModuleT(chartsT)
-  const themeId = useChartPaletteKey()
   const option = useMemo<EChartsOption>(() => {
     const hours = Array.from(new Set(data.map((item) => String(item.hora).padStart(2, '0')))).sort()
     const equipments = Array.from(new Set(data.map((item) => item.equipo))).sort()
@@ -104,7 +103,7 @@ function PremiumHeatmapChartBase({
         },
       }],
     }
-  }, [data, metric, t, themeId])
+  }, [data, metric, t])
 
   return (
     <PremiumChartFrame height={height} loading={loading} error={error} empty={!hasValues(data)}>

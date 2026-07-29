@@ -5,7 +5,6 @@ import { useTilt3D } from '../../hooks/useTilt3D'
 import { CommandCard } from '../ui/CommandCard'
 import { StatusPill, toneFromOperationalState } from '../ui/StatusPill'
 import { MachineStatusOverlay } from './MachineStatusOverlay'
-import { formatTons as formatTonsBase } from '../../lib/format'
 
 interface Props {
   equipmentId: string
@@ -25,7 +24,7 @@ interface Props {
 
 function formatTons(value?: number) {
   if (value === undefined) return '-'
-  return formatTonsBase(value)
+  return `${Math.round(value).toLocaleString('es-CL')} t`
 }
 
 export function EquipmentVisualCard({
@@ -94,7 +93,7 @@ export function EquipmentVisualCard({
 
           <div className="equipment-mini-kpis">
             <span><Activity size={13} /> {formatTons(toneladas)}</span>
-            <span><Gauge size={13} /> {tph !== undefined ? `${tph.toLocaleString('es-CL')} tph` : ciclos !== undefined ? `${ciclos.toLocaleString('es-CL')} ciclos` : 'Sin datos'}</span>
+            <span><Gauge size={13} /> {tph !== undefined ? `${tph.toLocaleString('es-CL')} tph` : `${(ciclos ?? 0).toLocaleString('es-CL')} ciclos`}</span>
             {trucks !== undefined && <span><Truck size={13} /> {trucks} CAEX</span>}
           </div>
 

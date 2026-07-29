@@ -133,8 +133,6 @@ export function EquipmentActivityModal({ target, onClose }: Props) {
   const visualModel = target.model ?? item?.model
   const equipmentImage = getEquipmentImage(target.id, visualModel)
   const equipmentLabel = getEquipmentLabel(target.id, visualModel)
-  const isPala1 = target.type === 'loader' && target.id.replace(/\s/g, '').toUpperCase() === 'PALA1'
-  const displayModel = isPala1 ? 'P&H 4100XPC AC' : visualModel
 
   const maintenanceMinutes = statuses.filter(s => s.category === 'MANTENCION').reduce((sum, s) => sum + s.minutes, 0)
   const colacionMinutes = statuses.filter(isColacion).reduce((sum, s) => sum + s.minutes, 0)
@@ -154,7 +152,7 @@ export function EquipmentActivityModal({ target, onClose }: Props) {
       <aside className="nmcp-detail-modal nm-shift-activity-modal">
         <header className="nmcp-detail-header">
           <div className="nmcp-shift-detail-title">
-            <span className={`nmcp-equipment-visual is-${target.type}${isPala1 ? ' is-pala-1' : ''}`}>
+            <span className={`nmcp-equipment-visual is-${target.type}`}>
               <img
                 className="nm-shift-modal-equipment-img"
                 src={equipmentImage}
@@ -165,7 +163,7 @@ export function EquipmentActivityModal({ target, onClose }: Props) {
             <div>
               <span className="nmcp-section-kicker">Actividad WENCO / Turno {shift}</span>
               <h2>{target.id}</h2>
-              <p>{displayModel ?? 'Sin modelo'}{bench ? ` - ${bench}` : ''}</p>
+              <p>{target.model ?? item?.model ?? 'Sin modelo'}{bench ? ` - ${bench}` : ''}</p>
               <p>Operador: {operator ?? 'Sin dato'}</p>
             </div>
           </div>

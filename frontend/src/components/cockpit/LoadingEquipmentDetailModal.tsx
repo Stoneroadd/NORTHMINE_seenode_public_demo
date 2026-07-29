@@ -7,13 +7,6 @@ import { formatNumber, formatPct, formatTons } from './cockpitModel'
 import { getDetailModalStyle, type DetailModalAnchor } from './detailModalPosition'
 import { useModuleT } from '../../i18n/useModuleT'
 import { cockpitT, type CockpitT } from '../../i18n/modules/cockpit'
-import { premiumPalette, useChartPaletteKey } from '../charts/premium/chartTheme'
-
-// premiumPalette siempre resuelve a hex de 6 digitos (definidos asi en las 6
-// apariencias de themes.css), por eso se puede sumar un sufijo de alpha.
-function withAlpha(hex: string, alphaHex: string) {
-  return hex.startsWith('#') ? `${hex}${alphaHex}` : hex
-}
 
 interface Props {
   item: CockpitEquipmentCardModel | null
@@ -76,15 +69,6 @@ function TooltipContent({ active, payload, label, t }: any) {
 
 export function LoadingEquipmentDetailModal({ item, hourly, anchor, onClose }: Props) {
   const t = useModuleT(cockpitT)
-  const paletteKey = useChartPaletteKey()
-  const palette = useMemo(() => ({
-    cyan: premiumPalette.cyan,
-    text: premiumPalette.text,
-    muted: premiumPalette.muted,
-    grid: premiumPalette.grid,
-    mineral: premiumPalette.mineral,
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }), [paletteKey])
   const rows = useMemo(() => {
     let accumulated = 0
     return hourly
@@ -176,16 +160,16 @@ export function LoadingEquipmentDetailModal({ item, hourly, anchor, onClose }: P
                 <BarChart data={rows} margin={{ top: 12, right: 10, bottom: 4, left: 0 }}>
                   <defs>
                     <linearGradient id={`nmcpUcDetail-${item.id}`} x1="0" x2="0" y1="0" y2="1">
-                      <stop offset="0%" stopColor={palette.cyan} stopOpacity={0.95} />
-                      <stop offset="100%" stopColor={palette.cyan} stopOpacity={0.2} />
+                      <stop offset="0%" stopColor="#2FD4FF" stopOpacity={0.95} />
+                      <stop offset="100%" stopColor="#2FD4FF" stopOpacity={0.2} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid stroke={palette.grid} vertical={false} />
-                  <XAxis dataKey="hour" tick={{ fill: palette.muted, fontSize: 11 }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fill: palette.muted, fontSize: 11 }} axisLine={false} tickLine={false} width={54} />
+                  <CartesianGrid stroke="rgba(158,173,186,0.12)" vertical={false} />
+                  <XAxis dataKey="hour" tick={{ fill: '#9EADBA', fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fill: '#9EADBA', fontSize: 11 }} axisLine={false} tickLine={false} width={54} />
                   <Tooltip
                     content={<TooltipContent t={t} />}
-                    cursor={{ fill: withAlpha(palette.cyan, '0C') }}
+                    cursor={{ fill: 'rgba(47,212,255,0.045)' }}
                     wrapperStyle={{ outline: 'none' }}
                   />
                   <Bar
@@ -193,13 +177,13 @@ export function LoadingEquipmentDetailModal({ item, hourly, anchor, onClose }: P
                     fill={`url(#nmcpUcDetail-${item.id})`}
                     radius={[6, 6, 0, 0]}
                     maxBarSize={34}
-                    activeBar={{ fill: palette.cyan, stroke: palette.text, strokeWidth: 1.1 }}
+                    activeBar={{ fill: '#5AE2FF', stroke: '#F4F7FA', strokeWidth: 1.1 }}
                   >
                     {rows.map((row) => (
                       <Cell
                         key={row.hour}
-                        fill={peak?.hour === row.hour ? palette.mineral : `url(#nmcpUcDetail-${item.id})`}
-                        stroke={peak?.hour === row.hour ? palette.text : undefined}
+                        fill={peak?.hour === row.hour ? '#29E76F' : `url(#nmcpUcDetail-${item.id})`}
+                        stroke={peak?.hour === row.hour ? '#F4F7FA' : undefined}
                         strokeWidth={peak?.hour === row.hour ? 0.9 : 0}
                       />
                     ))}

@@ -6,7 +6,7 @@ import type { LangId } from '../i18n/translations'
 export type Lang = LangId
 
 // ── TIPOS TEMA ─────────────────────────────────────────────────────────────
-export type ThemeId = 'dark' | 'operational' | 'light' | 'futuristic' | 'minimal' | 'carbon'
+export type ThemeId = 'dark' | 'light' | 'futuristic' | 'minimal' | 'carbon'
 
 export interface Effects {
   scanlines:  boolean
@@ -23,6 +23,10 @@ const DEFAULT_EFFECTS: Effects = {
 // ── TIPOS ──────────────────────────────────────────────────────────────────
 export type Rol = 'admin' | 'supervisor' | 'operador' | 'viewer'
 export type TurnoId = 'DIA' | 'NOCHE' | 'AMBOS'
+export type PageId =
+  | 'resumen' | 'turno' | 'flota' | 'rendimiento' | 'comparativa'
+  | 'alertas' | 'velocidades' | 'averias' | 'prediccion'
+  | 'simulador' | 'aerea' | 'calidad'
 
 export interface Usuario {
   id: string
@@ -68,6 +72,10 @@ interface AppStore {
   effects: Effects
   toggleEffect: (key: keyof Effects) => void
   resetEffects: () => void
+
+  // Página activa
+  pagina: PageId
+  setPagina: (p: PageId) => void
 
   // Filtros globales
   filtro: FiltroGlobal
@@ -120,7 +128,11 @@ const filtroDefault: FiltroGlobal = {
 }
 
 const VALID_LANGS: LangId[] = ['es', 'en', 'fr', 'de', 'pt', 'zh', 'ar', 'ru']
-const VALID_THEMES: ThemeId[] = ['dark', 'operational', 'light', 'futuristic', 'minimal', 'carbon']
+const VALID_THEMES: ThemeId[] = ['dark', 'light', 'futuristic', 'minimal', 'carbon']
+const VALID_PAGES: PageId[] = [
+  'resumen', 'turno', 'flota', 'rendimiento', 'comparativa', 'alertas',
+  'velocidades', 'averias', 'prediccion', 'simulador', 'aerea', 'calidad',
+]
 const VALID_SHIFTS: TurnoId[] = ['DIA', 'NOCHE', 'AMBOS']
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -152,6 +164,10 @@ export const useAppStore = create<AppStore>()(
       effects: { ...DEFAULT_EFFECTS },
       toggleEffect: (key) => set((s) => ({ effects: { ...s.effects, [key]: !s.effects[key] } })),
       resetEffects: () => set({ effects: { ...DEFAULT_EFFECTS } }),
+
+      // Página
+      pagina: 'resumen',
+      setPagina: (p) => set({ pagina: p }),
 
       // Filtros
       filtro: filtroDefault,
@@ -219,6 +235,7 @@ export const useAppStore = create<AppStore>()(
             cursor: booleanOr(storedEffects.cursor, currentState.effects.cursor),
             animations: booleanOr(storedEffects.animations, currentState.effects.animations),
           },
+          pagina: VALID_PAGES.includes(persisted.pagina as PageId) ? persisted.pagina as PageId : currentState.pagina,
           filtro: {
             fechaDesde: typeof storedFilter.fechaDesde === 'string' ? storedFilter.fechaDesde : currentState.filtro.fechaDesde,
             fechaHasta: typeof storedFilter.fechaHasta === 'string' ? storedFilter.fechaHasta : currentState.filtro.fechaHasta,
@@ -239,6 +256,7 @@ export const useAppStore = create<AppStore>()(
         lang: s.lang,
         themeId: s.themeId,
         effects: s.effects,
+        pagina: s.pagina,
         filtro: s.filtro,
         sidebarCollapsed: s.sidebarCollapsed,
         sistema: { ...s.sistema, ultimaActualizacion: null },
@@ -255,3 +273,16 @@ export const useT = () => {
   const lang = useAppStore((s) => s.lang)
   return translations[lang] ?? translations['es']
 }
+
+// ── PERMISOS POR ROL ───────────────────────────────────────────────────────
+export const PERMISOS: Record<Rol, PageId[]> = {
+  admin:      ['resumen','turno','flota','rendimiento','comparativa','alertas',
+               'velocidades','averias','prediccion','simulador','aerea','calidad'],
+  supervisor: ['resumen','turno','flota','rendimiento','comparativa','alertas',
+               'velocidades','averias'],
+  operador:   ['resumen','turno','flota','alertas'],
+  viewer:     ['resumen'],
+}
+
+export const tienePagina = (rol: Rol, pagina: PageId): boolean =>
+  PERMISOS[rol]?.includes(pagina) ?? false
