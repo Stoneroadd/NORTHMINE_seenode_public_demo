@@ -20,6 +20,7 @@ import type {
   ShiftComparisonHourlyPoint,
   ShiftComparisonResponse,
 } from '../lib/api'
+import { buildOperationalMindMap, type MindMapGraph } from '../components/mindmap3d/mindMapModel'
 
 export const FAST_PUBLIC_DEMO = import.meta.env.VITE_NORTHMINE_FAST_DEMO !== 'false'
 
@@ -654,3 +655,14 @@ export const FAST_DEMO_AERIAL = {
     auto_sync: { enabled: false, interval_min: 60, last_run: DEMO_NOW, last_result: 'OK' },
   } satisfies AerialMailStatus,
 }
+
+export const FAST_DEMO_MINDMAP: MindMapGraph = buildOperationalMindMap({
+  cockpit: FAST_DEMO_COCKPIT,
+  profit: FAST_DEMO_PROFIT,
+  hiddenLosses: FAST_DEMO_HIDDEN_LOSSES,
+  operationalNlp: FAST_DEMO_NLP,
+  dispatcher: FAST_DEMO_DISPATCHER,
+  decisionAudit: FAST_DEMO_DECISION_AUDIT,
+  monthlyTarget: FAST_DEMO_MONTHLY_TARGET,
+  errors: [],
+})
