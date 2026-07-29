@@ -48,12 +48,12 @@ function canUseWebGL(): boolean {
 }
 
 function qualityBudget(quality: MindMapQuality, nodeCount: number) {
-  if (quality === 'BAJA') return { dpr: 1, segments: 16, particles: 34, stars: 90, bloom: false, pit: false }
-  if (quality === 'MEDIA') return { dpr: 1.25, segments: 20, particles: 58, stars: 130, bloom: true, pit: true }
-  if (quality === 'ALTA') return { dpr: 1.75, segments: 28, particles: 84, stars: 180, bloom: true, pit: true }
+  if (quality === 'BAJA') return { dpr: 1, segments: 16, particles: 34, stars: 90, bloom: false, pit: false, trail: 1 }
+  if (quality === 'MEDIA') return { dpr: 1.25, segments: 20, particles: 58, stars: 130, bloom: true, pit: true, trail: 2 }
+  if (quality === 'ALTA') return { dpr: 1.75, segments: 28, particles: 84, stars: 180, bloom: true, pit: true, trail: 3 }
   return nodeCount > 150
-    ? { dpr: 1.1, segments: 18, particles: 42, stars: 110, bloom: true, pit: true }
-    : { dpr: 1.5, segments: 24, particles: 72, stars: 160, bloom: true, pit: true }
+    ? { dpr: 1.1, segments: 18, particles: 42, stars: 110, bloom: true, pit: true, trail: 2 }
+    : { dpr: 1.5, segments: 24, particles: 72, stars: 160, bloom: true, pit: true, trail: 3 }
 }
 
 function makeRadialTexture(size: number, stops: Array<[number, string]>): THREE.CanvasTexture {
@@ -145,17 +145,25 @@ function NodeObject({
 }) {
   const groupRef = useRef<THREE.Group | null>(null)
   const meshRef = useRef<THREE.Mesh | null>(null)
+  const materialRef = useRef<THREE.MeshStandardMaterial | null>(null)
+  const glowMaterialRef = useRef<THREE.SpriteMaterial | null>(null)
   const ringRef = useRef<THREE.Group | null>(null)
+  const pingRef = useRef<THREE.Mesh | null>(null)
+  const pingMaterialRef = useRef<THREE.MeshBasicMaterial | null>(null)
   const visual = getMindMapNodeVisual(node, selected, dimmed, 1)
   const baseScale = node.type === 'ROOT' ? 9.8 : node.type === 'CATEGORY' ? 6.9 : 4.6
   const scale = baseScale * visual.radius
   const labelSize = node.type === 'ROOT' ? 18 : node.type === 'CATEGORY' ? 11 : clamp(6.8 + node.importance * 5, 7, 12)
   const showLabel = node.type === 'ROOT' || node.type === 'CATEGORY' || selected || hovered || node.importance > 0.34
   const showRing = node.type === 'ROOT' || node.type === 'CATEGORY' || selected
+  const isCritical = node.status === 'CRITICAL'
+  const isAlert = isCritical || node.status === 'ATTENTION'
+  const pulseAmplitude = isCritical ? 0.09 : isAlert ? 0.05 : 0
   const color = useMemo(() => new THREE.Color(node.color), [node.color])
   const glowTexture = getGlowTexture()
   const glowScale = scale * (selected ? 4.4 : hovered ? 4.15 : node.status === 'CRITICAL' ? 3.9 : node.status === 'ATTENTION' ? 3.4 : 3)
-  const glowOpacity =
+  const baseEmissiveIntensity = selected ? 2.4 : hovered ? 2 : node.status === 'CRITICAL' ? 1.7 : node.status === 'ATTENTION' ? 1.25 : 0.85
+  const baseGlowOpacity =
     (selected ? 0.62 : hovered ? 0.54 : node.status === 'CRITICAL' ? 0.48 : node.status === 'ATTENTION' ? 0.38 : 0.27) * visual.alpha
 
   useFrame(({ clock }, delta) => {
@@ -164,12 +172,27 @@ function NodeObject({
     const time = clock.getElapsedTime()
     const position = animatedVector(node, time, paused, reducedMotion)
     group.position.lerp(position, paused || reducedMotion ? 1 : 0.08)
-    if (node.status === 'CRITICAL' || node.status === 'ATTENTION') {
-      const pulse = 1 + Math.sin(time * (node.status === 'CRITICAL' ? 3 : 2) + hashString(node.id)) * 0.04
-      group.scale.setScalar(pulse)
+
+    let pulseFactor = 0
+    if (isAlert && !paused && !reducedMotion) {
+      const speed = isCritical ? 3 : 2
+      pulseFactor = Math.sin(time * speed + hashString(node.id))
+      group.scale.setScalar(1 + pulseFactor * pulseAmplitude)
     } else {
       group.scale.setScalar(1)
     }
+
+    if (materialRef.current) {
+      materialRef.current.emissiveIntensity = isAlert
+        ? baseEmissiveIntensity * (1 + pulseFactor * 0.4)
+        : baseEmissiveIntensity
+    }
+    if (glowMaterialRef.current) {
+      glowMaterialRef.current.opacity = isAlert
+        ? clamp(baseGlowOpacity * (1 + pulseFactor * 0.5), 0, 1)
+        : baseGlowOpacity
+    }
+
     if (!paused && !reducedMotion) {
       if (meshRef.current && spinningNodeTypes.has(node.type)) {
         meshRef.current.rotation.y += delta * 0.35
@@ -177,6 +200,13 @@ function NodeObject({
       if (ringRef.current) {
         ringRef.current.rotation.z += delta * (node.type === 'ROOT' ? 0.22 : 0.14)
       }
+      if (isCritical && pingRef.current && pingMaterialRef.current) {
+        const cycle = ((time * 0.55 + hashString(node.id) * 0.0007) % 1 + 1) % 1
+        pingRef.current.scale.setScalar(scale * (1.25 + cycle * 2.4))
+        pingMaterialRef.current.opacity = (1 - cycle) * 0.5
+      }
+    } else if (pingMaterialRef.current) {
+      pingMaterialRef.current.opacity = 0
     }
   })
 
@@ -199,10 +229,11 @@ function NodeObject({
     <group ref={groupRef} position={[node.position.x, node.position.y, node.position.z]}>
       <sprite scale={glowScale}>
         <spriteMaterial
+          ref={glowMaterialRef}
           map={glowTexture}
           color={node.color}
           transparent
-          opacity={glowOpacity}
+          opacity={baseGlowOpacity}
           depthWrite={false}
           blending={THREE.AdditiveBlending}
         />
@@ -218,15 +249,32 @@ function NodeObject({
       >
         <NodeGeometry node={node} segments={segments} />
         <meshStandardMaterial
+          ref={materialRef}
           color={color}
           emissive={color}
-          emissiveIntensity={selected ? 2.4 : hovered ? 2 : node.status === 'CRITICAL' ? 1.7 : node.status === 'ATTENTION' ? 1.25 : 0.85}
+          emissiveIntensity={baseEmissiveIntensity}
           metalness={0.3}
           roughness={0.24}
           transparent
           opacity={visual.alpha}
         />
       </mesh>
+
+      {isCritical && (
+        <group rotation={[Math.PI / 2.15, 0, 0]}>
+          <mesh ref={pingRef}>
+            <torusGeometry args={[1, 0.022, 8, 48]} />
+            <meshBasicMaterial
+              ref={pingMaterialRef}
+              color={node.color}
+              transparent
+              opacity={0}
+              depthWrite={false}
+              blending={THREE.AdditiveBlending}
+            />
+          </mesh>
+        </group>
+      )}
 
       {showRing && (
         <group ref={ringRef} rotation={[Math.PI / 2.15, 0, 0]}>
@@ -290,20 +338,25 @@ function NodeObject({
   )
 }
 
+const TRAIL_OFFSETS = [0, 0.05, 0.1] as const
+const TRAIL_FACTORS = [1, 0.6, 0.32] as const
+
 function EdgeObject({
   edge,
   selectedNodeId,
   paused,
   reducedMotion,
   particlesEnabled,
+  trailLength,
 }: {
   edge: LayoutEdge
   selectedNodeId: string | null
   paused: boolean
   reducedMotion: boolean
   particlesEnabled: boolean
+  trailLength: number
 }) {
-  const particleRef = useRef<THREE.Sprite | null>(null)
+  const trailRefs = useRef<Array<THREE.Sprite | null>>([null, null, null])
   const selectedEdge = Boolean(selectedNodeId && (edge.source === selectedNodeId || edge.target === selectedNodeId))
   const dimmed = Boolean(selectedNodeId && !selectedEdge && edge.sourceNode.category !== edge.targetNode.category)
   const visual = getMindMapEdgeVisual(edge, dimmed)
@@ -323,14 +376,22 @@ function EdgeObject({
     })
   }, [points, visual.colorFrom, visual.colorTo])
 
+  const activeTrailOffsets = TRAIL_OFFSETS.slice(0, Math.max(1, trailLength))
+  const baseParticleScale = 4.2 + edge.weight * 4.6
+
   useFrame(({ clock }) => {
-    const particle = particleRef.current
-    if (!particle || paused || reducedMotion || !particlesEnabled || !edge.active) return
+    if (paused || reducedMotion || !particlesEnabled || !edge.active) return
+    const elapsed = clock.getElapsedTime()
     const seed = (hashString(edge.id) % 100) / 100
-    const t = (clock.getElapsedTime() * (0.07 + edge.flow * 0.12) + seed) % 1
-    particle.position.copy(curve.getPointAt(t))
-    const pulse = 1 + Math.sin(clock.getElapsedTime() * 2.4 + seed * 12) * 0.18
-    particle.scale.setScalar((4.2 + edge.weight * 4.6) * pulse)
+    const baseT = elapsed * (0.07 + edge.flow * 0.12) + seed
+    const pulse = 1 + Math.sin(elapsed * 2.4 + seed * 12) * 0.18
+    activeTrailOffsets.forEach((offset, index) => {
+      const sprite = trailRefs.current[index]
+      if (!sprite) return
+      const t = (((baseT - offset) % 1) + 1) % 1
+      sprite.position.copy(curve.getPointAt(t))
+      sprite.scale.setScalar(baseParticleScale * pulse * TRAIL_FACTORS[index])
+    })
   })
 
   return (
@@ -343,18 +404,25 @@ function EdgeObject({
         transparent
         opacity={selectedEdge ? Math.min(0.9, visual.alpha + 0.3) : visual.alpha}
       />
-      {particlesEnabled && edge.active && (
-        <sprite ref={particleRef} position={points[0]} scale={4.2 + edge.weight * 4.6}>
+      {particlesEnabled && edge.active && activeTrailOffsets.map((offset, index) => (
+        <sprite
+          key={offset}
+          ref={element => {
+            trailRefs.current[index] = element
+          }}
+          position={points[0]}
+          scale={baseParticleScale * TRAIL_FACTORS[index]}
+        >
           <spriteMaterial
             map={glowTexture}
             color={visual.color}
             transparent
-            opacity={visual.particleAlpha}
+            opacity={visual.particleAlpha * TRAIL_FACTORS[index]}
             depthWrite={false}
             blending={THREE.AdditiveBlending}
           />
         </sprite>
-      )}
+      ))}
     </group>
   )
 }
@@ -533,6 +601,7 @@ function GraphScene(props: SceneProps) {
           paused={paused}
           reducedMotion={reducedMotion}
           particlesEnabled={index < budget.particles}
+          trailLength={budget.trail}
         />
       ))}
       {nodes.map(node => (

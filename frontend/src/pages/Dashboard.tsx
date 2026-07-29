@@ -24,6 +24,8 @@ import { useAnalysisFilters } from '../hooks/useAnalysisFilters'
 import type { SectionId } from '../components/layout/Sidebar'
 import { ExecutiveInsightCard } from '../components/dashboard/ExecutiveInsightCard'
 import { buildOperationalInsights } from '../lib/operationalInsights'
+import { useStaggerEntrance } from '../hooks/useStaggerEntrance'
+import { useTilt3D } from '../hooks/useTilt3D'
 import { useModuleT } from '../i18n/useModuleT'
 import { dashboardT, type DashboardT } from '../i18n/modules/dashboard'
 
@@ -105,6 +107,12 @@ function DashboardSkeleton() {
 
 export function Dashboard({ session, section }: Props) {
   const t = useModuleT(dashboardT)
+  const kpiGridRef = useStaggerEntrance<HTMLElement>()
+  const boardGridRef = useStaggerEntrance<HTMLElement>()
+  const heroTilt = useTilt3D({ maxTilt: 2.5, scale: 1.006 })
+  const boardTiltA = useTilt3D({ maxTilt: 3, scale: 1.01 })
+  const boardTiltB = useTilt3D({ maxTilt: 3, scale: 1.01 })
+  const boardTiltC = useTilt3D({ maxTilt: 3, scale: 1.01 })
   const analysisFilters = useAnalysisFilters({}, 'northmine:filters:dashboard')
   const { appliedFilters } = analysisFilters
   const [
@@ -470,7 +478,12 @@ export function Dashboard({ session, section }: Props) {
         ))}
       </section>
 
-      <section className={`plan-performance-hero tone-${greenTone}`}>
+      <section
+        className={`plan-performance-hero tone-${greenTone}`}
+        style={heroTilt.style}
+        onPointerMove={heroTilt.onPointerMove}
+        onPointerLeave={heroTilt.onPointerLeave}
+      >
         <div className="plan-hero-ambient" aria-hidden="true">
           <span />
           <span />
@@ -521,14 +534,19 @@ export function Dashboard({ session, section }: Props) {
         </div>
       </section>
 
-      <section className="executive-kpi-grid">
+      <section className="executive-kpi-grid" ref={kpiGridRef}>
         {kpiCards.map((card) => (
           <ExecutiveKpiCard key={card.title} {...card} />
         ))}
       </section>
 
-      <section className="plan-board-grid">
-        <div className="plan-board-card">
+      <section className="plan-board-grid" ref={boardGridRef}>
+        <div
+          className="plan-board-card stagger-item"
+          style={boardTiltA.style}
+          onPointerMove={boardTiltA.onPointerMove}
+          onPointerLeave={boardTiltA.onPointerLeave}
+        >
           <div className="panel-header">
             <div>
               <span className="panel-kicker">Cumplimiento acumulado</span>
@@ -548,7 +566,12 @@ export function Dashboard({ session, section }: Props) {
           </div>
         </div>
 
-        <div className="plan-board-card">
+        <div
+          className="plan-board-card stagger-item"
+          style={boardTiltB.style}
+          onPointerMove={boardTiltB.onPointerMove}
+          onPointerLeave={boardTiltB.onPointerLeave}
+        >
           <div className="panel-header">
             <div>
               <span className="panel-kicker">Causas que pueden romper el plan</span>
@@ -573,7 +596,12 @@ export function Dashboard({ session, section }: Props) {
           </div>
         </div>
 
-        <div className="plan-board-card standby-justification-card">
+        <div
+          className="plan-board-card standby-justification-card stagger-item"
+          style={boardTiltC.style}
+          onPointerMove={boardTiltC.onPointerMove}
+          onPointerLeave={boardTiltC.onPointerLeave}
+        >
           <div className="panel-header">
             <div>
               <span className="panel-kicker">Standby justificado</span>

@@ -1,12 +1,12 @@
-import { useEffect, useMemo } from 'react'
-import { createPortal } from 'react-dom'
+import { useMemo } from 'react'
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { X } from 'lucide-react'
 import type { CockpitEquipmentCardModel, CockpitShovelHourlyPoint } from './cockpitModel'
 import { formatNumber, formatPct, formatTons } from './cockpitModel'
-import { getDetailModalStyle, type DetailModalAnchor } from './detailModalPosition'
+import type { DetailModalAnchor } from './detailModalPosition'
 import { useModuleT } from '../../i18n/useModuleT'
 import { cockpitT, type CockpitT } from '../../i18n/modules/cockpit'
+import { FloatingWindow } from '../ui/FloatingWindow'
 
 interface Props {
   item: CockpitEquipmentCardModel | null
@@ -93,15 +93,6 @@ export function LoadingEquipmentDetailModal({ item, hourly, anchor, onClose }: P
       })
   }, [hourly, item?.id])
 
-  useEffect(() => {
-    if (!item) return
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose()
-    }
-    window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
-  }, [item, onClose])
-
   if (!item) return null
 
   const totalHourly = rows.reduce((sum, row) => sum + row.tonnes, 0)
@@ -116,16 +107,14 @@ export function LoadingEquipmentDetailModal({ item, hourly, anchor, onClose }: P
     null,
   )
 
-  const modal = (
-    <div
-      className={`nmcp-detail-layer ${anchor ? 'is-anchored' : ''}`}
-      role="dialog"
-      aria-modal="true"
-      aria-label={t.loading_modal_aria(item.id)}
-      style={getDetailModalStyle(anchor)}
+  return (
+    <FloatingWindow
+      open
+      onClose={onClose}
+      placement={anchor ? { mode: 'anchor', anchor } : { mode: 'center' }}
+      ariaLabel={t.loading_modal_aria(item.id)}
+      panelClassName="nmcp-detail-modal"
     >
-      <button className="nmcp-detail-backdrop" type="button" onClick={onClose} aria-label={t.loading_modal_close_aria} />
-      <aside className="nmcp-detail-modal">
         <header className="nmcp-detail-header">
           <div>
             <span className="nmcp-section-kicker">{t.loading_modal_kicker}</span>
@@ -227,9 +216,6 @@ export function LoadingEquipmentDetailModal({ item, hourly, anchor, onClose }: P
             {!rows.length && <div className="nmcp-detail-empty">{t.loading_modal_sin_detalle(item.id)}</div>}
           </div>
         </section>
-      </aside>
-    </div>
+    </FloatingWindow>
   )
-
-  return createPortal(modal, document.body)
 }

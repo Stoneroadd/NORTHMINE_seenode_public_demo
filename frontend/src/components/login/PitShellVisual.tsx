@@ -26,12 +26,16 @@ function RotatingPit() {
   )
 }
 
-export function PitShellVisual() {
+interface Props {
+  compact?: boolean
+}
+
+export function PitShellVisual({ compact = false }: Props) {
   return (
     <Canvas
       className="login-pit-canvas"
       camera={{ position: [0, 160, 520], fov: 42 }}
-      dpr={[1, 1.75]}
+      dpr={compact ? [1, 1.2] : [1, 1.75]}
       gl={{ antialias: true, alpha: true }}
       style={{ pointerEvents: 'none' }}
     >
@@ -43,12 +47,12 @@ export function PitShellVisual() {
 
       <Suspense fallback={null}>
         <RotatingPit />
-        <Sparkles count={70} scale={[900, 400, 900]} size={1.6} speed={0.25} color="#7DD3FC" opacity={0.5} />
-        <Stars radius={700} depth={60} count={1400} factor={2.2} saturation={0} fade speed={0.4} />
+        <Sparkles count={compact ? 34 : 70} scale={[900, 400, 900]} size={1.6} speed={0.25} color="#7DD3FC" opacity={0.5} />
+        <Stars radius={700} depth={60} count={compact ? 480 : 1400} factor={2.2} saturation={0} fade speed={0.4} />
       </Suspense>
 
       <EffectComposer multisampling={0}>
-        <Bloom intensity={0.65} luminanceThreshold={0.15} luminanceSmoothing={0.4} mipmapBlur />
+        <Bloom intensity={compact ? 0.38 : 0.65} luminanceThreshold={0.15} luminanceSmoothing={0.4} mipmapBlur />
       </EffectComposer>
     </Canvas>
   )

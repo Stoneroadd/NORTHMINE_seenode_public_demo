@@ -3,6 +3,7 @@ import type { CockpitEquipmentRow } from './cockpitModel'
 import { formatNumber, formatTons } from './cockpitModel'
 import { useModuleT } from '../../i18n/useModuleT'
 import { cockpitT } from '../../i18n/modules/cockpit'
+import { useStaggerEntrance } from '../../hooks/useStaggerEntrance'
 
 function counts(rows: CockpitEquipmentRow[]) {
   return {
@@ -23,6 +24,7 @@ export function EquipmentStatusPanel({
 }) {
   const t = useModuleT(cockpitT)
   const summary = counts(rows)
+  const listRef = useStaggerEntrance<HTMLDivElement>()
 
   return (
     <section className="nmcp-panel nmcp-equipment-panel">
@@ -40,9 +42,9 @@ export function EquipmentStatusPanel({
         <span className="is-bad"><AlertTriangle size={14} /> {t.equip_status_posible_averia} <strong>{summary.bad}</strong></span>
       </div>
 
-      <div className="nmcp-equipment-list">
+      <div className="nmcp-equipment-list" ref={listRef}>
         {rows.length ? rows.map((row) => (
-          <article key={row.id} className={`nmcp-equipment-row is-${row.tone}`}>
+          <article key={row.id} className={`nmcp-equipment-row is-${row.tone} stagger-item`}>
             <span className="nmcp-state-dot" />
             <div>
               <strong>{row.id}</strong>

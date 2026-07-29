@@ -2,6 +2,9 @@ import React from 'react'
 import { useModuleT } from '../../i18n/useModuleT'
 import { uiT } from '../../i18n/modules/ui'
 
+export { FloatingWindow } from './FloatingWindow'
+export type { FloatingWindowPlacement, FloatingWindowSize } from './FloatingWindow'
+
 // ── TIPOS ──────────────────────────────────────────────────────────────────
 type Color = 'green' | 'cyan' | 'orange' | 'yellow' | 'red' | 'purple' | 'white'
 

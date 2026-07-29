@@ -11,8 +11,9 @@ interface Props {
 export function SystemStatusBadge({ health, loading }: Props) {
   const t = useModuleT(statusT)
   const online = health?.service === 'northmine-api' || health?.status === 'ok'
-  const mode = health?.environment === 'production' ? t.production : t.local
-  const database = health?.database === 'connected' ? t.dbConnected : t.dbDisconnected
+  const demoMode = health?.demo_mode === true || health?.data_source === 'DEMO' || health?.database === 'local-sqlite'
+  const mode = demoMode ? t.demoLocal : health?.environment === 'production' ? t.production : t.local
+  const database = demoMode ? t.simulatorActive : health?.database === 'connected' ? t.dbConnected : t.dbDisconnected
 
   return (
     <div className="status-strip" aria-label={t.systemStatusAria}>
@@ -24,7 +25,7 @@ export function SystemStatusBadge({ health, loading }: Props) {
         <Database size={14} />
         {mode}
       </span>
-      <span className="status-pill is-muted">
+      <span className={`status-pill ${demoMode || health?.database === 'connected' ? 'is-online' : 'is-muted'}`}>
         <CheckCircle2 size={14} />
         {database}
       </span>

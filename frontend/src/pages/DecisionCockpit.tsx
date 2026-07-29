@@ -23,8 +23,10 @@ import type { DetailModalAnchor } from '../components/cockpit/detailModalPositio
 import { ErrorState } from '../components/common/ErrorState'
 import { LoadingState } from '../components/common/LoadingState'
 import { northmineApi, type MonthlyTargetResponse, type ShiftComparisonResponse } from '../lib/api'
+import { useStaggerEntrance } from '../hooks/useStaggerEntrance'
 import { useModuleT } from '../i18n/useModuleT'
 import { cockpitT, type CockpitT } from '../i18n/modules/cockpit'
+import { settingsService } from '../services/settingsService'
 
 function availabilityLabel(value: string, t: CockpitT): string {
   if (value === 'available') return t.availability_real
@@ -323,6 +325,8 @@ export function DecisionCockpit() {
   const [selectedShift, setSelectedShift] = useState('ACTUAL')
   const [selectedLoadingUnitId, setSelectedLoadingUnitId] = useState<string | null>(null)
   const [selectedLoadingUnitAnchor, setSelectedLoadingUnitAnchor] = useState<DetailModalAnchor | null>(null)
+  const [secondaryQueriesEnabled, setSecondaryQueriesEnabled] = useState(true)
+  const equipmentGridRef = useStaggerEntrance<HTMLDivElement>()
   const selectedDateParam = selectedDate || undefined
   const query = useQuery({
     queryKey: ['decision-cockpit', 'v1', selectedDate, selectedShift],
@@ -333,41 +337,54 @@ export function DecisionCockpit() {
     queryKey: ['profit-optimization', 'v1'],
     queryFn: northmineApi.profitOptimization,
     refetchInterval: 300000,
+    enabled: secondaryQueriesEnabled,
   })
   const hiddenLossesQuery = useQuery({
     queryKey: ['hidden-losses', 'v1'],
     queryFn: northmineApi.hiddenLosses,
     refetchInterval: 300000,
+    enabled: secondaryQueriesEnabled,
   })
   const nlpQuery = useQuery({
     queryKey: ['operational-nlp', 'v1'],
     queryFn: northmineApi.operationalNlp,
     refetchInterval: 300000,
+    enabled: secondaryQueriesEnabled,
   })
   const dispatcherQuery = useQuery({
     queryKey: ['dispatcher-advisor', 'v1', selectedDate, selectedShift],
     queryFn: () => northmineApi.dispatcherAdvisor({ date: selectedDateParam, shift: selectedShift }),
     refetchInterval: 300000,
+    enabled: secondaryQueriesEnabled,
   })
   const decisionAuditQuery = useQuery({
     queryKey: ['decision-audit', 'v1', selectedDate, selectedShift],
     queryFn: () => northmineApi.decisionAudit({ date: selectedDateParam, shift: selectedShift }),
     refetchInterval: 300000,
+    enabled: secondaryQueriesEnabled,
   })
   const monthlyTargetQuery = useQuery({
     queryKey: ['monthly-target', 'v1', selectedDate, 'F01'],
     queryFn: () => northmineApi.monthlyTarget({ date: selectedDateParam, sector: 'F01' }),
     refetchInterval: 300000,
+    enabled: secondaryQueriesEnabled,
   })
   const shiftComparisonQuery = useQuery({
     queryKey: ['shift-comparison', 'v1', selectedDate],
     queryFn: () => northmineApi.shiftComparison({ date: selectedDateParam }),
     refetchInterval: 60000,
+    enabled: secondaryQueriesEnabled,
   })
 
   useEffect(() => {
+    if (secondaryQueriesEnabled || !query.data) return
+    const timer = window.setTimeout(() => setSecondaryQueriesEnabled(true), settingsService.demoLite ? 120 : 700)
+    return () => window.clearTimeout(timer)
+  }, [query.data, secondaryQueriesEnabled])
+
+  useEffect(() => {
     const resolvedDate = shiftComparisonQuery.data?.selected_date
-    if (!selectedDate && resolvedDate) {
+    if (!settingsService.demoLite && !selectedDate && resolvedDate) {
       setSelectedDate(resolvedDate)
     }
   }, [selectedDate, shiftComparisonQuery.data?.selected_date])
@@ -695,18 +712,19 @@ export function DecisionCockpit() {
               <p>{t.fleet_desc}</p>
             </div>
 
-            <div className="nmcp-equipment-card-grid">
+            <div className="nmcp-equipment-card-grid" ref={equipmentGridRef}>
               {rankedEquipmentCards.map((item, index) => (
-                <LoadingEquipmentCard
-                  key={item.id}
-                  item={item}
-                  rank={index + 1}
-                  leaderTonnes={leaderEquipmentTonnes ?? undefined}
-                  onOpenDetail={(selected, anchor) => {
-                    setSelectedLoadingUnitId(selected.id)
-                    setSelectedLoadingUnitAnchor(anchor)
-                  }}
-                />
+                <div className="stagger-item" key={item.id}>
+                  <LoadingEquipmentCard
+                    item={item}
+                    rank={index + 1}
+                    leaderTonnes={leaderEquipmentTonnes ?? undefined}
+                    onOpenDetail={(selected, anchor) => {
+                      setSelectedLoadingUnitId(selected.id)
+                      setSelectedLoadingUnitAnchor(anchor)
+                    }}
+                  />
+                </div>
               ))}
               {!rankedEquipmentCards.length && (
                 <section className="nmcp-panel nmcp-empty-inline">{t.fleet_empty}</section>

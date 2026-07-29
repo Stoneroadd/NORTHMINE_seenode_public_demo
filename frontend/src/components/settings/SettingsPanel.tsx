@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import {
   Check, Eye, Hexagon, KeyRound, Languages, MousePointer2,
   Palette, Rows3, Settings, ShieldCheck, Sparkles, Wand2, X,
@@ -9,6 +9,7 @@ import type { LangId } from '../../i18n/translations'
 import type { Translations } from '../../i18n/translations'
 import { secureApi } from '../../lib/secureApi'
 import { MFASetupModal } from '../auth/MFASetupModal'
+import { FloatingWindow } from '../ui/FloatingWindow'
 
 interface Props {
   open: boolean
@@ -336,53 +337,30 @@ export function SettingsPanel({ open, onClose }: Props) {
   const lang = useAppStore((s) => s.lang)
   const setLang = useAppStore((s) => s.setLang)
   const [hovered, setHovered] = useState<ThemeId | null>(null)
-  const panelRef = useRef<HTMLDivElement>(null)
-
-  // Close on Escape or outside click
-  useEffect(() => {
-    if (!open) return
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [open, onClose])
 
   // Ctrl+Shift+S shortcut (handled in parent — just consume here)
-
-  if (!open) return null
 
   const previewTheme = hovered ?? themeId
   const activeEffectCount = Object.values(effects).filter(Boolean).length
 
   return (
-    <div
-      style={{
-        position: 'fixed', inset: 0, zIndex: 600,
-        background: 'rgba(0,0,0,0.72)',
-        backdropFilter: 'blur(4px)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
+    <FloatingWindow
+      open={open}
+      onClose={onClose}
+      placement={{ mode: 'center' }}
+      size="lg"
+      ariaLabel={t.settings.titulo}
+      zIndex={600}
+      panelStyle={{
+        background:
+          'radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--accent, #00FF88) 5%, transparent), transparent 40%),'
+          + 'var(--panel-strong)',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 20,
       }}
-      onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
     >
-      <div
-        ref={panelRef}
-        style={{
-          width: 'min(540px, 95vw)',
-          maxHeight: '90vh',
-          overflowY: 'auto',
-          borderRadius: 16,
-          background:
-            'radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--accent, #00FF88) 5%, transparent), transparent 40%),'
-            + 'var(--bg-panel, #0C1220)',
-          border: '1px solid var(--border-mid, rgba(0,212,255,0.18))',
-          boxShadow: '0 24px 80px rgba(0,0,0,0.6)',
-          padding: '22px 24px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 20,
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header */}
+      {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 800, fontSize: 14, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--data-cyan, #00D4FF)' }}>
             <Settings size={16} /> {t.settings.titulo}
@@ -559,7 +537,6 @@ export function SettingsPanel({ open, onClose }: Props) {
             {t.action.cerrar}
           </button>
         </div>
-      </div>
-    </div>
+    </FloatingWindow>
   )
 }

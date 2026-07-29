@@ -5,6 +5,7 @@ import type { AuthSession } from '../../lib/api'
 import { getHealth } from '../../services/dashboardService'
 import { logout as clearSession } from '../../services/authService'
 import { CommandCenterBackground } from '../effects/CommandCenterBackground'
+import { CursorGlow } from '../effects/CursorGlow'
 import { Sidebar, type SectionId } from './Sidebar'
 import { Topbar } from './Topbar'
 import { useModuleT } from '../../i18n/useModuleT'
@@ -89,6 +90,7 @@ export function AppShell({ session, onLogout, children }: Props) {
   return (
     <div className="app-shell">
       <CommandCenterBackground />
+      <CursorGlow />
       <Sidebar
         active={section}
         onSelect={handleSelectSection}

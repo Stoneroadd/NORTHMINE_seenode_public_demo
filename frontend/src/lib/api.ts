@@ -21,6 +21,8 @@ export interface HealthResponse {
   identity_store?: 'connected' | 'disconnected' | string
   sql_available: boolean
   demo_mode?: boolean
+  data_source?: string
+  source_system?: string
   production_ready?: boolean
   timestamp?: string
   checks?: {

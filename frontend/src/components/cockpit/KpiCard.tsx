@@ -3,6 +3,7 @@ import type { LucideIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { useModuleT } from '../../i18n/useModuleT'
 import { cockpitT } from '../../i18n/modules/cockpit'
+import { AnimatedNumericValue } from '../ui/AnimatedNumericValue'
 
 interface Props {
   icon: LucideIcon
@@ -62,7 +63,7 @@ export function KpiCard({
         <span className="nmcp-kpi-icon" aria-hidden="true"><Icon size={16} /></span>
         <span className="nmcp-kpi-label">{label}</span>
       </div>
-      <strong className="nmcp-kpi-value">{value}</strong>
+      <strong className="nmcp-kpi-value"><AnimatedNumericValue value={value} enabled={!reduceMotion} /></strong>
       <div className="nmcp-kpi-meta">
         {subtext && <span>{subtext}</span>}
         {indicator && <em>{indicator}</em>}

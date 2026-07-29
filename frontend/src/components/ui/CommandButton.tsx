@@ -1,6 +1,7 @@
 import { MouseEvent, ReactNode, useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Loader2, type LucideIcon } from 'lucide-react'
+import { useMagneticHover } from '../../hooks/useMagneticHover'
 
 type CommandButtonVariant = 'primary' | 'secondary' | 'danger' | 'ghost' | 'matrix' | 'industrial'
 
@@ -36,6 +37,7 @@ export function CommandButton({
   const [ripples, setRipples] = useState<Ripple[]>([])
   const idRef = useRef(0)
   const timeoutRefs = useRef<number[]>([])
+  const magnetic = useMagneticHover({ enabled: !disabled && !loading, strength: 0.22, maxOffset: 7 })
 
   useEffect(() => () => {
     timeoutRefs.current.forEach((timeout) => window.clearTimeout(timeout))
@@ -60,7 +62,10 @@ export function CommandButton({
       disabled={disabled || loading}
       className={`command-button command-button-${variant} ${className}`}
       onClick={handleClick}
-      whileHover={{ y: disabled || loading ? 0 : -1 }}
+      onPointerMove={magnetic.onPointerMove}
+      onPointerLeave={magnetic.onPointerLeave}
+      style={{ x: magnetic.x, y: magnetic.y }}
+      whileHover={{ scale: disabled || loading ? 1 : 1.015 }}
       whileTap={{ scale: disabled || loading ? 1 : 0.985 }}
     >
       <span className="command-button-shine" />

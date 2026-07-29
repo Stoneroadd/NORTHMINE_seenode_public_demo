@@ -87,6 +87,8 @@ run("npm", ["--prefix", "frontend", "run", "build"], {
   env: {
     ...process.env,
     VITE_ENVIRONMENT: process.env.VITE_ENVIRONMENT || "production",
+    VITE_SHOW_DEMO_MODE: process.env.VITE_SHOW_DEMO_MODE || "true",
+    VITE_DEMO_LITE: process.env.VITE_DEMO_LITE || "true",
   },
 });
 installBackendRequirements(python);
