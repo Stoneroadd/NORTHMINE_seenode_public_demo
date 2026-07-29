@@ -10,11 +10,13 @@ const environment = normalizeEnvironment(
   import.meta.env.VITE_ENVIRONMENT || import.meta.env.MODE,
 )
 
+const defaultApiBaseUrl = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:8001'
+
 export const settingsService = {
   appName: import.meta.env.VITE_APP_NAME || 'NORTHMINE Intelligence',
   version: import.meta.env.VITE_APP_VERSION || '2.0.0',
   environment,
-  apiBaseUrl: (import.meta.env.VITE_API_URL || 'http://localhost:8001').replace(/\/$/, ''),
+  apiBaseUrl: (import.meta.env.VITE_API_URL || defaultApiBaseUrl).replace(/\/$/, ''),
   isProduction: environment === 'production',
   isDemoLike: false,
   showDemoMode: false,

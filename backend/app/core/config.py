@@ -56,6 +56,7 @@ class Settings:
     log_dir: str
     audit_db_path: str
     allow_demo_login: bool
+    local_auto_sync_enabled: bool
     users_db_path: str
     bootstrap_admin_user: str
     bootstrap_admin_password: str
@@ -168,6 +169,7 @@ def get_settings() -> Settings:
         log_dir=os.getenv("NORTHMINE_LOG_DIR", str(root_dir / "logs")),
         audit_db_path=os.getenv("NORTHMINE_AUDIT_DB", str(root_dir / "northmine_audit.db")),
         allow_demo_login=os.getenv("NORTHMINE_ALLOW_DEMO_LOGIN", "true").lower() == "true",
+        local_auto_sync_enabled=os.getenv("NORTHMINE_LOCAL_AUTO_SYNC_ENABLED", "true").lower() == "true",
         users_db_path=os.getenv("NORTHMINE_USERS_DB", str(root_dir / "northmine_users.db")),
         bootstrap_admin_user=os.getenv("NORTHMINE_BOOTSTRAP_ADMIN_USER", ""),
         bootstrap_admin_password=os.getenv("NORTHMINE_BOOTSTRAP_ADMIN_PASSWORD", ""),

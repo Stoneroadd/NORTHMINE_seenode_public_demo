@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import logging
+from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.requests import Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
@@ -24,6 +26,10 @@ from app.services.user_repository import init_user_repository
 settings = get_settings()
 configure_logging(settings)
 logger = logging.getLogger("northmine.api")
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+FRONTEND_DIST = PROJECT_ROOT / "frontend" / "dist"
+FRONTEND_INDEX = FRONTEND_DIST / "index.html"
 
 app = FastAPI(
     title=settings.app_name,
@@ -57,6 +63,9 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.include_router(router)
 app.include_router(operator_ranking_router)
 
+if (FRONTEND_DIST / "assets").exists():
+    app.mount("/assets", StaticFiles(directory=FRONTEND_DIST / "assets"), name="frontend-assets")
+
 
 @app.on_event("startup")
 def startup() -> None:
@@ -65,13 +74,16 @@ def startup() -> None:
     init_security_tables()
     init_mfa_table()
     init_user_repository()
-    from app.services.averias_import_service import start_auto_sync
-    from app.services.aerial_mail_service import start_auto_sync as start_aerial_sync
-    from app.services.cycle_history_service import start_auto_sync as start_cycle_sync
+    if settings.local_auto_sync_enabled:
+        from app.services.averias_import_service import start_auto_sync
+        from app.services.aerial_mail_service import start_auto_sync as start_aerial_sync
+        from app.services.cycle_history_service import start_auto_sync as start_cycle_sync
 
-    start_auto_sync()
-    start_aerial_sync()
-    start_cycle_sync()
+        start_auto_sync()
+        start_aerial_sync()
+        start_cycle_sync()
+    else:
+        logger.info("Local auto-sync is disabled for this deployment")
     logger.info(
         "NORTHMINE API started service=%s version=%s environment=%s mode=%s",
         settings.service_name,
@@ -93,8 +105,10 @@ async def global_exception_handler(request: Request, exc: Exception) -> JSONResp
     )
 
 
-@app.get("/")
-def root() -> dict[str, str]:
+@app.get("/", include_in_schema=False)
+def root():
+    if FRONTEND_INDEX.exists():
+        return FileResponse(FRONTEND_INDEX)
     return {
         "app": settings.app_name,
         "service": settings.service_name,
@@ -109,3 +123,14 @@ def root() -> dict[str, str]:
 @app.get("/health")
 def health_root() -> dict:
     return build_health_response()
+
+@app.get("/{full_path:path}", include_in_schema=False)
+def frontend_fallback(full_path: str):
+    if full_path.startswith("api/"):
+        raise HTTPException(status_code=404, detail="Not found")
+    requested_file = FRONTEND_DIST / full_path
+    if requested_file.exists() and requested_file.is_file():
+        return FileResponse(requested_file)
+    if FRONTEND_INDEX.exists():
+        return FileResponse(FRONTEND_INDEX)
+    raise HTTPException(status_code=404, detail="Frontend build not found")

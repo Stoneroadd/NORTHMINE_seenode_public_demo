@@ -29,7 +29,12 @@ function safeAssetPath(requestUrl) {
 }
 
 async function sendFile(response, filePath) {
-  const fileStat = await stat(filePath);
+  let fileStat;
+  try {
+    fileStat = await stat(filePath);
+  } catch {
+    return false;
+  }
   if (!fileStat.isFile()) return false;
   response.writeHead(200, {
     "Cache-Control": filePath.endsWith("index.html") ? "no-store" : "public, max-age=31536000, immutable",
@@ -40,8 +45,25 @@ async function sendFile(response, filePath) {
   return true;
 }
 
+function sendJson(response, statusCode, payload) {
+  response.writeHead(statusCode, {
+    "Cache-Control": "no-store",
+    "Content-Type": "application/json; charset=utf-8",
+  });
+  response.end(JSON.stringify(payload));
+}
+
 createServer(async (request, response) => {
   try {
+    const pathname = new URL(request.url || "/", "http://localhost").pathname;
+    if (pathname === "/health" || pathname.startsWith("/api/")) {
+      sendJson(response, 503, {
+        detail: "Backend FastAPI no disponible en este proceso. Usa npm start desde la raiz o configura VITE_API_URL hacia el backend.",
+        service: "northmine-frontend",
+      });
+      return;
+    }
+
     const assetPath = safeAssetPath(request.url);
     if (assetPath && await sendFile(response, assetPath)) return;
 

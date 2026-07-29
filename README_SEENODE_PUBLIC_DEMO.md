@@ -4,31 +4,36 @@ Esta carpeta esta preparada para publicar NORTHMINE como demo publica sin subir 
 
 ## Arquitectura recomendada
 
-Crear dos Web Services en Seenode desde el mismo repo:
+Usar un solo Web Service en Seenode desde la raiz del repo. En este modo FastAPI
+sirve la API y tambien el build React, por lo que login y datos usan el mismo
+dominio publico.
 
-1. Backend FastAPI
-   - Root Directory: `backend`
-   - Build Command: `pip install -r requirements.txt`
-   - Start Command: `uvicorn main:app --host 0.0.0.0 --port 80`
-   - Port: `80`
-   - Environment Variables: copiar `backend/.env.seenode.example` y reemplazar URLs/secretos.
+- Root Directory: raiz del repo
+- Build Command: `npm run build`
+- Start Command: `npm start`
+- Port: usar el puerto asignado por Seenode mediante `PORT`
+- Environment Variables: copiar `backend/.env.seenode.example` y reemplazar secretos.
 
-2. Frontend React/Vite
-   - Root Directory: `frontend`
-   - Build Command: `npm ci && npm run build`
-   - Start Command: `npm start`
-   - Port: `8080`
-   - Environment Variables: copiar `frontend/.env.seenode.example` y reemplazar `VITE_API_URL` por la URL publica del backend.
+Credenciales demo:
+
+- `admin` / `admin`
+- `demo` / `demo`
+- `supervisor` / `supervisor`
+- `operador` / `operador`
+
+El frontend solo debe usar `VITE_API_URL` si se decide separar frontend y backend
+en dos servicios. En el despliegue de un solo servicio, dejar `VITE_API_URL` vacio
+para que use el mismo dominio.
 
 ## Orden de despliegue
 
 1. Subir esta carpeta a GitHub o GitLab.
-2. Crear primero el servicio backend en Seenode.
-3. Copiar la URL publica del backend en `VITE_API_URL` del frontend.
-4. Crear el servicio frontend.
-5. Copiar la URL publica del frontend en `NORTHMINE_CORS_ORIGINS` del backend.
-6. Redeploy backend y frontend.
-7. Probar `/health` del backend y luego entrar al frontend con usuario demo.
+2. Crear o actualizar un Web Service desde la raiz del repo.
+3. Configurar `npm run build` como Build Command.
+4. Configurar `npm start` como Start Command.
+5. Configurar variables demo y secretos.
+6. Redeploy.
+7. Probar `/health` y luego entrar al frontend con usuario demo.
 
 ## Seguridad antes de publicar
 
