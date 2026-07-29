@@ -8,6 +8,9 @@
     "dev:frontend": "npm --prefix frontend run dev",
     "build": "npm --prefix frontend run build",
     "preview": "npm --prefix frontend run preview",
-    "lint": "npm --prefix frontend run lint"
+    "lint": "npm --prefix frontend run lint",
+    "build:frontend": "npm --prefix frontend ci --legacy-peer-deps && npm --prefix frontend run build",
+    "start": "node frontend/server.mjs",
+    "start:frontend": "node frontend/server.mjs"
   }
 }

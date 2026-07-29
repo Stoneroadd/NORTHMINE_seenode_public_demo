@@ -1,4 +1,4 @@
-﻿import { createReadStream } from "node:fs";
+import { createReadStream } from "node:fs";
 import { readFile, stat } from "node:fs/promises";
 import { createServer } from "node:http";
 import { dirname, extname, join, normalize, resolve } from "node:path";
@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const BUILD_DIR = resolve(__dirname, "dist");
-const PORT = 8080;
+const PORT = Number(process.env.PORT || 8080);
 
 const MIME_TYPES = {
   ".css": "text/css; charset=utf-8",
