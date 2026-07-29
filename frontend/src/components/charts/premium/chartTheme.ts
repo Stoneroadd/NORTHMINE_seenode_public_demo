@@ -1,10 +1,15 @@
+import { useEffect, useState } from 'react'
 import type { EChartsOption } from 'echarts'
+import { useAppStore } from '../../../store'
 
+// Misma paleta de acento que tokens.css / northmine-tokens.css (--mineral,
+// --cyan, --amber, --red) para que los charts ECharts combinen con el resto
+// de la interfaz en vez de usar tonos propios.
 const darkPalette = {
-  mineral: '#75D6A0',
-  cyan: '#7AA7C7',
-  amber: '#FFB84D',
-  red: '#EF6F6C',
+  mineral: '#3EE58A',
+  cyan: '#2FD4FF',
+  amber: '#FFC94A',
+  red: '#FF5C5C',
   steel: '#9AA8B5',
   slate: '#66717F',
   panel: '#0D121D',
@@ -12,26 +17,35 @@ const darkPalette = {
   muted: '#A2ADBA',
   grid: 'rgba(255,255,255,0.07)',
   border: 'rgba(255,255,255,0.12)',
+  night: '#C98BFF',
 }
 
-const lightPalette = {
-  mineral: '#15803D',
-  cyan: '#0369A1',
-  amber: '#B45309',
-  red: '#DC2626',
-  steel: '#475569',
-  slate: '#64748B',
-  panel: '#FFFFFF',
-  text: '#0F172A',
-  muted: '#475569',
-  grid: 'rgba(15,23,42,0.12)',
-  border: 'rgba(15,23,42,0.18)',
+// Cada apariencia (Startup Intelligence, Oscuro Negro, Light, Futur, Minimal,
+// Carbon) define sus propias variables --op-green/--data-cyan/etc en
+// themes.css. Leerlas en vivo desde :root permite que los gráficos ECharts
+// (que no pueden usar var() de CSS) sigan el color exacto de la apariencia
+// activa en lugar de solo distinguir claro/oscuro.
+function readVar(name: string, fallback: string) {
+  if (typeof document === 'undefined') return fallback
+  const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim()
+  return value || fallback
 }
 
 function activePalette() {
-  return typeof document !== 'undefined' && document.documentElement.dataset.theme === 'light'
-    ? lightPalette
-    : darkPalette
+  return {
+    mineral: readVar('--op-green', darkPalette.mineral),
+    cyan: readVar('--data-cyan', darkPalette.cyan),
+    amber: readVar('--warn-yellow', darkPalette.amber),
+    red: readVar('--danger-red', darkPalette.red),
+    steel: readVar('--text-secondary', darkPalette.steel),
+    slate: readVar('--text-tertiary', darkPalette.slate),
+    panel: readVar('--bg-card', darkPalette.panel),
+    text: readVar('--text-primary', darkPalette.text),
+    muted: readVar('--text-secondary', darkPalette.muted),
+    grid: readVar('--border-dim', darkPalette.grid),
+    border: readVar('--border-mid', darkPalette.border),
+    night: readVar('--vision-night', darkPalette.night),
+  }
 }
 
 // Charts read these values while building their options, so switching theme
@@ -53,7 +67,7 @@ export function formatTons(value: number) {
 export function tooltipBase(): EChartsOption['tooltip'] {
   return {
     trigger: 'axis',
-    backgroundColor: 'rgba(9,13,20,0.96)',
+    backgroundColor: premiumPalette.panel,
     borderColor: premiumPalette.border,
     borderWidth: 1,
     padding: [10, 12],
@@ -81,4 +95,24 @@ export const baseGrid = {
 
 export function hasValues<T>(items: T[] | undefined | null) {
   return Array.isArray(items) && items.length > 0
+}
+
+// useTheme() aplica html[data-theme] dentro de un useLayoutEffect (para
+// evitar parpadeos de tema en el resto de la UI). Si un chart recalculara
+// sus colores con premiumPalette dentro de su propio render/useMemo al
+// cambiar themeId, ese render corre en el MISMO commit, ANTES de que ese
+// layout effect llegue a escribir el nuevo atributo en el DOM — por lo que
+// getComputedStyle() aun devolvia el color del tema ANTERIOR (el chart
+// quedaba "un tema atrasado"). React garantiza que los useEffect (pasivos)
+// de todo el arbol corren despues de TODOS los useLayoutEffect del mismo
+// commit, asi que este hook usa uno para recalcular una unica vez que el
+// atributo ya fue aplicado. Los componentes de chart deben incluir el valor
+// que retorna en el array de dependencias de su useMemo en vez de themeId.
+export function useChartPaletteKey() {
+  const themeId = useAppStore((s) => s.themeId)
+  const [key, setKey] = useState(themeId)
+  useEffect(() => {
+    setKey(themeId)
+  }, [themeId])
+  return key
 }

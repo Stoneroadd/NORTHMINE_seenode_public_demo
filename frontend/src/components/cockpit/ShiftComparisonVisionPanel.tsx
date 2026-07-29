@@ -8,6 +8,7 @@ import {
   ComposedChart,
   LabelList,
   Line,
+  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -25,9 +26,12 @@ import { formatNumber, formatTons } from './cockpitModel'
 import { getDetailModalAnchor, getDetailModalStyle, type DetailModalAnchor } from './detailModalPosition'
 import { useModuleT } from '../../i18n/useModuleT'
 import { cockpitT, type CockpitT } from '../../i18n/modules/cockpit'
+import { premiumPalette, useChartPaletteKey } from '../charts/premium/chartTheme'
 
-const DAY_COLOR = '#2FD4FF'
-const NIGHT_COLOR = '#C98BFF'
+// Dia/noche son un codigo de color semantico fijo (no un accent de marca),
+// por eso usan su propio token --vision-night en vez de premiumPalette.amber
+// o .red: cada apariencia lo redefine a su manera (violeta en dark/light,
+// gris en minimal, bronce en carbon) para no chocar con su propio cyan.
 const SHIFT_HOURS = 12
 
 type ShiftFocus = 'DIA' | 'NOCHE' | 'AMBOS'
@@ -733,6 +737,15 @@ function formatMetric(value: number | null | undefined, suffix: string, t: Cockp
   return `${formatNumber(value, digits)} ${suffix}`
 }
 
+function metricBarWidth(value: number | null | undefined, max: number, minimum = 6): string {
+  if (typeof value !== 'number' || Number.isNaN(value) || max <= 0) return '0%'
+  return `${Math.max(minimum, Math.min(100, (value / max) * 100))}%`
+}
+
+function hasMetricValue(value: number | null | undefined): value is number {
+  return typeof value === 'number' && !Number.isNaN(value)
+}
+
 function hourlyRecommendation(
   row: ShiftComparisonEquipmentHourlyPoint,
   focusShift: ShiftFocus,
@@ -1271,6 +1284,7 @@ function EquipmentComparisonDetailModal({
   onClose: () => void
 }) {
   const t = useModuleT(cockpitT)
+  useChartPaletteKey()
   useEffect(() => {
     if (!item) return
     const onKeyDown = (event: KeyboardEvent) => {
@@ -1299,6 +1313,8 @@ function EquipmentComparisonDetailModal({
   const avgLoadingTph = type === 'loader' && activeHourlyRows > 0 ? displayTonnes / activeHourlyRows : null
   const image = getEquipmentImage(item.id, item.model)
   const label = getEquipmentLabel(item.id, item.model)
+  const isPala1 = type === 'loader' && item.id.replace(/\s/g, '').toUpperCase() === 'PALA1'
+  const displayModel = isPala1 ? 'P&H 4100XPC AC' : item.model
   const peak = equipmentRows.reduce<ShiftComparisonEquipmentHourlyPoint | null>(
     (best, row) => (!best || selectedHourlyTonnes(row, focusShift) > selectedHourlyTonnes(best, focusShift) ? row : best),
     null,
@@ -1324,6 +1340,77 @@ function EquipmentComparisonDetailModal({
     : null
   const equipmentStatuses = aggregateEquipmentStatuses(equipmentRows, focusShift)
   const detailAnimationId = `${type}-${item.id}-${focusShift}`
+  const operationalRows = equipmentRows.map((row) => {
+    const hourLabel = focusShift === 'DIA' ? row.dia_hour : focusShift === 'NOCHE' ? row.noche_hour : `${row.dia_hour} / ${row.noche_hour}`
+    const origin = selectedHourlyString(focusShift, row.dia_origin, row.noche_origin)
+    const destination = selectedHourlyString(focusShift, row.dia_destination, row.noche_destination)
+    const tonnes = selectedHourlyTonnes(row, focusShift)
+    const cycles = selectedHourlyCycles(row, focusShift)
+    const loadedDistance = selectedHourlyNumber(row, focusShift, row.dia_loaded_distance_km, row.noche_loaded_distance_km)
+    const loading = selectedHourlyNumber(row, focusShift, row.dia_loading_time_min, row.noche_loading_time_min)
+    const cycle = selectedHourlyNumber(row, focusShift, row.dia_cycle_time_min, row.noche_cycle_time_min)
+    const wait = selectedHourlyNumber(row, focusShift, row.dia_caex_wait_time_min, row.noche_caex_wait_time_min)
+    const transport = selectedHourlyNumber(row, focusShift, row.dia_transport_time_min, row.noche_transport_time_min)
+    const emptyReturn = selectedHourlyNumber(row, focusShift, row.dia_empty_return_time_min, row.noche_empty_return_time_min)
+    const travelCycle = selectedHourlyNumber(row, focusShift, row.dia_travel_cycle_time_min, row.noche_travel_cycle_time_min)
+    const shovelWait = selectedHourlyNumber(row, focusShift, row.dia_shovel_wait_time_min, row.noche_shovel_wait_time_min)
+    const caexCycle = selectedHourlyNumber(row, focusShift, row.dia_caex_cycle_time_min, row.noche_caex_cycle_time_min)
+    const loadingSource = formatSourceLabel(selectedHourlySource(focusShift, row.dia_loading_time_source, row.noche_loading_time_source), t)
+    const waitSource = formatSourceLabel(selectedHourlySource(focusShift, row.dia_caex_wait_time_source, row.noche_caex_wait_time_source), t)
+    const transportSource = formatSourceLabel(selectedHourlySource(focusShift, row.dia_transport_time_source, row.noche_transport_time_source), t)
+    const emptyReturnSource = formatSourceLabel(selectedHourlySource(focusShift, row.dia_empty_return_time_source, row.noche_empty_return_time_source), t)
+    const travelCycleSource = formatSourceLabel(selectedHourlySource(focusShift, row.dia_travel_cycle_time_source, row.noche_travel_cycle_time_source), t)
+    const shovelWaitSource = formatSourceLabel(selectedHourlySource(focusShift, row.dia_shovel_wait_time_source, row.noche_shovel_wait_time_source), t)
+    const caexCycleSource = formatSourceLabel(selectedHourlySource(focusShift, row.dia_caex_cycle_time_source, row.noche_caex_cycle_time_source), t)
+    const maintenanceCode = selectedHourlyMaintenanceCode(row, focusShift)
+    const maintenanceDesc = selectedHourlyMaintenanceDesc(row, focusShift)
+    const maintenanceMinutes = selectedHourlyMaintenanceMinutes(row, focusShift)
+    const statusBreakdown = selectedHourlyStatuses(row, focusShift)
+    const recommendation = hourlyRecommendation(row, focusShift, peakSlot, t, type)
+    const recommendationClass = maintenanceCode && maintenanceMinutes ? 'is-maintenance' : peakSlot === row.slot ? 'is-best' : ''
+    const cycleMetric = type === 'truck' ? caexCycle ?? travelCycle : cycle
+    return {
+      row,
+      hourLabel,
+      origin,
+      destination,
+      tonnes,
+      cycles,
+      loadedDistance,
+      loading,
+      cycle,
+      wait,
+      transport,
+      emptyReturn,
+      travelCycle,
+      shovelWait,
+      caexCycle,
+      loadingSource,
+      waitSource,
+      transportSource,
+      emptyReturnSource,
+      travelCycleSource,
+      shovelWaitSource,
+      caexCycleSource,
+      maintenanceCode,
+      maintenanceDesc,
+      maintenanceMinutes,
+      statusBreakdown,
+      recommendation,
+      recommendationClass,
+      cycleMetric,
+      isPeak: peakSlot === row.slot,
+    }
+  })
+  const maxOperationalTonnes = Math.max(...operationalRows.map((row) => row.tonnes), 1)
+  const maxOperationalDistance = Math.max(...operationalRows.map((row) => row.loadedDistance ?? 0), 1)
+  const maxOperationalCycle = Math.max(...operationalRows.map((row) => row.cycleMetric ?? 0), 1)
+  const activeOperationalRows = operationalRows.filter((row) => row.tonnes > 0 || row.cycles > 0)
+  const lowProductionRow = activeOperationalRows.length
+    ? activeOperationalRows.reduce((low, row) => row.tonnes < low.tonnes ? row : low, activeOperationalRows[0])
+    : null
+  const detailAverageCycle = averageHourlyValue(operationalRows.map((row) => row.cycleMetric))
+  const detailAverageDistance = averageHourlyValue(operationalRows.map((row) => row.loadedDistance))
 
   const modal = (
     <div
@@ -1337,13 +1424,13 @@ function EquipmentComparisonDetailModal({
       <aside className="nmcp-detail-modal">
         <header className="nmcp-detail-header">
           <div className="nmcp-shift-detail-title">
-            <span className={`nmcp-equipment-visual is-${type}`}>
+            <span className={`nmcp-equipment-visual is-${type}${isPala1 ? ' is-pala-1' : ''}`}>
               <img src={image} alt={label} loading="lazy" />
             </span>
             <div>
               <span className="nmcp-section-kicker">{type === 'loader' ? t.sc_detalle_uc : t.sc_detalle_caex}</span>
               <h2>{item.id}</h2>
-              <p>{item.model} - {focusLabel(focusShift, t)}</p>
+              <p>{displayModel} - {focusLabel(focusShift, t)}</p>
               <p>{t.loading_modal_operador(displayOperator)}</p>
             </div>
           </div>
@@ -1358,6 +1445,7 @@ function EquipmentComparisonDetailModal({
           {focusShift === 'AMBOS' && <span><small>{t.sc_diferencia_label}</small><strong>{formatTons(item.difference_tonnes)}</strong></span>}
           <span><small>{t.sc_ciclos_kv}</small><strong>{formatNumber(displayCycles)}</strong></span>
           {type === 'loader' && <span><small>{t.sc_rend_carguio_kv}</small><strong>{avgLoadingTph === null ? t.common_sin_dato : `${formatNumber(avgLoadingTph, 1)} t/h`}</strong></span>}
+          {isPala1 && <span><small>Meta P&H 4100</small><strong>5.000 t/h</strong></span>}
           <span><small>{t.sc_dist_od}</small><strong>{formatMetric(avgLoadedDistance, 'km', t)}</strong></span>
           {type === 'truck' && <span><small>{t.sc_transp_n04}</small><strong>{formatMetric(avgTransportN04, 'min', t)}</strong></span>}
           {type === 'truck' && <span><small>{t.sc_retorno_n03}</small><strong>{formatMetric(avgEmptyReturnN03, 'min', t)}</strong></span>}
@@ -1370,7 +1458,7 @@ function EquipmentComparisonDetailModal({
           <OperatorPerformanceComparison day={dayPerformance} night={nightPerformance} />
         )}
 
-        <section className="nmcp-detail-chart-card">
+        <section className="nmcp-detail-chart-card is-compact">
           <div className="nmcp-panel-header">
             <div>
               <span className="nmcp-section-kicker">{t.sc_tonelaje_hora_hora}</span>
@@ -1394,11 +1482,25 @@ function EquipmentComparisonDetailModal({
                   <ComposedChart
                     key={detailAnimationId}
                     data={equipmentVisualRows}
-                    margin={{ top: 30, right: 10, bottom: 4, left: 0 }}
+                    margin={{ top: 18, right: 4, bottom: 0, left: -6 }}
                   >
-                    <CartesianGrid stroke="rgba(158,173,186,0.12)" vertical={false} />
-                    <XAxis dataKey="label" tick={{ fill: '#9EADBA', fontSize: 11 }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fill: '#9EADBA', fontSize: 11 }} axisLine={false} tickLine={false} width={54} />
+                    <CartesianGrid stroke="rgba(158,173,186,0.1)" vertical={false} />
+                    <XAxis dataKey="label" tick={{ fill: '#9EADBA', fontSize: 10 }} axisLine={false} tickLine={false} />
+                    <YAxis
+                      tick={{ fill: '#9EADBA', fontSize: 10 }}
+                      axisLine={false}
+                      tickLine={false}
+                      width={42}
+                      tickFormatter={(value) => `${Math.round(Number(value) / 1000)}k`}
+                    />
+                        {peak && (
+                          <ReferenceLine
+                            x={peak.label}
+                            stroke="#FFC928"
+                            strokeDasharray="4 4"
+                            strokeOpacity={0.62}
+                          />
+                        )}
                         <Tooltip
                           content={<EquipmentDetailTooltip focusShift={focusShift} />}
                           cursor={{ fill: 'rgba(244,247,250,0.035)' }}
@@ -1408,53 +1510,44 @@ function EquipmentComparisonDetailModal({
                           <Bar
                             dataKey="dia_tonnes"
                             name="Dia"
-                            fill={DAY_COLOR}
-                            radius={[6, 6, 0, 0]}
-                            maxBarSize={28}
+                            fill={premiumPalette.cyan}
+                            radius={[5, 5, 0, 0]}
+                            maxBarSize={18}
                             shape={<RisingBarShape variant="day" />}
                             isAnimationActive
                             animationBegin={80}
-                            animationDuration={980}
+                            animationDuration={720}
                             animationEasing="ease-out"
                             activeBar={{ fill: '#55DEFF', stroke: '#F4F7FA', strokeWidth: 1.1 }}
-                          >
-                            <LabelList
-                              dataKey="dia_tonnes"
-                              content={<HourlyBarValueLabel fill={DAY_COLOR} animationId={`${detailAnimationId}-dia`} />}
-                            />
-                          </Bar>
+                          />
                         )}
                         {focusShift !== 'DIA' && (
                           <Bar
                             dataKey="noche_tonnes"
                             name="Noche"
-                            fill={NIGHT_COLOR}
-                            radius={[6, 6, 0, 0]}
-                            maxBarSize={28}
+                            fill={premiumPalette.night}
+                            radius={[5, 5, 0, 0]}
+                            maxBarSize={18}
                             shape={<RisingBarShape variant="night" />}
                             isAnimationActive
                             animationBegin={140}
-                            animationDuration={980}
+                            animationDuration={720}
                             animationEasing="ease-out"
                             activeBar={{ fill: '#D99BFF', stroke: '#F4F7FA', strokeWidth: 1.1 }}
-                          >
-                            <LabelList
-                              dataKey="noche_tonnes"
-                              content={<HourlyBarValueLabel fill={NIGHT_COLOR} animationId={`${detailAnimationId}-noche`} />}
-                            />
-                          </Bar>
+                          />
                         )}
                         <Line
                           type="monotone"
                           dataKey="hourly_total_tonnes"
                           name="Ton/h"
                           stroke="#FFC928"
-                          strokeWidth={2.4}
-                          dot={{ r: 2.4, strokeWidth: 1.4, fill: '#071425', stroke: '#FFC928' }}
-                          activeDot={{ r: 4.2, strokeWidth: 1.5, fill: '#FFC928', stroke: '#F4F7FA' }}
+                          strokeWidth={3}
+                          strokeLinecap="round"
+                          dot={{ r: 1.9, strokeWidth: 1.1, fill: '#071425', stroke: '#FFC928' }}
+                          activeDot={{ r: 4.4, strokeWidth: 1.5, fill: '#FFC928', stroke: '#F4F7FA' }}
                           isAnimationActive
                           animationBegin={260}
-                          animationDuration={900}
+                          animationDuration={720}
                           animationEasing="ease-out"
                         />
                   </ComposedChart>
@@ -1494,148 +1587,123 @@ function EquipmentComparisonDetailModal({
           )}
         </section>
 
-        <section className="nmcp-detail-table-card">
-          <div className="nmcp-detail-table-head is-operational-detail">
-            <span>{t.sc_col_slot}</span>
-            <span>{t.sc_col_origen_destino}</span>
-            <span>{t.sc_col_tonelaje}</span>
-            <span>{t.sc_col_dist_od}</span>
-            <span>{type === 'truck' ? t.sc_col_transp_retorno : t.sc_col_carguio_ciclo}</span>
-            <span>{type === 'truck' ? t.sc_col_ciclo_caex : t.sc_col_espera_caex}</span>
-            <span>{t.sc_col_recomendacion}</span>
+        <section className="nmcp-detail-operational-card">
+          <div className="nmcp-panel-header">
+            <div>
+              <span className="nmcp-section-kicker">Lectura operacional por slot</span>
+              <h3>{item.id} / {focusLabel(focusShift, t)}</h3>
+            </div>
+            <span className="nmcp-panel-tag">{operationalRows.length} slots</span>
           </div>
-          <div className="nmcp-detail-table-body">
-            {equipmentRows.map((row) => {
-              const hourLabel = focusShift === 'DIA' ? row.dia_hour : focusShift === 'NOCHE' ? row.noche_hour : `${row.dia_hour} / ${row.noche_hour}`
-              const origin = selectedHourlyString(focusShift, row.dia_origin, row.noche_origin)
-              const destination = selectedHourlyString(focusShift, row.dia_destination, row.noche_destination)
-              const tonnes = selectedHourlyTonnes(row, focusShift)
-              const cycles = selectedHourlyCycles(row, focusShift)
-              const loadedDistance = selectedHourlyNumber(row, focusShift, row.dia_loaded_distance_km, row.noche_loaded_distance_km)
-              const loading = selectedHourlyNumber(row, focusShift, row.dia_loading_time_min, row.noche_loading_time_min)
-              const cycle = selectedHourlyNumber(row, focusShift, row.dia_cycle_time_min, row.noche_cycle_time_min)
-              const wait = selectedHourlyNumber(row, focusShift, row.dia_caex_wait_time_min, row.noche_caex_wait_time_min)
-              const transport = selectedHourlyNumber(row, focusShift, row.dia_transport_time_min, row.noche_transport_time_min)
-              const emptyReturn = selectedHourlyNumber(row, focusShift, row.dia_empty_return_time_min, row.noche_empty_return_time_min)
-              const travelCycle = selectedHourlyNumber(row, focusShift, row.dia_travel_cycle_time_min, row.noche_travel_cycle_time_min)
-              const shovelWait = selectedHourlyNumber(row, focusShift, row.dia_shovel_wait_time_min, row.noche_shovel_wait_time_min)
-              const caexCycle = selectedHourlyNumber(row, focusShift, row.dia_caex_cycle_time_min, row.noche_caex_cycle_time_min)
-              const loadingSource = formatSourceLabel(selectedHourlySource(focusShift, row.dia_loading_time_source, row.noche_loading_time_source), t)
-              const waitSource = formatSourceLabel(selectedHourlySource(focusShift, row.dia_caex_wait_time_source, row.noche_caex_wait_time_source), t)
-              const transportSource = formatSourceLabel(selectedHourlySource(focusShift, row.dia_transport_time_source, row.noche_transport_time_source), t)
-              const emptyReturnSource = formatSourceLabel(selectedHourlySource(focusShift, row.dia_empty_return_time_source, row.noche_empty_return_time_source), t)
-              const travelCycleSource = formatSourceLabel(selectedHourlySource(focusShift, row.dia_travel_cycle_time_source, row.noche_travel_cycle_time_source), t)
-              const shovelWaitSource = formatSourceLabel(selectedHourlySource(focusShift, row.dia_shovel_wait_time_source, row.noche_shovel_wait_time_source), t)
-              const caexCycleSource = formatSourceLabel(selectedHourlySource(focusShift, row.dia_caex_cycle_time_source, row.noche_caex_cycle_time_source), t)
-              const maintenanceCode = selectedHourlyMaintenanceCode(row, focusShift)
-              const maintenanceDesc = selectedHourlyMaintenanceDesc(row, focusShift)
-              const maintenanceMinutes = selectedHourlyMaintenanceMinutes(row, focusShift)
-              const statusBreakdown = selectedHourlyStatuses(row, focusShift)
-              const recommendation = hourlyRecommendation(row, focusShift, peakSlot, t, type)
-              const recommendationClass = maintenanceCode && maintenanceMinutes ? 'is-maintenance' : peakSlot === row.slot ? 'is-best' : ''
-              return (
-                <div
-                  key={`${row.equipment_id}-${row.slot}`}
-                  className={`nmcp-detail-table-row is-operational-detail ${peakSlot === row.slot ? 'is-best-hour' : ''}`}
-                >
-                  <span>
-                    <b>{row.label}</b>
-                    <small>{hourLabel}</small>
-                  </span>
-                  <strong>
-                    <small>{origin}</small>
-                    <small>{destination}</small>
-                  </strong>
-                  <strong>
-                    {formatTons(tonnes)}
-                    <small>{t.sc_ciclos_n(formatNumber(cycles))}</small>
-                    {focusShift === 'AMBOS' && (
-                      <>
-                        <small>{t.sc_ciclos_c(t.sc_dia_tons(formatTons(row.dia_tonnes)), formatNumber(row.dia_cycles))}</small>
-                        <small>{t.sc_ciclos_c(t.sc_noche_tons(formatTons(row.noche_tonnes)), formatNumber(row.noche_cycles))}</small>
-                      </>
-                    )}
-                  </strong>
-                  <span>
-                    {formatMetric(loadedDistance, 'km', t)}
-                    {focusShift === 'AMBOS' && (
-                      <>
-                        <small>{t.sc_dia_tons(formatMetric(row.dia_loaded_distance_km, 'km', t))}</small>
-                        <small>{t.sc_noche_tons(formatMetric(row.noche_loaded_distance_km, 'km', t))}</small>
-                      </>
-                    )}
-                  </span>
-                  {type === 'truck' ? (
-                    <span>
-                      {formatMetric(transport, 'min', t)}
-                      {transportSource && <small>{transportSource}</small>}
-                      <small>{t.sc_retorno_kv(formatMetric(emptyReturn, 'min', t))}</small>
-                      {emptyReturnSource && <small>{emptyReturnSource}</small>}
-                      {focusShift === 'AMBOS' && (
-                        <>
-                          <small>{t.sc_dia_n04_n03(formatMetric(row.dia_transport_time_min, 'min', t), formatMetric(row.dia_empty_return_time_min, 'min', t))}</small>
-                          <small>{t.sc_noche_n04_n03(formatMetric(row.noche_transport_time_min, 'min', t), formatMetric(row.noche_empty_return_time_min, 'min', t))}</small>
-                        </>
-                      )}
-                    </span>
-                  ) : (
-                    <span>
-                      {formatMetric(loading, 'min', t)}
-                      {loadingSource && <small>{loadingSource}</small>}
-                      <small>{t.sc_ciclo_kv} {formatMetric(cycle, 'min', t)}</small>
-                      {focusShift === 'AMBOS' && (
-                        <>
-                          <small>{t.sc_dia_n13(formatMetric(row.dia_loading_time_min, 'min', t))}</small>
-                          <small>{t.sc_noche_n13(formatMetric(row.noche_loading_time_min, 'min', t))}</small>
-                        </>
-                      )}
-                    </span>
-                  )}
-                  {type === 'truck' ? (
-                    <span>
-                      {formatMetric(caexCycle ?? travelCycle, 'min', t)}
-                      {(caexCycleSource || travelCycleSource) && <small>{caexCycleSource || travelCycleSource}</small>}
-                      <small>{t.sc_espera_n06} {formatMetric(shovelWait, 'min', t)}</small>
-                      {shovelWaitSource && <small>{shovelWaitSource}</small>}
-                      {focusShift === 'AMBOS' && (
-                        <>
-                          <small>{t.sc_dia_ciclo(formatMetric(row.dia_caex_cycle_time_min ?? row.dia_travel_cycle_time_min, 'min', t))}</small>
-                          <small>{t.sc_noche_ciclo(formatMetric(row.noche_caex_cycle_time_min ?? row.noche_travel_cycle_time_min, 'min', t))}</small>
-                        </>
-                      )}
-                    </span>
-                  ) : (
-                    <span>
-                      {formatMetric(wait, 'min', t)}
-                      {waitSource && <small>{waitSource}</small>}
-                      {focusShift === 'AMBOS' && (
-                        <>
-                          <small>{t.sc_dia_n14(formatMetric(row.dia_caex_wait_time_min, 'min', t))}</small>
-                          <small>{t.sc_noche_n14(formatMetric(row.noche_caex_wait_time_min, 'min', t))}</small>
-                        </>
-                      )}
-                    </span>
-                  )}
-                  <em className={recommendationClass}>
-                    {recommendation}
-                    {maintenanceCode && maintenanceMinutes && (
-                      <small>{maintenanceDesc || maintenanceCode} / {formatMetric(maintenanceMinutes, 'min', t)}</small>
-                    )}
-                    {!!statusBreakdown.length && (
-                      <span className="nmcp-row-status-list">
-                        {statusBreakdown.slice(0, 3).map((status) => (
-                          <small key={status.code}>
-                            {status.code} {status.description} / {formatMetric(status.minutes, 'min', t)}
-                          </small>
-                        ))}
-                      </span>
-                    )}
-                  </em>
-                </div>
-              )
-            })}
-            {!equipmentRows.length && <div className="nmcp-detail-empty">{t.sc_sin_detalle_horario}</div>}
-          </div>
+          {operationalRows.length ? (
+            <>
+              <div className="nmcp-operational-summary-grid">
+                <article className="is-peak">
+                  <span>Mejor hora</span>
+                  <strong>{peak ? peak.label : t.common_sin_dato}</strong>
+                  <small>{peak ? `${formatTons(selectedHourlyTonnes(peak, focusShift))} / ${t.sc_ciclos_n(formatNumber(selectedHourlyCycles(peak, focusShift)))}` : t.sc_sin_detalle_horario}</small>
+                </article>
+                <article>
+                  <span>Hora baja</span>
+                  <strong>{lowProductionRow ? lowProductionRow.row.label : t.common_sin_dato}</strong>
+                  <small>{lowProductionRow ? `${formatTons(lowProductionRow.tonnes)} / ${t.sc_ciclos_n(formatNumber(lowProductionRow.cycles))}` : t.sc_sin_detalle_horario}</small>
+                </article>
+                <article>
+                  <span>Promedios visibles</span>
+                  <strong>{formatMetric(detailAverageCycle, 'min', t)}</strong>
+                  <small>{t.sc_dist_od} {formatMetric(detailAverageDistance, 'km', t)}</small>
+                </article>
+              </div>
+
+              <div className="nmcp-operational-slot-grid">
+                {operationalRows.map((detail) => {
+                  const primaryCycleLabel = type === 'truck' ? t.sc_col_ciclo_caex : t.sc_ciclo_kv
+                  const primaryCycleSource = type === 'truck' ? detail.caexCycleSource || detail.travelCycleSource : detail.loadingSource
+                  return (
+                    <article
+                      key={`${detail.row.equipment_id}-${detail.row.slot}`}
+                      className={`nmcp-operational-slot-card ${detail.isPeak ? 'is-best-hour' : ''}`}
+                    >
+                      <div className="nmcp-slot-card-head">
+                        <span>
+                          <b>{detail.row.label}</b>
+                          <small>{detail.hourLabel}</small>
+                        </span>
+                        <strong className="nmcp-slot-tonnes">{formatTons(detail.tonnes)}</strong>
+                        <em className={detail.recommendationClass}>
+                          {detail.recommendation}
+                        </em>
+                      </div>
+
+                      <div className="nmcp-slot-route">
+                        <span>
+                          <small>{t.sc_col_origen_destino.split('/')[0]?.trim() || 'Origen'}</small>
+                          <strong>{detail.origin}</strong>
+                        </span>
+                        <i aria-hidden="true" />
+                        <span>
+                          <small>{t.sc_col_origen_destino.split('/')[1]?.trim() || 'Destino'}</small>
+                          <strong>{detail.destination}</strong>
+                        </span>
+                      </div>
+
+                      <div className="nmcp-slot-bar-list">
+                        <div>
+                          <span>{t.sc_col_tonelaje}</span>
+                          <i><b style={{ width: metricBarWidth(detail.tonnes, maxOperationalTonnes) }} /></i>
+                          <strong>{formatTons(detail.tonnes)}</strong>
+                        </div>
+                        <div>
+                          <span>{t.sc_dist_od}</span>
+                          <i><b style={{ width: metricBarWidth(detail.loadedDistance, maxOperationalDistance) }} /></i>
+                          <strong>{formatMetric(detail.loadedDistance, 'km', t)}</strong>
+                        </div>
+                        <div className="is-cycle">
+                          <span>{primaryCycleLabel}</span>
+                          <i><b style={{ width: metricBarWidth(detail.cycleMetric, maxOperationalCycle) }} /></i>
+                          <strong>{formatMetric(detail.cycleMetric, 'min', t)}</strong>
+                        </div>
+                      </div>
+
+                      <div className="nmcp-slot-meta-grid">
+                        <span><small>{t.sc_ciclos_kv}</small><strong>{formatNumber(detail.cycles)}</strong></span>
+                        {type === 'truck' ? (
+                          <>
+                            {hasMetricValue(detail.transport) && <span><small>{t.sc_transp_n04}</small><strong>{formatMetric(detail.transport, 'min', t)}</strong>{detail.transportSource && <em>{detail.transportSource}</em>}</span>}
+                            {hasMetricValue(detail.emptyReturn) && <span><small>{t.sc_retorno_n03}</small><strong>{formatMetric(detail.emptyReturn, 'min', t)}</strong>{detail.emptyReturnSource && <em>{detail.emptyReturnSource}</em>}</span>}
+                            {hasMetricValue(detail.shovelWait) && <span><small>{t.sc_espera_n06}</small><strong>{formatMetric(detail.shovelWait, 'min', t)}</strong>{detail.shovelWaitSource && <em>{detail.shovelWaitSource}</em>}</span>}
+                          </>
+                        ) : (
+                          <>
+                            {hasMetricValue(detail.loading) && <span><small>Carguio</small><strong>{formatMetric(detail.loading, 'min', t)}</strong>{primaryCycleSource && <em>{primaryCycleSource}</em>}</span>}
+                            {hasMetricValue(detail.cycle) && <span><small>{t.sc_ciclo_kv}</small><strong>{formatMetric(detail.cycle, 'min', t)}</strong></span>}
+                            {hasMetricValue(detail.wait) && <span><small>{t.sc_col_espera_caex}</small><strong>{formatMetric(detail.wait, 'min', t)}</strong>{detail.waitSource && <em>{detail.waitSource}</em>}</span>}
+                          </>
+                        )}
+                      </div>
+
+                      {(detail.maintenanceCode && detail.maintenanceMinutes) || !!detail.statusBreakdown.length ? (
+                        <div className="nmcp-slot-status-strip">
+                          {detail.maintenanceCode && detail.maintenanceMinutes && (
+                            <span className="is-maintenance">
+                              {detail.maintenanceDesc || detail.maintenanceCode} / {formatMetric(detail.maintenanceMinutes, 'min', t)}
+                            </span>
+                          )}
+                          {detail.statusBreakdown.slice(0, 3).map((status) => (
+                            <span key={status.code}>
+                              {status.code} {status.description} / {formatMetric(status.minutes, 'min', t)}
+                            </span>
+                          ))}
+                        </div>
+                      ) : null}
+                    </article>
+                  )
+                })}
+              </div>
+            </>
+          ) : (
+            <div className="nmcp-detail-empty">{t.sc_sin_detalle_horario}</div>
+          )}
         </section>
       </aside>
     </div>
@@ -1654,6 +1722,7 @@ export function ShiftComparisonVisionPanel({
   onRefresh,
 }: ShiftComparisonVisionPanelProps) {
   const t = useModuleT(cockpitT)
+  useChartPaletteKey()
   const [focusShift, setFocusShift] = useState<ShiftFocus>('AMBOS')
   const [selectedEquipment, setSelectedEquipment] = useState<{
     type: 'loader' | 'truck'
@@ -1854,7 +1923,7 @@ export function ShiftComparisonVisionPanel({
                   <Bar
                     dataKey="dia_tonnes"
                     name="Dia"
-                    fill={DAY_COLOR}
+                    fill={premiumPalette.cyan}
                     radius={[5, 5, 0, 0]}
                     maxBarSize={24}
                     shape={<RisingBarShape variant="day" />}
@@ -1867,7 +1936,7 @@ export function ShiftComparisonVisionPanel({
                     {showHourlyBarLabels && (
                       <LabelList
                         dataKey="dia_tonnes"
-                        content={<HourlyBarValueLabel fill={DAY_COLOR} animationId={`${mainHourlyAnimationId}-dia`} />}
+                        content={<HourlyBarValueLabel fill={premiumPalette.cyan} animationId={`${mainHourlyAnimationId}-dia`} />}
                       />
                     )}
                   </Bar>
@@ -1876,7 +1945,7 @@ export function ShiftComparisonVisionPanel({
                   <Bar
                     dataKey="noche_tonnes"
                     name="Noche"
-                    fill={NIGHT_COLOR}
+                    fill={premiumPalette.night}
                     radius={[5, 5, 0, 0]}
                     maxBarSize={24}
                     shape={<RisingBarShape variant="night" />}
@@ -1889,7 +1958,7 @@ export function ShiftComparisonVisionPanel({
                     {showHourlyBarLabels && (
                       <LabelList
                         dataKey="noche_tonnes"
-                        content={<HourlyBarValueLabel fill={NIGHT_COLOR} animationId={`${mainHourlyAnimationId}-noche`} />}
+                        content={<HourlyBarValueLabel fill={premiumPalette.night} animationId={`${mainHourlyAnimationId}-noche`} />}
                       />
                     )}
                   </Bar>

@@ -48,6 +48,18 @@ def _reject_demo_mode(endpoint: str) -> None:
         _real_only_error(endpoint, "NORTHMINE_DEMO_MODE=true no esta permitido para datos operacionales.")
 
 
+def _explicit_demo_mode() -> bool:
+    settings = get_settings()
+    return settings.environment == "demo" or settings.mode == "demo"
+
+
+def _builder_demo_flag(demo_mode: bool) -> bool:
+    # Los servicios operacionales de esta rama aun bloquean demo_mode=True.
+    # ENVIRONMENT=demo ya fuerza que data_provider entregue datos sinteticos;
+    # aqui solo conservamos el contrato de respuesta para poder demostrar la UI.
+    return False if demo_mode else False
+
+
 def _cockpit_dataset(request: Request) -> tuple[dict, str | None, str | None]:
     filters = _filters(request)
     selected_date = filters.get("selected_date") or filters.get("start_date")
@@ -93,14 +105,16 @@ def _real_data_unavailable(path: str, exc: Exception) -> JSONResponse:
 
 @router.get("/cockpit")
 def cockpit(request: Request, user: dict = RequireAny) -> dict:
-    _reject_demo_mode("/api/cockpit")
+    demo_mode = _explicit_demo_mode()
+    if not demo_mode:
+        _reject_demo_mode("/api/cockpit")
     try:
         dataset, selected_date, selected_shift = _cockpit_dataset(request)
     except Exception as exc:
         return _real_data_unavailable("/api/cockpit", exc)
     return build_cockpit_response(
         dataset,
-        demo_mode=False,
+        demo_mode=_builder_demo_flag(demo_mode),
         selected_date=selected_date,
         selected_shift=selected_shift,
     )
@@ -130,7 +144,9 @@ def monthly_target(request: Request, user: dict = RequireAny) -> dict:
 
 @router.get("/shift-comparison")
 def shift_comparison(request: Request, user: dict = RequireAny) -> dict:
-    _reject_demo_mode("/api/shift-comparison")
+    demo_mode = _explicit_demo_mode()
+    if not demo_mode:
+        _reject_demo_mode("/api/shift-comparison")
     filters = _filters(request)
     selected_date = filters.get("selected_date") or filters.get("start_date")
     try:
@@ -139,14 +155,16 @@ def shift_comparison(request: Request, user: dict = RequireAny) -> dict:
         return _real_data_unavailable("/api/shift-comparison", exc)
     return build_shift_comparison_response(
         dataset,
-        demo_mode=False,
+        demo_mode=_builder_demo_flag(demo_mode),
         selected_date=selected_date,
     )
 
 
 @router.get("/profit-optimization")
 def profit_optimization(request: Request, user: dict = RequireAny) -> dict:
-    _reject_demo_mode("/api/profit-optimization")
+    demo_mode = _explicit_demo_mode()
+    if not demo_mode:
+        _reject_demo_mode("/api/profit-optimization")
     try:
         dataset = _dataset(request)
     except Exception:
@@ -154,12 +172,14 @@ def profit_optimization(request: Request, user: dict = RequireAny) -> dict:
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Datos reales WENCO no disponibles y sin cache operacional para /api/profit-optimization.",
         )
-    return build_profit_optimization_response(dataset, demo_mode=False)
+    return build_profit_optimization_response(dataset, demo_mode=_builder_demo_flag(demo_mode))
 
 
 @router.get("/hidden-losses")
 def hidden_losses(request: Request, user: dict = RequireAny) -> dict:
-    _reject_demo_mode("/api/hidden-losses")
+    demo_mode = _explicit_demo_mode()
+    if not demo_mode:
+        _reject_demo_mode("/api/hidden-losses")
     try:
         dataset = _dataset(request)
     except Exception:
@@ -167,12 +187,14 @@ def hidden_losses(request: Request, user: dict = RequireAny) -> dict:
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Datos reales WENCO no disponibles y sin cache operacional para /api/hidden-losses.",
         )
-    return build_hidden_losses_response(dataset, demo_mode=False)
+    return build_hidden_losses_response(dataset, demo_mode=_builder_demo_flag(demo_mode))
 
 
 @router.get("/operational-nlp")
 def operational_nlp(request: Request, user: dict = RequireAny) -> dict:
-    _reject_demo_mode("/api/operational-nlp")
+    demo_mode = _explicit_demo_mode()
+    if not demo_mode:
+        _reject_demo_mode("/api/operational-nlp")
     try:
         dataset = _dataset(request)
     except Exception:
@@ -180,12 +202,14 @@ def operational_nlp(request: Request, user: dict = RequireAny) -> dict:
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Datos reales WENCO no disponibles y sin cache operacional para /api/operational-nlp.",
         )
-    return build_operational_nlp_response(dataset, demo_mode=False)
+    return build_operational_nlp_response(dataset, demo_mode=_builder_demo_flag(demo_mode))
 
 
 @router.get("/dispatcher-advisor")
 def dispatcher_advisor(request: Request, user: dict = RequireAny) -> dict:
-    _reject_demo_mode("/api/dispatcher-advisor")
+    demo_mode = _explicit_demo_mode()
+    if not demo_mode:
+        _reject_demo_mode("/api/dispatcher-advisor")
     try:
         dataset, selected_date, selected_shift = _cockpit_dataset(request)
     except Exception:
@@ -195,7 +219,7 @@ def dispatcher_advisor(request: Request, user: dict = RequireAny) -> dict:
         )
     return build_dispatcher_advisor_response(
         dataset,
-        demo_mode=False,
+        demo_mode=_builder_demo_flag(demo_mode),
         selected_date=selected_date,
         selected_shift=selected_shift,
     )
@@ -203,7 +227,9 @@ def dispatcher_advisor(request: Request, user: dict = RequireAny) -> dict:
 
 @router.get("/decision-audit")
 def decision_audit(request: Request, user: dict = RequireAny) -> dict:
-    _reject_demo_mode("/api/decision-audit")
+    demo_mode = _explicit_demo_mode()
+    if not demo_mode:
+        _reject_demo_mode("/api/decision-audit")
     try:
         dataset, selected_date, selected_shift = _cockpit_dataset(request)
     except Exception:
@@ -213,7 +239,7 @@ def decision_audit(request: Request, user: dict = RequireAny) -> dict:
         )
     return build_decision_audit_response(
         dataset,
-        demo_mode=False,
+        demo_mode=_builder_demo_flag(demo_mode),
         selected_date=selected_date,
         selected_shift=selected_shift,
     )

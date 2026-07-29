@@ -13,7 +13,10 @@ from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
-import pyodbc
+try:
+    import pyodbc
+except ImportError:  # pyodbc/libodbc is optional for the public demo runtime.
+    pyodbc = None
 
 from app.core.config import get_settings
 
@@ -98,6 +101,8 @@ def _connection_config() -> dict[str, str]:
 
 
 def _get_connection():
+    if pyodbc is None:
+        raise RuntimeError("pyodbc is not installed; real WENCO/SQL mode requires the SQL Server ODBC dependency.")
     config = _connection_config()
     missing = [key for key in ("server", "database", "user", "password") if not config.get(key)]
     if missing:
@@ -117,7 +122,7 @@ def _get_connection():
     # La coleccion de este WENCO guarda varchar en cp1252 (texto en espanol
     # con tildes/enies), no utf-8. Sin esto, pyodbc decodifica SQL_CHAR como
     # utf-8 por defecto y las tildes salen como el caracter de reemplazo
-    # (confirmado con evidencia real: "Aver�a"/"Cami�n" en STATUS_DESC).
+    # (confirmado con evidencia real: "Averia/Camion" en STATUS_DESC).
     conn.setdecoding(pyodbc.SQL_CHAR, encoding="cp1252")
     conn.setdecoding(pyodbc.SQL_WCHAR, encoding="utf-16le")
     conn.setencoding(encoding="utf-8")
@@ -450,7 +455,6 @@ def get_equipment_status(dias: int = 1) -> dict[str, dict[str, Any]]:
         logger.error(f"WENCO equipment status error: {e}")
         raise
     return result
-
 
 def get_equipment_status_history(dias: int = 7, limit: int = 500) -> list[dict[str, Any]]:
     """Historial real de transiciones MANTENCION/DEMORA por equipo, desde EQUIP_STATUS_TRANS.
