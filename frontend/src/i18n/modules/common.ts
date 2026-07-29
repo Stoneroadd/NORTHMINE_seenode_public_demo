@@ -6,6 +6,7 @@ export interface CommonT {
   errorStateTitle: string
   errorStateDetail: string
   loadingStateLabel: string
+  retryAction: string
 }
 
 export const commonT: ModuleDict<CommonT> = {
@@ -15,6 +16,7 @@ export const commonT: ModuleDict<CommonT> = {
     errorStateTitle: 'No fue posible cargar el modulo',
     errorStateDetail: 'Verifica que la API FastAPI este disponible.',
     loadingStateLabel: 'Cargando datos operacionales...',
+    retryAction: 'Reintentar',
   },
   en: {
     emptyStateTitle: 'No data available',
@@ -22,5 +24,6 @@ export const commonT: ModuleDict<CommonT> = {
     errorStateTitle: 'Could not load the module',
     errorStateDetail: 'Check that the FastAPI backend is available.',
     loadingStateLabel: 'Loading operational data...',
+    retryAction: 'Retry',
   },
 }

@@ -13,9 +13,10 @@ from slowapi.errors import RateLimitExceeded
 
 from app.api.routes import router
 from app.api.operator_ranking import router as operator_ranking_router
-from app.core.audit import init_audit_db, init_security_tables
+from app.core.audit import AuditStoreUnavailable, init_audit_db, init_security_tables
 from app.core.audit_middleware import AuditMiddleware
 from app.core.config import get_settings
+from app.core.distributed import verify_shared_services
 from app.core.health import build_health_response
 from app.core.logging import configure_logging
 from app.core.mfa import init_mfa_table
@@ -35,8 +36,12 @@ app = FastAPI(
     title=settings.app_name,
     version="2.0.0",
     description="API segura para NORTHMINE Intelligence Hub.",
-    docs_url="/docs",
-    redoc_url="/redoc",
+    # Swagger/ReDoc listan cada endpoint, su forma y sus modelos: util en
+    # desarrollo, un mapa gratis del API para cualquiera en produccion. Se
+    # exponen solo fuera de production (mismo criterio que require_production_safe).
+    docs_url="/docs" if not settings.is_production else None,
+    redoc_url="/redoc" if not settings.is_production else None,
+    openapi_url="/openapi.json" if not settings.is_production else None,
 )
 
 # ── Middlewares (orden crítico) ────────────────────────────────────────────────
@@ -67,9 +72,16 @@ if (FRONTEND_DIST / "assets").exists():
     app.mount("/assets", StaticFiles(directory=FRONTEND_DIST / "assets"), name="frontend-assets")
 
 
+@app.exception_handler(AuditStoreUnavailable)
+async def audit_store_unavailable_handler(request: Request, exc: AuditStoreUnavailable) -> JSONResponse:
+    logger.error("Security/audit store unavailable path=%s", request.url.path, exc_info=exc)
+    return JSONResponse(status_code=503, content={"detail": "Almacen de seguridad temporalmente no disponible"})
+
+
 @app.on_event("startup")
 def startup() -> None:
     settings.require_production_safe()
+    verify_shared_services()
     init_audit_db()
     init_security_tables()
     init_mfa_table()
@@ -83,7 +95,7 @@ def startup() -> None:
         start_aerial_sync()
         start_cycle_sync()
     else:
-        logger.info("Local auto-sync is disabled for this deployment")
+        logger.info("Local auto-sync is disabled; run syncs from a dedicated worker or scheduler")
     logger.info(
         "NORTHMINE API started service=%s version=%s environment=%s mode=%s",
         settings.service_name,
@@ -115,7 +127,7 @@ def root():
         "version": settings.version,
         "environment": settings.environment,
         "mode": settings.mode,
-        "docs": "/docs",
+        "docs": "/docs" if not settings.is_production else None,
         "health": "/health",
     }
 
@@ -123,6 +135,7 @@ def root():
 @app.get("/health")
 def health_root() -> dict:
     return build_health_response()
+
 
 @app.get("/{full_path:path}", include_in_schema=False)
 def frontend_fallback(full_path: str):

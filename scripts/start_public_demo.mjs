@@ -89,12 +89,12 @@ const defaultDbDir = isWindows ? "." : "/tmp";
 
 const env = {
   ...process.env,
-  ENVIRONMENT: process.env.ENVIRONMENT || "demo",
-  NORTHMINE_MODE: process.env.NORTHMINE_MODE || "demo",
-  NORTHMINE_DATA_MODE: process.env.NORTHMINE_DATA_MODE || "DEMO",
-  NORTHMINE_DEMO_MODE: process.env.NORTHMINE_DEMO_MODE || "true",
-  NORTHMINE_ALLOW_DEMO_LOGIN: process.env.NORTHMINE_ALLOW_DEMO_LOGIN || "true",
-  NORTHMINE_LOCAL_AUTO_SYNC_ENABLED: process.env.NORTHMINE_LOCAL_AUTO_SYNC_ENABLED || "false",
+  ENVIRONMENT: "demo",
+  NORTHMINE_MODE: "demo",
+  NORTHMINE_DATA_MODE: "DEMO",
+  NORTHMINE_DEMO_MODE: "true",
+  NORTHMINE_ALLOW_DEMO_LOGIN: "true",
+  NORTHMINE_LOCAL_AUTO_SYNC_ENABLED: "false",
   NORTHMINE_AUDIT_DB: process.env.NORTHMINE_AUDIT_DB || `${defaultDbDir}/northmine_demo_audit.db`,
   NORTHMINE_USERS_DB: process.env.NORTHMINE_USERS_DB || `${defaultDbDir}/northmine_demo_users.db`,
 };

@@ -18,11 +18,12 @@ export function EquipmentDetailHeader({ detail, onClose }: Props) {
   const tilt = useTilt3D({ maxTilt: 5, scale: 1.025 })
   const image = getEquipmentImage(detail.equipment_id, detail.model)
   const tone = toneFromOperationalState(detail.status)
+  const isPala1 = detail.equipment_id.replace(/\s/g, '').toUpperCase() === 'PALA1'
 
   return (
-    <header className={`equipment-detail-header tone-${tone}`}>
-      <div className="equipment-detail-visual" {...tilt}>
-        <img src={image} alt={`${detail.equipment_id} ${detail.model}`} />
+    <header className="equipment-detail-header">
+      <div className={`equipment-detail-visual${isPala1 ? ' is-pala-1' : ''}`} {...tilt}>
+        <img className={isPala1 ? 'is-pala-1' : undefined} src={image} alt={`${detail.equipment_id} ${detail.model}`} />
         <span className="equipment-scanline" />
         <MachineStatusOverlay
           state={detail.status}

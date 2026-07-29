@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react'
 import type { AuthSession } from '../../lib/api'
 import { getHealth } from '../../services/dashboardService'
 import { logout as clearSession } from '../../services/authService'
+import { useAppStore } from '../../store'
 import { CommandCenterBackground } from '../effects/CommandCenterBackground'
-import { CursorGlow } from '../effects/CursorGlow'
 import { Sidebar, type SectionId } from './Sidebar'
 import { Topbar } from './Topbar'
 import { useModuleT } from '../../i18n/useModuleT'
@@ -45,6 +45,10 @@ export function AppShell({ session, onLogout, children }: Props) {
   const [section, setSection] = useState<SectionId>(() => sectionFromPath(window.location.pathname))
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
   const queryClient = useQueryClient()
+  // El fondo decorativo (matrix rain + grid) dibuja en canvas via rAF de forma
+  // continua; si esta desactivado en Efectos visuales debe desmontarse del
+  // todo (no solo ocultarse con CSS) para liberar CPU/GPU realmente.
+  const backgroundFxEnabled = useAppStore((s) => s.effects.hexgrid)
   const healthQuery = useQuery({
     queryKey: ['health'],
     queryFn: getHealth,
@@ -89,8 +93,7 @@ export function AppShell({ session, onLogout, children }: Props) {
 
   return (
     <div className="app-shell">
-      <CommandCenterBackground />
-      <CursorGlow />
+      {backgroundFxEnabled && <CommandCenterBackground />}
       <Sidebar
         active={section}
         onSelect={handleSelectSection}

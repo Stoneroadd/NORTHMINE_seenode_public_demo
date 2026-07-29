@@ -3,7 +3,11 @@ import ReactECharts from 'echarts-for-react'
 import type { EChartsOption } from 'echarts'
 import { Target } from 'lucide-react'
 import { apiFetch } from '../lib/api'
+import { premiumPalette, useChartPaletteKey } from '../components/charts/premium/chartTheme'
 import { ModuleHeader } from '../components/common/ModuleHeader'
+import { ErrorState } from '../components/common/ErrorState'
+import { LoadingState } from '../components/common/LoadingState'
+import { ApiError } from '../lib/api'
 import { useAnimatedNumber } from '../hooks/useAnimatedNumber'
 import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion'
 import { useModuleT } from '../i18n/useModuleT'
@@ -57,7 +61,9 @@ type SimValues = {
   turno: string
 }
 
-const META_MES = 4_499_998
+// La meta mensual la entrega el backend (result.resultado.meta_mes) — no se
+// hardcodea aca para evitar que el numero mostrado quede desincronizado del
+// que realmente se usa para calcular brecha/estado/curva de equilibrio.
 
 // ─── Chart builder ────────────────────────────────────────────────────────────
 
@@ -65,6 +71,7 @@ function buildCrossoverOption(
   curva: SimResult['curva_caex'],
   currentCaex: number,
   caexMin: number,
+  metaMes: number,
   t: SimulatorT,
 ): EChartsOption {
   const xs = curva.map((p) => p.caex)
@@ -79,9 +86,9 @@ function buildCrossoverOption(
     grid: { top: 40, right: 24, bottom: 40, left: 80 },
     tooltip: {
       trigger: 'axis',
-      backgroundColor: 'rgba(2,4,3,0.88)',
-      borderColor: 'rgba(57,255,20,0.2)',
-      textStyle: { color: 'rgba(245,255,250,0.9)', fontSize: 12 },
+      backgroundColor: premiumPalette.panel,
+      borderColor: premiumPalette.border,
+      textStyle: { color: premiumPalette.text, fontSize: 12 },
       formatter: (params: unknown) => {
         const rows = params as [{ axisValue: number; value: number }]
         return t.tooltip_crossover(rows[0].axisValue, rows[0].value.toLocaleString('es-CL'))
@@ -92,16 +99,16 @@ function buildCrossoverOption(
       data: xs,
       name: 'CAEX',
       nameLocation: 'end',
-      nameTextStyle: { color: 'rgba(245,255,250,0.5)', fontSize: 10 },
-      axisLine: { lineStyle: { color: 'rgba(245,255,250,0.12)' } },
+      nameTextStyle: { color: premiumPalette.muted, fontSize: 10 },
+      axisLine: { lineStyle: { color: premiumPalette.border } },
       axisTick: { show: false },
-      axisLabel: { color: 'rgba(245,255,250,0.5)', fontSize: 10 },
+      axisLabel: { color: premiumPalette.muted, fontSize: 10 },
     },
     yAxis: {
       type: 'value',
-      splitLine: { lineStyle: { color: 'rgba(57,255,20,0.08)' } },
+      splitLine: { lineStyle: { color: premiumPalette.grid } },
       axisLabel: {
-        color: 'rgba(245,255,250,0.5)',
+        color: premiumPalette.muted,
         fontSize: 10,
         formatter: (v: number) => `${(v / 1e6).toFixed(1)}M`,
       },
@@ -110,8 +117,8 @@ function buildCrossoverOption(
       show: false,
       dimension: 1,
       pieces: [
-        { lt: META_MES, color: 'rgba(255,45,85,0.18)' },
-        { gte: META_MES, color: 'rgba(0,255,136,0.08)' },
+        { lt: metaMes, color: `color-mix(in srgb, ${premiumPalette.red} 18%, transparent)` },
+        { gte: metaMes, color: `color-mix(in srgb, ${premiumPalette.mineral} 8%, transparent)` },
       ],
     },
     series: ([
@@ -119,22 +126,22 @@ function buildCrossoverOption(
         type: 'line',
         smooth: true,
         data: ys,
-        lineStyle: { width: 3, color: '#00D4FF' },
+        lineStyle: { width: 3, color: premiumPalette.cyan },
         areaStyle: { opacity: 0.3 },
         symbol: 'none',
         markLine: {
           silent: true,
           data: [
             {
-              yAxis: META_MES,
+              yAxis: metaMes,
               name: 'META',
               label: {
                 formatter: t.chart_meta_label,
-                color: '#FFD100',
+                color: premiumPalette.amber,
                 fontFamily: '"JetBrains Mono",monospace',
                 fontSize: 10,
               },
-              lineStyle: { type: 'dashed', color: '#FFD100', width: 2 },
+              lineStyle: { type: 'dashed', color: premiumPalette.amber, width: 2 },
             },
           ],
         },
@@ -142,14 +149,14 @@ function buildCrossoverOption(
           data: [
             {
               name: `${caexMin} CAEX equilibrio`,
-              coord: [xs.indexOf(caexMin) >= 0 ? String(caexMin) : String(xs[0]), META_MES],
+              coord: [xs.indexOf(caexMin) >= 0 ? String(caexMin) : String(xs[0]), metaMes],
               label: {
                 formatter: t.mark_equilibrio(caexMin),
-                color: '#FFD100',
+                color: premiumPalette.amber,
                 fontFamily: '"JetBrains Mono",monospace',
                 fontSize: 9,
               },
-              itemStyle: { color: '#FFD100' },
+              itemStyle: { color: premiumPalette.amber },
               symbol: 'diamond',
               symbolSize: 12,
             },
@@ -158,11 +165,11 @@ function buildCrossoverOption(
               coord: [String(currentCaex), currentProd],
               label: {
                 formatter: t.mark_actual(currentCaex),
-                color: currentSobre ? '#00FF88' : '#FF2D55',
+                color: currentSobre ? premiumPalette.mineral : premiumPalette.red,
                 fontFamily: '"JetBrains Mono",monospace',
                 fontSize: 9,
               },
-              itemStyle: { color: currentSobre ? '#00FF88' : '#FF2D55' },
+              itemStyle: { color: currentSobre ? premiumPalette.mineral : premiumPalette.red },
               symbol: 'circle',
               symbolSize: 14,
             },
@@ -224,7 +231,7 @@ function SliderRow({ label, field, min, max, step, value, onChange, suffix }: Sl
           onChange={(e) => onChange(field, Number(e.target.value))}
           style={{
             width: 72,
-            background: 'rgba(245,255,250,0.06)',
+            background: 'var(--border-dim)',
             border: '1px solid var(--nm-border)',
             borderRadius: 4,
             color: 'var(--nm-text)',
@@ -263,6 +270,8 @@ export function Simulator() {
   const [values, setValues] = useState<SimValues>({ ...DEFAULTS })
   const [result, setResult] = useState<SimResult | null>(null)
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<Error | null>(null)
+  const [retryTick, setRetryTick] = useState(0)
 
   const update = useCallback(
     (field: keyof Omit<SimValues, 'turno'>, val: number) => {
@@ -275,10 +284,11 @@ export function Simulator() {
     setValues((prev) => ({ ...prev, turno: t }))
   }, [])
 
-  // Debounced fetch — runs on values change
+  // Debounced fetch — runs on values change (y en el reintento manual)
   useEffect(() => {
     const timer = setTimeout(() => {
       setLoading(true)
+      setError(null)
       apiFetch<SimResult>('/api/simulator/run', {
         method: 'POST',
         body: JSON.stringify({
@@ -291,13 +301,14 @@ export function Simulator() {
         })
         .catch((err) => {
           console.error('Simulator fetch error:', err)
+          setError(err instanceof Error ? err : new Error('No se pudo calcular la simulacion.'))
         })
         .finally(() => {
           setLoading(false)
         })
     }, 200)
     return () => clearTimeout(timer)
-  }, [values])
+  }, [values, retryTick])
 
   // Animated production value
   const animProd = useAnimatedNumber(result?.resultado.produccion_estimada ?? 0, {
@@ -324,11 +335,13 @@ export function Simulator() {
   const estadoLabel = result?.resultado.estado.replace(/_/g, ' ') ?? '—'
   const brecha = result?.resultado.brecha ?? 0
   const pct_meta = result?.resultado.pct_meta ?? 0
+  const metaMes = result?.resultado.meta_mes ?? 0
 
+  const themeId = useChartPaletteKey()
   const crossoverOption = useMemo(() => {
     if (!result || result.curva_caex.length === 0) return null
-    return buildCrossoverOption(result.curva_caex, values.caex, result.resultado.caex_minimo, t)
-  }, [result, values.caex, t])
+    return buildCrossoverOption(result.curva_caex, values.caex, result.resultado.caex_minimo, result.resultado.meta_mes, t)
+  }, [result, values.caex, t, themeId])
 
   const narrative = useMemo(() => {
     if (!result) return null
@@ -475,7 +488,43 @@ export function Simulator() {
           className="simulator-panel-right"
           style={{ display: 'flex', flexDirection: 'column', gap: 16 }}
         >
+          {loading && !result && !error && <LoadingState label="Calculando simulacion..." />}
+          {error && !result && (
+            <ErrorState
+              detail={
+                error instanceof ApiError
+                  ? `No se pudo calcular la simulacion: ${error.message}`
+                  : 'No se pudo calcular la simulacion.'
+              }
+              onRetry={() => setRetryTick((v) => v + 1)}
+            />
+          )}
+          {error && result && (
+            <div
+              className="panel"
+              style={{
+                padding: '10px 14px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: 12,
+                borderColor: 'var(--nm-red)',
+                color: 'var(--nm-red)',
+                fontSize: 12,
+              }}
+            >
+              <span>El ultimo cambio no se pudo recalcular; se muestra el resultado anterior.</span>
+              <button
+                type="button"
+                className="command-button command-button-secondary"
+                onClick={() => setRetryTick((v) => v + 1)}
+              >
+                Reintentar
+              </button>
+            </div>
+          )}
           {/* Card principal */}
+          {result && (
           <div className="panel simulator-result-card" style={{ padding: '20px 24px' }}>
             <div
               className="eyebrow"
@@ -512,7 +561,7 @@ export function Simulator() {
                   fontFamily: '"JetBrains Mono",monospace',
                 }}
               >
-                {t.meta_resumen(META_MES.toLocaleString('es-CL'), brecha >= 0 ? '+' : '', brecha.toLocaleString('es-CL'), pct_meta)}
+                {t.meta_resumen(metaMes.toLocaleString('es-CL'), brecha >= 0 ? '+' : '', brecha.toLocaleString('es-CL'), pct_meta)}
               </span>
             </div>
             {result && (
@@ -543,6 +592,7 @@ export function Simulator() {
               </div>
             )}
           </div>
+          )}
 
           {/* Gráfico punto de cruce */}
           {crossoverOption && (

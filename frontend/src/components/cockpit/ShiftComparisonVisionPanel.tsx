@@ -1,4 +1,5 @@
 import { type CSSProperties, useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { RefreshCcw, SplitSquareHorizontal, X } from 'lucide-react'
 import {
   Bar,
@@ -22,11 +23,10 @@ import type {
   ShiftComparisonResponse,
 } from '../../lib/api'
 import { formatNumber, formatTons } from './cockpitModel'
-import { getDetailModalAnchor, type DetailModalAnchor } from './detailModalPosition'
+import { getDetailModalAnchor, getDetailModalStyle, type DetailModalAnchor } from './detailModalPosition'
 import { useModuleT } from '../../i18n/useModuleT'
 import { cockpitT, type CockpitT } from '../../i18n/modules/cockpit'
 import { premiumPalette, useChartPaletteKey } from '../charts/premium/chartTheme'
-import { FloatingWindow } from '../ui/FloatingWindow'
 
 // Dia/noche son un codigo de color semantico fijo (no un accent de marca),
 // por eso usan su propio token --vision-night en vez de premiumPalette.amber
@@ -1285,6 +1285,14 @@ function EquipmentComparisonDetailModal({
 }) {
   const t = useModuleT(cockpitT)
   useChartPaletteKey()
+  useEffect(() => {
+    if (!item) return
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [item, onClose])
 
   if (!item) return null
 
@@ -1404,14 +1412,16 @@ function EquipmentComparisonDetailModal({
   const detailAverageCycle = averageHourlyValue(operationalRows.map((row) => row.cycleMetric))
   const detailAverageDistance = averageHourlyValue(operationalRows.map((row) => row.loadedDistance))
 
-  return (
-    <FloatingWindow
-      open
-      onClose={onClose}
-      placement={anchor ? { mode: 'anchor', anchor } : { mode: 'center' }}
-      ariaLabel={t.sc_detalle_comparativo_aria(item.id)}
-      panelClassName="nmcp-detail-modal"
+  const modal = (
+    <div
+      className={`nmcp-detail-layer ${anchor ? 'is-anchored' : ''}`}
+      role="dialog"
+      aria-modal="true"
+      aria-label={t.sc_detalle_comparativo_aria(item.id)}
+      style={getDetailModalStyle(anchor)}
     >
+      <button className="nmcp-detail-backdrop" type="button" onClick={onClose} aria-label={t.sc_close_aria} />
+      <aside className="nmcp-detail-modal">
         <header className="nmcp-detail-header">
           <div className="nmcp-shift-detail-title">
             <span className={`nmcp-equipment-visual is-${type}${isPala1 ? ' is-pala-1' : ''}`}>
@@ -1695,8 +1705,11 @@ function EquipmentComparisonDetailModal({
             <div className="nmcp-detail-empty">{t.sc_sin_detalle_horario}</div>
           )}
         </section>
-    </FloatingWindow>
+      </aside>
+    </div>
   )
+
+  return createPortal(modal, document.body)
 }
 
 export function ShiftComparisonVisionPanel({

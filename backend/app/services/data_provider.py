@@ -36,6 +36,72 @@ _status_cache: dict[int, dict[str, Any]] = {}
 _status_history_cache: dict[int, list[dict[str, Any]]] = {}
 
 
+def _demo_equipment_status(dias: int = 1) -> dict[str, dict[str, Any]]:
+    """Estados ficticios completos para que la demo no dependa de WENCO."""
+    selected = date.today()
+    base = datetime.combine(selected, time(hour=18, minute=40))
+    status: dict[str, dict[str, Any]] = {}
+    # Las demoras se presentan con los mismos codigos y categorias WENCO que
+    # consume el Cockpit. Asi la demo permite leer la causa operacional, no
+    # solo un generico "sin actividad".
+    special = {
+        "CAEX04": ("DEMORA_OPERACIONAL", "O02", "O02 Colacion", 34),
+        "CAEX07": ("STANDBY", "S99", "S99 Standby gestionado", 28),
+        "CAEX09": ("MANTENCION", "M30", "M30 Averia sistema hidraulico", 95),
+        "CAEX11": ("DEMORA_OPERACIONAL", "O01", "O01 Cambio de Turno", 16),
+        "CAEX15": ("DEMORA_OPERACIONAL", "O11", "O11 Combustible", 24),
+        "CAEX18": ("DEMORA_OPERACIONAL", "O18", "O18 Espera en Chancado", 42),
+        "CAEX21": ("DEMORA_OPERACIONAL", "O16", "O16 Detenido por Combustible", 28),
+        "CAEX22": ("DEMORA_OPERACIONAL", "O27", "O27 Falla Operacional", 39),
+        "PALA 2": ("DEMORA_OPERACIONAL", "N14", "N14 Pala Esperando CAEX", 31),
+    }
+    for index in range(1, 25):
+        equipment_id = f"CAEX{index:02d}"
+        category, code, description, minutes = special.get(equipment_id, ("PRODUCTIVO", "N09", "N09 Produccion General", 0))
+        status[equipment_id] = {
+            "category": category,
+            "status_code": code,
+            "status_desc": description,
+            "start_timestamp": (base - timedelta(minutes=minutes)).isoformat(timespec="minutes") if minutes else base.isoformat(timespec="minutes"),
+        }
+    for equipment_id in ("PALA 1", "PALA 2", "PALA 3", "CF 1", "CF 2"):
+        category, code, description, minutes = special.get(equipment_id, ("PRODUCTIVO", "O01", "O01 Carguio productivo", 0))
+        status[equipment_id] = {
+            "category": category,
+            "status_code": code,
+            "status_desc": description,
+            "start_timestamp": (base - timedelta(minutes=minutes)).isoformat(timespec="minutes") if minutes else base.isoformat(timespec="minutes"),
+        }
+    return status
+
+
+def _demo_equipment_status_history(dias: int = 7) -> list[dict[str, Any]]:
+    selected = date.today()
+    events = [
+        ("CAEX04", "DEMORA_OPERACIONAL", "O02", "O02 Colacion", 34),
+        ("CAEX09", "MANTENCION", "M30", "M30 Averia sistema hidraulico", 95),
+        ("CAEX11", "DEMORA_OPERACIONAL", "O01", "O01 Cambio de Turno", 16),
+        ("CAEX15", "DEMORA_OPERACIONAL", "O11", "O11 Combustible", 24),
+        ("CAEX18", "DEMORA_OPERACIONAL", "O18", "O18 Espera en Chancado", 42),
+        ("CAEX21", "DEMORA_OPERACIONAL", "O16", "O16 Detenido por Combustible", 28),
+        ("CAEX22", "DEMORA_OPERACIONAL", "O27", "O27 Falla Operacional", 39),
+        ("PALA 2", "DEMORA_OPERACIONAL", "N14", "N14 Pala Esperando CAEX", 31),
+    ]
+    result = []
+    for equipment_id, category, code, description, minutes in events:
+        end = datetime.combine(selected, time(hour=18, minute=40))
+        start = end - timedelta(minutes=minutes)
+        result.append({
+            "equip_ident": equipment_id,
+            "category": category,
+            "status_code": code,
+            "status_desc": description,
+            "start_timestamp": start.isoformat(timespec="minutes"),
+            "end_timestamp": end.isoformat(timespec="minutes"),
+        })
+    return result
+
+
 def _demo_dataset(fecha: str | None, dias: int) -> dict[str, Any]:
     """Genera turnos reproducibles, pero distintos, para la demo local.
 
@@ -48,7 +114,7 @@ def _demo_dataset(fecha: str | None, dias: int) -> dict[str, Any]:
     start = selected - timedelta(days=max(dias, 1) - 1)
     caex_models = ["CAT789D"] * 8 + ["CAT793F"] * 8 + ["KOM980E-5"] * 8
     loaders = [
-        ("PALA 1", "KOM PC5500"), ("PALA 2", "KOM PC5500"),
+        ("PALA 1", "P&H 4100XPC AC"), ("PALA 2", "KOM PC5500"),
         ("PALA 3", "CAT 390F"), ("CF 1", "CAT 995"), ("CF 2", "CAT 994K"),
     ]
     payload_by_model = {"CAT789D": 190, "CAT793F": 220, "KOM980E-5": 360}
@@ -76,6 +142,12 @@ def _demo_dataset(fecha: str | None, dias: int) -> dict[str, Any]:
                         stamp = datetime.combine(stamp_day, time(absolute_hour, minute))
                         loader_id, loader_model = loaders[(truck_index + slot + sequence + (0 if shift == "DIA" else 2)) % len(loaders)]
                         payload = payload_by_model[model] * shift_factor * (0.88 + truck_rng.random() * 0.22)
+                        # PALA 1 representa la pala eléctrica P&H 4100XPC de
+                        # referencia en el demo: mayor continuidad y aporte
+                        # por ciclo para que el reporte muestre una historia
+                        # operacional coherente de alto rendimiento.
+                        if loader_id == "PALA 1":
+                            payload *= 3.10
                         # Un frente con menor continuidad crea valles visibles
                         # en las velas/series, en vez de una línea plana.
                         if slot in {3, 8} and truck_rng.random() < 0.28:
@@ -179,6 +251,8 @@ def get_equipment_status(dias: int = 1) -> dict[str, dict[str, Any]]:
     degradan por equipo cuando no encuentran estado real para un caex_id
     puntual, asi que no vale la pena tumbar el endpoint entero por esto.
     """
+    if get_settings().is_demo:
+        return _demo_equipment_status(dias)
     try:
         result = _get_wenco_equipment_status(dias=dias)
         _status_cache[dias] = result
@@ -198,6 +272,8 @@ def get_equipment_status_history(dias: int = 7) -> list[dict[str, Any]]:
     Mismo criterio de degradacion que get_equipment_status: sin WENCO y sin
     cache, devuelve lista vacia en vez de tumbar el endpoint de historial de averias.
     """
+    if get_settings().is_demo:
+        return _demo_equipment_status_history(dias)
     try:
         result = _get_wenco_equipment_status_history(dias=dias)
         _status_history_cache[dias] = result

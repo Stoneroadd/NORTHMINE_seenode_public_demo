@@ -4,7 +4,7 @@ import type { EChartsOption } from 'echarts'
 import { useAnimatedNumber } from '../../../hooks/useAnimatedNumber'
 import { useDemoLivePulse } from '../../../hooks/useDemoLivePulse'
 import { PremiumChartFrame } from './PremiumChartFrame'
-import { formatNumber, formatTons, premiumPalette, tooltipBase } from './chartTheme'
+import { formatNumber, formatTons, premiumPalette, tooltipBase, useChartPaletteKey } from './chartTheme'
 import { useModuleT } from '../../../i18n/useModuleT'
 import { chartsT } from '../../../i18n/modules/charts'
 
@@ -36,6 +36,7 @@ function PremiumGaugeChartBase({
   label,
 }: Props) {
   const t = useModuleT(chartsT)
+  const themeId = useChartPaletteKey()
   const resolvedLabel = label ?? t.complianceLabel
   const animated = useAnimatedNumber(value, { durationMs: 900 })
   const pulse = useDemoLivePulse({ enabled: value < 100, intervalMs: 2600, amplitude: 0.02 })
@@ -112,7 +113,7 @@ function PremiumGaugeChartBase({
         data: [{ value: Math.min(value, 125), name: resolvedLabel }],
       },
     ],
-  }), [animated, breach, color, current, resolvedLabel, meta, pulse, t, value])
+  }), [animated, breach, color, current, resolvedLabel, meta, pulse, t, value, themeId])
 
   return (
     <PremiumChartFrame height={height} loading={loading} error={error} empty={Number.isNaN(value)}>

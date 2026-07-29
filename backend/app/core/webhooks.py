@@ -5,7 +5,11 @@ import os
 
 import httpx
 
-ENVIRONMENT = os.environ.get("ENVIRONMENT", "development")
+from app.core.config import get_settings
+
+# Antes leia ENVIRONMENT directo de os.environ, en paralelo a Settings.environment
+# - un segundo lugar que podia divergir del que usa el resto del backend.
+ENVIRONMENT = get_settings().environment
 SLACK_WEBHOOK_URL = os.environ.get("SLACK_WEBHOOK_URL", "")
 security_logger = logging.getLogger("northmine.security")
 
@@ -49,4 +53,4 @@ def _send_slack(event_type: str, details: dict, severity: str) -> None:
             timeout=5.0,
         )
     except Exception:
-        pass
+        security_logger.exception("No se pudo enviar la alerta de seguridad a Slack (event=%s)", event_type)

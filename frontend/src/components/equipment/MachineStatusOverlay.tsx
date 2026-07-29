@@ -1,5 +1,6 @@
 import { AlertTriangle, Gauge, RadioTower } from 'lucide-react'
 import { StatusPill, toneFromOperationalState } from '../ui/StatusPill'
+import { formatTons as formatTonsBase } from '../../lib/format'
 
 interface Props {
   state?: string
@@ -11,7 +12,7 @@ interface Props {
 
 function formatTons(value?: number) {
   if (value === undefined) return '-'
-  return `${Math.round(value).toLocaleString('es-CL')} t`
+  return formatTonsBase(value)
 }
 
 export function MachineStatusOverlay({

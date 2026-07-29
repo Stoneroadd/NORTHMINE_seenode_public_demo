@@ -74,6 +74,7 @@ class BaseUserRepository(Protocol):
     def update_role(self, user_id: str, role: str) -> User: ...
     def set_active_status(self, user_id: str, is_active: bool) -> User: ...
     def reset_password(self, user_id: str, new_password: str) -> User: ...
+    def invalidate_auth_sessions(self, username: str) -> int: ...
     def update_last_login(self, username: str) -> None: ...
     def count_active_admins(self) -> int: ...
     def audit_admin_action(self, *, actor_user: str, target_user: str, action: str, result: str, ip: str = "unknown", user_agent: str = "", detail: dict[str, Any] | None = None, status_code: int = 200) -> None: ...
@@ -141,6 +142,7 @@ class SQLiteUserRepository:
                     created_at    TEXT NOT NULL,
                     updated_at    TEXT NOT NULL,
                     last_login_at TEXT,
+                    auth_version  INTEGER NOT NULL DEFAULT 1,
                     faena         TEXT NOT NULL DEFAULT 'Rajo DES',
                     empresa       TEXT NOT NULL DEFAULT 'NORTHMINE'
                 )
@@ -149,6 +151,9 @@ class SQLiteUserRepository:
             conn.execute("CREATE INDEX IF NOT EXISTS idx_users_username ON users(username)")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_users_role ON users(role)")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_users_active ON users(is_active)")
+            columns = {row["name"] for row in conn.execute("PRAGMA table_info(users)").fetchall()}
+            if "auth_version" not in columns:
+                conn.execute("ALTER TABLE users ADD COLUMN auth_version INTEGER NOT NULL DEFAULT 1")
             conn.commit()
 
     def _row_to_user(self, row: sqlite3.Row | None) -> User | None:
@@ -166,6 +171,7 @@ class SQLiteUserRepository:
             created_at=str(row["created_at"]),
             updated_at=str(row["updated_at"]),
             last_login_at=row["last_login_at"],
+            auth_version=int(row["auth_version"]),
             faena=str(row["faena"]),
             empresa=str(row["empresa"]),
         )
@@ -370,7 +376,7 @@ class SQLiteUserRepository:
         now = _utc_now()
         with closing(self._connect()) as conn:
             conn.execute(
-                "UPDATE users SET password_hash = ?, updated_at = ? WHERE id = ?",
+                "UPDATE users SET password_hash = ?, auth_version = auth_version + 1, updated_at = ? WHERE id = ?",
                 (hash_password(new_password), now, user_id),
             )
             conn.commit()
@@ -421,11 +427,25 @@ class SQLiteUserRepository:
         password_hash = hash_password(password)
         with closing(self._connect()) as conn:
             result = conn.execute(
-                "UPDATE users SET password_hash = ?, updated_at = ? WHERE username = ?",
+                "UPDATE users SET password_hash = ?, auth_version = auth_version + 1, updated_at = ? WHERE username = ?",
                 (password_hash, now, username.strip().lower()),
             )
             conn.commit()
             return result.rowcount > 0
+
+    def invalidate_auth_sessions(self, username: str) -> int:
+        """Invalidate every access and refresh token issued before this call."""
+        normalized = _normalize_username(username)
+        if not normalized:
+            return 0
+        now = _utc_now()
+        with closing(self._connect()) as conn:
+            result = conn.execute(
+                "UPDATE users SET auth_version = auth_version + 1, updated_at = ? WHERE username = ?",
+                (now, normalized),
+            )
+            conn.commit()
+        return result.rowcount
 
     def validate_credentials(self, username: str, password: str) -> User | None:
         user = self.get_by_username(username)

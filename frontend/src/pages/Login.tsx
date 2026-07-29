@@ -1,20 +1,17 @@
-import { FormEvent, lazy, Suspense, useEffect, useState } from 'react'
+import { FormEvent, useState } from 'react'
 import { motion } from 'framer-motion'
-import { CirclePlay, LockKeyhole, RadioTower } from 'lucide-react'
+import { LockKeyhole, RadioTower } from 'lucide-react'
 import { ApiError, type AuthSession } from '../lib/api'
 import { sanitize } from '../lib/sanitize'
 import * as authService from '../services/authService'
 import { CommandCenterBackground } from '../components/effects/CommandCenterBackground'
-import { CursorGlow } from '../components/effects/CursorGlow'
 import { BrandHero } from '../components/login/BrandHero'
+import { PitShellVisual } from '../components/login/PitShellVisual'
 import { CommandButton } from '../components/ui/CommandButton'
-import { useTilt3D } from '../hooks/useTilt3D'
 import { useT } from '../store'
 import { settingsService } from '../services/settingsService'
 import { useModuleT } from '../i18n/useModuleT'
 import { loginT } from '../i18n/modules/login'
-
-const PitShellVisual = lazy(() => import('../components/login/PitShellVisual').then(m => ({ default: m.PitShellVisual })))
 
 interface Props {
   onAuthenticated: (session: AuthSession) => void
@@ -23,23 +20,23 @@ interface Props {
 export function Login({ onAuthenticated }: Props) {
   const t = useT()
   const tl = useModuleT(loginT)
-  const [username, setUsername] = useState(settingsService.isDemoLike ? 'admin' : '')
-  const [password, setPassword] = useState(settingsService.isDemoLike ? 'admin' : '')
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const [showPitVisual, setShowPitVisual] = useState(!settingsService.demoLite)
-  const tilt = useTilt3D({ maxTilt: 3, scale: 1.01 })
 
-  useEffect(() => {
-    if (showPitVisual) return
-    const timer = window.setTimeout(() => setShowPitVisual(true), 650)
-    return () => window.clearTimeout(timer)
-  }, [showPitVisual])
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    setError('')
 
-  const submitCredentials = async (credentials: { username: string; password: string }) => {
+    if (!username.trim() || !password.trim()) {
+      setError(tl.err_campos_vacios)
+      return
+    }
+
     setLoading(true)
     try {
-      const session = await authService.login(credentials)
+      const session = await authService.login({ username, password })
       onAuthenticated(session)
     } catch (error) {
       if (error instanceof ApiError) {
@@ -62,39 +59,14 @@ export function Login({ onAuthenticated }: Props) {
     }
   }
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    setError('')
-
-    if (!username.trim() || !password.trim()) {
-      setError(tl.err_campos_vacios)
-      return
-    }
-
-    await submitCredentials({ username, password })
-  }
-
-  const handleDemoAccess = async () => {
-    setError('')
-    setUsername('admin')
-    setPassword('admin')
-    await submitCredentials({ username: 'admin', password: 'admin' })
-  }
-
   return (
     <main className="login-page nm-login-shell nm-responsive-compact">
       <CommandCenterBackground />
-      <CursorGlow />
       <div className="login-backdrop" />
 
       <div className="login-command-layout nm-login-layout">
         <section className="login-canvas-panel nm-login-visual nm-wireframe-panel" aria-label={tl.visual_aria_label}>
-          <div className="login-pit-placeholder" aria-hidden="true" />
-          {showPitVisual && (
-            <Suspense fallback={null}>
-              <PitShellVisual compact={settingsService.demoLite} />
-            </Suspense>
-          )}
+          <PitShellVisual />
           <div className="mine-pit-hud mine-pit-hud-bl" aria-hidden="true">
             <span>RAJO DEMO / COMPAÑÍA DEMO</span>
             <strong>{tl.hud_diseno_mina_real}</strong>
@@ -108,50 +80,43 @@ export function Login({ onAuthenticated }: Props) {
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 0.45, ease: 'easeOut' }}
         >
-          <div style={tilt.style} onPointerMove={tilt.onPointerMove} onPointerLeave={tilt.onPointerLeave}>
-            <BrandHero />
+          <BrandHero />
 
-            <div className="login-copy">
-              <h2>{tl.acceso_titulo}</h2>
-            </div>
+          <div className="login-copy">
+            <h2>{tl.acceso_titulo}</h2>
+          </div>
 
-            <form className="login-form" onSubmit={handleSubmit}>
-              <label>
-                {t.auth.usuario}
-                <input
-                  value={username}
-                  onChange={(event) => setUsername(sanitize.username(event.target.value))}
-                  autoComplete="username"
-                  placeholder={tl.placeholder_usuario}
-                />
-              </label>
-              <label>
-                {t.auth.password}
-                <input
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  type="password"
-                  autoComplete="current-password"
-                  placeholder={tl.placeholder_password}
-                />
-              </label>
+          <form className="login-form" onSubmit={handleSubmit}>
+            <label>
+              {t.auth.usuario}
+              <input
+                value={username}
+                onChange={(event) => setUsername(sanitize.username(event.target.value))}
+                autoComplete="username"
+                placeholder={tl.placeholder_usuario}
+              />
+            </label>
+            <label>
+              {t.auth.password}
+              <input
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                type="password"
+                autoComplete="current-password"
+                placeholder={tl.placeholder_password}
+              />
+            </label>
 
-              {error && <div className="login-error">{error}</div>}
+            {error && <div className="login-error">{error}</div>}
 
-              <CommandButton variant="matrix" type="submit" icon={LockKeyhole} loading={loading} disabled={!username.trim() || !password.trim()}>
-                {loading ? t.general.cargando : t.auth.ingresar}
-              </CommandButton>
-              {settingsService.isDemoLike && (
-                <CommandButton className="demo-quick-access" variant="secondary" type="button" icon={CirclePlay} loading={loading} onClick={handleDemoAccess}>
-                  {tl.demo_quick_access}
-                </CommandButton>
-              )}
-            </form>
+            <CommandButton variant="matrix" type="submit" icon={LockKeyhole} loading={loading} disabled={!username.trim() || !password.trim()}>
+              {loading ? t.general.cargando : t.auth.ingresar}
+            </CommandButton>
+          </form>
 
-            <div className="login-status">
-              <span><RadioTower size={14} /> API FastAPI</span>
-              <span>{settingsService.isProduction ? tl.status_produccion : tl.status_demo_local}</span>
-            </div>
+          <div className="login-status">
+            <span><RadioTower size={14} /> API FastAPI</span>
+            <span>{settingsService.isProduction ? tl.status_produccion : tl.status_demo_local}</span>
           </div>
         </motion.section>
       </div>

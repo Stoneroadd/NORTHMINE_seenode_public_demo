@@ -1,12 +1,16 @@
 import ReactECharts from 'echarts-for-react'
 import type { EChartsOption } from 'echarts'
 import type { OperatorTrendPoint } from '../../types/operatorRanking'
-import { axisLabel, premiumPalette, tooltipBase } from '../charts/premium/chartTheme'
+import { axisLabel, premiumPalette, tooltipBase, useChartPaletteKey } from '../charts/premium/chartTheme'
 import { useModuleT } from '../../i18n/useModuleT'
 import { operatorRankingT } from '../../i18n/modules/operatorRanking'
 
 export function OperatorTrendChart({ points, height = 260 }: { points: OperatorTrendPoint[]; height?: number }) {
   const t = useModuleT(operatorRankingT)
+  // Se suscribe al tema activo solo para forzar un re-render cuando cambia:
+  // el option de ECharts se recalcula en cada render usando premiumPalette,
+  // que lee las variables CSS del tema en ese momento.
+  useChartPaletteKey()
   const option: EChartsOption = {
     animationDuration: 750,
     grid: { top: 28, right: 28, bottom: 42, left: 48 },
@@ -49,9 +53,9 @@ export function OperatorTrendChart({ points, height = 260 }: { points: OperatorT
         smooth: true,
         symbolSize: 6,
         data: points.map((point) => point.score_global),
-        lineStyle: { color: '#00FF88', width: 3 },
-        itemStyle: { color: '#00FF88' },
-        areaStyle: { color: 'rgba(0,255,136,0.08)' },
+        lineStyle: { color: premiumPalette.mineral, width: 3 },
+        itemStyle: { color: premiumPalette.mineral },
+        areaStyle: { color: premiumPalette.mineral, opacity: 0.08 },
       },
       {
         name: t.trend_disponibilidad,
@@ -59,8 +63,8 @@ export function OperatorTrendChart({ points, height = 260 }: { points: OperatorT
         smooth: true,
         symbolSize: 5,
         data: points.map((point) => point.disponibilidad),
-        lineStyle: { color: '#00D4FF', width: 2 },
-        itemStyle: { color: '#00D4FF' },
+        lineStyle: { color: premiumPalette.cyan, width: 2 },
+        itemStyle: { color: premiumPalette.cyan },
       },
       {
         name: t.trend_toneladas,

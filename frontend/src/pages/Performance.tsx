@@ -15,6 +15,7 @@ import {
   formatTons,
   premiumPalette,
   tooltipBase,
+  useChartPaletteKey,
 } from '../components/charts/premium/chartTheme'
 import type { LoaderPerformance, PerformanceSummary } from '../lib/api'
 
@@ -81,7 +82,7 @@ function buildPeakHoursOption(data: PerformanceSummary): EChartsOption {
           value: item.promedio_ton,
           itemStyle: {
             borderRadius: [6, 6, 0, 0],
-            color: topSet.has(item.hora) ? '#00FF88' : '#00D4FF',
+            color: topSet.has(item.hora) ? premiumPalette.mineral : premiumPalette.cyan,
           },
         })),
       },
@@ -124,7 +125,7 @@ function buildAverageCurveOption(data: PerformanceSummary): EChartsOption {
         smooth: true,
         symbol: 'none',
         lineStyle: { opacity: 0 },
-        areaStyle: { color: 'rgba(0,212,255,0.14)' },
+        areaStyle: { color: premiumPalette.cyan, opacity: 0.14 },
         stack: 'confidence',
         data: data.hourly_profile.map((item) => Math.max(0, item.max_confianza - item.min_confianza)),
       },
@@ -133,8 +134,8 @@ function buildAverageCurveOption(data: PerformanceSummary): EChartsOption {
         type: 'line',
         smooth: true,
         symbolSize: 7,
-        lineStyle: { width: 3, color: '#00FF88' },
-        areaStyle: { color: 'rgba(57,255,20,0.10)' },
+        lineStyle: { width: 3, color: premiumPalette.mineral },
+        areaStyle: { color: premiumPalette.mineral, opacity: 0.10 },
         markPoint: {
           data: [{ name: 'Pico', coord: [peak.label, peak.promedio_ton], value: formatTons(peak.promedio_ton) }],
           label: { color: '#020403', fontWeight: 900 },
@@ -171,7 +172,7 @@ function buildHeatmapOption(data: PerformanceSummary): EChartsOption {
       left: 'center',
       bottom: 0,
       textStyle: { color: premiumPalette.muted },
-      inRange: { color: ['#071528', '#00D4FF', '#00FF88'] },
+      inRange: { color: [premiumPalette.panel, premiumPalette.cyan, premiumPalette.mineral] },
     },
     series: [
       {
@@ -223,7 +224,7 @@ function buildLoaderOption(data: LoaderPerformance[]): EChartsOption {
           value: item.toneladas,
           itemStyle: {
             borderRadius: [0, 7, 7, 0],
-            color: item.fase === 'F02' ? '#FF6B00' : '#00D4FF',
+            color: item.fase === 'F02' ? premiumPalette.amber : premiumPalette.cyan,
           },
         })),
         label: {
@@ -260,14 +261,15 @@ export function Performance() {
     queryKey: ['performance-summary', range.desde, range.hasta],
     queryFn: () => getPerformanceSummary(range.desde, range.hasta),
   })
+  const themeId = useChartPaletteKey()
 
-  const peakOption = useMemo(() => query.data ? buildPeakHoursOption(query.data) : undefined, [query.data])
-  const curveOption = useMemo(() => query.data ? buildAverageCurveOption(query.data) : undefined, [query.data])
-  const heatmapOption = useMemo(() => query.data ? buildHeatmapOption(query.data) : undefined, [query.data])
-  const loaderOption = useMemo(() => query.data ? buildLoaderOption(query.data.loader_performance) : undefined, [query.data])
+  const peakOption = useMemo(() => query.data ? buildPeakHoursOption(query.data) : undefined, [query.data, themeId])
+  const curveOption = useMemo(() => query.data ? buildAverageCurveOption(query.data) : undefined, [query.data, themeId])
+  const heatmapOption = useMemo(() => query.data ? buildHeatmapOption(query.data) : undefined, [query.data, themeId])
+  const loaderOption = useMemo(() => query.data ? buildLoaderOption(query.data.loader_performance) : undefined, [query.data, themeId])
 
   if (query.isLoading) return <LoadingState label="Cargando rendimiento operacional..." />
-  if (query.isError || !query.data) return <ErrorState detail="No se pudo cargar /api/performance/summary." />
+  if (query.isError || !query.data) return <ErrorState detail="No se pudo cargar /api/performance/summary." onRetry={() => query.refetch()} />
 
   const data = query.data
   const worstTone = (data.kpis.peor_dia?.cumplimiento_pct ?? 100) < 80 ? 'red' : 'amber'

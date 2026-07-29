@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from functools import lru_cache
 from typing import Annotated
 
 from fastapi import APIRouter, BackgroundTasks, Cookie, Depends, File, HTTPException, Query, Request, Response, UploadFile, status
@@ -15,13 +16,15 @@ from app.core.audit import (
     get_most_active_user,
     log_event,
     query_audit_log,
+    register_refresh_session,
     register_active_session,
     remove_user_sessions,
-    revoke_all_user_tokens,
+    rotate_refresh_session,
     save_password_history,
 )
 from app.core.brute_force import is_blocked, record_failure, record_success
 from app.core.config import get_settings
+from app.core.distributed import SyncAlreadyRunning
 from app.core.crypto import decrypt_sensitive_data
 from app.core.dependencies import RequireAdmin, RequireAny, RequireOperador, RequireSupervisor, get_current_user
 from app.core.health import build_health_response
@@ -34,6 +37,7 @@ from app.core.mfa import (
     regenerate_backup_codes,
     save_mfa_setup,
     verify_mfa_code,
+    verify_totp_code,
 )
 from app.core.rate_limit import endpoint_limit, limiter
 from app.core.security import (
@@ -74,7 +78,7 @@ from app.models.schemas import (
 )
 from app.models.security import AIAnalysisRequestSecure, SimulatorRequestSecure
 from app.services.data_provider import get_dataset as provider_get_dataset, get_fleet_full as provider_get_fleet_full
-from app.services.pdf_report import build_shift_pdf
+from app.services.pdf_report import build_cockpit_executive_pdf, build_shift_pdf
 from app.services.kpis import (
     build_alerts,
     build_current_shift_command_center,
@@ -90,6 +94,7 @@ from app.services.kpis import (
 )
 from app.services.user_repository import DuplicateUserError, LastAdminError, UserRepositoryError, get_user_repository
 from app.services import aerial_service, averias_import_service, averias_service, fleet_service, production_service, shift_service
+from app.services.simulator import simulate as simulator_simulate
 from app.services.filtering import (
     apply_common_filters,
     build_filter_catalog,
@@ -111,6 +116,18 @@ def _filters(request: Request) -> dict[str, str]:
 def _dataset(request: Request) -> dict:
     filters = _filters(request)
     selected_date = filters.get("selected_date") or filters.get("start_date")
+    # El filtrado (recorrer y normalizar miles de ciclos) es el costo real por
+    # request, no la generacion sintetica (esa ya cachea por minuto en
+    # synthetic_provider). Varios widgets de una misma pantalla piden el
+    # mismo fecha/filtros en paralelo, asi que se cachea tambien por minuto
+    # para no repetir ese trabajo N veces en cada carga de pantalla.
+    now_bucket = datetime.now().replace(second=0, microsecond=0)
+    return _cached_filtered_dataset(selected_date, tuple(sorted(filters.items())), now_bucket)
+
+
+@lru_cache(maxsize=128)
+def _cached_filtered_dataset(selected_date: str | None, filter_items: tuple[tuple[str, str], ...], now: datetime) -> dict:
+    filters = dict(filter_items)
     base_dataset = provider_get_dataset(fecha=selected_date) if selected_date else provider_get_dataset()
     return filtered_operational_dataset(base_dataset, filters)
 
@@ -168,7 +185,15 @@ def _user_token_claims(user, settings) -> dict:
         "mode": _session_mode(settings),
         "environment": settings.environment,
         "is_demo": user.is_demo,
+        # Bumping this value invalidates all previously issued access *and*
+        # refresh tokens for the user without preventing a later fresh login.
+        "auth_version": user.auth_version,
     }
+
+
+def _invalidate_auth_sessions(repository, username: str) -> None:
+    repository.invalidate_auth_sessions(username)
+    remove_user_sessions(username)
 
 
 def _to_user_public(user) -> UserPublic:
@@ -280,6 +305,9 @@ def login(request: Request, payload: LoginRequest, response: Response, backgroun
     claims = _user_token_claims(user, settings)
     access_token = create_access_token(claims)
     refresh_token = create_refresh_token(claims)
+    refresh_payload = verify_refresh_token(refresh_token)
+    if not refresh_payload or not register_refresh_session(refresh_payload):
+        raise HTTPException(status_code=500, detail="No se pudo crear la sesiÃ³n de renovaciÃ³n")
 
     register_active_session(user.username, access_token, ip, user_agent)
 
@@ -314,7 +342,11 @@ def login(request: Request, payload: LoginRequest, response: Response, backgroun
         "faena": user.faena,
         "empresa": user.empresa,
         "access_token": access_token,
-        "refresh_token": refresh_token,
+        # El refresh token vive solo en la cookie httpOnly seteada arriba.
+        # Antes tambien se devolvia aqui en texto plano: cualquier script con
+        # acceso a la respuesta (o un log que la capture) podia leerlo, lo
+        # que anulaba la proteccion de httpOnly. El frontend ya no lo lee de
+        # aqui (ver authService.saveSession, que lo descartaba igual).
         "token_type": "bearer",
         "expires_in": ACCESS_TOKEN_EXPIRE_MINUTES * 60,
         "modo": _session_mode(settings),
@@ -328,12 +360,10 @@ def login(request: Request, payload: LoginRequest, response: Response, backgroun
 def refresh_token(
     request: Request,
     response: Response,
-    body: dict | None = None,
     refresh_token_cookie: str | None = Cookie(default=None, alias="refresh_token"),
 ) -> dict:
     settings = get_settings()
-    body = body or {}
-    token = body.get("refresh_token") or refresh_token_cookie
+    token = refresh_token_cookie
     if not token:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token requerido")
 
@@ -344,7 +374,7 @@ def refresh_token(
     username = str(payload.get("sub", "")).strip().lower()
     repository = get_user_repository()
     user = repository.get_by_username(username)
-    if not user or not user.is_active:
+    if not user or not user.is_active or payload.get("auth_version") != user.auth_version:
         log_event(
             usuario=username or "anon",
             ip=_client_ip(request),
@@ -360,6 +390,9 @@ def refresh_token(
     claims = _user_token_claims(user, settings)
     new_access = create_access_token(claims)
     new_refresh = create_refresh_token(claims)
+    new_refresh_payload = verify_refresh_token(new_refresh)
+    if not new_refresh_payload or not rotate_refresh_session(payload, new_refresh_payload):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token revocado o ya utilizado")
 
     response.set_cookie(
         key="refresh_token",
@@ -385,7 +418,6 @@ def refresh_token(
 
     return {
         "access_token": new_access,
-        "refresh_token": new_refresh,
         "token_type": "bearer",
         "expires_in": ACCESS_TOKEN_EXPIRE_MINUTES * 60,
     }
@@ -399,8 +431,8 @@ def logout(request: Request, response: Response, background_tasks: BackgroundTas
         token = auth[7:]
         expires_at = datetime.fromtimestamp(user.get("exp", 0), tz=timezone.utc).isoformat()
         blacklist_token(token, username, expires_at)
+    _invalidate_auth_sessions(get_user_repository(), username)
     response.delete_cookie("refresh_token", path="/api/auth/refresh")
-    remove_user_sessions(username)
     log_event(
         usuario=username,
         ip=_client_ip(request),
@@ -417,6 +449,9 @@ def logout(request: Request, response: Response, background_tasks: BackgroundTas
 
 @router.get("/auth/me")
 def me(user: dict = RequireAny) -> dict:
+    settings = get_settings()
+    repository = get_user_repository()
+    record = repository.get_by_username(str(user.get("sub", "")).strip().lower())
     return {
         "sub": user.get("sub"),
         "uid": user.get("uid"),
@@ -424,6 +459,16 @@ def me(user: dict = RequireAny) -> dict:
         "mode": user.get("mode", "demo"),
         "environment": user.get("environment"),
         "is_demo": bool(user.get("is_demo", False)),
+        # Perfil completo (no viaja en el JWT): permite reconstruir la sesion
+        # en el frontend tras un refresh silencioso sin volver a pedir login,
+        # sin necesitar guardar el access token en localStorage.
+        "user_id": record.id if record else user.get("uid"),
+        "username": record.username if record else user.get("sub"),
+        "nombre": record.full_name if record else user.get("sub"),
+        "faena": record.faena if record else "",
+        "empresa": record.empresa if record else "",
+        "modo": _session_mode(settings),
+        "sql_disponible": False,
     }
 
 
@@ -450,7 +495,10 @@ def mfa_verify(request: Request, payload: MFAVerifyRequest, user: dict = Require
     mfa_data = get_mfa_data(username)
     if not mfa_data:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="MFA no configurado")
-    if verify_mfa_code(username, payload.code):
+    # verify_totp_code, no verify_mfa_code: en este punto mfa_enabled todavia
+    # es False (se confirma antes de activarlo), y verify_mfa_code trata
+    # "no habilitado" como pase automatico -- aceptaria cualquier codigo.
+    if verify_totp_code(mfa_data["secret"], payload.code):
         enable_mfa(username)
         return {"message": "MFA activado correctamente", "enabled": True}
     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="CÃ³digo invÃ¡lido")
@@ -838,8 +886,19 @@ def averias_inactivity_alerts(request: Request, user: dict = RequireOperador) ->
 
 
 @router.post("/averias/import-xls")
-async def averias_import_xls(file: UploadFile = File(...), user: dict = RequireSupervisor) -> dict:
-    data = await file.read()
+@limiter.limit(endpoint_limit("/api/averias/import-xls"))
+async def averias_import_xls(request: Request, file: UploadFile = File(...), user: dict = RequireSupervisor) -> dict:
+    max_bytes = averias_import_service.MAX_WORKBOOK_BYTES
+    if file.size is not None and file.size > max_bytes:
+        raise HTTPException(status_code=413, detail=f"Archivo excede el limite de {max_bytes // (1024 * 1024)} MB")
+    chunks: list[bytes] = []
+    total = 0
+    while chunk := await file.read(1024 * 1024):
+        total += len(chunk)
+        if total > max_bytes:
+            raise HTTPException(status_code=413, detail=f"Archivo excede el limite de {max_bytes // (1024 * 1024)} MB")
+        chunks.append(chunk)
+    data = b"".join(chunks)
     try:
         return averias_import_service.import_workbook_bytes(data, file.filename or "reporte.xlsx", origen="manual")
     except ValueError as exc:
@@ -847,8 +906,12 @@ async def averias_import_xls(file: UploadFile = File(...), user: dict = RequireS
 
 
 @router.post("/averias/mail-sync")
-def averias_mail_sync(user: dict = RequireSupervisor) -> dict:
-    return averias_import_service.sync_all()
+@limiter.limit(endpoint_limit("/api/averias/mail-sync"))
+def averias_mail_sync(request: Request, user: dict = RequireSupervisor) -> dict:
+    try:
+        return averias_import_service.sync_all()
+    except SyncAlreadyRunning as exc:
+        raise HTTPException(status_code=409, detail="Ya hay una sincronizacion de averias en curso") from exc
 
 
 @router.get("/averias/mail-status")
@@ -941,7 +1004,10 @@ def aerial_files(user: dict = RequireSupervisor) -> dict:
 
 @router.get("/aerial/preview")
 def aerial_preview(file: str = Query(..., min_length=1, max_length=200), user: dict = RequireOperador) -> FileResponse:
-    preview = aerial_service.get_or_build_preview(file)
+    try:
+        preview = aerial_service.get_or_build_preview(file)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
     if preview is None:
         raise HTTPException(status_code=404, detail="Ortomosaico no encontrado.")
     return FileResponse(preview, media_type="image/jpeg")
@@ -951,7 +1017,10 @@ def aerial_preview(file: str = Query(..., min_length=1, max_length=200), user: d
 def aerial_mail_sync(user: dict = RequireSupervisor) -> dict:
     from app.services import aerial_mail_service
 
-    return aerial_mail_service.sync_all_sources()
+    try:
+        return aerial_mail_service.sync_all_sources()
+    except SyncAlreadyRunning as exc:
+        raise HTTPException(status_code=409, detail="Ya hay una sincronizacion aerea en curso") from exc
 
 
 @router.get("/aerial/mail-status")
@@ -1103,6 +1172,21 @@ def shift_pdf(
     )
 
 
+@router.get("/report/cockpit-executive-pdf")
+def cockpit_executive_pdf(
+    fecha: Annotated[str | None, Query()] = None,
+    turno: Annotated[str | None, Query()] = None,
+    user: dict = RequireAny,
+) -> Response:
+    content = build_cockpit_executive_pdf(fecha=fecha, turno=turno, username=str(user.get("username") or user.get("sub") or "usuario"))
+    filename = f"NORTHMINE_Informe_Ejecutivo_{turno or 'ACTUAL'}_{fecha or 'actual'}.pdf"
+    return Response(
+        content=content,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
 @router.get("/navigation")
 def navigation(
     role: Annotated[str, Query()] = "admin",
@@ -1129,7 +1213,14 @@ def ml_prediction(
 @router.post("/simulator/run")
 @limiter.limit(endpoint_limit("/api/simulator/run"))
 async def simulator_run(request: Request, payload: SimulatorRequestSecure, user: dict = RequireAny) -> dict:
-    _real_only_error("/api/simulator/run", "Simulador no calibrado con fuente real en esta politica real-only.")
+    return simulator_simulate(
+        caex=payload.caex,
+        ciclos_hora=payload.ciclos_hora,
+        ton_ciclo=payload.ton_ciclo,
+        disponibilidad=payload.disponibilidad,
+        dias=payload.dias,
+        turno=payload.turno,
+    )
 
 
 @router.post("/ai/analysis")
@@ -1246,8 +1337,7 @@ def admin_update_user_role(user_id: str, payload: UserRoleUpdateRequest, request
     except LastAdminError as exc:
         _audit_admin_user_action(repository, request, user, target.username, "admin_user_action_denied", "last_admin", status_code=400, detail={"reason": str(exc), "from": target.role, "to": payload.role})
         raise HTTPException(status_code=400, detail=str(exc))
-    revoke_all_user_tokens(target.username)
-    remove_user_sessions(target.username)
+    _invalidate_auth_sessions(repository, target.username)
     _audit_admin_user_action(repository, request, user, updated.username, "admin_user_role_changed", "ok", detail={"from": target.role, "to": updated.role})
     return _to_user_public(updated)
 
@@ -1265,8 +1355,7 @@ def admin_update_user_status(user_id: str, payload: UserStatusUpdateRequest, req
         _audit_admin_user_action(repository, request, user, target.username, "admin_user_action_denied", "last_admin", status_code=400, detail={"reason": str(exc), "requested_active": payload.is_active})
         raise HTTPException(status_code=400, detail=str(exc))
     if not updated.is_active:
-        revoke_all_user_tokens(target.username)
-        remove_user_sessions(target.username)
+        _invalidate_auth_sessions(repository, target.username)
     _audit_admin_user_action(
         repository,
         request,
@@ -1291,8 +1380,7 @@ def admin_reset_user_password(user_id: str, payload: UserPasswordResetRequest, r
     except UserRepositoryError as exc:
         _audit_admin_user_action(repository, request, user, target.username, "admin_user_action_denied", "validation_error", status_code=400, detail={"reason": str(exc)})
         raise HTTPException(status_code=400, detail=str(exc))
-    revoke_all_user_tokens(target.username)
-    remove_user_sessions(target.username)
+    _invalidate_auth_sessions(repository, target.username)
     _audit_admin_user_action(repository, request, user, updated.username, "admin_user_password_reset", "ok")
     return _to_user_public(updated)
 
@@ -1338,6 +1426,7 @@ def change_password(request: Request, payload: ChangePasswordRequest, background
         raise HTTPException(status_code=400, detail="No puede reutilizar passwords anteriores")
     save_password_history(username, user_record.password_hash)
     repository.update_password(username, pw)
+    remove_user_sessions(username)
     log_event(
         usuario=username,
         ip=_client_ip(request),
@@ -1356,7 +1445,11 @@ def change_password(request: Request, payload: ChangePasswordRequest, background
 
 @router.post("/admin/revoke-user-tokens/{user_id}")
 def revoke_user_tokens(user_id: str, user: dict = RequireAdmin) -> dict:
-    revoke_all_user_tokens(user_id)
+    repository = get_user_repository()
+    target = repository.get_user_by_id(user_id) or repository.get_by_username(user_id)
+    if not target:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    _invalidate_auth_sessions(repository, target.username)
     return {"message": f"Tokens revocados para {user_id}"}
 
 
@@ -1381,5 +1474,3 @@ def security_metrics(user: dict = RequireAdmin) -> SecurityMetricsResponse:
 @router.get("/admin/system")
 def admin_system(user: dict = RequireAdmin) -> dict:
     return build_admin_system_status()
-
-

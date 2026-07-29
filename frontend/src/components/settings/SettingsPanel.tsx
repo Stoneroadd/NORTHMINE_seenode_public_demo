@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   Check, Eye, Hexagon, KeyRound, Languages, MousePointer2,
   Palette, Rows3, Settings, ShieldCheck, Sparkles, Wand2, X,
@@ -9,7 +9,6 @@ import type { LangId } from '../../i18n/translations'
 import type { Translations } from '../../i18n/translations'
 import { secureApi } from '../../lib/secureApi'
 import { MFASetupModal } from '../auth/MFASetupModal'
-import { FloatingWindow } from '../ui/FloatingWindow'
 
 interface Props {
   open: boolean
@@ -19,6 +18,7 @@ interface Props {
 // ── Theme previews (hardcoded, NOT using CSS vars of active theme) ─────────
 const THEME_PREVIEWS: Record<ThemeId, { bg: string; mid: string; accent: string; text: string }> = {
   dark:        { bg: '#050810', mid: '#0C1220', accent: '#00FF88', text: 'rgba(255,255,255,0.9)' },
+  operational: { bg: '#050607', mid: '#17191C', accent: '#B8C0C8', text: 'rgba(245,247,250,0.94)' },
   light:       { bg: '#EEF1F5', mid: '#FFFFFF', accent: '#0052CC', text: 'rgba(0,0,0,0.87)' },
   futuristic:  { bg: '#000308', mid: '#020818', accent: '#00FFCC', text: 'rgba(0,255,255,0.95)' },
   minimal:     { bg: '#FAFAFA', mid: '#FFFFFF', accent: '#0055FF', text: '#111111' },
@@ -46,7 +46,7 @@ const EFFECT_ICONS = {
 
 function themeLabel(t: Translations, id: ThemeId): string {
   const map: Record<ThemeId, string> = {
-    dark: t.settings.tema_dark, light: t.settings.tema_light, futuristic: t.settings.tema_futuristic,
+    dark: t.settings.tema_dark, operational: 'OSCURO NEGRO', light: t.settings.tema_light, futuristic: t.settings.tema_futuristic,
     minimal: t.settings.tema_minimal, carbon: t.settings.tema_carbon,
   }
   return map[id]
@@ -54,7 +54,7 @@ function themeLabel(t: Translations, id: ThemeId): string {
 
 function themeDesc(t: Translations, id: ThemeId): string {
   const map: Record<ThemeId, string> = {
-    dark: t.settings.tema_dark_desc, light: t.settings.tema_light_desc, futuristic: t.settings.tema_futuristic_desc,
+    dark: t.settings.tema_dark_desc, operational: 'Negro, gris y superficies transparentes', light: t.settings.tema_light_desc, futuristic: t.settings.tema_futuristic_desc,
     minimal: t.settings.tema_minimal_desc, carbon: t.settings.tema_carbon_desc,
   }
   return map[id]
@@ -337,30 +337,53 @@ export function SettingsPanel({ open, onClose }: Props) {
   const lang = useAppStore((s) => s.lang)
   const setLang = useAppStore((s) => s.setLang)
   const [hovered, setHovered] = useState<ThemeId | null>(null)
+  const panelRef = useRef<HTMLDivElement>(null)
+
+  // Close on Escape or outside click
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [open, onClose])
 
   // Ctrl+Shift+S shortcut (handled in parent — just consume here)
+
+  if (!open) return null
 
   const previewTheme = hovered ?? themeId
   const activeEffectCount = Object.values(effects).filter(Boolean).length
 
   return (
-    <FloatingWindow
-      open={open}
-      onClose={onClose}
-      placement={{ mode: 'center' }}
-      size="lg"
-      ariaLabel={t.settings.titulo}
-      zIndex={600}
-      panelStyle={{
-        background:
-          'radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--accent, #00FF88) 5%, transparent), transparent 40%),'
-          + 'var(--panel-strong)',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 20,
+    <div
+      style={{
+        position: 'fixed', inset: 0, zIndex: 600,
+        background: 'rgba(0,0,0,0.72)',
+        backdropFilter: 'blur(4px)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}
+      onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
     >
-      {/* Header */}
+      <div
+        ref={panelRef}
+        style={{
+          width: 'min(540px, 95vw)',
+          maxHeight: '90vh',
+          overflowY: 'auto',
+          borderRadius: 16,
+          background:
+            'radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--accent, #00FF88) 5%, transparent), transparent 40%),'
+            + 'var(--bg-panel, #0C1220)',
+          border: '1px solid var(--border-mid, rgba(0,212,255,0.18))',
+          boxShadow: '0 24px 80px rgba(0,0,0,0.6)',
+          padding: '22px 24px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 20,
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 800, fontSize: 14, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--data-cyan, #00D4FF)' }}>
             <Settings size={16} /> {t.settings.titulo}
@@ -537,6 +560,7 @@ export function SettingsPanel({ open, onClose }: Props) {
             {t.action.cerrar}
           </button>
         </div>
-    </FloatingWindow>
+      </div>
+    </div>
   )
 }

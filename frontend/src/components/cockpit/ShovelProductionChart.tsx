@@ -4,8 +4,13 @@ import type { CockpitEquipmentRow, CockpitShovelHourlyPoint } from './cockpitMod
 import { formatNumber, formatTons } from './cockpitModel'
 import { useModuleT } from '../../i18n/useModuleT'
 import { cockpitT, type CockpitT } from '../../i18n/modules/cockpit'
+import { premiumPalette, useChartPaletteKey } from '../charts/premium/chartTheme'
 
-const palette = ['#5B9DFF', '#2FD4FF', '#3EE58A', '#FFC94A', '#C98BFF']
+// premiumPalette siempre resuelve a hex de 6 digitos (definidos asi en las 6
+// apariencias de themes.css), por eso se puede sumar un sufijo de alpha.
+function withAlpha(hex: string, alphaHex: string) {
+  return hex.startsWith('#') ? `${hex}${alphaHex}` : hex
+}
 
 function TooltipContent({ active, payload, label, t }: any) {
   if (!active || !payload?.length) return null
@@ -45,9 +50,21 @@ export function ShovelProductionChart({
 }) {
   const t = useModuleT(cockpitT)
   const [hidden, setHidden] = useState<Set<string>>(() => new Set())
+  const paletteKey = useChartPaletteKey()
+  const palette = useMemo(() => [
+    premiumPalette.cyan,
+    premiumPalette.mineral,
+    premiumPalette.amber,
+    premiumPalette.red,
+    premiumPalette.steel,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  ], [paletteKey])
+  const chartMuted = useMemo(() => premiumPalette.muted, [paletteKey])
+  const chartGrid = useMemo(() => premiumPalette.grid, [paletteKey])
+  const chartText = useMemo(() => premiumPalette.text, [paletteKey])
   const paletteById = useMemo(
     () => Object.fromEntries(rows.map((row, index) => [row.id, palette[index % palette.length]])),
-    [rows],
+    [rows, palette],
   )
   const hourlyData = useMemo(() => {
     const byHour = new Map<string, Record<string, number | string>>()
@@ -122,12 +139,12 @@ export function ShovelProductionChart({
       <div className="nmcp-shovel-chart" role="img" aria-label={t.shovel_chart_aria}>
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} margin={{ top: 12, right: 12, bottom: 4, left: 0 }}>
-            <CartesianGrid stroke="rgba(158,173,186,0.12)" vertical={false} />
-            <XAxis dataKey="hour" tick={{ fill: '#9EADBA', fontSize: 11 }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fill: '#9EADBA', fontSize: 11 }} axisLine={false} tickLine={false} width={54} />
+            <CartesianGrid stroke={chartGrid} vertical={false} />
+            <XAxis dataKey="hour" tick={{ fill: chartMuted, fontSize: 11 }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fill: chartMuted, fontSize: 11 }} axisLine={false} tickLine={false} width={54} />
             <Tooltip
               content={<TooltipContent t={t} />}
-              cursor={{ fill: 'rgba(255,201,74,0.04)' }}
+              cursor={{ fill: withAlpha(premiumPalette.amber, '0A') }}
               wrapperStyle={{ outline: 'none' }}
             />
             {rows.filter((row) => !hidden.has(row.id)).map((row) => (
@@ -138,7 +155,7 @@ export function ShovelProductionChart({
                 fill={paletteById[row.id]}
                 radius={[5, 5, 0, 0]}
                 maxBarSize={42}
-                activeBar={{ stroke: '#F4F7FA', strokeWidth: 1.1 }}
+                activeBar={{ stroke: chartText, strokeWidth: 1.1 }}
               />
             ))}
           </BarChart>

@@ -6,7 +6,6 @@ import { LoadingState } from '../components/common/LoadingState'
 import { ErrorState } from '../components/common/ErrorState'
 import { ExecutiveKpiCard } from '../components/kpi/ExecutiveKpiCard'
 import { EquipmentDetailDrawer } from '../components/equipment/detail/EquipmentDetailDrawer'
-import { FleetShiftChecklist } from '../components/fleet/FleetShiftChecklist'
 import { getFleetStatus } from '../services/fleetService'
 import { getShiftExport, type FleetEquipment } from '../lib/api'
 import { useModuleT } from '../i18n/useModuleT'
@@ -172,7 +171,7 @@ export function FleetPage() {
   }
 
   if (query.isLoading) return <LoadingState label={t.loading_label} />
-  if (query.isError || !data) return <ErrorState detail={t.error_detail} />
+  if (query.isError || !data) return <ErrorState detail={t.error_detail} onRetry={() => query.refetch()} />
 
   const dataSource = data.source === 'wenco-sql-live' ? t.live_wenco : String(data.source || 'API').toUpperCase()
 
@@ -218,8 +217,6 @@ export function FleetPage() {
             />
           ))}
         </section>
-
-        <FleetShiftChecklist />
 
         <section className="fleet-status-layout">
           <div className="panel fleet-status-table-panel">

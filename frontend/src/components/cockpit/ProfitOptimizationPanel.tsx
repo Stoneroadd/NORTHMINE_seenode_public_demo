@@ -1,4 +1,5 @@
-import { AlertTriangle, CircleDollarSign, RefreshCcw, ShieldCheck, TrendingUp } from 'lucide-react'
+import { AlertTriangle, ArrowDownRight, ArrowUpRight, CircleDollarSign, Minus, RefreshCcw, ShieldCheck, TrendingUp } from 'lucide-react'
+import type { ReactNode } from 'react'
 import type { ProfitOptimizationResponse, ProfitScenario } from '../../lib/api'
 import { formatMoney, formatNumber, formatTons } from './cockpitModel'
 import { useModuleT } from '../../i18n/useModuleT'
@@ -16,9 +17,40 @@ function scenarioById(data: ProfitOptimizationResponse, id: string): ProfitScena
   return data.scenarios.find((item) => item.id === id)
 }
 
-function deltaLabel(value: number, formatter: (value: number) => string, t: CockpitT): string {
-  if (value === 0) return t.profit_base
-  return `${value > 0 ? '+' : ''}${formatter(value)}`
+type Polarity = 'higher-better' | 'lower-better'
+
+// Estilo "bolsa de Wall Street": verde/flecha arriba cuando el cambio es
+// favorable para el negocio, rojo/flecha abajo cuando no lo es. El sentido
+// depende de la metrica: para costos, bajar es la buena noticia (lower-better);
+// para valor, produccion y margen, subir es la buena noticia (higher-better).
+function DeltaTag({
+  value,
+  formatter,
+  t,
+  polarity = 'higher-better',
+}: {
+  value: number
+  formatter: (value: number) => string
+  t: CockpitT
+  polarity?: Polarity
+}) {
+  if (value === 0) {
+    return (
+      <span className="nmcp-delta is-flat">
+        <Minus size={11} />
+        {t.profit_base}
+      </span>
+    )
+  }
+  const isGood = polarity === 'higher-better' ? value > 0 : value < 0
+  const sign = value > 0 ? '+' : ''
+  return (
+    <span className={`nmcp-delta ${isGood ? 'is-up' : 'is-down'}`}>
+      {isGood ? <ArrowUpRight size={11} /> : <ArrowDownRight size={11} />}
+      {sign}
+      {formatter(value)}
+    </span>
+  )
 }
 
 function riskClass(risk: string): string {
@@ -36,7 +68,7 @@ function MiniMetric({
 }: {
   label: string
   value: string
-  subtext: string
+  subtext: ReactNode
   tone?: 'green' | 'cyan' | 'yellow' | 'purple' | 'neutral'
 }) {
   return (
@@ -136,7 +168,7 @@ export function ProfitOptimizationPanel({
         <MiniMetric
           label={t.profit_valor_ajustado}
           value={formatMoney(best.risk_adjusted_value_usd)}
-          subtext={deltaLabel(best.value_delta_usd, formatMoney, t)}
+          subtext={<DeltaTag value={best.value_delta_usd} formatter={formatMoney} t={t} polarity="higher-better" />}
           tone="green"
         />
         <MiniMetric
@@ -177,18 +209,18 @@ export function ProfitOptimizationPanel({
                 <tr key={scenario.id} className={scenario.id === best.id ? 'is-best' : undefined}>
                   <td>
                     <strong>{scenario.name}</strong>
-                    <span>{deltaLabel(scenario.production_delta_tonnes, formatTons, t)}</span>
+                    <DeltaTag value={scenario.production_delta_tonnes} formatter={formatTons} t={t} polarity="higher-better" />
                   </td>
-                  <td>{formatTons(scenario.production_tonnes)}</td>
-                  <td>
+                  <td className="nmcp-num">{formatTons(scenario.production_tonnes)}</td>
+                  <td className="nmcp-num">
                     {formatMoney(scenario.total_cost_usd)}
-                    <span>{deltaLabel(scenario.cost_delta_usd, formatMoney, t)}</span>
+                    <DeltaTag value={scenario.cost_delta_usd} formatter={formatMoney} t={t} polarity="lower-better" />
                   </td>
-                  <td>USD {formatNumber(scenario.cost_per_tonne_usd, 2)}</td>
+                  <td className="nmcp-num">USD {formatNumber(scenario.cost_per_tonne_usd, 2)}</td>
                   <td><em className={`nmcp-risk-chip ${riskClass(scenario.risk_label)}`}>{scenario.risk_label}</em></td>
-                  <td>
+                  <td className="nmcp-num">
                     {formatMoney(scenario.risk_adjusted_value_usd)}
-                    <span>{deltaLabel(scenario.value_delta_usd, formatMoney, t)}</span>
+                    <DeltaTag value={scenario.value_delta_usd} formatter={formatMoney} t={t} polarity="higher-better" />
                   </td>
                 </tr>
               ))}

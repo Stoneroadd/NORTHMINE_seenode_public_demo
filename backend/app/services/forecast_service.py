@@ -3,6 +3,75 @@ from __future__ import annotations
 from typing import Any
 
 
+def _ols_fit(points: list[tuple[float, float]]) -> tuple[float, float, float]:
+    """Ajuste por minimos cuadrados ordinarios: y = a + b*x.
+
+    Devuelve (intercepto, pendiente, r2). Implementado en Python puro
+    (sin numpy/sklearn) porque con ~12 puntos por turno el costo de una
+    dependencia adicional no se justifica.
+    """
+    n = len(points)
+    mean_x = sum(x for x, _ in points) / n
+    mean_y = sum(y for _, y in points) / n
+    ss_xx = sum((x - mean_x) ** 2 for x, _ in points)
+    if ss_xx <= 0:
+        return mean_y, 0.0, 0.0
+    ss_xy = sum((x - mean_x) * (y - mean_y) for x, y in points)
+    b = ss_xy / ss_xx
+    a = mean_y - b * mean_x
+    ss_tot = sum((y - mean_y) ** 2 for _, y in points)
+    if ss_tot <= 0:
+        return a, b, 1.0
+    ss_res = sum((y - (a + b * x)) ** 2 for x, y in points)
+    return a, b, 1 - ss_res / ss_tot
+
+
+def forecast_shift_total(
+    points: list[tuple[float, float]],
+    current_total: int,
+    elapsed_minutes: int,
+    shift_minutes: int = 720,
+    min_elapsed_fraction: float = 0.08,
+) -> dict[str, Any]:
+    """Proyecta el cierre de turno ajustando una regresion lineal sobre el
+    avance acumulado real, en vez de asumir un ritmo constante desde el
+    minuto cero del turno.
+
+    `points` son pares (minuto_transcurrido, toneladas_acumuladas) de las
+    horas ya cerradas del turno mas, si corresponde, la hora en curso. Con
+    menos de 3 puntos distintos no hay señal suficiente para ajustar una
+    tendencia: se degrada al ritmo promedio (mismo comportamiento que el
+    calculo anterior), que sigue siendo la base del blend cuando el ajuste
+    es poco confiable (r2 bajo).
+    """
+    elapsed_fraction = max(elapsed_minutes / shift_minutes, min_elapsed_fraction)
+    naive_projection = current_total / elapsed_fraction
+    trend_tph = round(current_total / max(elapsed_minutes / 60, 0.25), 1)
+
+    unique_x = {x for x, _ in points}
+    if len(unique_x) < 3:
+        return {
+            "value": int(round(naive_projection)),
+            "model": "ritmo_promedio_turno",
+            "r2": None,
+            "n_points": len(unique_x),
+            "trend_tph": trend_tph,
+        }
+
+    intercept, slope, r2 = _ols_fit(points)
+    regression_projection = intercept + slope * shift_minutes
+    confidence = max(0.15, min(0.85, r2)) if r2 > 0 else 0.15
+    blended = confidence * regression_projection + (1 - confidence) * naive_projection
+    value = max(current_total, int(round(blended)))
+    return {
+        "value": value,
+        "model": "regresion_lineal_ols",
+        "r2": round(max(0.0, r2), 3),
+        "n_points": len(unique_x),
+        "trend_tph": round(slope * 60, 1),
+    }
+
+
 def calculate_non_compliance_risk(
     actual: int,
     forecast: int,

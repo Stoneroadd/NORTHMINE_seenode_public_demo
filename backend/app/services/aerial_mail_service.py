@@ -11,6 +11,7 @@ from email.header import decode_header
 from pathlib import Path
 from typing import Any
 
+from app.core.distributed import sync_lock
 from app.services.aerial_service import AERIAL_EXTENSIONS, _root_dir
 
 # Ingesta automatica de ortomosaicos desde Gmail hacia data/aerial:
@@ -442,7 +443,7 @@ def sync_gmail() -> dict[str, Any]:
     return {"status": "ok", "imported_files": imported, "errors": errors}
 
 
-def sync_all_sources() -> dict[str, Any]:
+def _sync_all_sources_unlocked() -> dict[str, Any]:
     """Drive oficial primero; Gmail solo si esta configurado."""
     drive_result = sync_drive()
     config = _config()
@@ -455,6 +456,12 @@ def sync_all_sources() -> dict[str, Any]:
         "mail": mail_result,
         "generated_at": datetime.now().isoformat(timespec="seconds"),
     }
+
+
+def sync_all_sources() -> dict[str, Any]:
+    """Run the aerial import once under a shared distributed lock."""
+    with sync_lock("aerial", ttl_seconds=1800):
+        return _sync_all_sources_unlocked()
 
 
 def get_sync_status() -> dict[str, Any]:

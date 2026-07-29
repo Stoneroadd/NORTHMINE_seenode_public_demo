@@ -3,7 +3,7 @@ import ReactECharts from 'echarts-for-react'
 import type { EChartsOption } from 'echarts'
 import { useDemoLivePulse } from '../../../hooks/useDemoLivePulse'
 import { PremiumChartFrame } from './PremiumChartFrame'
-import { axisLabel, baseGrid, formatNumber, formatTons, hasValues, premiumPalette, tooltipBase } from './chartTheme'
+import { axisLabel, baseGrid, formatNumber, formatTons, hasValues, premiumPalette, tooltipBase, useChartPaletteKey } from './chartTheme'
 import { useModuleT } from '../../../i18n/useModuleT'
 import { chartsT } from '../../../i18n/modules/charts'
 
@@ -38,6 +38,7 @@ function PremiumLineAreaChartBase({
   demoPulse = true,
 }: Props) {
   const t = useModuleT(chartsT)
+  const themeId = useChartPaletteKey()
   const pulse = useDemoLivePulse({ enabled: demoPulse, intervalMs: 5200, amplitude: 0.012 })
 
   const option = useMemo<EChartsOption>(() => {
@@ -167,7 +168,7 @@ function PremiumLineAreaChartBase({
           : []),
       ],
     } as EChartsOption
-  }, [bestLabel, data, pulse, showAccumulated, showMeta, t, worstLabel])
+  }, [bestLabel, data, pulse, showAccumulated, showMeta, t, worstLabel, themeId])
 
   return (
     <PremiumChartFrame height={height} loading={loading} error={error} empty={!hasValues(data)}>

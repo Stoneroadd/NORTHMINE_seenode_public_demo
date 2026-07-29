@@ -3,7 +3,7 @@ import ReactECharts from 'echarts-for-react'
 import type { EChartsOption } from 'echarts'
 import type { LoadingUnit, RankingItem } from '../../../lib/api'
 import { PremiumChartFrame } from './PremiumChartFrame'
-import { axisLabel, formatNumber, formatTons, hasValues, premiumPalette, tooltipBase } from './chartTheme'
+import { axisLabel, formatNumber, formatTons, hasValues, premiumPalette, tooltipBase, useChartPaletteKey } from './chartTheme'
 import { useModuleT } from '../../../i18n/useModuleT'
 import { chartsT, type ChartsT } from '../../../i18n/modules/charts'
 
@@ -45,6 +45,7 @@ function PremiumLoadingRankingChartBase({
   error,
 }: Props) {
   const t = useModuleT(chartsT)
+  const themeId = useChartPaletteKey()
   const rows = useMemo(() => (
     [...data]
       .sort((a, b) => tons(b) - tons(a))
@@ -114,7 +115,7 @@ function PremiumLoadingRankingChartBase({
         },
       ],
     }
-  }, [rows, t])
+  }, [rows, t, themeId])
 
   return (
     <PremiumChartFrame height={height} loading={loading} error={error} empty={!hasValues(data)}>

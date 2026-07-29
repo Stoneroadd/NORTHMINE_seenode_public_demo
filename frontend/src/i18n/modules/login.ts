@@ -13,7 +13,6 @@ export interface LoginT {
   hud_dxf_vista_3d: string
 
   acceso_titulo: string
-  demo_quick_access: string
   placeholder_usuario: string
   placeholder_password: string
 
@@ -38,7 +37,6 @@ export const loginT: ModuleDict<LoginT> = {
     hud_dxf_vista_3d: 'DXF · VISTA 3D',
 
     acceso_titulo: 'Acceso operacional seguro',
-    demo_quick_access: 'Entrar demo',
     placeholder_usuario: 'usuario',
     placeholder_password: 'contrasena',
 
@@ -61,7 +59,6 @@ export const loginT: ModuleDict<LoginT> = {
     hud_dxf_vista_3d: 'DXF · 3D VIEW',
 
     acceso_titulo: 'Secure operational access',
-    demo_quick_access: 'Enter demo',
     placeholder_usuario: 'username',
     placeholder_password: 'password',
 

@@ -24,13 +24,10 @@ import {
   getOperatorRankingTrends,
 } from '../services/operatorRankingService'
 import type { OperatorRankingItem } from '../types/operatorRanking'
-import { axisLabel, formatNumber, premiumPalette, tooltipBase } from '../components/charts/premium/chartTheme'
+import { axisLabel, formatNumber, premiumPalette, tooltipBase, useChartPaletteKey } from '../components/charts/premium/chartTheme'
 import { useModuleT } from '../i18n/useModuleT'
 import { operatorRankingT, type OperatorRankingT } from '../i18n/modules/operatorRanking'
-
-function formatTons(value: number) {
-  return `${Math.round(value || 0).toLocaleString('es-CL')} t`
-}
+import { formatTons } from '../lib/format'
 
 function formatHours(value: number) {
   return `${Math.round((value || 0) / 60).toLocaleString('es-CL')} h`
@@ -46,11 +43,11 @@ function dataModeLabel(t: OperatorRankingT, mode?: string) {
 }
 
 function scoreColor(score: number) {
-  if (score >= 90) return '#00FF88'
-  if (score >= 80) return '#00D4FF'
-  if (score >= 70) return '#FFCC33'
+  if (score >= 90) return premiumPalette.mineral
+  if (score >= 80) return premiumPalette.cyan
+  if (score >= 70) return premiumPalette.amber
   if (score >= 60) return '#FF8A00'
-  return '#FF2D55'
+  return premiumPalette.red
 }
 
 function buildScoreBars(items: OperatorRankingItem[]): EChartsOption {
@@ -329,7 +326,7 @@ function buildCauseDonut(items: OperatorRankingItem[]): EChartsOption {
   items.forEach((item) => totals.set(item.main_loss_cause, (totals.get(item.main_loss_cause) ?? 0) + item.lost_tons_estimated))
   const data = [...totals.entries()].map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value)
   return {
-    color: ['#FFCC33', '#00D4FF', '#00FF88', '#FF8A00', '#FF2D55', '#93A4B7'],
+    color: [premiumPalette.amber, premiumPalette.cyan, premiumPalette.mineral, '#FF8A00', premiumPalette.red, premiumPalette.slate],
     animationDuration: 850,
     tooltip: tooltipBase(),
     legend: { bottom: 0, textStyle: { color: premiumPalette.muted, fontSize: 11 } },
@@ -403,10 +400,11 @@ export function OperatorRanking() {
   const priorityItems = useMemo(() => buildOperatorPriorities(items), [items])
   const productivityComparison = useMemo(() => buildProductivityComparison(items), [items])
   const dataMode = rankingQuery.data?.data_mode
-  const scoreBars = useMemo(() => buildScoreBars(items), [items])
-  const scatter = useMemo(() => buildScatter(t, items), [items, t])
-  const donut = useMemo(() => buildCauseDonut(items), [items])
-  const heatmap = useMemo(() => buildDelayHeatmap(t, items), [items, t])
+  const themeId = useChartPaletteKey()
+  const scoreBars = useMemo(() => buildScoreBars(items), [items, themeId])
+  const scatter = useMemo(() => buildScatter(t, items), [items, t, themeId])
+  const donut = useMemo(() => buildCauseDonut(items), [items, themeId])
+  const heatmap = useMemo(() => buildDelayHeatmap(t, items), [items, t, themeId])
 
   const exportCsv = async () => {
     const blob = await exportOperatorRankingCsv(appliedFilters)
@@ -426,7 +424,7 @@ export function OperatorRanking() {
   }
 
   if (rankingQuery.isLoading) return <LoadingState label={t.cargando_ranking} />
-  if (rankingQuery.isError || !rankingQuery.data) return <ErrorState detail={t.error_cargar_ranking} />
+  if (rankingQuery.isError || !rankingQuery.data) return <ErrorState detail={t.error_cargar_ranking} onRetry={() => rankingQuery.refetch()} />
 
   return (
     <>

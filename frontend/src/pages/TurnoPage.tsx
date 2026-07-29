@@ -1,2 +1,0 @@
-export { TurnoPage } from './PlaceholderPage'
-

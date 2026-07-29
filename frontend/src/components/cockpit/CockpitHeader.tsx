@@ -1,4 +1,4 @@
-import { Clock3, Database, RefreshCw, ShieldCheck } from 'lucide-react'
+import { Clock3, Database, Download, RefreshCw, ShieldCheck } from 'lucide-react'
 import type { CockpitViewModel } from './cockpitModel'
 import { useModuleT } from '../../i18n/useModuleT'
 import { cockpitT } from '../../i18n/modules/cockpit'
@@ -22,10 +22,14 @@ export function CockpitHeader({
   data,
   fetching,
   onRefresh,
+  downloadingReport = false,
+  onDownloadReport,
 }: {
   data: CockpitViewModel
   fetching: boolean
   onRefresh: () => void
+  downloadingReport?: boolean
+  onDownloadReport?: () => void
 }) {
   const t = useModuleT(cockpitT)
   const modeLabel = data.isDemo ? t.header_modo_demo : data.stale ? t.header_cache_real : t.header_datos_reales
@@ -58,6 +62,12 @@ export function CockpitHeader({
         <span>{t.header_calidad} <strong>{quality}</strong></span>
         {freshness && <span>{t.header_frescura} <strong>{freshness}</strong></span>}
         <span>{t.header_api} <strong>{data.apiVersion}</strong></span>
+        {onDownloadReport && (
+          <button className="nmcp-report-button" type="button" onClick={onDownloadReport} aria-label="Descargar informe ejecutivo" title="Descargar informe ejecutivo" disabled={downloadingReport}>
+            <Download size={16} className={downloadingReport ? 'is-spinning' : ''} />
+            <span>{downloadingReport ? 'Generando...' : 'Informe'}</span>
+          </button>
+        )}
         <button className="nmcp-icon-button" type="button" onClick={onRefresh} aria-label={t.header_refresh_aria} disabled={fetching}>
           <RefreshCw size={16} className={fetching ? 'is-spinning' : ''} />
         </button>

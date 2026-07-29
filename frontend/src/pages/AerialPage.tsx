@@ -7,6 +7,8 @@ import { ErrorState } from '../components/common/ErrorState'
 import { EmptyState } from '../components/common/EmptyState'
 import { ExecutiveKpiCard } from '../components/kpi/ExecutiveKpiCard'
 import { getAerialFiles, getAerialMailStatus, getAerialPreviewUrl, getAerialStatus, postAerialMailSync } from '../lib/api'
+import { useModuleT } from '../i18n/useModuleT'
+import { aerialT } from '../i18n/modules/aerial'
 
 function mb(value: number) {
   return `${value.toLocaleString('es-CL', { maximumFractionDigits: 2 })} MB`
@@ -20,6 +22,7 @@ const VIEWER_MIN_ZOOM = 1
 const VIEWER_MAX_ZOOM = 6
 
 function OrthomosaicViewer({ fileName }: { fileName: string }) {
+  const t = useModuleT(aerialT)
   const [zoom, setZoom] = useState(1)
   const [dragging, setDragging] = useState(false)
   const zoomRef = useRef(1)
@@ -128,23 +131,23 @@ function OrthomosaicViewer({ fileName }: { fileName: string }) {
   return (
     <section className="panel">
       <div className="panel-header">
-        <div><span className="panel-kicker">Visor</span><h2>Ortomosaico {fileName}</h2></div>
+        <div><span className="panel-kicker">{t.viewer_kicker}</span><h2>{t.viewer_title(fileName)}</h2></div>
         <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
-          <small style={{ color: 'var(--nm-muted)' }}>Rueda: zoom / Arrastrar: mover / Doble clic: acercar</small>
-          <button className="command-button command-button-secondary" type="button" onClick={() => applyZoom(zoomRef.current / 1.5)} disabled={zoom <= VIEWER_MIN_ZOOM} aria-label="Alejar">
+          <small style={{ color: 'var(--nm-muted)' }}>{t.viewer_hint}</small>
+          <button className="command-button command-button-secondary" type="button" onClick={() => applyZoom(zoomRef.current / 1.5)} disabled={zoom <= VIEWER_MIN_ZOOM} aria-label={t.zoom_out_aria}>
             <ZoomOut size={15} />
           </button>
           <span className="panel-tag" style={{ minWidth: 52, textAlign: 'center' }}>{Math.round(zoom * 100)}%</span>
-          <button className="command-button command-button-secondary" type="button" onClick={() => applyZoom(zoomRef.current * 1.5)} disabled={zoom >= VIEWER_MAX_ZOOM} aria-label="Acercar">
+          <button className="command-button command-button-secondary" type="button" onClick={() => applyZoom(zoomRef.current * 1.5)} disabled={zoom >= VIEWER_MAX_ZOOM} aria-label={t.zoom_in_aria}>
             <ZoomIn size={15} />
           </button>
         </div>
       </div>
       {previewQuery.isLoading && (
-        <EmptyState title="Generando vista previa del TIF... la primera vez puede tardar unos segundos." />
+        <EmptyState title={t.generating_preview} />
       )}
       {previewQuery.isError && (
-        <EmptyState title="No se pudo generar la vista previa. Reintenta recargando la pagina." />
+        <EmptyState title={t.preview_error} />
       )}
       {previewQuery.data && (
         <div
@@ -164,7 +167,7 @@ function OrthomosaicViewer({ fileName }: { fileName: string }) {
         >
           <img
             src={previewQuery.data}
-            alt={`Ortomosaico ${fileName}`}
+            alt={t.orthomosaic_alt(fileName)}
             draggable={false}
             style={{ width: `${zoom * 100}%`, display: 'block', userSelect: 'none' }}
           />
@@ -175,6 +178,7 @@ function OrthomosaicViewer({ fileName }: { fileName: string }) {
 }
 
 export function AerialPage() {
+  const t = useModuleT(aerialT)
   const [syncing, setSyncing] = useState(false)
   const [syncMessage, setSyncMessage] = useState<string | null>(null)
   const [selectedFile, setSelectedFile] = useState<string | null>(null)
@@ -198,53 +202,59 @@ export function AerialPage() {
       const result = await postAerialMailSync()
       const downloaded = [...result.drive.imported_files, ...result.mail.imported_files]
       if (result.drive.status === 'error') {
-        setSyncMessage(result.drive.detail ?? 'Error al revisar la carpeta Drive.')
+        setSyncMessage(result.drive.detail ?? t.drive_error_default)
       } else if (downloaded.length) {
-        setSyncMessage(`${downloaded.length} archivo(s) descargados: ${downloaded.map((file) => file.filename).join(', ')}`)
+        setSyncMessage(t.files_downloaded(downloaded.length, downloaded.map((file) => file.filename).join(', ')))
       } else {
-        const detail = result.drive.checked?.length ? ` (${result.drive.checked[0]})` : ''
-        setSyncMessage(`Sin ortomosaicos nuevos en la carpeta Drive${detail}.`)
+        const detail = result.drive.checked?.length ? t.checked_suffix(result.drive.checked[0]) : ''
+        setSyncMessage(t.no_new_files(detail))
       }
       await query.refetch()
     } catch {
-      setSyncMessage('No se pudo sincronizar. Reintenta.')
+      setSyncMessage(t.sync_failed)
     } finally {
       setSyncing(false)
     }
   }
 
-  if (query.isLoading) return <LoadingState label="Cargando estado aereo..." />
-  if (query.isError || !query.data) return <ErrorState detail="No se pudo cargar el modulo de vista aerea." />
+  if (query.isLoading) return <LoadingState label={t.loading_label} />
+  if (query.isError || !query.data) return <ErrorState detail={t.error_detail} onRetry={() => query.refetch()} />
 
   const { status, files } = query.data
   const latest = status.latest_file
+  const imageExtensions = new Set(['tif', 'tiff', 'jpg', 'jpeg', 'png', 'jp2', 'ecw'])
+  const imageFiles = files.items.filter((item) => imageExtensions.has(item.extension.toLowerCase()))
+  const latestImage = imageFiles.find((item) => item.file_name === latest?.file_name) ?? imageFiles[0] ?? null
+  const activeImageFile = imageFiles.find((item) => item.file_name === selectedFile)?.file_name ?? latestImage?.file_name ?? null
 
   return (
     <div className="module-page">
       <ModuleHeader
         icon={Map}
-        eyebrow="Vista Aerea"
-        title="Ortomosaicos y cobertura operacional"
-        description="Primera iteracion metadata-only para evitar cargar TIF pesados en frontend."
+        eyebrow={t.eyebrow}
+        title={t.title}
+        description={t.description}
         meta="API /api/aerial/status"
         actions={
           <>
             <span className="panel-tag">
               <Mail size={12} style={{ verticalAlign: 'text-top', marginRight: 4 }} />
               {query.data?.mailStatus?.drive_configured
-                ? 'Drive vuelos: conectado'
-                : 'Drive sin configurar'}
+                ? t.drive_connected
+                : t.drive_not_configured}
             </span>
             {query.data?.mailStatus?.auto_sync?.enabled && (
               <span className="panel-tag" style={{ borderColor: 'rgba(74,222,128,0.5)', color: '#4ADE80' }}>
-                Auto cada {query.data.mailStatus.auto_sync.interval_min} min
-                {query.data.mailStatus.auto_sync.last_run
-                  ? ` / ultima ${query.data.mailStatus.auto_sync.last_run.slice(11, 16)}`
-                  : ''}
+                {t.auto_sync(
+                  query.data.mailStatus.auto_sync.interval_min,
+                  query.data.mailStatus.auto_sync.last_run
+                    ? t.auto_sync_last_run_suffix(query.data.mailStatus.auto_sync.last_run.slice(11, 16))
+                    : '',
+                )}
               </span>
             )}
             <button className="command-button" type="button" onClick={handleSync} disabled={syncing}>
-              <RefreshCw size={15} /> {syncing ? 'Sincronizando...' : 'Buscar ortomosaico'}
+              <RefreshCw size={15} /> {syncing ? t.syncing : t.sync_button}
             </button>
           </>
         }
@@ -254,10 +264,10 @@ export function AerialPage() {
         <p style={{ color: 'var(--nm-muted)', fontSize: '0.84rem', margin: '0 0 8px' }}>{syncMessage}</p>
       )}
 
-      {files.items.length > 1 && (
+      {imageFiles.length > 1 && (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, margin: '0 0 10px' }}>
-          {files.items.map((item) => {
-            const isActive = (selectedFile ?? latest?.file_name) === item.file_name
+          {imageFiles.map((item) => {
+            const isActive = activeImageFile === item.file_name
             return (
               <button
                 key={item.file_name}
@@ -272,45 +282,45 @@ export function AerialPage() {
         </div>
       )}
 
-      {(selectedFile ?? latest?.file_name) && (
-        <OrthomosaicViewer fileName={selectedFile ?? latest!.file_name} />
+      {activeImageFile && (
+        <OrthomosaicViewer fileName={activeImageFile} />
       )}
 
       <section className="kpi-grid compact">
-        <ExecutiveKpiCard title="Estado" value={status.status.replace(/_/g, ' ')} subtitle={status.viewer_status} trend={status.heavy_tif_loaded ? 'TIF cargado' : 'TIF no cargado'} tone={latest ? 'amber' : 'slate'} icon={ShieldCheck} />
-        <ExecutiveKpiCard title="Archivos" value={`${status.files_count}`} subtitle="Ortomosaicos detectados" trend={latest?.extension.toUpperCase() ?? 'sin archivo'} tone="cyan" icon={FileStack} />
-        <ExecutiveKpiCard title="CAEX" value={`${status.equipment_counts.caex ?? 0}`} subtitle="Cobertura operacional" trend={`${status.equipment_counts.palas ?? 0} palas`} tone="green" icon={Truck} />
-        <ExecutiveKpiCard title="Ultimo" value={latest?.file_name ?? '-'} subtitle={latest ? mb(latest.size_mb) : 'Sin ortomosaico'} trend={latest ? dateLabel(latest.updated_at) : 'en validacion'} tone="slate" icon={Map} />
+        <ExecutiveKpiCard title={t.kpi_status_title} value={status.status.replace(/_/g, ' ')} subtitle={status.viewer_status} trend={status.heavy_tif_loaded ? t.tif_loaded : t.tif_not_loaded} tone={latestImage ? 'amber' : 'slate'} icon={ShieldCheck} />
+        <ExecutiveKpiCard title={t.kpi_files_title} value={`${status.files_count}`} subtitle={t.kpi_files_subtitle} trend={latestImage?.extension.toUpperCase() ?? t.kpi_files_trend_none} tone="cyan" icon={FileStack} />
+        <ExecutiveKpiCard title={t.kpi_caex_title} value={`${status.equipment_counts.caex ?? 0}`} subtitle={t.kpi_caex_subtitle} trend={t.kpi_caex_trend(status.equipment_counts.palas ?? 0)} tone="green" icon={Truck} />
+        <ExecutiveKpiCard title={t.kpi_last_title} value={latestImage?.file_name ?? '-'} subtitle={latestImage ? mb(latestImage.size_mb) : t.kpi_last_subtitle_none} trend={latestImage ? dateLabel(latestImage.updated_at) : t.kpi_last_trend_validating} tone="slate" icon={Map} />
       </section>
 
       <section className="two-column">
         <div className="panel">
-          <div className="panel-header"><div><span className="panel-kicker">Ortomosaico</span><h2>Ultimo archivo disponible</h2></div><span className="panel-tag">{status.status}</span></div>
-          {latest ? (
+          <div className="panel-header"><div><span className="panel-kicker">{t.orthomosaic_kicker}</span><h2>{t.last_file_available}</h2></div><span className="panel-tag">{status.status}</span></div>
+          {latestImage ? (
             <div style={{ display: 'grid', gap: 12 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}><strong>Archivo</strong><span>{latest.file_name}</span></div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}><strong>Formato</strong><span>{latest.extension.toUpperCase()}</span></div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}><strong>Tamano</strong><span>{mb(latest.size_mb)}</span></div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}><strong>Fecha</strong><span>{dateLabel(latest.updated_at)}</span></div>
-              <div className="alert-sim-hint" style={{ marginTop: 10 }}><span>Visor pesado en validacion. Estado actual: metadata-only.</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}><strong>{t.file_label}</strong><span>{latestImage.file_name}</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}><strong>{t.format_label}</strong><span>{latestImage.extension.toUpperCase()}</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}><strong>{t.size_label}</strong><span>{mb(latestImage.size_mb)}</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}><strong>{t.date_label}</strong><span>{dateLabel(latestImage.updated_at)}</span></div>
+              <div className="alert-sim-hint" style={{ marginTop: 10 }}><span>{t.heavy_viewer_hint}</span></div>
             </div>
-          ) : <EmptyState title="Sin datos suficientes para evaluacion operacional" />}
+          ) : <EmptyState title={t.no_operational_data} />}
         </div>
 
         <div className="panel">
-          <div className="panel-header"><div><span className="panel-kicker">Cobertura</span><h2>Estado de capas</h2></div><span className="panel-tag">{status.faena}</span></div>
+          <div className="panel-header"><div><span className="panel-kicker">{t.coverage_kicker}</span><h2>{t.layer_status}</h2></div><span className="panel-tag">{status.faena}</span></div>
           {Object.entries(status.equipment_counts).map(([key, value]) => (
             <div key={key} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
               <strong>{key.toUpperCase()}</strong><span>{value}</span>
             </div>
           ))}
-          <div className="alert-sim-hint" style={{ marginTop: 14 }}><span>No se exponen rutas internas del servidor al frontend.</span></div>
+          <div className="alert-sim-hint" style={{ marginTop: 14 }}><span>{t.no_internal_routes_hint}</span></div>
         </div>
       </section>
 
       <section className="panel">
-        <div className="panel-header"><div><span className="panel-kicker">Archivos</span><h2>Metadatos disponibles</h2></div><span className="panel-tag">{files.count}</span></div>
-        {!files.items.length ? <EmptyState title="Sin datos suficientes para evaluacion operacional" /> : files.items.map((item) => (
+        <div className="panel-header"><div><span className="panel-kicker">{t.files_kicker}</span><h2>{t.files_metadata}</h2></div><span className="panel-tag">{files.count}</span></div>
+        {!files.items.length ? <EmptyState title={t.no_operational_data} /> : files.items.map((item) => (
           <article key={`${item.file_name}-${item.updated_at}`} style={{ display: 'grid', gridTemplateColumns: '1fr 90px 140px 150px', gap: 12, alignItems: 'center', padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
             <strong>{item.file_name}</strong><span>{item.extension.toUpperCase()}</span><span>{mb(item.size_mb)}</span><span>{dateLabel(item.updated_at)}</span>
           </article>

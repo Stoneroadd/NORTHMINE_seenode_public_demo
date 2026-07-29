@@ -24,8 +24,6 @@ import { useAnalysisFilters } from '../hooks/useAnalysisFilters'
 import type { SectionId } from '../components/layout/Sidebar'
 import { ExecutiveInsightCard } from '../components/dashboard/ExecutiveInsightCard'
 import { buildOperationalInsights } from '../lib/operationalInsights'
-import { useStaggerEntrance } from '../hooks/useStaggerEntrance'
-import { useTilt3D } from '../hooks/useTilt3D'
 import { useModuleT } from '../i18n/useModuleT'
 import { dashboardT, type DashboardT } from '../i18n/modules/dashboard'
 
@@ -107,12 +105,6 @@ function DashboardSkeleton() {
 
 export function Dashboard({ session, section }: Props) {
   const t = useModuleT(dashboardT)
-  const kpiGridRef = useStaggerEntrance<HTMLElement>()
-  const boardGridRef = useStaggerEntrance<HTMLElement>()
-  const heroTilt = useTilt3D({ maxTilt: 2.5, scale: 1.006 })
-  const boardTiltA = useTilt3D({ maxTilt: 3, scale: 1.01 })
-  const boardTiltB = useTilt3D({ maxTilt: 3, scale: 1.01 })
-  const boardTiltC = useTilt3D({ maxTilt: 3, scale: 1.01 })
   const analysisFilters = useAnalysisFilters({}, 'northmine:filters:dashboard')
   const { appliedFilters } = analysisFilters
   const [
@@ -261,6 +253,7 @@ export function Dashboard({ session, section }: Props) {
   const projectedGap = monthlyPlanAvailable ? monthlyProjection - monthlyTargetTotal : null
   const requiredVsCurrentPct = requiredDailyToGreen > 0 ? (currentDailyAverage / requiredDailyToGreen) * 100 : monthlyPlanAvailable ? 160 : 0
   const projectionCompletionPct = monthlyTargetTotal > 0 ? (monthlyProjection / monthlyTargetTotal) * 100 : 0
+  const monthRealCompletionPct = monthlyTargetTotal > 0 ? (monthReal / monthlyTargetTotal) * 100 : 0
   const accumulatedGapPct = planAccumulatedToDate > 0 ? (Math.abs(accumulatedGap) / planAccumulatedToDate) * 100 : 0
   const greenStatusKey = !monthlyPlanAvailable
     ? 'no_plan'
@@ -478,12 +471,7 @@ export function Dashboard({ session, section }: Props) {
         ))}
       </section>
 
-      <section
-        className={`plan-performance-hero tone-${greenTone}`}
-        style={heroTilt.style}
-        onPointerMove={heroTilt.onPointerMove}
-        onPointerLeave={heroTilt.onPointerLeave}
-      >
+      <section className={`plan-performance-hero tone-${greenTone}`}>
         <div className="plan-hero-ambient" aria-hidden="true">
           <span />
           <span />
@@ -502,10 +490,10 @@ export function Dashboard({ session, section }: Props) {
         <div className={`plan-hero-status is-${greenTone}`}>
           <span>Estado cierre F01</span>
           <strong>{greenStatus}</strong>
-          <div className="plan-radial-meter" style={meterStyle(accumulatedCompliance, 160)} aria-hidden="true">
-            <span>{monthlyPlanAvailable ? formatPct(accumulatedCompliance) : '--'}</span>
+          <div className="plan-radial-meter" style={meterStyle(projectionCompletionPct, 100)} aria-hidden="true">
+            <span>{monthlyPlanAvailable ? formatPct(projectionCompletionPct) : '--'}</span>
           </div>
-          <small>{monthlyPlanAvailable ? `${formatPct(accumulatedCompliance)} vs acumulado` : 'Plan requerido'}</small>
+          <small>{monthlyPlanAvailable ? 'Proyeccion de cierre vs meta mes' : 'Plan requerido'}</small>
         </div>
         <div className="plan-hero-metrics">
           <div className="plan-hero-metric is-required" style={meterStyle(requiredVsCurrentPct, 160)}>
@@ -532,21 +520,47 @@ export function Dashboard({ session, section }: Props) {
           <span className={(projectedGap ?? 0) >= 0 ? 'is-up' : 'is-down'}><b>Proy.</b>{formatSignedTons(projectedGap ?? 0)}</span>
           <span className="is-info"><b>F02</b>{formatTonsWithUnit(monthF02)}</span>
         </div>
+        {monthlyPlanAvailable && (
+          <div className="plan-close-runway" aria-label="Progreso mensual hacia la meta F01">
+            <div className="plan-close-runway-head">
+              <div>
+                <span>Progreso mensual F01</span>
+                <strong>Real, proyeccion y meta de cierre</strong>
+              </div>
+              <small>{remainingDays} dias restantes · faltan {formatTonsWithUnit(remainingToMonthlyTarget)}</small>
+            </div>
+            <div className="plan-close-runway-bars">
+              <article className="is-real" style={meterStyle(monthRealCompletionPct, 100)}>
+                <div><b /></div>
+                <strong>{formatTonsWithUnit(monthReal)}</strong>
+                <span>F01 real</span>
+                <small>{formatPct(monthRealCompletionPct)} de meta</small>
+              </article>
+              <article className={(projectedGap ?? 0) >= 0 ? 'is-positive' : 'is-risk'} style={meterStyle(projectionCompletionPct, 100)}>
+                <div><b /></div>
+                <strong>{formatTonsWithUnit(monthlyProjection)}</strong>
+                <span>Proyeccion</span>
+                <small>{formatSignedTons(projectedGap ?? 0)} al cierre</small>
+              </article>
+              <article className="is-target" style={meterStyle(100, 100)}>
+                <div><b /></div>
+                <strong>{formatTonsWithUnit(monthlyTargetTotal)}</strong>
+                <span>Meta mes</span>
+                <small>100% requerido</small>
+              </article>
+            </div>
+          </div>
+        )}
       </section>
 
-      <section className="executive-kpi-grid" ref={kpiGridRef}>
+      <section className="executive-kpi-grid">
         {kpiCards.map((card) => (
           <ExecutiveKpiCard key={card.title} {...card} />
         ))}
       </section>
 
-      <section className="plan-board-grid" ref={boardGridRef}>
-        <div
-          className="plan-board-card stagger-item"
-          style={boardTiltA.style}
-          onPointerMove={boardTiltA.onPointerMove}
-          onPointerLeave={boardTiltA.onPointerLeave}
-        >
+      <section className="plan-board-grid">
+        <div className="plan-board-card">
           <div className="panel-header">
             <div>
               <span className="panel-kicker">Cumplimiento acumulado</span>
@@ -566,12 +580,7 @@ export function Dashboard({ session, section }: Props) {
           </div>
         </div>
 
-        <div
-          className="plan-board-card stagger-item"
-          style={boardTiltB.style}
-          onPointerMove={boardTiltB.onPointerMove}
-          onPointerLeave={boardTiltB.onPointerLeave}
-        >
+        <div className="plan-board-card">
           <div className="panel-header">
             <div>
               <span className="panel-kicker">Causas que pueden romper el plan</span>
@@ -589,6 +598,7 @@ export function Dashboard({ session, section }: Props) {
                 <strong>{item.equipment}</strong>
                 <span>{item.type} / {formatSignedPct(item.deviationPct)} vs referencia</span>
                 <small>Impacto estimado {formatTonsWithUnit(item.estimatedImpactTons)} - {item.detail}</small>
+                <i className="plan-cause-meter"><b /></i>
               </article>
             )) : (
               <div className="executive-empty-state">Sin desviaciones relevantes contra referencia.</div>
@@ -596,12 +606,7 @@ export function Dashboard({ session, section }: Props) {
           </div>
         </div>
 
-        <div
-          className="plan-board-card standby-justification-card stagger-item"
-          style={boardTiltC.style}
-          onPointerMove={boardTiltC.onPointerMove}
-          onPointerLeave={boardTiltC.onPointerLeave}
-        >
+        <div className="plan-board-card standby-justification-card">
           <div className="panel-header">
             <div>
               <span className="panel-kicker">Standby justificado</span>

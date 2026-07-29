@@ -64,7 +64,7 @@ def build_admin_system_status() -> dict[str, Any]:
         },
         "frontend": {
             "expected_version": settings.version,
-            "expected_origin": "http://localhost:5173" if not settings.is_production else "configured",
+            "expected_origin": settings.cors_origins[0] if settings.cors_origins and not settings.is_production else "configured",
         },
         "logs": {
             "directory": settings.log_dir,

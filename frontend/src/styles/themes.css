@@ -20,17 +20,18 @@
    ════════════════════════════════════════ */
 :root,
 html[data-theme="dark"] {
-  --bg-void:        #070b14;
-  --bg-deep:        #0d1321;
-  --bg-panel:       #111827;
-  --bg-card:        #141f30;
-  --bg-elevated:    #1a2744;
-  --bg-hover:       #1e2f50;
-  --border-dim:     rgba(99,102,241,0.10);
-  --border-mid:     rgba(99,102,241,0.22);
-  --border-bright:  rgba(99,102,241,0.52);
-  --op-green:       #10b981;
-  --data-cyan:      #38bdf8;
+  --bg-void:        #030405;
+  --bg-deep:        #08090d;
+  --bg-panel:       rgba(10, 12, 18, 0.58);
+  --bg-card:        rgba(12, 15, 22, 0.68);
+  --bg-elevated:    rgba(14, 17, 24, 0.78);
+  --bg-hover:       rgba(18, 21, 30, 0.85);
+  --border-dim:     rgba(47,212,255,0.10);
+  --border-mid:     rgba(47,212,255,0.22);
+  --border-bright:  rgba(47,212,255,0.52);
+  --op-green:       #3ee58a;
+  --data-cyan:      #2fd4ff;
+  --vision-night:   #c98bff;
   --alert-orange:   #f97316;
   --warn-yellow:    #f59e0b;
   --danger-red:     #ef4444;
@@ -38,14 +39,85 @@ html[data-theme="dark"] {
   --text-secondary: rgba(248,250,252,0.60);
   --text-tertiary:  rgba(248,250,252,0.38);
   --text-disabled:  rgba(248,250,252,0.20);
-  --shadow-card:    0 4px 6px -1px rgba(0,0,0,0.45), 0 2px 4px -2px rgba(0,0,0,0.3), 0 0 0 1px rgba(99,102,241,0.06);
-  --cursor-color:   #6366f1;
-  --cursor-inner:   #10b981;
-  --accent:         #6366f1;
-  --accent-pop:     #10b981;
+  --shadow-card:    0 4px 6px -1px rgba(0,0,0,0.45), 0 2px 4px -2px rgba(0,0,0,0.3), 0 0 0 1px rgba(47,212,255,0.06);
+  --cursor-color:   #2fd4ff;
+  --cursor-inner:   #3ee58a;
+  --accent:         #2fd4ff;
+  --accent-rgb:     47,212,255;
+  --accent-pop:     #3ee58a;
   --font-display:   'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-mono:      'JetBrains Mono', 'IBM Plex Mono', monospace;
   --font-label:     'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* ════════════════════════════════════════
+   TEMA OPERACIONAL — negro, gris y superficies de vidrio
+   ════════════════════════════════════════ */
+html[data-theme="operational"] {
+  color-scheme: dark;
+  --bg-void:        #050607;
+  --bg-deep:        #0b0d0f;
+  --bg-panel:       #15181b;
+  --bg-card:        #1b1f23;
+  --bg-elevated:    #24282d;
+  --bg-hover:       #2c3137;
+  --border-dim:     rgba(198, 205, 212, 0.10);
+  --border-mid:     rgba(198, 205, 212, 0.18);
+  --border-bright:  rgba(224, 229, 234, 0.36);
+  --op-green:       #58d68d;
+  --data-cyan:      #72c7d8;
+  --vision-night:   #ad9bd1;
+  --alert-orange:   #e7a55b;
+  --warn-yellow:    #e5c36b;
+  --danger-red:     #ec7777;
+  --text-primary:   #f1f3f5;
+  --text-secondary: #aeb6bf;
+  --text-tertiary:  #77808a;
+  --text-disabled:  #4e555c;
+  --shadow-card:    0 14px 38px rgba(0,0,0,0.36), inset 0 1px 0 rgba(255,255,255,0.025);
+  --cursor-color:   #b8c0c8;
+  --cursor-inner:   #58d68d;
+  --accent:         #b8c0c8;
+  --accent-rgb:     184,192,200;
+  --accent-pop:     #d8dde2;
+}
+
+html[data-theme="operational"] body {
+  background:
+    radial-gradient(ellipse 80% 42% at 50% -10%, rgba(255,255,255,0.045), transparent 64%),
+    radial-gradient(rgba(255,255,255,0.05) 0.6px, transparent 0.6px) 0 0/3px 3px,
+    #050607 !important;
+}
+
+html[data-theme="operational"] .sidebar,
+html[data-theme="operational"] .topbar {
+  background: color-mix(in srgb, #0a0c0e 82%, transparent) !important;
+  border-color: rgba(198, 205, 212, 0.16) !important;
+  backdrop-filter: blur(20px) saturate(0.8) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(0.8) !important;
+}
+
+/* Vidrio esmerilado en todas las superficies — "negro, gris y superficies
+   transparentes": paneles, tarjetas y modales comparten el mismo cristal. */
+html[data-theme="operational"] .panel,
+html[data-theme="operational"] .kpi-card,
+html[data-theme="operational"] .hero-panel,
+html[data-theme="operational"] .module-header,
+html[data-theme="operational"] .report-card,
+html[data-theme="operational"] .state-card,
+html[data-theme="operational"] .command-card,
+html[data-theme="operational"] .login-card {
+  background: color-mix(in srgb, #17191c 74%, transparent) !important;
+  backdrop-filter: blur(18px) saturate(0.85);
+  -webkit-backdrop-filter: blur(18px) saturate(0.85);
+  border-color: rgba(198, 205, 212, 0.14) !important;
+}
+
+html[data-theme="operational"] .panel:hover,
+html[data-theme="operational"] .kpi-card:hover,
+html[data-theme="operational"] .command-card:hover {
+  border-color: rgba(224, 229, 234, 0.30) !important;
+  box-shadow: var(--shadow-card), 0 0 0 1px rgba(224, 229, 234, 0.08);
 }
 
 /* ════════════════════════════════════════
@@ -59,11 +131,12 @@ html[data-theme="light"] {
   --bg-card:        #ffffff;
   --bg-elevated:    #f8fafc;
   --bg-hover:       #f1f5f9;
-  --border-dim:     rgba(99,102,241,0.10);
-  --border-mid:     rgba(99,102,241,0.22);
-  --border-bright:  rgba(99,102,241,0.52);
+  --border-dim:     rgba(47,212,255,0.10);
+  --border-mid:     rgba(47,212,255,0.22);
+  --border-bright:  rgba(47,212,255,0.52);
   --op-green:       #059669;
   --data-cyan:      #0284c7;
+  --vision-night:   #7c3aed;
   --alert-orange:   #ea580c;
   --warn-yellow:    #d97706;
   --danger-red:     #dc2626;
@@ -72,9 +145,10 @@ html[data-theme="light"] {
   --text-tertiary:  #94a3b8;
   --text-disabled:  #cbd5e1;
   --shadow-card:    0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
-  --cursor-color:   #6366f1;
+  --cursor-color:   #2fd4ff;
   --cursor-inner:   #059669;
-  --accent:         #6366f1;
+  --accent:         #2fd4ff;
+  --accent-rgb:     47,212,255;
   --accent-pop:     #059669;
   --font-display:   'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-mono:      'JetBrains Mono', 'IBM Plex Mono', monospace;
@@ -139,6 +213,7 @@ html[data-theme="futuristic"] {
   --border-bright:  rgba(139,92,246,0.68);
   --op-green:       #a78bfa;
   --data-cyan:      #818cf8;
+  --vision-night:   #d946ef;
   --alert-orange:   #fb7185;
   --warn-yellow:    #fbbf24;
   --danger-red:     #f43f5e;
@@ -150,6 +225,7 @@ html[data-theme="futuristic"] {
   --cursor-color:   #a78bfa;
   --cursor-inner:   #818cf8;
   --accent:         #8b5cf6;
+  --accent-rgb:     139,92,246;
   --accent-pop:     #a78bfa;
   --font-display:   'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono:      'JetBrains Mono', 'IBM Plex Mono', monospace;
@@ -209,10 +285,12 @@ html[data-theme="minimal"] {
   --border-bright:  rgba(0,0,0,0.32);
   --op-green:       #111111;
   --data-cyan:      #111111;
+  --vision-night:   #6b6b6b;
   --alert-orange:   #444444;
   --warn-yellow:    #777777;
   --danger-red:     #111111;
   --accent:         #111111;
+  --accent-rgb:     17,17,17;
   --accent-pop:     #0055FF;
   --text-primary:   #111111;
   --text-secondary: #555555;
@@ -250,10 +328,16 @@ html[data-theme="minimal"] *::after {
 
 html[data-theme="minimal"] .kpi-card,
 html[data-theme="minimal"] .panel,
-html[data-theme="minimal"] .command-card {
+html[data-theme="minimal"] .command-card,
+html[data-theme="minimal"] .hero-panel,
+html[data-theme="minimal"] .module-header,
+html[data-theme="minimal"] .report-card,
+html[data-theme="minimal"] .state-card,
+html[data-theme="minimal"] .login-card {
   border-top: 2px solid #0055FF !important;
   box-shadow: 0 1px 3px rgba(0,0,0,0.08) !important;
   background: #FFFFFF !important;
+  background-image: none !important;
   border-left-color: transparent !important;
   color: #111111 !important;
 }
@@ -280,6 +364,7 @@ html[data-theme="carbon"] {
   --border-bright:  rgba(255,200,0,0.50);
   --op-green:       #FFD700;
   --data-cyan:      #FFC200;
+  --vision-night:   #C87F3B;
   --alert-orange:   #FF6600;
   --warn-yellow:    #FFAA00;
   --danger-red:     #FF3300;
@@ -291,6 +376,7 @@ html[data-theme="carbon"] {
   --cursor-color:   #FFD700;
   --cursor-inner:   #FFC200;
   --accent:         #FFD700;
+  --accent-rgb:     255,215,0;
   --accent-pop:     #FFC200;
   --font-display:   'Inter', sans-serif;
   --font-mono:      'JetBrains Mono', monospace;
@@ -306,6 +392,29 @@ html[data-theme="carbon"] body {
 
 html[data-theme="carbon"] .nm-cursor-ring {
   border-color: #FFD700 !important;
+}
+
+/* Trama de fibra de carbono también en paneles y tarjetas, no solo el fondo. */
+html[data-theme="carbon"] .panel,
+html[data-theme="carbon"] .kpi-card,
+html[data-theme="carbon"] .hero-panel,
+html[data-theme="carbon"] .module-header,
+html[data-theme="carbon"] .report-card,
+html[data-theme="carbon"] .state-card,
+html[data-theme="carbon"] .command-card,
+html[data-theme="carbon"] .login-card {
+  background-image:
+    repeating-linear-gradient(45deg,  rgba(255,255,255,0.02) 0, rgba(255,255,255,0.02) 1px, transparent 1px, transparent 50%),
+    repeating-linear-gradient(-45deg, rgba(255,255,255,0.02) 0, rgba(255,255,255,0.02) 1px, transparent 1px, transparent 50%),
+    linear-gradient(135deg, color-mix(in srgb, var(--accent) 5%, transparent), transparent 60%) !important;
+  background-size: 4px 4px, 4px 4px, auto !important;
+}
+
+html[data-theme="carbon"] .panel:hover,
+html[data-theme="carbon"] .kpi-card:hover,
+html[data-theme="carbon"] .command-card:hover {
+  border-color: rgba(255,200,0,0.42) !important;
+  box-shadow: var(--shadow-card), 0 0 24px rgba(255,200,0,0.14);
 }
 
 /* ════════════════════════════════════════
@@ -500,6 +609,7 @@ html[data-theme] {
   --cyan: var(--data-cyan);
   --amber: var(--warn-yellow);
   --red: var(--danger-red);
+  --orange: var(--alert-orange);
   --steel: var(--text-secondary);
   --shadow: var(--shadow-card);
 

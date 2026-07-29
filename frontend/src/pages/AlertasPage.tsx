@@ -1,2 +1,0 @@
-export { AlertasPage } from './PlaceholderPage'
-
