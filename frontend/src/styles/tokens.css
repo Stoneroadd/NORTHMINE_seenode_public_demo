@@ -13232,3 +13232,28 @@ option,
     padding: 5px 9px;
   }
 }
+
+@media (max-width: 1180px) {
+  .sidebar {
+    width: min(88vw, 320px) !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain;
+    padding-bottom: 14px !important;
+    scrollbar-width: thin;
+  }
+
+  .sidebar .brand-block {
+    padding-bottom: 16px;
+  }
+
+  .sidebar-nav {
+    padding-bottom: 8px;
+  }
+
+  .sidebar-footer {
+    position: static !important;
+    margin: 14px 0 0 !important;
+  }
+}
