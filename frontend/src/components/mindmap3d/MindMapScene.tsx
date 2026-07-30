@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Canvas, useFrame, useThree, type ThreeEvent } from '@react-three/fiber'
 import { Billboard, Line, OrbitControls, Sparkles, Stars, Text } from '@react-three/drei'
 import { Bloom, EffectComposer } from '@react-three/postprocessing'
+import { configureTextBuilder } from 'troika-three-text'
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 import * as THREE from 'three'
 import type { MindMapGraph, MindMapQuality, MindMapViewMode } from './mindMapModel'
@@ -12,6 +13,11 @@ import { PitShell } from './PitShell'
 import { clamp, hashString, shortLabel } from './mindMapUtils'
 import { useModuleT } from '../../i18n/useModuleT'
 import { mindmap3dT } from '../../i18n/modules/mindmap3d'
+
+configureTextBuilder({
+  useWorker: false,
+  defaultFontURL: '/fonts/kenpixel.ttf',
+})
 
 interface Props {
   graph: MindMapGraph
@@ -88,11 +94,11 @@ function RotatingPit({
 
 function qualityBudget(quality: MindMapQuality, nodeCount: number) {
   if (quality === 'BAJA') return { dpr: 1, segments: 16, particles: 34, stars: 90, bloom: false, pit: false }
-  if (quality === 'MEDIA') return { dpr: 1.25, segments: 20, particles: 58, stars: 130, bloom: true, pit: true }
+  if (quality === 'MEDIA') return { dpr: 1.25, segments: 20, particles: 58, stars: 130, bloom: false, pit: true }
   if (quality === 'ALTA') return { dpr: 2, segments: 32, particles: 110, stars: 220, bloom: true, pit: true }
   return nodeCount > 150
-    ? { dpr: 1.1, segments: 18, particles: 42, stars: 110, bloom: true, pit: true }
-    : { dpr: 1.5, segments: 24, particles: 72, stars: 160, bloom: true, pit: true }
+    ? { dpr: 1.1, segments: 18, particles: 42, stars: 110, bloom: false, pit: true }
+    : { dpr: 1.5, segments: 24, particles: 72, stars: 160, bloom: false, pit: true }
 }
 
 function makeRadialTexture(size: number, stops: Array<[number, string]>): THREE.CanvasTexture {

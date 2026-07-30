@@ -89,12 +89,12 @@ async function downloadXlsx(kind: 'shift' | 'caex' | 'loading', setLoading: (val
 
 function BarRow({ label, value, max, meta }: { label: string; value: number; max: number; meta?: string }) {
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '110px 1fr 110px', gap: 12, alignItems: 'center', padding: '9px 0' }}>
-      <strong style={{ color: 'var(--nm-text)' }}>{label}</strong>
-      <span style={{ height: 8, borderRadius: 999, background: 'rgba(255,255,255,0.08)', overflow: 'hidden' }}>
-        <i style={{ display: 'block', height: '100%', width: `${Math.min(100, value / Math.max(max, 1) * 100)}%`, background: 'linear-gradient(90deg, var(--nm-cyan), var(--nm-green))' }} />
+    <div className="nm-shift-hour-row">
+      <strong>{label}</strong>
+      <span className="nm-shift-hour-track">
+        <i style={{ width: `${Math.min(100, value / Math.max(max, 1) * 100)}%` }} />
       </span>
-      <span style={{ textAlign: 'right', color: 'var(--nm-muted)', fontVariantNumeric: 'tabular-nums' }}>{meta ?? tons(value)}</span>
+      <span className="nm-shift-hour-meta">{meta ?? tons(value)}</span>
     </div>
   )
 }
@@ -479,84 +479,92 @@ export function CurrentShiftPage() {
         <ExecutiveKpiCard title={t.kpi_caex_activos} value={`${data.caex_activos}`} subtitle={t.kpi_caex_sin_actividad(data.caex_sin_actividad)} trend={t.kpi_caex_averia(data.caex_posible_averia)} tone={data.caex_posible_averia ? 'amber' : 'green'} icon={Truck} />
       </section>
 
-      <section className="panel">
-        <div className="panel-header">
-          <div><span className="panel-kicker">{t.resumen_ejecutivo}</span><h2>{t.lectura_del_turno}</h2></div>
-          <span className="panel-tag">{t.generado_automaticamente}</span>
+      <section className="nm-shift-overview-grid">
+        <div className="panel nm-shift-narrative-panel">
+          <div className="panel-header">
+            <div><span className="panel-kicker">{t.resumen_ejecutivo}</span><h2>{t.lectura_del_turno}</h2></div>
+            <span className="panel-tag">{t.generado_automaticamente}</span>
+          </div>
+          <div className="nm-shift-narrative">
+            {narrative.map((paragraph, index) => (
+              <p key={index} className={index === 0 ? 'is-primary' : undefined}>
+                {paragraph}
+              </p>
+            ))}
+          </div>
         </div>
-        {narrative.map((paragraph, index) => (
-          <p key={index} style={{ color: index === 0 ? 'var(--nm-text)' : 'var(--nm-muted)', fontSize: '0.85rem', lineHeight: 1.6, margin: index === 0 ? '0 0 8px' : '0 0 8px' }}>
-            {paragraph}
-          </p>
-        ))}
-      </section>
-
-      <section className="two-column">
-        <div className="panel">
+        <div className="panel nm-shift-hourly-panel">
           <div className="panel-header"><div><span className="panel-kicker">{t.hora_a_hora}</span><h2>{t.tonelaje_del_turno}</h2></div><span className="panel-tag">{data.turno}</span></div>
-          {data.hourly.length ? data.hourly.map((item) => <BarRow key={item.label} label={item.label} value={item.toneladas} max={hourlyMax} meta={`${tons(item.toneladas)} / ${t.ciclos_ton(item.ciclos)}`} />) : <EmptyState title={t.sin_datos_evaluacion} />}
+          <div className="nm-shift-hourly-list">
+            {data.hourly.length ? data.hourly.map((item) => <BarRow key={item.label} label={item.label} value={item.toneladas} max={hourlyMax} meta={`${tons(item.toneladas)} / ${t.ciclos_ton(item.ciclos)}`} />) : <EmptyState title={t.sin_datos_evaluacion} />}
+          </div>
         </div>
-        <div className="panel">
+        <div className="panel nm-shift-review-panel">
           <div className="panel-header"><div><span className="panel-kicker">{t.bajo_promedio}</span><h2>{t.caex_a_revisar}</h2></div><span className="panel-tag">{t.equipos_count(lowAverage.length)}</span></div>
-          {!lowAverage.length ? <EmptyState title={t.sin_datos_evaluacion} /> : lowAverage.map((item) => (
-            <article
-              key={item.caex_id}
-              className="operational-alert-row alert-severity-alta nm-shift-alert-row is-clickable"
-              style={{ marginBottom: 10 }}
-              role="button"
-              tabIndex={0}
-              onClick={() => setActivityTarget({ id: item.caex_id, model: item.modelo, type: 'truck' })}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter' || event.key === ' ') {
-                  event.preventDefault()
-                  setActivityTarget({ id: item.caex_id, model: item.modelo, type: 'truck' })
-                }
-              }}
-              aria-label={t.ver_actividad_wenco(item.caex_id)}
-            >
-              <span className="nm-shift-equip-visual">
-                <EquipmentImage id={item.caex_id} model={item.modelo} />
-              </span>
-              <div><h3>{item.caex_id}</h3><p>{item.modelo} / {tons(item.toneladas)} / {t.pct_del_promedio(item.porcentaje_promedio)}</p>{routeLabel(item, t) && <small>{routeLabel(item, t)}</small>}<small>{t.ultima_actividad_hace(min(item.minutos_sin_actividad))}</small><AnomalyBadge anomaly={anomalyByCaex.get(item.caex_id)} /></div>
-              <span className="panel-tag">{item.estado}</span>
-            </article>
-          ))}
+          <div className="nm-shift-review-list">
+            {!lowAverage.length ? <EmptyState title={t.sin_datos_evaluacion} /> : lowAverage.map((item) => (
+              <article
+                key={item.caex_id}
+                className="operational-alert-row alert-severity-alta nm-shift-alert-row is-clickable"
+                role="button"
+                tabIndex={0}
+                onClick={() => setActivityTarget({ id: item.caex_id, model: item.modelo, type: 'truck' })}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault()
+                    setActivityTarget({ id: item.caex_id, model: item.modelo, type: 'truck' })
+                  }
+                }}
+                aria-label={t.ver_actividad_wenco(item.caex_id)}
+              >
+                <span className="nm-shift-equip-visual">
+                  <EquipmentImage id={item.caex_id} model={item.modelo} />
+                </span>
+                <div><h3>{item.caex_id}</h3><p>{item.modelo} / {tons(item.toneladas)} / {t.pct_del_promedio(item.porcentaje_promedio)}</p>{routeLabel(item, t) && <small>{routeLabel(item, t)}</small>}<small>{t.ultima_actividad_hace(min(item.minutos_sin_actividad))}</small><AnomalyBadge anomaly={anomalyByCaex.get(item.caex_id)} /></div>
+                <span className="panel-tag">{item.estado}</span>
+              </article>
+            ))}
+          </div>
         </div>
       </section>
 
-      <section className="two-column">
-        <div className="panel">
+      <section className="two-column nm-shift-equipment-grid">
+        <div className="panel nm-shift-list-panel">
           <div className="panel-header"><div><span className="panel-kicker">{t.carguio}</span><h2>{t.rendimiento_por_uc}</h2></div><span className="panel-tag">{t.unidades_count(query.data.loadingUnits.length)}</span></div>
-          {query.data.loadingUnits.map((item) => (
-            <EquipmentRow
-              key={item.carguio_id}
-              id={item.carguio_id}
-              model={item.modelo}
-              value={item.toneladas}
-              max={loadingMax}
-              meta={`${tons(item.toneladas)} / ${item.rendimiento_tph.toLocaleString('es-CL')} tph`}
-              sub={[routeLabel(item, t) ?? item.ubicacion, item.operador].filter(Boolean).join(' / ')}
-              ucAnomalyCount={anomalyCountByUc.get(item.carguio_id)}
-              onOpenActivity={() => setActivityTarget({ id: item.carguio_id, model: item.modelo, type: 'loader' })}
-            />
-          ))}
+          <div className="nm-shift-equipment-list">
+            {query.data.loadingUnits.map((item) => (
+              <EquipmentRow
+                key={item.carguio_id}
+                id={item.carguio_id}
+                model={item.modelo}
+                value={item.toneladas}
+                max={loadingMax}
+                meta={`${tons(item.toneladas)} / ${item.rendimiento_tph.toLocaleString('es-CL')} tph`}
+                sub={[routeLabel(item, t) ?? item.ubicacion, item.operador].filter(Boolean).join(' / ')}
+                ucAnomalyCount={anomalyCountByUc.get(item.carguio_id)}
+                onOpenActivity={() => setActivityTarget({ id: item.carguio_id, model: item.modelo, type: 'loader' })}
+              />
+            ))}
+          </div>
         </div>
-        <div className="panel">
+        <div className="panel nm-shift-list-panel">
           <div className="panel-header"><div><span className="panel-kicker">{t.ranking_caex}</span><h2>{t.tonelaje_del_turno}</h2></div><span className="panel-tag">{t.top_12}</span></div>
-          {query.data.caex.slice(0, 12).map((item) => (
-            <EquipmentRow
-              key={item.caex_id}
-              id={item.caex_id}
-              model={item.modelo}
-              value={item.toneladas}
-              max={caexMax}
-              meta={`${tons(item.toneladas)} / ${t.ciclos_ton(item.ciclos)}`}
-              sub={routeLabel(item, t)}
-              rank={item.rank}
-              anomaly={anomalyByCaex.get(item.caex_id)}
-              onOpenActivity={() => setActivityTarget({ id: item.caex_id, model: item.modelo, type: 'truck' })}
-            />
-          ))}
+          <div className="nm-shift-equipment-list">
+            {query.data.caex.slice(0, 12).map((item) => (
+              <EquipmentRow
+                key={item.caex_id}
+                id={item.caex_id}
+                model={item.modelo}
+                value={item.toneladas}
+                max={caexMax}
+                meta={`${tons(item.toneladas)} / ${t.ciclos_ton(item.ciclos)}`}
+                sub={routeLabel(item, t)}
+                rank={item.rank}
+                anomaly={anomalyByCaex.get(item.caex_id)}
+                onOpenActivity={() => setActivityTarget({ id: item.caex_id, model: item.modelo, type: 'truck' })}
+              />
+            ))}
+          </div>
         </div>
       </section>
 
@@ -568,8 +576,8 @@ export function CurrentShiftPage() {
           </div>
           <div className="nm-model-routes">
             {data.caex_model_routes!.map((group) => (
-              <article key={group.modelo} className="nm-model-route-card">
-                <header>
+              <details key={group.modelo} className="nm-model-route-card">
+                <summary>
                   <span className="nm-shift-equip-visual">
                     <EquipmentImage id="CAEX" model={group.modelo} />
                   </span>
@@ -580,7 +588,14 @@ export function CurrentShiftPage() {
                       {group.avg_distance_km != null ? ` / ${group.avg_distance_km.toLocaleString('es-CL', { maximumFractionDigits: 1 })} km/ciclo` : ''}
                     </small>
                   </div>
-                </header>
+                  <span
+                    className="nm-model-route-count"
+                    title={`${group.rutas.length} rutas`}
+                    aria-label={`${group.rutas.length} rutas`}
+                  >
+                    {group.rutas.length}
+                  </span>
+                </summary>
                 <div className="nm-model-route-list">
                   {group.rutas.map((ruta) => (
                     <div key={`${ruta.origen}-${ruta.destino}`} className="nm-model-route-line">
@@ -599,7 +614,7 @@ export function CurrentShiftPage() {
                     </div>
                   ))}
                 </div>
-              </article>
+              </details>
             ))}
           </div>
         </section>

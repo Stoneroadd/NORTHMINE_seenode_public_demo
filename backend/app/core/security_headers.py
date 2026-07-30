@@ -26,11 +26,12 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         script_inline = " 'unsafe-inline'" if not settings.is_production else ""
         response.headers["Content-Security-Policy"] = (
             "default-src 'self'; "
-            f"script-src 'self'{script_inline}{docs_cdn}; "
+            f"script-src 'self' blob:{script_inline}{docs_cdn}; "
             f"style-src 'self' 'unsafe-inline' https://fonts.googleapis.com{docs_cdn}; "
             "font-src 'self' https://fonts.gstatic.com; "
             "img-src 'self' data: https://*.basemaps.cartocdn.com https://*.tile.openstreetmap.org; "
             "connect-src 'self' https://api.anthropic.com; "
+            "worker-src 'self' blob:; "
             "object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none';"
         )
 

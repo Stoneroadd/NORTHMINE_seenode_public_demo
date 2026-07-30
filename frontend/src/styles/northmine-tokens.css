@@ -7719,6 +7719,473 @@
   font-size: 0.72rem;
 }
 
+/* Turno Actual: densidad operativa sin escalar la interfaz. */
+.current-shift-page {
+  --nm-shift-gap: 12px;
+  gap: var(--nm-shift-gap);
+}
+
+.current-shift-page .module-header {
+  grid-template-columns: 40px minmax(240px, 1fr) minmax(440px, auto);
+  gap: 12px;
+  padding: 12px 14px;
+}
+
+.current-shift-page .module-icon {
+  width: 40px;
+  height: 40px;
+}
+
+.current-shift-page .module-header h2 {
+  margin: 2px 0;
+  font-size: clamp(19px, 1.55vw, 24px);
+}
+
+.current-shift-page .module-header p {
+  font-size: 12px;
+}
+
+.current-shift-page .module-header-side {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.current-shift-page .module-header-side .command-button,
+.current-shift-page .module-meta {
+  min-height: 32px;
+  padding: 0 9px;
+  font-size: 11px;
+}
+
+.current-shift-page .kpi-grid.compact {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.current-shift-page .executive-kpi-card {
+  min-height: 0;
+  padding: 12px 14px;
+}
+
+.current-shift-page .executive-kpi-card .kpi-value {
+  margin: 10px 0 6px;
+  font-size: clamp(24px, 2vw, 31px);
+}
+
+.current-shift-page .executive-kpi-card .kpi-bottomline {
+  margin-top: 6px;
+}
+
+.current-shift-page .panel {
+  padding: 12px;
+}
+
+.current-shift-page .panel-header {
+  align-items: center;
+  margin-bottom: 9px;
+}
+
+.current-shift-page .panel-header h2 {
+  margin-top: 2px;
+  font-size: 16px;
+}
+
+.current-shift-page .panel-tag {
+  padding: 4px 8px;
+  font-size: 10px;
+}
+
+.nm-shift-overview-grid {
+  display: grid;
+  grid-template-columns: minmax(250px, 0.8fr) minmax(340px, 1fr) minmax(390px, 1.2fr);
+  gap: 12px;
+  align-items: stretch;
+}
+
+.nm-shift-narrative {
+  display: grid;
+  gap: 8px;
+}
+
+.nm-shift-narrative p {
+  margin: 0;
+  color: var(--nm-text-muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.nm-shift-narrative p.is-primary {
+  color: var(--nm-text);
+  font-weight: 650;
+}
+
+.nm-shift-hourly-list,
+.nm-shift-review-list,
+.nm-shift-equipment-list {
+  min-height: 0;
+  overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--cyan) 24%, transparent) transparent;
+}
+
+.nm-shift-hourly-list,
+.nm-shift-review-list {
+  max-height: 360px;
+}
+
+.nm-shift-equipment-list {
+  max-height: 420px;
+}
+
+.nm-shift-hour-row {
+  display: grid;
+  grid-template-columns: 48px minmax(80px, 1fr) 132px;
+  gap: 8px;
+  align-items: center;
+  min-height: 27px;
+  border-bottom: 1px solid color-mix(in srgb, var(--nm-border) 28%, transparent);
+}
+
+.nm-shift-hour-row:last-child {
+  border-bottom: 0;
+}
+
+.nm-shift-hour-row > strong {
+  color: var(--nm-text);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.nm-shift-hour-track {
+  height: 7px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.nm-shift-hour-track i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--nm-cyan), var(--nm-green));
+}
+
+.nm-shift-hour-meta {
+  color: var(--nm-muted);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.nm-shift-review-list {
+  display: grid;
+  gap: 6px;
+}
+
+.current-shift-page .nm-shift-alert-row {
+  grid-template-columns: 58px minmax(0, 1fr) auto;
+  gap: 9px;
+  min-height: 68px;
+  padding: 7px 8px;
+}
+
+.current-shift-page .nm-shift-alert-row .nm-shift-equip-visual {
+  width: 58px;
+  height: 46px;
+}
+
+.current-shift-page .nm-shift-alert-row h3 {
+  margin: 0;
+  font-size: 12px;
+}
+
+.current-shift-page .nm-shift-alert-row p,
+.current-shift-page .nm-shift-alert-row small {
+  display: block;
+  margin: 1px 0 0;
+  overflow: hidden;
+  color: var(--nm-text-dim);
+  font-size: 9.5px;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nm-shift-equipment-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.current-shift-page .nm-shift-equip-row {
+  grid-template-columns: 58px minmax(0, 1fr) auto;
+  gap: 9px;
+  min-height: 60px;
+  padding: 6px;
+}
+
+.current-shift-page .nm-shift-equip-row .nm-shift-equip-visual {
+  width: 58px;
+  height: 46px;
+}
+
+.current-shift-page .nm-shift-equip-main {
+  gap: 3px;
+}
+
+.current-shift-page .nm-shift-equip-meta {
+  font-size: 10px;
+}
+
+.nm-model-routes {
+  grid-template-columns: repeat(3, minmax(250px, 1fr));
+  gap: 8px;
+}
+
+.nm-model-route-card {
+  display: block;
+  padding: 0;
+  overflow: hidden;
+}
+
+.nm-model-route-card > summary {
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 70px;
+  padding: 8px 10px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.nm-model-route-card > summary::-webkit-details-marker {
+  display: none;
+}
+
+.nm-model-route-card > summary .nm-shift-equip-visual {
+  width: 58px;
+  height: 46px;
+}
+
+.nm-model-route-card > summary strong,
+.nm-model-route-card > summary small {
+  display: block;
+}
+
+.nm-model-route-count {
+  display: grid;
+  place-items: center;
+  min-width: 28px;
+  min-height: 28px;
+  border: 1px solid color-mix(in srgb, var(--cyan) 28%, transparent);
+  border-radius: 999px;
+  color: var(--cyan);
+  font-size: 11px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.nm-model-route-card[open] .nm-model-route-count {
+  background: color-mix(in srgb, var(--cyan) 12%, transparent);
+}
+
+.nm-model-route-card .nm-model-route-list {
+  max-height: 360px;
+  overflow: auto;
+  padding: 0 10px 8px;
+  scrollbar-width: thin;
+}
+
+.nm-model-route-card .nm-model-route-line {
+  padding: 6px 0;
+}
+
+/* Cabecera command center: una sola franja estable en escritorio. */
+@media (min-width: 1281px) {
+  .topbar {
+    grid-template-columns: minmax(220px, 1fr) auto minmax(480px, auto);
+    gap: 10px;
+    min-height: 58px;
+    padding: 8px 18px;
+  }
+
+  .topbar .eyebrow {
+    font-size: 9px;
+    letter-spacing: 0.08em;
+  }
+
+  .topbar h1 {
+    margin-top: 1px;
+    font-size: 17px;
+  }
+
+  .topbar-terminal-line {
+    margin-top: 2px;
+    font-size: 10px;
+  }
+
+  .topbar-actions {
+    gap: 6px;
+    flex-wrap: nowrap;
+  }
+
+  .topbar-actions .command-button,
+  .topbar-actions .status-pill,
+  .topbar-actions .user-chip {
+    min-height: 34px;
+  }
+
+  .topbar-actions .command-button {
+    padding-inline: 9px;
+  }
+
+  .topbar-actions .user-chip {
+    max-width: 230px;
+    padding: 6px 10px;
+  }
+}
+
+@media (max-width: 1500px) {
+  .topbar {
+    grid-template-columns: minmax(190px, 1fr) auto minmax(0, auto);
+    min-height: 62px;
+  }
+
+  .topbar > .status-strip {
+    flex-wrap: nowrap;
+    gap: 4px;
+  }
+
+  .topbar > .status-strip .status-pill {
+    justify-content: center;
+    width: 34px;
+    min-width: 34px;
+    min-height: 34px;
+    padding: 0;
+    overflow: hidden;
+    font-size: 0;
+  }
+
+  .topbar-actions .status-pill {
+    max-width: 145px;
+    overflow: hidden;
+    font-size: 9px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .topbar-actions .user-chip {
+    max-width: 195px;
+  }
+
+  .topbar-actions .command-button {
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 1280px) {
+  .nm-shift-overview-grid {
+    grid-template-columns: minmax(250px, 0.85fr) minmax(340px, 1.15fr);
+  }
+
+  .nm-shift-review-panel {
+    grid-column: 1 / -1;
+  }
+
+  .nm-shift-review-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    max-height: 280px;
+  }
+
+  .nm-model-routes {
+    grid-template-columns: repeat(2, minmax(280px, 1fr));
+  }
+}
+
+@media (max-width: 1100px) {
+  .current-shift-page .module-header {
+    grid-template-columns: 40px minmax(0, 1fr);
+  }
+
+  .current-shift-page .module-header-side {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+  }
+
+  .current-shift-page .kpi-grid.compact,
+  .nm-shift-equipment-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .nm-shift-overview-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .nm-shift-review-panel {
+    grid-column: auto;
+  }
+}
+
+@media (max-width: 700px) {
+  .current-shift-page {
+    --nm-shift-gap: 10px;
+  }
+
+  .current-shift-page .module-header,
+  .nm-shift-equipment-grid,
+  .nm-model-routes,
+  .nm-shift-review-list {
+    grid-template-columns: 1fr;
+  }
+
+  .current-shift-page .kpi-grid.compact {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .current-shift-page .executive-kpi-card {
+    min-height: 128px;
+    padding: 11px 12px;
+  }
+
+  .current-shift-page .executive-kpi-card .kpi-value {
+    font-size: clamp(21px, 6.2vw, 27px);
+  }
+
+  .current-shift-page .module-header-side {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+  }
+
+  .current-shift-page .module-header-side .module-meta {
+    grid-column: 1 / -1;
+  }
+
+  .current-shift-page .module-header-side .command-button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .current-shift-page .nm-shift-equip-row,
+  .current-shift-page .nm-shift-alert-row {
+    grid-template-columns: 54px minmax(0, 1fr);
+  }
+
+  .current-shift-page .nm-shift-equip-meta,
+  .current-shift-page .nm-shift-alert-row .panel-tag {
+    grid-column: 2;
+    justify-self: start;
+  }
+
+  .nm-shift-hour-row {
+    grid-template-columns: 42px minmax(70px, 1fr) 112px;
+  }
+}
+
 /* Graficos del modulo Averias (desglose XLS): entradas animadas, glow al
    hover, tooltips CSS y transiciones suaves al cambiar filtros. */
 .nm-avr-chart-card {

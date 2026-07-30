@@ -41,8 +41,24 @@ function errorMessage(t: MindMap3dT, error: unknown): string {
   return t.page_modulo_no_disponible
 }
 
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = window.setTimeout(() => reject(new Error('Tiempo de respuesta agotado')), timeoutMs)
+    promise.then(
+      value => {
+        window.clearTimeout(timer)
+        resolve(value)
+      },
+      error => {
+        window.clearTimeout(timer)
+        reject(error)
+      },
+    )
+  })
+}
+
 async function fetchOperationalMindMap(t: MindMap3dT): Promise<MindMapGraph> {
-  const results = await Promise.allSettled(sourceRequests.map(request => request.run()))
+  const results = await Promise.allSettled(sourceRequests.map(request => withTimeout(request.run(), 1800)))
   const sources: MindMapSources = { errors: [] }
 
   results.forEach((result, index) => {
@@ -238,7 +254,7 @@ function MindMapLiteScene({
 export function OperationalMindMap3D() {
   const t = useModuleT(mindmap3dT)
   const [viewMode, setViewMode] = useState<MindMapViewMode>('CONSTELACION')
-  const [quality, setQuality] = useState<MindMapQuality>('ALTA')
+  const [quality, setQuality] = useState<MindMapQuality>('MEDIA')
   const [paused, setPaused] = useState(false)
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>('northmine-root')
   const [focusedNodeId, setFocusedNodeId] = useState<string | null>(null)
