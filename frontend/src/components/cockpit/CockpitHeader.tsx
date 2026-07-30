@@ -2,6 +2,9 @@ import { Clock3, Database, Download, RefreshCw, ShieldCheck } from 'lucide-react
 import type { CockpitViewModel } from './cockpitModel'
 import { useModuleT } from '../../i18n/useModuleT'
 import { cockpitT } from '../../i18n/modules/cockpit'
+import { Badge, type BadgeProps } from '../ui/badge'
+import { Button } from '../ui/button'
+import { cn } from '@/lib/utils'
 
 function dateLabel(value: string) {
   try {
@@ -11,11 +14,11 @@ function dateLabel(value: string) {
   }
 }
 
-function statusTone(status: string) {
+function statusVariant(status: string): NonNullable<BadgeProps['variant']> {
   const normalized = status.toUpperCase()
-  if (normalized.includes('CONNECTED') || normalized.includes('OK')) return 'is-connected'
-  if (normalized.includes('STALE') || normalized.includes('CACHE')) return 'is-warning'
-  return 'is-error'
+  if (normalized.includes('CONNECTED') || normalized.includes('OK')) return 'success'
+  if (normalized.includes('STALE') || normalized.includes('CACHE')) return 'warning'
+  return 'critical'
 }
 
 export function CockpitHeader({
@@ -33,6 +36,7 @@ export function CockpitHeader({
 }) {
   const t = useModuleT(cockpitT)
   const modeLabel = data.isDemo ? t.header_modo_demo : data.stale ? t.header_cache_real : t.header_datos_reales
+  const modeVariant: NonNullable<BadgeProps['variant']> = data.isDemo ? 'info' : data.stale ? 'warning' : 'success'
   const dataStatusLabel = data.isDemo
     ? t.header_datos_sinteticos
     : `${data.sourceSystem}: ${data.dataSourceStatus}`
@@ -40,37 +44,50 @@ export function CockpitHeader({
   const freshness = data.lastRecordAgeMin === null ? null : `${data.lastRecordAgeMin} min`
 
   return (
-    <header className="nmcp-header">
-      <div className="nmcp-title-block">
-        <span>NORTHMINE</span>
-        <h1>{t.header_title}</h1>
-        <p>{t.header_subtitle}</p>
+    <header className="flex flex-col gap-4 border-b border-border-dim px-6 py-5 lg:flex-row lg:items-start lg:justify-between">
+      <div className="flex shrink-0 flex-col gap-0.5">
+        <span className="text-xs font-semibold tracking-[0.08em] text-signal">NORTHMINE</span>
+        <h1 className="font-industrial text-2xl font-semibold tracking-tight text-text-primary">{t.header_title}</h1>
+        <p className="text-sm text-text-secondary">{t.header_subtitle}</p>
       </div>
 
-      <div className="nmcp-header-status" aria-label={t.header_status_aria}>
-        <span className={`nmcp-status-pill ${statusTone(data.backendStatus)}`}>
-          <ShieldCheck size={14} /> {t.header_backend(data.backendStatus)}
-        </span>
-        <span className={`nmcp-status-pill ${statusTone(data.dataSourceStatus)}`}>
-          <Database size={14} /> {dataStatusLabel}
-        </span>
-        <span><Clock3 size={14} /> {dateLabel(data.generatedAt)}</span>
-        <span>{t.header_ultimo_registro} <strong>{data.lastRealRecordLabel}</strong></span>
-        <span className={`nmcp-mode-pill ${data.isDemo ? 'is-demo' : data.stale ? 'is-stale' : 'is-real'}`}>
-          <Database size={14} /> {modeLabel}
-        </span>
-        <span>{t.header_calidad} <strong>{quality}</strong></span>
-        {freshness && <span>{t.header_frescura} <strong>{freshness}</strong></span>}
-        <span>{t.header_api} <strong>{data.apiVersion}</strong></span>
+      <div className="flex flex-wrap items-center gap-2.5 text-xs text-text-secondary" aria-label={t.header_status_aria}>
+        <Badge variant={statusVariant(data.backendStatus)}>
+          <ShieldCheck size={13} /> {t.header_backend(data.backendStatus)}
+        </Badge>
+        <Badge variant={statusVariant(data.dataSourceStatus)}>
+          <Database size={13} /> {dataStatusLabel}
+        </Badge>
+        <span className="inline-flex items-center gap-1"><Clock3 size={13} /> {dateLabel(data.generatedAt)}</span>
+        <span>{t.header_ultimo_registro} <strong className="text-text-primary">{data.lastRealRecordLabel}</strong></span>
+        <Badge variant={modeVariant}>
+          <Database size={13} /> {modeLabel}
+        </Badge>
+        <span>{t.header_calidad} <strong className="text-text-primary">{quality}</strong></span>
+        {freshness && <span>{t.header_frescura} <strong className="text-text-primary">{freshness}</strong></span>}
+        <span>{t.header_api} <strong className="text-text-primary">{data.apiVersion}</strong></span>
         {onDownloadReport && (
-          <button className="nmcp-report-button" type="button" onClick={onDownloadReport} aria-label="Descargar informe ejecutivo" title="Descargar informe ejecutivo" disabled={downloadingReport}>
-            <Download size={16} className={downloadingReport ? 'is-spinning' : ''} />
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={onDownloadReport}
+            aria-label="Descargar informe ejecutivo"
+            title="Descargar informe ejecutivo"
+            disabled={downloadingReport}
+          >
+            <Download size={14} className={cn(downloadingReport && 'animate-spin')} />
             <span>{downloadingReport ? 'Generando...' : 'Informe'}</span>
-          </button>
+          </Button>
         )}
-        <button className="nmcp-icon-button" type="button" onClick={onRefresh} aria-label={t.header_refresh_aria} disabled={fetching}>
-          <RefreshCw size={16} className={fetching ? 'is-spinning' : ''} />
-        </button>
+        <Button
+          variant="secondary"
+          size="icon"
+          onClick={onRefresh}
+          aria-label={t.header_refresh_aria}
+          disabled={fetching}
+        >
+          <RefreshCw size={15} className={cn(fetching && 'animate-spin')} />
+        </Button>
       </div>
     </header>
   )

@@ -1,9 +1,14 @@
 import { motion, useReducedMotion } from 'framer-motion'
 import type { LucideIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
+import { cva } from 'class-variance-authority'
 import { useModuleT } from '../../i18n/useModuleT'
 import { cockpitT } from '../../i18n/modules/cockpit'
 import { useAnimatedNumber } from '../../hooks/useAnimatedNumber'
+import { Card } from '../ui/card'
+import { cn } from '@/lib/utils'
+
+type Tone = 'green' | 'cyan' | 'yellow' | 'orange' | 'red' | 'purple' | 'neutral'
 
 interface Props {
   icon: LucideIcon
@@ -11,12 +16,59 @@ interface Props {
   value: string
   subtext?: string
   indicator?: string
-  tone?: 'green' | 'cyan' | 'yellow' | 'orange' | 'red' | 'purple' | 'neutral'
+  tone?: Tone
   progress?: number | null
   sparkline?: number[]
   unavailable?: boolean
   children?: ReactNode
 }
+
+// Un unico acento por KPI (icono, barra, sparkline) — nunca borde de color;
+// el estado se comunica con causa (DESIGN.md: La Regla del Color con Causa).
+const toneChip = cva('flex h-7 w-7 items-center justify-center rounded-md', {
+  variants: {
+    tone: {
+      green: 'bg-success/15 text-success',
+      cyan: 'bg-info/15 text-info',
+      yellow: 'bg-warning/15 text-warning',
+      orange: 'bg-alert/15 text-alert',
+      red: 'bg-critical/15 text-critical',
+      purple: 'bg-brand-violet/15 text-brand-violet',
+      neutral: 'bg-elevated text-text-secondary',
+    },
+  },
+  defaultVariants: { tone: 'neutral' },
+})
+
+const toneAccent = cva('', {
+  variants: {
+    tone: {
+      green: 'text-success',
+      cyan: 'text-info',
+      yellow: 'text-warning',
+      orange: 'text-alert',
+      red: 'text-critical',
+      purple: 'text-brand-violet',
+      neutral: 'text-text-secondary',
+    },
+  },
+  defaultVariants: { tone: 'neutral' },
+})
+
+const toneProgressFill = cva('h-full rounded-full transition-[width] duration-300', {
+  variants: {
+    tone: {
+      green: 'bg-success',
+      cyan: 'bg-info',
+      yellow: 'bg-warning',
+      orange: 'bg-alert',
+      red: 'bg-critical',
+      purple: 'bg-brand-violet',
+      neutral: 'bg-text-secondary',
+    },
+  },
+  defaultVariants: { tone: 'neutral' },
+})
 
 function Sparkline({ values, ariaLabel }: { values: number[]; ariaLabel: string }) {
   if (values.length < 2) return null
@@ -30,8 +82,8 @@ function Sparkline({ values, ariaLabel }: { values: number[]; ariaLabel: string 
   }).join(' ')
 
   return (
-    <svg className="nmcp-kpi-spark" viewBox="0 0 100 32" role="img" aria-label={ariaLabel}>
-      <polyline points={points} fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+    <svg className="h-8 w-full" viewBox="0 0 100 32" role="img" aria-label={ariaLabel}>
+      <polyline points={points} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   )
 }
@@ -68,7 +120,7 @@ function AnimatedMetric({ value, reducedMotion }: { value: string; reducedMotion
   if (!parsed) return <>{value}</>
 
   return (
-    <span key={value} className="nmcp-animated-number">
+    <span key={value}>
       {animated.toLocaleString('es-CL', {
         minimumFractionDigits: parsed.decimalDigits,
         maximumFractionDigits: parsed.decimalDigits,
@@ -94,31 +146,52 @@ export function KpiCard({
   const reduceMotion = useReducedMotion()
 
   return (
-    <motion.article
-      className={`nmcp-kpi-card nmcp-tone-${tone} ${unavailable ? 'is-unavailable' : ''}`}
+    <motion.div
       initial={reduceMotion ? false : { opacity: 0, y: 10 }}
       animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
-      whileHover={reduceMotion ? undefined : { y: -4, scale: 1.01 }}
       transition={{ duration: 0.28, ease: 'easeOut' }}
     >
-      <div className="nmcp-kpi-primary">
-        <div className="nmcp-kpi-top">
-          <span className="nmcp-kpi-icon" aria-hidden="true"><Icon size={16} /></span>
-          <span className="nmcp-kpi-label">{label}</span>
+      <Card
+        className={cn(
+          'flex flex-col gap-3 p-5 hover:shadow-[0_4px_16px_rgba(0,0,0,0.35)]',
+          unavailable && 'opacity-60'
+        )}
+      >
+        <div className="flex items-center gap-2.5">
+          <span className={toneChip({ tone })} aria-hidden="true">
+            <Icon size={15} />
+          </span>
+          <span className="text-xs font-medium tracking-wide text-text-secondary">{label}</span>
         </div>
-        <strong className="nmcp-kpi-value"><AnimatedMetric value={value} reducedMotion={reduceMotion} /></strong>
-        <div className="nmcp-kpi-meta">
-          {subtext && <span>{subtext}</span>}
-          {indicator && <em>{indicator}</em>}
-        </div>
-        {typeof progress === 'number' && (
-          <div className="nmcp-progress" aria-label={t.kpi_card_progress_aria(Math.round(progress))}>
-            <i style={{ width: `${Math.max(0, Math.min(progress, 100))}%` }} />
+
+        <strong className="font-industrial-mono text-2xl font-semibold leading-none text-text-primary">
+          <AnimatedMetric value={value} reducedMotion={reduceMotion} />
+        </strong>
+
+        {(subtext || indicator) && (
+          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 text-xs text-text-secondary">
+            {subtext && <span>{subtext}</span>}
+            {indicator && <em className={cn('not-italic font-medium', toneAccent({ tone }))}>{indicator}</em>}
           </div>
         )}
-        {sparkline && <Sparkline values={sparkline} ariaLabel={t.kpi_card_sparkline_aria} />}
-      </div>
-      {children}
-    </motion.article>
+
+        {typeof progress === 'number' && (
+          <div
+            className="h-1.5 w-full overflow-hidden rounded-full bg-elevated"
+            aria-label={t.kpi_card_progress_aria(Math.round(progress))}
+          >
+            <div className={toneProgressFill({ tone })} style={{ width: `${Math.max(0, Math.min(progress, 100))}%` }} />
+          </div>
+        )}
+
+        {sparkline && (
+          <div className={toneAccent({ tone })}>
+            <Sparkline values={sparkline} ariaLabel={t.kpi_card_sparkline_aria} />
+          </div>
+        )}
+
+        {children}
+      </Card>
+    </motion.div>
   )
 }

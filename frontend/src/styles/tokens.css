@@ -8147,13 +8147,7 @@ button.alert-metric-card {
   letter-spacing: 0.04em !important;
   line-height: 1 !important;
   white-space: nowrap;
-  color: transparent !important;
-  background: linear-gradient(135deg, var(--cyan) 0%, var(--accent-pop) 30%, var(--cyan) 60%, var(--cyan) 100%);
-  background-size: 200% auto;
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: brandShimmer 6s linear infinite;
+  color: #F4F7FA !important;
 }
 
 .brand-intelligence {
@@ -8402,11 +8396,7 @@ html[data-theme="light"] .mine-pit-scene {
 
 html[data-theme="light"] .login-brand-name,
 html[data-theme="minimal"] .login-brand-name {
-  background: linear-gradient(135deg, #006B3C 0%, #004D8C 100%);
-  background-size: 200% auto;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #0f172a !important;
   filter: none;
 }
 
@@ -9028,10 +9018,6 @@ input[type="date"] {
   line-height: 1.08 !important;
   padding: 0.08em 0 0.12em !important;
   overflow: visible !important;
-  background: linear-gradient(110deg, #f8fafc 15%, #b9e9fa 58%, #86efac 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
   text-shadow: none;
 }
 
@@ -12536,13 +12522,7 @@ body::before {
 .module-header h2 {
   color: var(--text-primary);
   text-rendering: optimizeLegibility;
-  text-shadow: 0 0 20px color-mix(in srgb, var(--accent) 28%, transparent);
   letter-spacing: -0.01em;
-  transition: text-shadow 220ms ease;
-}
-
-.module-header:hover h2 {
-  text-shadow: 0 0 26px color-mix(in srgb, var(--accent) 42%, transparent);
 }
 
 .panel-header h2 {

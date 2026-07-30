@@ -11,7 +11,7 @@ const COLOR_MAP: Record<Color, string> = {
   orange: 'var(--alert-orange)',
   yellow: 'var(--warn-yellow)',
   red:    'var(--danger-red)',
-  purple: '#BF5FFF',
+  purple: '#C98BFF',
   white:  'rgba(255,255,255,0.85)',
 }
 const GLOW_MAP: Record<Color, string> = {
@@ -20,7 +20,7 @@ const GLOW_MAP: Record<Color, string> = {
   orange: 'var(--alert-glow)',
   yellow: '0 0 20px rgba(255,209,0,0.4)',
   red:    '0 0 20px rgba(255,45,85,0.4)',
-  purple: '0 0 20px rgba(191,95,255,0.4)',
+  purple: '0 0 20px rgba(201,139,255,0.4)',
   white:  'none',
 }
 

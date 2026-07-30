@@ -1,0 +1,58 @@
+/*
+ * Tailwind v4, capa por capa (sin Preflight): la migracion incremental
+ * conviven con las paginas que aun dependen del cascade de tokens.css /
+ * themes.css. Reactivar Preflight solo cuando toda la app este migrada.
+ */
+/* Sin layer(): el resto de la app (tokens.css/northmine-tokens.css) no usa
+   @layer, y las reglas sin capa siempre ganan sobre las reglas en capa sin
+   importar especificidad (CSS Cascade Layers). Envolver las utilidades de
+   Tailwind en layer(utilities) las perdia silenciosamente contra reglas
+   legacy como "button { color: inherit }". Sin layer(), Tailwind entra al
+   mismo nivel que el resto y gana por especificidad/orden normal. */
+@import "tailwindcss/theme.css";
+@import "tailwindcss/utilities.css";
+
+@theme {
+  /* Puente 1:1 a themes.css: los valores son referencias, no duplicados,
+     asi que el cambio de tema (html[data-theme]) sigue funcionando para
+     cualquier utilidad Tailwind nueva (bg-void, text-primary, etc). */
+  --color-void: var(--bg-void);
+  --color-deep: var(--bg-deep);
+  --color-panel: var(--bg-panel);
+  --color-card: var(--bg-card);
+  --color-elevated: var(--bg-elevated);
+  --color-hover: var(--bg-hover);
+
+  --color-border-dim: var(--border-dim);
+  --color-border-mid: var(--border-mid);
+  --color-border-bright: var(--border-bright);
+
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-tertiary);
+  --color-text-disabled: var(--text-disabled);
+
+  --color-success: var(--op-green);
+  --color-info: var(--data-cyan);
+  --color-warning: var(--warn-yellow);
+  --color-critical: var(--danger-red);
+  --color-alert: var(--alert-orange);
+
+  /* Direccion "Sala de Control" (DESIGN.md): acento interactivo unico +
+     violeta de marca reservado para momentos puntuales. Este repo ya
+     define --vision-night como violeta reactivo por tema; se reusa en
+     vez de fijar un hex estatico. */
+  --color-signal: var(--data-cyan);
+  --color-signal-dim: var(--accent-pop);
+  --color-brand-violet: var(--vision-night);
+
+  /* Par tipografico dedicado a la superficie de referencia (Decision
+     Cockpit). El resto de la app sigue usando --font-display hasta que
+     una fase futura unifique tipografia global. */
+  --font-industrial: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-industrial-mono: 'IBM Plex Mono', ui-monospace, monospace;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+}

@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import './styles/themes.css'
 import './styles/tokens.css'
 import './styles/northmine-tokens.css'
+import './styles/tailwind.css'
 import App from './App'
 import { FAST_PUBLIC_DEMO } from './demo/fastDemo'
 

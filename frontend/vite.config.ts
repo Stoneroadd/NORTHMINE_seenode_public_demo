@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import tailwindcss from '@tailwindcss/vite'
 import { fileURLToPath } from 'url'
 import path from 'path'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -10,10 +11,11 @@ const localNodeModules = path.resolve(__dirname, 'node_modules')
 const apiProxyTarget = process.env.VITE_API_PROXY_TARGET ?? 'http://localhost:8001'
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), tailwindcss()],
   resolve: {
     dedupe: ['react', 'react-dom'],
     alias: [
+      { find: '@', replacement: path.resolve(__dirname, 'src') },
       { find: 'react-dom/client', replacement: `${localNodeModules}/react-dom/client.js` },
       { find: 'react/jsx-dev-runtime', replacement: `${localNodeModules}/react/jsx-dev-runtime.js` },
       { find: 'react/jsx-runtime', replacement: `${localNodeModules}/react/jsx-runtime.js` },

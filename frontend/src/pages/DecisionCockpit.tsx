@@ -37,6 +37,7 @@ import {
 } from '../demo/fastDemo'
 import { useModuleT } from '../i18n/useModuleT'
 import { cockpitT, type CockpitT } from '../i18n/modules/cockpit'
+import { Tabs, TabsList, TabsTrigger } from '../components/ui/tabs'
 
 function availabilityLabel(value: string, t: CockpitT): string {
   if (value === 'available') return t.availability_real
@@ -105,19 +106,15 @@ function SectionNav() {
   }
 
   return (
-    <nav className="nmcp-section-nav" aria-label={t.section_nav_aria}>
-      {COCKPIT_SECTION_IDS.map((id) => (
-        <button
-          key={id}
-          type="button"
-          className={activeSection === id ? 'is-active' : ''}
-          aria-current={activeSection === id ? 'true' : undefined}
-          onClick={() => goToSection(id)}
-        >
-          {sectionLabel[id]}
-        </button>
-      ))}
-    </nav>
+    <Tabs value={activeSection} onValueChange={goToSection} aria-label={t.section_nav_aria}>
+      <TabsList className="sticky top-0 z-10 flex-wrap justify-start overflow-x-auto backdrop-blur">
+        {COCKPIT_SECTION_IDS.map((id) => (
+          <TabsTrigger key={id} value={id}>
+            {sectionLabel[id]}
+          </TabsTrigger>
+        ))}
+      </TabsList>
+    </Tabs>
   )
 }
 
@@ -135,15 +132,28 @@ function CompactFilters({
   onShiftChange: (value: string) => void
 }) {
   const t = useModuleT(cockpitT)
+  const fieldLabel = 'text-xs font-medium tracking-wide text-text-secondary'
+  const fieldControl =
+    'h-9 rounded-md border border-border-mid bg-panel px-3 text-sm text-text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal'
   return (
-    <section className="nmcp-filters" aria-label={t.filters_aria}>
-      <label>
-        <span>{t.filters_fecha}</span>
-        <input type="date" value={selectedDate} onChange={(event) => onDateChange(event.target.value)} />
+    <section className="flex flex-wrap items-end gap-4" aria-label={t.filters_aria}>
+      <label className="flex flex-col gap-1">
+        <span className={fieldLabel}>{t.filters_fecha}</span>
+        <input
+          type="date"
+          className={fieldControl}
+          value={selectedDate}
+          onChange={(event) => onDateChange(event.target.value)}
+        />
       </label>
-      <label>
-        <span>{t.filters_turno}</span>
-        <select value={selectedShift} onChange={(event) => onShiftChange(event.target.value)} aria-label={t.filters_turno_resuelto_aria(resolvedShiftLabel)}>
+      <label className="flex flex-col gap-1">
+        <span className={fieldLabel}>{t.filters_turno}</span>
+        <select
+          className={fieldControl}
+          value={selectedShift}
+          onChange={(event) => onShiftChange(event.target.value)}
+          aria-label={t.filters_turno_resuelto_aria(resolvedShiftLabel)}
+        >
           <option value="ACTUAL">{t.filters_turno_actual}</option>
           <option value="DIA">{t.filters_turno_dia}</option>
           <option value="NOCHE">{t.filters_turno_noche}</option>
