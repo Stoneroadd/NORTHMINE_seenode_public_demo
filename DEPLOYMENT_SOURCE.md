@@ -24,3 +24,13 @@ label it as DEMO. It must not claim WENCO or a real database connection.
 
 Shared product improvements should be committed first in `NORTHREACT`, then
 ported here with a separate validated commit.
+
+## Deploy note (2026-07-30)
+
+Commit `8ec02fe` (KpiHero/StatRow density fix for Decision Cockpit) was pushed
+to `main` but the live `northmine-seenode-public-demo-3` service kept serving
+an older bundle (`DecisionCockpit-DBohM2su.js`, confirmed via direct bundle
+inspection to predate this port — 0 occurrences of the `progressbar` marker
+this fix introduces). This commit exists to force a fresh push/build signal;
+if the service is still stale after this, the block is on Seenode's build
+pipeline itself and needs a manual clean rebuild from the dashboard.
