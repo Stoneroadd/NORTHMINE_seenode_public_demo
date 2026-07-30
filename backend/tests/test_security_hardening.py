@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import pytest
 
+from app.core.rate_limit import limiter
+
 
 def test_operator_cannot_access_supervisor_endpoints(client, login_as_operador):
     headers = {"Authorization": f"Bearer {login_as_operador['access_token']}"}
@@ -31,19 +33,33 @@ def test_token_blacklist_after_logout(client, login_as_admin):
 
 
 def test_password_history_mining_requirement(client, login_as_admin):
-    headers = {"Authorization": f"Bearer {login_as_admin['access_token']}"}
+    # Cada cambio de password bumpea auth_version (invalida el token vigente
+    # a proposito, ver core/security backport), asi que el token usado para
+    # el SIGUIENTE cambio debe venir de un login posterior al cambio anterior,
+    # no reutilizar el token original en toda la secuencia.
+    token = login_as_admin["access_token"]
 
     passwords = [f"Pala202{i}!!" for i in range(1, 6)]
     current = "admin"
 
     for i, new_pw in enumerate(passwords):
+        headers = {"Authorization": f"Bearer {token}"}
         resp = client.post("/api/auth/change-password", headers=headers, json={
             "current_password": current,
             "new_password": new_pw,
         })
         assert resp.status_code == 200, f"Failed on change {i}: {resp.text}"
         current = new_pw
+        # El test verifica profundidad de historial de passwords, no rate
+        # limiting (eso ya lo cubre test_rate_limit_login_enforced) -- se
+        # resetea el limiter antes de cada re-login para no acumular contra
+        # el limite de 5/min de /api/auth/login en esta misma secuencia.
+        limiter.reset()
+        login_resp = client.post("/api/auth/login", json={"username": "admin", "password": current})
+        assert login_resp.status_code == 200, f"Re-login failed after change {i}: {login_resp.text}"
+        token = login_resp.json()["access_token"]
 
+    headers = {"Authorization": f"Bearer {token}"}
     resp = client.post("/api/auth/change-password", headers=headers, json={
         "current_password": current,
         "new_password": "Pala2021!!",

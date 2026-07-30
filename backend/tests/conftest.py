@@ -13,6 +13,14 @@ import os
 # la seguridad real (nunca se usa en produccion, solo en tests).
 os.environ.setdefault("BCRYPT_ROUNDS", "4")
 
+# ENVIRONMENT tambien debe fijarse ANTES de "from app.main import app": config.py
+# omite el valor -> "production" a proposito (fail-closed si un despliegue real
+# olvida configurarlo), pero eso hace que crypto.py aborte el arranque exigiendo
+# AUDIT_ENCRYPTION_KEY si el proceso de tests no fijo ENVIRONMENT de antemano.
+# El fixture _init_db de mas abajo tambien lo fija, pero corre DESPUES de este
+# import de modulo, demasiado tarde para el chequeo de crypto.py.
+os.environ.setdefault("ENVIRONMENT", "testing")
+
 from typing import Any, Generator
 
 import pytest
