@@ -70,12 +70,12 @@ function statusClass(value: string | undefined) {
 }
 
 function shouldUseLightMap() {
-  if (typeof window === 'undefined') return FAST_PUBLIC_DEMO
-  if (!FAST_PUBLIC_DEMO) return false
-  return (
-    window.matchMedia('(max-width: 900px)').matches ||
-    window.matchMedia('(hover: none) and (pointer: coarse)').matches
-  )
+  if (typeof window === 'undefined' || !FAST_PUBLIC_DEMO) return false
+  const width = window.innerWidth
+  const smallViewport = width <= 640
+  const narrowTouchViewport = width <= 820 && window.matchMedia('(hover: none) and (pointer: coarse)').matches
+  // Touch capability alone must not downgrade desktop browsers with a large viewport.
+  return smallViewport || narrowTouchViewport
 }
 
 function useLightMapPreference() {
@@ -84,10 +84,10 @@ function useLightMapPreference() {
   useEffect(() => {
     if (typeof window === 'undefined' || !FAST_PUBLIC_DEMO) return undefined
     const queries = [
-      window.matchMedia('(max-width: 900px)'),
-      window.matchMedia('(hover: none) and (pointer: coarse)'),
+      window.matchMedia('(max-width: 640px)'),
+      window.matchMedia('(max-width: 820px) and (hover: none) and (pointer: coarse)'),
     ]
-    const sync = () => setLightMap(queries.some(query => query.matches))
+    const sync = () => setLightMap(shouldUseLightMap())
     sync()
     queries.forEach(query => query.addEventListener('change', sync))
     return () => queries.forEach(query => query.removeEventListener('change', sync))
@@ -344,17 +344,20 @@ export function OperationalMindMap3D() {
           <p>{t.page_desc}</p>
         </div>
         <div className="nm-map-status-strip">
-          <span className={`nm-map-status-pill ${statusClass(graph.metadata.backend_status)}`}>
-            {t.page_backend} <strong>{graph.metadata.backend_status ?? t.page_conectado_fallback}</strong>
+          <span className={`nm-map-status-pill ${statusClass(FAST_PUBLIC_DEMO ? 'DEMO LOCAL' : graph.metadata.backend_status)}`}>
+            {t.page_backend} <strong>{FAST_PUBLIC_DEMO ? 'DEMO LOCAL' : graph.metadata.backend_status ?? t.page_conectado_fallback}</strong>
           </span>
-          <span className={`nm-map-status-pill ${statusClass(graph.metadata.data_source_status)}`}>
-            {t.page_wenco} <strong>{graph.metadata.data_source_status ?? graph.metadata.source_system ?? 'NORTHMINE'}</strong>
+          <span className={`nm-map-status-pill ${statusClass(FAST_PUBLIC_DEMO ? 'DEMO SIN WENCO' : graph.metadata.data_source_status)}`}>
+            {t.page_wenco} <strong>{FAST_PUBLIC_DEMO ? 'SIN WENCO' : graph.metadata.data_source_status ?? graph.metadata.source_system ?? 'NORTHMINE'}</strong>
           </span>
           <span className={`nm-map-status-pill ${statusClass(graph.data_source)}`}>
             {t.page_datos} <strong>{graph.data_source}</strong>
           </span>
           <span className="nm-map-status-pill">
             {t.page_actualizado} <strong>{new Date(graph.generated_at).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })}</strong>
+          </span>
+          <span className={`nm-map-status-pill ${FAST_PUBLIC_DEMO ? 'is-demo' : ''}`}>
+            Módulos <strong>{graph.metadata.modules_loaded}/{graph.metadata.modules_requested}</strong>
           </span>
           <button
             className="nm-map-refresh-button"
@@ -370,7 +373,7 @@ export function OperationalMindMap3D() {
         </div>
       </header>
 
-      {graph.status !== 'OK' && (
+      {!FAST_PUBLIC_DEMO && graph.status !== 'OK' && (
         <div className="nm-map-warning">
           <AlertTriangle size={16} />
           <span>
@@ -397,7 +400,7 @@ export function OperationalMindMap3D() {
             onAlertTour={handleAlertTour}
           />
           {lightMap && liteScene ? liteScene : (
-            <Suspense fallback={liteScene}>
+            <Suspense fallback={<div className="nm-map-scene nm-map-scene-loading"><Network size={28} /><strong>{t.page_loading_titulo}</strong><span>{t.page_loading_desc}</span></div>}>
               <LazyMindMapScene
                 graph={graph}
                 viewMode={viewMode}

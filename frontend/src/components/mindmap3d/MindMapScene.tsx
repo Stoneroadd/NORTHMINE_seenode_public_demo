@@ -30,6 +30,7 @@ interface SceneProps extends Props {
   nodes: LayoutNode[]
   edges: LayoutEdge[]
   reducedMotion: boolean
+  tabVisible: boolean
   hoveredNodeId: string | null
   onHoverNode: (node: LayoutNode | null) => void
   onHoverMove: (x: number, y: number) => void
@@ -45,6 +46,44 @@ function canUseWebGL(): boolean {
   } catch {
     return false
   }
+}
+
+function useTabVisible(): boolean {
+  const [visible, setVisible] = useState(() => (typeof document === 'undefined' ? true : !document.hidden))
+  useEffect(() => {
+    const handleVisibility = () => setVisible(!document.hidden)
+    document.addEventListener('visibilitychange', handleVisibility)
+    return () => document.removeEventListener('visibilitychange', handleVisibility)
+  }, [])
+  return visible
+}
+
+// Giro lento del rajo (vuelta completa cada ~3 min): protagonismo visual sin
+// marear ni competir con la lectura de nodos. Gira el grupo que contiene la
+// geometria, nunca la camara -- OrbitControls sigue siendo la unica forma de
+// navegar la escena, evitando rotaciones simultaneas que desorienten.
+const PIT_ROTATION_SPEED = 0.035
+
+function RotatingPit({
+  enabled,
+  radius,
+  position,
+}: {
+  enabled: boolean
+  radius: number
+  position: [number, number, number]
+}) {
+  const groupRef = useRef<THREE.Group | null>(null)
+  useFrame((_, delta) => {
+    if (enabled && groupRef.current) {
+      groupRef.current.rotation.y += delta * PIT_ROTATION_SPEED
+    }
+  })
+  return (
+    <group ref={groupRef} position={position}>
+      <PitShell radius={radius} position={[0, 0, 0]} />
+    </group>
+  )
 }
 
 function qualityBudget(quality: MindMapQuality, nodeCount: number) {
@@ -364,11 +403,15 @@ function CameraRig({
   focusedNodeId,
   selectedNodeId,
   resetSignal,
+  onInteractionStart,
+  onInteractionEnd,
 }: {
   nodes: LayoutNode[]
   focusedNodeId: string | null
   selectedNodeId: string | null
   resetSignal: number
+  onInteractionStart: () => void
+  onInteractionEnd: () => void
 }) {
   const controlsRef = useRef<OrbitControlsImpl | null>(null)
   const { camera } = useThree()
@@ -402,6 +445,8 @@ function CameraRig({
       panSpeed={0.72}
       minDistance={110}
       maxDistance={860}
+      onStart={onInteractionStart}
+      onEnd={onInteractionEnd}
     />
   )
 }
@@ -452,11 +497,13 @@ function SceneEnvironment({
   nodeCount,
   paused,
   reducedMotion,
+  pitRotationEnabled,
 }: {
   quality: MindMapQuality
   nodeCount: number
   paused: boolean
   reducedMotion: boolean
+  pitRotationEnabled: boolean
 }) {
   const { scene, gl } = useThree()
   const budget = qualityBudget(quality, nodeCount)
@@ -499,7 +546,7 @@ function SceneEnvironment({
       />
       <Nebula paused={paused} reducedMotion={reducedMotion} />
       <polarGridHelper args={[430, 16, 9, 64, '#1B4D6B', '#0D2740']} position={[0, -210, 0]} />
-      {budget.pit && <PitShell radius={300} position={[0, -206, 0]} />}
+      {budget.pit && <RotatingPit enabled={pitRotationEnabled} radius={300} position={[0, -206, 0]} />}
     </>
   )
 }
@@ -515,6 +562,7 @@ function GraphScene(props: SceneProps) {
     resetSignal,
     onSelectNode,
     reducedMotion,
+    tabVisible,
     hoveredNodeId,
     onHoverNode,
     onHoverMove,
@@ -522,9 +570,34 @@ function GraphScene(props: SceneProps) {
   const budget = qualityBudget(quality, nodes.length)
   const selectedNode = nodes.find(node => node.id === selectedNodeId)
 
+  // El giro automatico del rajo se pausa mientras el usuario arrastra la
+  // camara (OrbitControls onStart/onEnd) y se reanuda ~900ms despues de
+  // soltar -- "reanudarse de forma controlada", nunca de golpe.
+  const [interacting, setInteracting] = useState(false)
+  const interactionTimeoutRef = useRef<number | undefined>(undefined)
+
+  const handleInteractionStart = () => {
+    window.clearTimeout(interactionTimeoutRef.current)
+    setInteracting(true)
+  }
+  const handleInteractionEnd = () => {
+    window.clearTimeout(interactionTimeoutRef.current)
+    interactionTimeoutRef.current = window.setTimeout(() => setInteracting(false), 900)
+  }
+
+  useEffect(() => () => window.clearTimeout(interactionTimeoutRef.current), [])
+
+  const pitRotationEnabled = !paused && !reducedMotion && !interacting && tabVisible
+
   return (
     <>
-      <SceneEnvironment quality={quality} nodeCount={nodes.length} paused={paused} reducedMotion={reducedMotion} />
+      <SceneEnvironment
+        quality={quality}
+        nodeCount={nodes.length}
+        paused={paused}
+        reducedMotion={reducedMotion}
+        pitRotationEnabled={pitRotationEnabled}
+      />
       {edges.map((edge, index) => (
         <EdgeObject
           key={edge.id}
@@ -550,7 +623,14 @@ function GraphScene(props: SceneProps) {
           onHoverMove={onHoverMove}
         />
       ))}
-      <CameraRig nodes={nodes} focusedNodeId={focusedNodeId} selectedNodeId={selectedNodeId} resetSignal={resetSignal} />
+      <CameraRig
+        nodes={nodes}
+        focusedNodeId={focusedNodeId}
+        selectedNodeId={selectedNodeId}
+        resetSignal={resetSignal}
+        onInteractionStart={handleInteractionStart}
+        onInteractionEnd={handleInteractionEnd}
+      />
       {budget.bloom && (
         <EffectComposer multisampling={0}>
           <Bloom mipmapBlur intensity={1.35} luminanceThreshold={0.42} luminanceSmoothing={0.32} radius={0.82} />
@@ -576,6 +656,7 @@ export function MindMapScene({
   const [webglAvailable, setWebglAvailable] = useState(true)
   const [reducedMotion, setReducedMotion] = useState(false)
   const [hoveredNode, setHoveredNode] = useState<LayoutNode | null>(null)
+  const tabVisible = useTabVisible()
   const tooltipRef = useRef<HTMLDivElement | null>(null)
   const pointerRef = useRef({ x: 0, y: 0 })
 
@@ -644,6 +725,7 @@ export function MindMapScene({
         camera={{ position: [0, 90, 440], fov: 52, near: 0.1, far: 2200 }}
         dpr={[1, budget.dpr]}
         gl={{ antialias: quality !== 'BAJA', alpha: false, powerPreference: 'high-performance' }}
+        frameloop={tabVisible ? 'always' : 'never'}
         onPointerMissed={() => onSelectNode(null)}
       >
         <GraphScene
@@ -660,6 +742,7 @@ export function MindMapScene({
           nodes={filteredNodes}
           edges={filteredEdges}
           reducedMotion={reducedMotion}
+          tabVisible={tabVisible}
           hoveredNodeId={hoveredNode?.id ?? null}
           onHoverNode={handleHoverNode}
           onHoverMove={handleHoverMove}
