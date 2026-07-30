@@ -1,45 +1,16 @@
 import { motion, useReducedMotion } from 'framer-motion'
-import type { LucideIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { cva } from 'class-variance-authority'
 import { useModuleT } from '../../i18n/useModuleT'
 import { cockpitT } from '../../i18n/modules/cockpit'
 import { useAnimatedNumber } from '../../hooks/useAnimatedNumber'
-import { Card } from '../ui/card'
+import { formatNumber } from './cockpitModel'
 import { cn } from '@/lib/utils'
 
 type Tone = 'green' | 'cyan' | 'yellow' | 'orange' | 'red' | 'purple' | 'neutral'
 
-interface Props {
-  icon: LucideIcon
-  label: string
-  value: string
-  subtext?: string
-  indicator?: string
-  tone?: Tone
-  progress?: number | null
-  sparkline?: number[]
-  unavailable?: boolean
-  children?: ReactNode
-}
-
 // Un unico acento por KPI (icono, barra, sparkline) — nunca borde de color;
 // el estado se comunica con causa (DESIGN.md: La Regla del Color con Causa).
-const toneChip = cva('flex h-7 w-7 items-center justify-center rounded-md', {
-  variants: {
-    tone: {
-      green: 'bg-success/15 text-success',
-      cyan: 'bg-info/15 text-info',
-      yellow: 'bg-warning/15 text-warning',
-      orange: 'bg-alert/15 text-alert',
-      red: 'bg-critical/15 text-critical',
-      purple: 'bg-brand-violet/15 text-brand-violet',
-      neutral: 'bg-elevated text-text-secondary',
-    },
-  },
-  defaultVariants: { tone: 'neutral' },
-})
-
 const toneAccent = cva('', {
   variants: {
     tone: {
@@ -50,21 +21,6 @@ const toneAccent = cva('', {
       red: 'text-critical',
       purple: 'text-brand-violet',
       neutral: 'text-text-secondary',
-    },
-  },
-  defaultVariants: { tone: 'neutral' },
-})
-
-const toneProgressFill = cva('h-full rounded-full transition-[width] duration-300', {
-  variants: {
-    tone: {
-      green: 'bg-success',
-      cyan: 'bg-info',
-      yellow: 'bg-warning',
-      orange: 'bg-alert',
-      red: 'bg-critical',
-      purple: 'bg-brand-violet',
-      neutral: 'bg-text-secondary',
     },
   },
   defaultVariants: { tone: 'neutral' },
@@ -130,68 +86,126 @@ function AnimatedMetric({ value, reducedMotion }: { value: string; reducedMotion
   )
 }
 
-export function KpiCard({
-  icon: Icon,
+// La lectura principal del turno: un unico numero grande, sin caja ni
+// icono compitiendo por atencion. Todo lo demas en esta seccion es
+// secundario a esta cifra (DESIGN.md: jerarquia por tamano/peso, no color).
+export function KpiHero({
   label,
   value,
-  subtext,
-  indicator,
+  statusLine,
   tone = 'neutral',
-  progress,
   sparkline,
-  unavailable = false,
+  progress,
+  footer,
   children,
-}: Props) {
+}: {
+  label: string
+  value: string
+  statusLine?: ReactNode
+  tone?: Tone
+  sparkline?: number[]
+  progress?: number | null
+  footer?: ReactNode
+  children?: ReactNode
+}) {
   const t = useModuleT(cockpitT)
   const reduceMotion = useReducedMotion()
+  const normalizedProgress = typeof progress === 'number'
+    ? Math.min(100, Math.max(0, progress))
+    : null
 
   return (
-    <motion.div
-      initial={reduceMotion ? false : { opacity: 0, y: 10 }}
+    <motion.section
+      initial={reduceMotion ? false : { opacity: 0, y: 14 }}
       animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
-      transition={{ duration: 0.28, ease: 'easeOut' }}
+      transition={{ duration: 0.34, ease: 'easeOut' }}
+      className="relative rounded-lg border border-border-dim bg-card px-4 py-4 sm:px-5"
+      aria-label={label}
     >
-      <Card
-        className={cn(
-          'flex flex-col gap-3 p-5 hover:shadow-[0_4px_16px_rgba(0,0,0,0.35)]',
-          unavailable && 'opacity-60'
-        )}
-      >
-        <div className="flex items-center gap-2.5">
-          <span className={toneChip({ tone })} aria-hidden="true">
-            <Icon size={15} />
-          </span>
-          <span className="text-xs font-medium tracking-wide text-text-secondary">{label}</span>
+      <div className="grid gap-4 lg:grid-cols-[minmax(250px,0.72fr)_minmax(0,1.28fr)] lg:items-end">
+        <div>
+          <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+            <span className="text-xs font-medium uppercase tracking-[0.1em] text-text-secondary">{label}</span>
+            {sparkline && (
+              <div className={cn('h-5 w-24 opacity-90', toneAccent({ tone }))}>
+                <Sparkline values={sparkline} ariaLabel={t.kpi_card_sparkline_aria} />
+              </div>
+            )}
+          </div>
+
+          <div className="mt-1 flex flex-wrap items-end gap-x-4 gap-y-1">
+            <strong className="font-industrial-mono text-4xl font-semibold leading-none tracking-tight text-text-primary sm:text-5xl">
+              <AnimatedMetric value={value} reducedMotion={reduceMotion} />
+            </strong>
+            {statusLine && (
+              <span className={cn('pb-0.5 text-sm font-medium', toneAccent({ tone }))}>{statusLine}</span>
+            )}
+          </div>
+
+          {normalizedProgress !== null && (
+            <div
+              className="mt-3 h-1.5 rounded-sm bg-elevated"
+              role="progressbar"
+              aria-label={label}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={normalizedProgress}
+              aria-valuetext={`${formatNumber(progress ?? 0, 1)}%`}
+            >
+              <span
+                className="block h-full rounded-sm bg-info transition-[width] duration-300"
+                style={{ width: `${normalizedProgress}%` }}
+              />
+            </div>
+          )}
         </div>
 
-        <strong className="font-industrial-mono text-2xl font-semibold leading-none text-text-primary">
-          <AnimatedMetric value={value} reducedMotion={reduceMotion} />
-        </strong>
+        {children && <div>{children}</div>}
+      </div>
 
-        {(subtext || indicator) && (
-          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 text-xs text-text-secondary">
-            {subtext && <span>{subtext}</span>}
-            {indicator && <em className={cn('not-italic font-medium', toneAccent({ tone }))}>{indicator}</em>}
-          </div>
-        )}
+      {footer && <div className="mt-3 border-t border-border-dim pt-3">{footer}</div>}
+    </motion.section>
+  )
+}
 
-        {typeof progress === 'number' && (
-          <div
-            className="h-1.5 w-full overflow-hidden rounded-full bg-elevated"
-            aria-label={t.kpi_card_progress_aria(Math.round(progress))}
-          >
-            <div className={toneProgressFill({ tone })} style={{ width: `${Math.max(0, Math.min(progress, 100))}%` }} />
-          </div>
-        )}
+// Banda operacional secundaria dentro del hero. No crea otra tarjeta ni
+// establece altura: la grilla se adapta al viewport y al contenido real.
+export function StatRow({ children }: { children: ReactNode }) {
+  return (
+    <div className="grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-3 lg:grid-cols-5 lg:gap-0 lg:divide-x lg:divide-border-dim">
+      {children}
+    </div>
+  )
+}
 
-        {sparkline && (
-          <div className={toneAccent({ tone })}>
-            <Sparkline values={sparkline} ariaLabel={t.kpi_card_sparkline_aria} />
-          </div>
-        )}
-
-        {children}
-      </Card>
-    </motion.div>
+export function StatItem({
+  label,
+  value,
+  indicator,
+  tone = 'neutral',
+  unavailable = false,
+}: {
+  label: string
+  value: string
+  indicator?: string
+  tone?: Tone
+  unavailable?: boolean
+}) {
+  const reduceMotion = useReducedMotion()
+  return (
+    <div className={cn(
+      'min-w-0 grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-2 gap-y-0.5 lg:flex lg:flex-col lg:items-stretch lg:px-4 lg:first:pl-0 lg:last:pr-0',
+      unavailable && 'opacity-50',
+    )}>
+      <span className="text-xs font-medium leading-tight text-text-secondary">{label}</span>
+      <strong className="font-industrial-mono text-lg font-semibold leading-tight text-text-primary">
+        <AnimatedMetric value={value} reducedMotion={reduceMotion} />
+      </strong>
+      {indicator && (
+        <span className={cn('col-span-2 text-xs font-medium leading-tight lg:col-auto', toneAccent({ tone }))}>
+          {indicator}
+        </span>
+      )}
+    </div>
   )
 }

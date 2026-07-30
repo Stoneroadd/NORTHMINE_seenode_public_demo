@@ -1,4 +1,4 @@
-import { Clock3, Database, Download, RefreshCw, ShieldCheck } from 'lucide-react'
+import { Clock3, Database, Download, ShieldCheck } from 'lucide-react'
 import type { CockpitViewModel } from './cockpitModel'
 import { useModuleT } from '../../i18n/useModuleT'
 import { cockpitT } from '../../i18n/modules/cockpit'
@@ -23,14 +23,10 @@ function statusVariant(status: string): NonNullable<BadgeProps['variant']> {
 
 export function CockpitHeader({
   data,
-  fetching,
-  onRefresh,
   downloadingReport = false,
   onDownloadReport,
 }: {
   data: CockpitViewModel
-  fetching: boolean
-  onRefresh: () => void
   downloadingReport?: boolean
   onDownloadReport?: () => void
 }) {
@@ -79,15 +75,6 @@ export function CockpitHeader({
             <span>{downloadingReport ? 'Generando...' : 'Informe'}</span>
           </Button>
         )}
-        <Button
-          variant="secondary"
-          size="icon"
-          onClick={onRefresh}
-          aria-label={t.header_refresh_aria}
-          disabled={fetching}
-        >
-          <RefreshCw size={15} className={cn(fetching && 'animate-spin')} />
-        </Button>
       </div>
     </header>
   )
