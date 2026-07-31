@@ -42,3 +42,11 @@ from NORTHREACT `f278963`) was pushed to `main`. The live service kept
 serving `index-CaOGKLYR.js` / `DecisionCockpit-CExi8D7G.js` for 3.75 minutes
 across 15 polls with no change. This commit exists to force a fresh
 push/build signal, same as the note above.
+
+## Deploy note (2026-07-31, second)
+
+Commits `f536972`/`479e5d7`/`2ab7865` (collapsible sidebar, larger equipment
+imagery + fallback, hour/timestamp formatting consolidation and H+N fix)
+were pushed to `main`. The live service kept serving `index-CY_WCvIM.js`
+for 3.3 minutes across 10 polls with no change. This commit exists to force
+a fresh push/build signal, same as the notes above.
