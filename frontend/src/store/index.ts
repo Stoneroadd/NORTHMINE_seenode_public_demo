@@ -169,7 +169,7 @@ export const useAppStore = create<AppStore>()(
       setSistema: (s) => set({ sistema: { ...get().sistema, ...s } }),
 
       // UI
-      sidebarCollapsed: false,
+      sidebarCollapsed: typeof window !== 'undefined' ? window.innerWidth < 1600 : true,
       toggleSidebar: () => set({ sidebarCollapsed: !get().sidebarCollapsed }),
       settingsOpen: false,
       setSettingsOpen: (v) => set({ settingsOpen: v }),

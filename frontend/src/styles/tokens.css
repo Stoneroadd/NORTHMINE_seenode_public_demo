@@ -79,6 +79,7 @@ button {
   border-right: 1px solid var(--border);
   background: rgba(10, 15, 28, 0.96);
   backdrop-filter: blur(20px);
+  transition: width 160ms ease, flex-basis 160ms ease;
 }
 
 .brand-block {
@@ -8268,10 +8269,59 @@ button.alert-metric-card {
   text-transform: uppercase;
 }
 
+.sidebar-collapse-toggle {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 36px 1fr;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  padding: 9px 12px;
+  min-height: 44px;
+  background: transparent;
+  color: var(--dim);
+  text-align: left;
+  cursor: pointer;
+  transition: background 150ms ease, border-color 150ms ease;
+  font-family: 'Inter', sans-serif;
+}
+
+.sidebar-collapse-toggle svg {
+  display: grid;
+  place-items: center;
+}
+
+.sidebar-collapse-toggle span {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.sidebar-collapse-toggle:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--border);
+}
+
+.sidebar-collapse-toggle:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--cyan) 70%, transparent);
+  outline-offset: 3px;
+}
+
 .sidebar.is-collapsed:not(.is-mobile-open) {
   width: 64px;
   flex-basis: 64px;
   padding: 18px 10px;
+}
+
+.sidebar.is-collapsed:not(.is-mobile-open) .sidebar-collapse-toggle {
+  grid-template-columns: 1fr;
+  justify-items: center;
+  padding: 10px 0;
+}
+
+.sidebar.is-collapsed:not(.is-mobile-open) .sidebar-collapse-toggle span {
+  display: none;
 }
 
 .sidebar.is-collapsed:not(.is-mobile-open) .brand-block {

@@ -9,6 +9,8 @@ import {
   LockKeyhole,
   Map,
   Network,
+  PanelLeftClose,
+  PanelLeftOpen,
   Pickaxe,
   Server,
   Settings,
@@ -73,6 +75,7 @@ export function Sidebar({ active, onSelect, mobileOpen = false, onNavigate }: Pr
   const t = useT()
   const usuario = useAppStore(s => s.usuario)
   const sidebarCollapsed = useAppStore(s => s.sidebarCollapsed)
+  const toggleSidebar = useAppStore(s => s.toggleSidebar)
   const canViewOperatorRanking = usuario?.rol === 'admin' || usuario?.rol === 'supervisor'
   const visibleItems = items.filter((item) => item.id !== 'admin' || usuario?.rol === 'admin')
 
@@ -88,16 +91,31 @@ export function Sidebar({ active, onSelect, mobileOpen = false, onNavigate }: Pr
         </div>
       </div>
 
-      <nav className="sidebar-nav">
+      <button
+        type="button"
+        className="sidebar-collapse-toggle"
+        title={sidebarCollapsed ? 'Expandir navegación' : 'Colapsar navegación'}
+        aria-label={sidebarCollapsed ? 'Expandir navegación' : 'Colapsar navegación'}
+        aria-expanded={!sidebarCollapsed}
+        aria-controls="sidebar-nav"
+        onClick={toggleSidebar}
+      >
+        {sidebarCollapsed ? <PanelLeftOpen aria-hidden="true" size={18} /> : <PanelLeftClose aria-hidden="true" size={18} />}
+        <span>{sidebarCollapsed ? 'Expandir' : 'Colapsar'}</span>
+      </button>
+
+      <nav className="sidebar-nav" id="sidebar-nav">
         <span className="nav-group-label">OPERACIÓN EN TIEMPO REAL</span>
         {visibleItems.map((item) => {
           const Icon = item.icon
           const isActive = active === item.id
+          const label = item.labelKey ? t.nav[item.labelKey] : item.label
           return (
             <button
               key={item.id}
               className={`nav-item ${isActive ? 'is-active' : ''}`}
               type="button"
+              title={`${label}: ${item.caption}`}
               onClick={() => {
                 onNavigate?.()
                 onSelect(item.id)
@@ -106,7 +124,7 @@ export function Sidebar({ active, onSelect, mobileOpen = false, onNavigate }: Pr
               <span className="nav-active-line" />
               <span className="nav-icon"><Icon size={18} /></span>
               <span>
-                <span className="nav-label">{item.labelKey ? t.nav[item.labelKey] : item.label}</span>
+                <span className="nav-label">{label}</span>
                 <span className="nav-caption">{item.caption}</span>
               </span>
             </button>
@@ -115,7 +133,7 @@ export function Sidebar({ active, onSelect, mobileOpen = false, onNavigate }: Pr
 
         <span className="nav-group-label" style={{ marginTop: 12 }}>ANÁLISIS</span>
         {canViewOperatorRanking && (
-          <a className={`nav-item ${window.location.pathname === '/operator-ranking' ? 'is-active' : ''}`} href="/operator-ranking" onClick={onNavigate}>
+          <a className={`nav-item ${window.location.pathname === '/operator-ranking' ? 'is-active' : ''}`} href="/operator-ranking" title="Ranking Operadores: Productividad y demoras" onClick={onNavigate}>
             <span className="nav-active-line" />
             <span className="nav-icon"><Users size={18} /></span>
             <span>
@@ -124,7 +142,7 @@ export function Sidebar({ active, onSelect, mobileOpen = false, onNavigate }: Pr
             </span>
           </a>
         )}
-        <a className={`nav-item ${window.location.pathname === '/comparativa' ? 'is-active' : ''}`} href="/comparativa" onClick={onNavigate}>
+        <a className={`nav-item ${window.location.pathname === '/comparativa' ? 'is-active' : ''}`} href="/comparativa" title="Comparativa: Periodos y brechas" onClick={onNavigate}>
           <span className="nav-active-line" />
           <span className="nav-icon"><BarChart3 size={18} /></span>
           <span>
@@ -132,7 +150,7 @@ export function Sidebar({ active, onSelect, mobileOpen = false, onNavigate }: Pr
             <span className="nav-caption">Periodos y brechas</span>
           </span>
         </a>
-        <a className={`nav-item ${window.location.pathname === '/prediccion' ? 'is-active' : ''}`} href="/prediccion" onClick={onNavigate}>
+        <a className={`nav-item ${window.location.pathname === '/prediccion' ? 'is-active' : ''}`} href="/prediccion" title="Predicción ML: Proyección de turno" onClick={onNavigate}>
           <span className="nav-active-line" />
           <span className="nav-icon"><Brain size={18} /></span>
           <span>
@@ -140,7 +158,7 @@ export function Sidebar({ active, onSelect, mobileOpen = false, onNavigate }: Pr
             <span className="nav-caption">Proyección de turno</span>
           </span>
         </a>
-        <a className={`nav-item ${window.location.pathname === '/simulador' ? 'is-active' : ''}`} href="/simulador" onClick={onNavigate}>
+        <a className={`nav-item ${window.location.pathname === '/simulador' ? 'is-active' : ''}`} href="/simulador" title="Simulador: Escenarios de meta" onClick={onNavigate}>
           <span className="nav-active-line" />
           <span className="nav-icon"><FlaskConical size={18} /></span>
           <span>
@@ -152,7 +170,7 @@ export function Sidebar({ active, onSelect, mobileOpen = false, onNavigate }: Pr
         {usuario?.rol === 'admin' && (
           <>
             <span className="nav-group-label" style={{ marginTop: 12 }}>HERRAMIENTAS</span>
-            <a className={`nav-item ${window.location.pathname === '/admin/users' ? 'is-active' : ''}`} href="/admin/users" onClick={onNavigate}>
+            <a className={`nav-item ${window.location.pathname === '/admin/users' ? 'is-active' : ''}`} href="/admin/users" title="Usuarios: Roles y acceso" onClick={onNavigate}>
               <span className="nav-active-line" />
               <span className="nav-icon"><Users size={18} /></span>
               <span>
@@ -160,7 +178,7 @@ export function Sidebar({ active, onSelect, mobileOpen = false, onNavigate }: Pr
                 <span className="nav-caption">Roles y acceso</span>
               </span>
             </a>
-            <a className={`nav-item ${window.location.pathname === '/admin/sistema' ? 'is-active' : ''}`} href="/admin/sistema" onClick={onNavigate}>
+            <a className={`nav-item ${window.location.pathname === '/admin/sistema' ? 'is-active' : ''}`} href="/admin/sistema" title="Sistema: Salud y monitoreo" onClick={onNavigate}>
               <span className="nav-active-line" />
               <span className="nav-icon"><Server size={18} /></span>
               <span>
@@ -168,7 +186,7 @@ export function Sidebar({ active, onSelect, mobileOpen = false, onNavigate }: Pr
                 <span className="nav-caption">Salud y monitoreo</span>
               </span>
             </a>
-            <a className={`nav-item ${window.location.pathname === '/admin/auditoria' ? 'is-active' : ''}`} href="/admin/auditoria" onClick={onNavigate}>
+            <a className={`nav-item ${window.location.pathname === '/admin/auditoria' ? 'is-active' : ''}`} href="/admin/auditoria" title="Auditoría: Log de seguridad" onClick={onNavigate}>
               <span className="nav-active-line" />
               <span className="nav-icon"><ShieldAlert size={18} /></span>
               <span>
