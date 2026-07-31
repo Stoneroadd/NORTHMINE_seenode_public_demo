@@ -13,6 +13,7 @@ from slowapi.errors import RateLimitExceeded
 
 from app.api.routes import router
 from app.api.operator_ranking import router as operator_ranking_router
+from app.api.demo_access import router as demo_access_router
 from app.core.audit import AuditStoreUnavailable, init_audit_db, init_security_tables
 from app.core.audit_middleware import AuditMiddleware
 from app.core.config import get_settings
@@ -22,6 +23,7 @@ from app.core.logging import configure_logging
 from app.core.mfa import init_mfa_table
 from app.core.rate_limit import limiter
 from app.core.security_headers import SecurityHeadersMiddleware
+from app.repositories.demo_access_repository import get_demo_access_repository
 from app.services.user_repository import init_user_repository
 
 settings = get_settings()
@@ -67,6 +69,7 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 app.include_router(router)
 app.include_router(operator_ranking_router)
+app.include_router(demo_access_router)
 
 if (FRONTEND_DIST / "assets").exists():
     app.mount("/assets", StaticFiles(directory=FRONTEND_DIST / "assets"), name="frontend-assets")
@@ -86,6 +89,7 @@ def startup() -> None:
     init_security_tables()
     init_mfa_table()
     init_user_repository()
+    get_demo_access_repository().init_schema()
     if settings.local_auto_sync_enabled:
         from app.services.averias_import_service import start_auto_sync
         from app.services.aerial_mail_service import start_auto_sync as start_aerial_sync
@@ -145,5 +149,8 @@ def frontend_fallback(full_path: str):
     if requested_file.exists() and requested_file.is_file():
         return FileResponse(requested_file)
     if FRONTEND_INDEX.exists():
-        return FileResponse(FRONTEND_INDEX)
+        return FileResponse(
+            FRONTEND_INDEX,
+            headers={"X-Robots-Tag": "noindex, nofollow"},
+        )
     raise HTTPException(status_code=404, detail="Frontend build not found")

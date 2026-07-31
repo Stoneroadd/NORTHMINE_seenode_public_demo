@@ -34,6 +34,7 @@ const loadLoadingUnits = () => import('./pages/LoadingUnitsPage')
 const loadAveriasPage = () => import('./pages/AveriasPage')
 const loadExpertAnalysisPage = () => import('./pages/ExpertAnalysisPage')
 const loadAlerts      = () => import('./pages/Alerts')
+const loadDemoAccessAdminPage = () => import('./pages/DemoAccessAdminPage')
 
 const Prediction  = lazy(() => loadPrediction().then(m => ({ default: m.Prediction })))
 const Simulator   = lazy(() => loadSimulator().then(m => ({ default: m.Simulator })))
@@ -55,6 +56,7 @@ const LoadingUnits = lazy(() => loadLoadingUnits().then(m => ({ default: m.Loadi
 const AveriasPage = lazy(() => loadAveriasPage().then(m => ({ default: m.AveriasPage })))
 const ExpertAnalysisPage = lazy(() => loadExpertAnalysisPage().then(m => ({ default: m.ExpertAnalysisPage })))
 const Alerts      = lazy(() => loadAlerts().then(m => ({ default: m.Alerts })))
+const DemoAccessAdminPage = lazy(() => loadDemoAccessAdminPage().then(m => ({ default: m.DemoAccessAdminPage })))
 import { Settings } from 'lucide-react'
 
 const ALL_MODULE_LOADERS = [
@@ -119,6 +121,20 @@ function renderSection(section: SectionId, session: AuthSession, t: AppT) {
       )
     }
     return wrap(_S(<SystemPage />), '/admin/sistema')
+  }
+  if (path === '/admin/demo-access') {
+    if (session.rol !== 'admin') {
+      return wrap(
+        <div className="section-placeholder">
+          <Settings size={34} />
+          <span>{t.acceso_restringido}</span>
+          <h2>Solicitudes de acceso restringidas</h2>
+          <p>Solo un administrador puede revisar solicitudes del demo.</p>
+        </div>,
+        '/admin/demo-access-denied',
+      )
+    }
+    return wrap(_S(<DemoAccessAdminPage />), '/admin/demo-access')
   }
   if (path === '/admin/users') {
     if (session.rol !== 'admin') {
@@ -290,6 +306,9 @@ export default function App() {
     restoreSession().then((restored) => {
       if (cancelled) return
       if (restored) {
+        if (window.location.pathname === '/acceso-demo') {
+          window.history.replaceState({}, '', '/cockpit')
+        }
         useAppStore.getState().setUsuario(sessionToUsuario(restored))
         setSession(restored)
       }
@@ -318,11 +337,15 @@ export default function App() {
   // Callbacks explÃ­citos: setUsuario ANTES de setSession para que el token
   // estÃ© en el store cuando Dashboard renderice por primera vez
   const handleAuthenticated = useCallback((newSession: AuthSession) => {
+    if (window.location.pathname === '/acceso-demo') {
+      window.history.replaceState({}, '', '/cockpit')
+    }
     setUsuario(sessionToUsuario(newSession))
     setSession(newSession)
   }, [setUsuario])
 
   const handleLogout = useCallback(() => {
+    window.history.replaceState({}, '', '/acceso-demo')
     setUsuario(null)
     setSession(null)
   }, [setUsuario])
@@ -365,4 +388,3 @@ export default function App() {
     </>
   )
 }
-

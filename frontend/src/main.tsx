@@ -5,7 +5,7 @@ import './styles/themes.css'
 import './styles/tokens.css'
 import './styles/northmine-tokens.css'
 import './styles/tailwind.css'
-import App from './App'
+import { PublicRouter } from './PublicRouter'
 import { FAST_PUBLIC_DEMO } from './demo/fastDemo'
 
 const queryClient = new QueryClient({
@@ -122,7 +122,7 @@ ReactDOM.createRoot(rootElement).render(
   <React.StrictMode>
     <RootErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <App />
+        <PublicRouter />
       </QueryClientProvider>
     </RootErrorBoundary>
   </React.StrictMode>,
