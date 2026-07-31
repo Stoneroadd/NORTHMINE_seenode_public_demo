@@ -50,3 +50,13 @@ imagery + fallback, hour/timestamp formatting consolidation and H+N fix)
 were pushed to `main`. The live service kept serving `index-CY_WCvIM.js`
 for 3.3 minutes across 10 polls with no change. This commit exists to force
 a fresh push/build signal, same as the notes above.
+
+## Deploy note (2026-07-31, third)
+
+After forcing commit `1b42f4a`, the live service was still serving
+`index-CY_WCvIM.js` after a further ~13 minutes of polling (well beyond
+the 3-4 minute delay seen in the notes above). This is a second forcing
+commit. If the bundle is still stale after this, the stall is on Seenode's
+build pipeline itself and needs a manual clean rebuild from the dashboard
+(the app-level changes are confirmed correct via local build/typecheck
+and via the identical fix validated live on the laboratorio's demo data).
