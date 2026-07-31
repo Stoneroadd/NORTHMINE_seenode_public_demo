@@ -3,17 +3,26 @@ from __future__ import annotations
 import json
 import sqlite3
 import uuid
-from contextlib import closing
+from collections.abc import Callable, Iterator
+from contextlib import closing, contextmanager
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from functools import lru_cache
 from pathlib import Path
-from typing import Protocol
+from typing import Any, NoReturn, Protocol
 
-from app.core.config import get_settings
+from app.core.config import Settings, get_settings
 
 
 VALID_STATUSES = frozenset({"pending", "approved", "rejected"})
+
+
+class DemoAccessPersistenceError(RuntimeError):
+    """Persistence failed without exposing storage details to API callers."""
+
+
+class DemoAccessUnavailableError(DemoAccessPersistenceError):
+    """No durable request store is currently available."""
 
 
 def _utc_now() -> str:
@@ -72,7 +81,11 @@ class DemoAccessRequestRecord:
 
 
 class DemoAccessRepository(Protocol):
+    backend_name: str
+    durable: bool
+
     def init_schema(self) -> None: ...
+    def health_status(self) -> dict[str, object]: ...
 
     def create(
         self,
@@ -107,6 +120,9 @@ class DemoAccessRepository(Protocol):
 
 
 class SQLiteDemoAccessRepository:
+    backend_name = "sqlite"
+    durable = False
+
     def __init__(self, db_path: str | Path | None = None) -> None:
         configured_path = Path(db_path or get_settings().demo_access_db_path)
         if configured_path.is_absolute():
@@ -121,8 +137,16 @@ class SQLiteDemoAccessRepository:
         conn.row_factory = sqlite3.Row
         return conn
 
+    @contextmanager
+    def _connection(self) -> Iterator[sqlite3.Connection]:
+        try:
+            with closing(self._connect()) as conn:
+                yield conn
+        except (OSError, sqlite3.Error) as exc:
+            raise DemoAccessPersistenceError("SQLite demo access store failed") from exc
+
     def init_schema(self) -> None:
-        with closing(self._connect()) as conn:
+        with self._connection() as conn:
             conn.execute(
                 """
                 CREATE TABLE IF NOT EXISTS demo_access_requests (
@@ -165,7 +189,10 @@ class SQLiteDemoAccessRepository:
     def _row_to_record(row: sqlite3.Row | None) -> DemoAccessRequestRecord | None:
         if row is None:
             return None
-        interests = json.loads(str(row["interests_json"]))
+        try:
+            interests = json.loads(str(row["interests_json"]))
+        except (TypeError, ValueError) as exc:
+            raise DemoAccessPersistenceError("Invalid SQLite demo access record") from exc
         if not isinstance(interests, list):
             interests = []
         return DemoAccessRequestRecord(
@@ -214,7 +241,7 @@ class SQLiteDemoAccessRepository:
         now = _utc_now()
         request_id = str(uuid.uuid4())
         self.init_schema()
-        with closing(self._connect()) as conn:
+        with self._connection() as conn:
             cursor = conn.execute(
                 """
                 INSERT OR IGNORE INTO demo_access_requests (
@@ -266,7 +293,7 @@ class SQLiteDemoAccessRepository:
             query += " WHERE status = ?"
             params = (status,)
         query += " ORDER BY created_at DESC LIMIT 500"
-        with closing(self._connect()) as conn:
+        with self._connection() as conn:
             rows = conn.execute(query, params).fetchall()
         return [
             record
@@ -276,7 +303,7 @@ class SQLiteDemoAccessRepository:
 
     def get(self, request_id: str) -> DemoAccessRequestRecord | None:
         self.init_schema()
-        with closing(self._connect()) as conn:
+        with self._connection() as conn:
             row = conn.execute(
                 "SELECT * FROM demo_access_requests WHERE id = ?",
                 (request_id,),
@@ -295,7 +322,7 @@ class SQLiteDemoAccessRepository:
             raise ValueError("Revision de solicitud invalida")
         now = _utc_now()
         self.init_schema()
-        with closing(self._connect()) as conn:
+        with self._connection() as conn:
             conn.execute(
                 """
                 UPDATE demo_access_requests
@@ -312,9 +339,113 @@ class SQLiteDemoAccessRepository:
             conn.commit()
         return self._row_to_record(row)
 
+    def health_status(self) -> dict[str, object]:
+        try:
+            with self._connection() as conn:
+                conn.execute("SELECT 1").fetchone()
+            return {
+                "status": "connected",
+                "backend": self.backend_name,
+                "durable": self.durable,
+                "configured": True,
+            }
+        except DemoAccessPersistenceError:
+            return {
+                "status": "unavailable",
+                "backend": self.backend_name,
+                "durable": self.durable,
+                "configured": True,
+            }
+
+
+class UnavailableDemoAccessRepository:
+    backend_name = "unavailable"
+    durable = False
+
+    def __init__(self, reason: str) -> None:
+        self.reason = reason
+
+    def _raise(self) -> NoReturn:
+        raise DemoAccessUnavailableError(self.reason)
+
+    def init_schema(self) -> None:
+        self._raise()
+
+    def create(self, **_: Any) -> tuple[DemoAccessRequestRecord, bool]:
+        self._raise()
+
+    def list(self, status: str | None = None) -> list[DemoAccessRequestRecord]:
+        del status
+        self._raise()
+
+    def get(self, request_id: str) -> DemoAccessRequestRecord | None:
+        del request_id
+        self._raise()
+
+    def review(
+        self,
+        request_id: str,
+        *,
+        status: str,
+        reviewed_by: str,
+        internal_notes: str | None,
+    ) -> DemoAccessRequestRecord | None:
+        del request_id, status, reviewed_by, internal_notes
+        self._raise()
+
+    def health_status(self) -> dict[str, object]:
+        return {
+            "status": "unavailable",
+            "backend": self.backend_name,
+            "durable": self.durable,
+            "configured": False,
+            "reason": self.reason,
+        }
+
+
+PostgresRepositoryFactory = Callable[..., DemoAccessRepository]
+
+
+def _default_postgres_factory(**kwargs: Any) -> DemoAccessRepository:
+    from app.repositories.demo_access_postgres_repository import (
+        PostgreSQLDemoAccessRepository,
+    )
+
+    return PostgreSQLDemoAccessRepository(**kwargs)
+
+
+def build_demo_access_repository(
+    settings: Settings | None = None,
+    *,
+    postgres_factory: PostgresRepositoryFactory | None = None,
+) -> DemoAccessRepository:
+    settings = settings or get_settings()
+    if settings.demo_access_require_durable and (
+        settings.demo_access_fingerprint_key_is_ephemeral
+        or len(settings.demo_access_fingerprint_key) < 32
+    ):
+        return UnavailableDemoAccessRepository(
+            "stable_fingerprint_key_not_configured"
+        )
+    if settings.demo_access_database_url:
+        factory = postgres_factory or _default_postgres_factory
+        try:
+            return factory(
+                database_url=settings.demo_access_database_url,
+                min_size=settings.demo_access_pool_min_size,
+                max_size=settings.demo_access_pool_max_size,
+                pool_timeout=settings.demo_access_pool_timeout_seconds,
+                connect_timeout=settings.demo_access_connect_timeout_seconds,
+            )
+        except (ImportError, ValueError) as exc:
+            return UnavailableDemoAccessRepository(
+                f"postgres_repository_unavailable:{exc.__class__.__name__}"
+            )
+    if settings.demo_access_require_durable:
+        return UnavailableDemoAccessRepository("durable_store_not_configured")
+    return SQLiteDemoAccessRepository(settings.demo_access_db_path)
+
 
 @lru_cache(maxsize=1)
-def get_demo_access_repository() -> SQLiteDemoAccessRepository:
-    repository = SQLiteDemoAccessRepository()
-    repository.init_schema()
-    return repository
+def get_demo_access_repository() -> DemoAccessRepository:
+    return build_demo_access_repository()

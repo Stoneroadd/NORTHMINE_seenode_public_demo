@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from app.core.config import get_settings
+from app.repositories.demo_access_repository import get_demo_access_repository
 from app.services.user_repository import get_user_repository
 
 
@@ -26,15 +27,22 @@ def build_health_response() -> dict[str, Any]:
     settings = get_settings()
     database = _database_status()
     user_store = get_user_repository().health_status()
+    demo_access_store = get_demo_access_repository().health_status()
     startup_errors = settings.startup_errors
     status = "ok"
-    if database != "connected" or user_store.get("status") != "connected" or startup_errors:
+    if (
+        database != "connected"
+        or user_store.get("status") != "connected"
+        or demo_access_store.get("status") != "connected"
+        or startup_errors
+    ):
         status = "degraded"
     response: dict[str, Any] = {
         "status": status,
         "service": settings.service_name,
         "version": settings.version,
         "timestamp": datetime.now(timezone.utc).isoformat(),
+        "demo_access_persistence": demo_access_store.get("status"),
     }
     # El health publico basta para un balanceador. Los detalles de topologia,
     # CORS y errores de configuracion solo se exponen fuera de produccion.
@@ -48,10 +56,11 @@ def build_health_response() -> dict[str, Any]:
             "demo_mode": settings.demo_mode,
             "production_ready": not startup_errors,
             "checks": {
-            "service_identity": settings.service_name == "northmine-api",
-            "cors_origins": settings.cors_origins,
-            "production_errors": startup_errors,
-            "users": user_store,
+                "service_identity": settings.service_name == "northmine-api",
+                "cors_origins": settings.cors_origins,
+                "production_errors": startup_errors,
+                "users": user_store,
+                "demo_access": demo_access_store,
             },
         })
     return response

@@ -110,6 +110,12 @@ class Settings:
     log_dir: str
     audit_db_path: str
     demo_access_db_path: str
+    demo_access_database_url: str
+    demo_access_require_durable: bool
+    demo_access_pool_min_size: int
+    demo_access_pool_max_size: int
+    demo_access_pool_timeout_seconds: float
+    demo_access_connect_timeout_seconds: float
     demo_access_fingerprint_key: str
     demo_access_fingerprint_key_is_ephemeral: bool
     allow_demo_login: bool
@@ -265,6 +271,10 @@ def get_settings() -> Settings:
         "NORTHMINE_DEMO_ACCESS_FINGERPRINT_KEY",
         "",
     ).strip()
+    env_demo_access_database_url = os.getenv(
+        "NORTHMINE_DEMO_ACCESS_DATABASE_URL",
+        os.getenv("DATABASE_URL", ""),
+    ).strip()
     env_cors_origins = os.getenv("NORTHMINE_CORS_ORIGINS", "").strip()
     return Settings(
         app_name=os.getenv("NORTHMINE_APP_NAME", "NORTHMINE SaaS API"),
@@ -299,6 +309,23 @@ def get_settings() -> Settings:
         demo_access_db_path=os.getenv(
             "NORTHMINE_DEMO_ACCESS_DB",
             str(root_dir / "northmine_demo_access.db"),
+        ),
+        demo_access_database_url=env_demo_access_database_url,
+        demo_access_require_durable=os.getenv(
+            "NORTHMINE_DEMO_ACCESS_REQUIRE_DURABLE",
+            "true" if environment == "production" else "false",
+        ).strip().lower() == "true",
+        demo_access_pool_min_size=int(
+            os.getenv("NORTHMINE_DEMO_ACCESS_POOL_MIN_SIZE", "1")
+        ),
+        demo_access_pool_max_size=int(
+            os.getenv("NORTHMINE_DEMO_ACCESS_POOL_MAX_SIZE", "4")
+        ),
+        demo_access_pool_timeout_seconds=float(
+            os.getenv("NORTHMINE_DEMO_ACCESS_POOL_TIMEOUT_SECONDS", "5")
+        ),
+        demo_access_connect_timeout_seconds=float(
+            os.getenv("NORTHMINE_DEMO_ACCESS_CONNECT_TIMEOUT_SECONDS", "5")
         ),
         demo_access_fingerprint_key=env_demo_access_fingerprint_key or _random_secret(),
         demo_access_fingerprint_key_is_ephemeral=not env_demo_access_fingerprint_key,

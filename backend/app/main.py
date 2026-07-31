@@ -23,7 +23,10 @@ from app.core.logging import configure_logging
 from app.core.mfa import init_mfa_table
 from app.core.rate_limit import limiter
 from app.core.security_headers import SecurityHeadersMiddleware
-from app.repositories.demo_access_repository import get_demo_access_repository
+from app.repositories.demo_access_repository import (
+    DemoAccessPersistenceError,
+    get_demo_access_repository,
+)
 from app.services.user_repository import init_user_repository
 
 settings = get_settings()
@@ -89,7 +92,15 @@ def startup() -> None:
     init_security_tables()
     init_mfa_table()
     init_user_repository()
-    get_demo_access_repository().init_schema()
+    demo_access_repository = get_demo_access_repository()
+    try:
+        demo_access_repository.init_schema()
+    except DemoAccessPersistenceError:
+        logger.warning(
+            "Demo access persistence unavailable backend=%s durable=%s",
+            demo_access_repository.backend_name,
+            demo_access_repository.durable,
+        )
     if settings.local_auto_sync_enabled:
         from app.services.averias_import_service import start_auto_sync
         from app.services.aerial_mail_service import start_auto_sync as start_aerial_sync
