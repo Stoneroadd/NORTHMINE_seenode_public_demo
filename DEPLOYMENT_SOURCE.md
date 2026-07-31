@@ -34,3 +34,11 @@ inspection to predate this port — 0 occurrences of the `progressbar` marker
 this fix introduces). This commit exists to force a fresh push/build signal;
 if the service is still stale after this, the block is on Seenode's build
 pipeline itself and needs a manual clean rebuild from the dashboard.
+
+## Deploy note (2026-07-31)
+
+Commit `d5cfffe` (3D map IBM Plex font, Cockpit card tone refinement, ported
+from NORTHREACT `f278963`) was pushed to `main`. The live service kept
+serving `index-CaOGKLYR.js` / `DecisionCockpit-CExi8D7G.js` for 3.75 minutes
+across 15 polls with no change. This commit exists to force a fresh
+push/build signal, same as the note above.
