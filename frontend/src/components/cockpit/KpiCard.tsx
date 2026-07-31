@@ -231,6 +231,24 @@ export function StatRow({ children }: { children: ReactNode }) {
   )
 }
 
+const statItemTone = cva(
+  'min-w-0 grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-2 gap-y-0.5 rounded-md px-2 py-1 transition-[background-color,box-shadow,transform] duration-200 motion-safe:hover:-translate-y-0.5 motion-reduce:transition-none lg:flex lg:flex-col lg:items-stretch lg:px-4 lg:first:pl-0 lg:last:pr-0',
+  {
+    variants: {
+      tone: {
+        green: 'hover:bg-success/[0.08] hover:shadow-[0_6px_16px_rgba(0,0,0,0.18)]',
+        cyan: 'hover:bg-info/[0.08] hover:shadow-[0_6px_16px_rgba(0,0,0,0.18)]',
+        yellow: 'hover:bg-warning/[0.08] hover:shadow-[0_6px_16px_rgba(0,0,0,0.18)]',
+        orange: 'hover:bg-alert/[0.08] hover:shadow-[0_6px_16px_rgba(0,0,0,0.18)]',
+        red: 'hover:bg-critical/[0.08] hover:shadow-[0_6px_16px_rgba(0,0,0,0.18)]',
+        purple: 'hover:bg-brand-violet/[0.08] hover:shadow-[0_6px_16px_rgba(0,0,0,0.18)]',
+        neutral: 'hover:bg-elevated/60 hover:shadow-[0_6px_16px_rgba(0,0,0,0.18)]',
+      },
+    },
+    defaultVariants: { tone: 'neutral' },
+  },
+)
+
 export function StatItem({
   label,
   value,
@@ -246,10 +264,7 @@ export function StatItem({
 }) {
   const reduceMotion = useReducedMotion()
   return (
-    <div className={cn(
-      'min-w-0 grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-2 gap-y-0.5 lg:flex lg:flex-col lg:items-stretch lg:px-4 lg:first:pl-0 lg:last:pr-0',
-      unavailable && 'opacity-50',
-    )}>
+    <div className={cn(statItemTone({ tone }), unavailable && 'opacity-50')}>
       <span className="flex min-w-0 items-center gap-1.5 text-xs font-medium leading-tight text-text-secondary">
         <span className={toneDot({ tone })} aria-hidden="true" />
         <span>{label}</span>
