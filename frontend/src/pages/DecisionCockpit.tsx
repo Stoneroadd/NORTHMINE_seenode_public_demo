@@ -629,8 +629,21 @@ export function DecisionCockpit() {
                 aria-label={t.sector_split_aria}
               >
                 {sectorBreakdown.map((sector) => (
-                  <div key={sector.sector} className="flex flex-col gap-0.5">
-                    <span className="text-xs font-medium text-text-secondary">{sector.sector}</span>
+                  <div
+                    key={sector.sector}
+                    className={cn(
+                      'flex flex-col gap-0.5 rounded-md px-3 py-2',
+                      sector.sector === 'F01'
+                        ? 'bg-info/[0.075]'
+                        : 'bg-brand-violet/[0.06]',
+                    )}
+                  >
+                    <span className={cn(
+                      'text-xs font-semibold',
+                      sector.sector === 'F01' ? 'text-info' : 'text-brand-violet',
+                    )}>
+                      {sector.sector}
+                    </span>
                     <strong className="font-industrial-mono text-lg font-semibold text-text-primary">{formatTons(sector.actualTonnes)}</strong>
                     <span className="text-xs text-text-secondary">
                       {sector.forecastTonnes === null
@@ -640,8 +653,12 @@ export function DecisionCockpit() {
                   </div>
                 ))}
                 <div className={cn(
-                  'flex flex-col gap-0.5',
+                  'flex flex-col gap-0.5 rounded-md border px-3 py-2',
                   sectorBreakdown.length >= 2 && 'col-span-2 sm:col-span-1',
+                  projectionTone === 'green' && 'border-success/20 bg-success/[0.065]',
+                  projectionTone === 'yellow' && 'border-warning/20 bg-warning/[0.06]',
+                  projectionTone === 'red' && 'border-critical/20 bg-critical/[0.06]',
+                  projectionTone === 'neutral' && 'border-border-dim bg-elevated/25',
                 )}>
                   <span className="text-xs font-medium text-text-secondary">{t.kpi_tonelaje_proyectado}</span>
                   <strong className="font-industrial-mono text-lg font-semibold text-text-primary">{formatTons(data.forecastTonnes)}</strong>

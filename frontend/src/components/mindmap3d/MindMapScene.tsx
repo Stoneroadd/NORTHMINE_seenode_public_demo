@@ -14,9 +14,12 @@ import { clamp, hashString, shortLabel } from './mindMapUtils'
 import { useModuleT } from '../../i18n/useModuleT'
 import { mindmap3dT } from '../../i18n/modules/mindmap3d'
 
+const MINDMAP_LABEL_FONT = '/fonts/IBMPlexSans-SemiBold.woff'
+const MINDMAP_VALUE_FONT = '/fonts/IBMPlexMono-Medium.woff'
+
 configureTextBuilder({
   useWorker: false,
-  defaultFontURL: '/fonts/kenpixel.ttf',
+  defaultFontURL: MINDMAP_LABEL_FONT,
 })
 
 interface Props {
@@ -303,9 +306,12 @@ function NodeObject({
       {showLabel && (
         <Billboard position={[scale + 7, scale * 0.28, 0]}>
           <Text
+            font={MINDMAP_LABEL_FONT}
             color={dimmed ? '#5B6B7F' : '#F4F7FA'}
             fontSize={labelSize}
             fontWeight={selected || node.type === 'ROOT' ? 800 : 700}
+            letterSpacing={node.type === 'ROOT' ? 0.035 : 0.012}
+            lineHeight={1.02}
             anchorX="left"
             anchorY="middle"
             outlineColor={LABEL_OUTLINE}
@@ -316,10 +322,13 @@ function NodeObject({
           </Text>
           {selected && node.displayValue && (
             <Text
+              font={MINDMAP_VALUE_FONT}
               position={[0, -labelSize * 1.18, 0]}
               color={getCategoryColor(node.category)}
               fontSize={Math.max(5.5, labelSize * 0.72)}
               fontWeight={700}
+              letterSpacing={0.018}
+              lineHeight={1.02}
               anchorX="left"
               anchorY="middle"
               outlineColor={LABEL_OUTLINE}

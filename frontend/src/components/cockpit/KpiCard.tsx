@@ -26,6 +26,39 @@ const toneAccent = cva('', {
   defaultVariants: { tone: 'neutral' },
 })
 
+const toneFrame = cva(
+  'relative rounded-lg border bg-card/85 px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.035)] sm:px-5',
+  {
+    variants: {
+      tone: {
+        green: 'border-success/25 border-t-success/55',
+        cyan: 'border-info/25 border-t-info/55',
+        yellow: 'border-warning/25 border-t-warning/50',
+        orange: 'border-alert/25 border-t-alert/50',
+        red: 'border-critical/25 border-t-critical/50',
+        purple: 'border-brand-violet/25 border-t-brand-violet/50',
+        neutral: 'border-border-mid border-t-border-bright/45',
+      },
+    },
+    defaultVariants: { tone: 'neutral' },
+  },
+)
+
+const toneDot = cva('h-1.5 w-1.5 shrink-0 rounded-full', {
+  variants: {
+    tone: {
+      green: 'bg-success',
+      cyan: 'bg-info',
+      yellow: 'bg-warning',
+      orange: 'bg-alert',
+      red: 'bg-critical',
+      purple: 'bg-brand-violet',
+      neutral: 'bg-text-tertiary',
+    },
+  },
+  defaultVariants: { tone: 'neutral' },
+})
+
 function Sparkline({ values, ariaLabel }: { values: number[]; ariaLabel: string }) {
   if (values.length < 2) return null
   const max = Math.max(...values, 1)
@@ -62,27 +95,47 @@ function parseMetric(value: string) {
       ? rawNumber.replace(/\./g, '')
       : rawNumber
   const numeric = Number(normalized) * (sign === '-' ? -1 : 1)
-  return Number.isFinite(numeric) ? { numeric, suffix, decimalDigits } : null
+  return Number.isFinite(numeric) ? { numeric, suffix, decimalDigits, explicitPlus: sign === '+' } : null
 }
 
-function AnimatedMetric({ value, reducedMotion }: { value: string; reducedMotion: boolean | null }) {
+function AnimatedMetricToken({ value, reducedMotion }: { value: string; reducedMotion: boolean | null }) {
   const parsed = parseMetric(value)
+  const enabled = Boolean(parsed) && !reducedMotion
   const animated = useAnimatedNumber(parsed?.numeric ?? 0, {
-    initialValue: 0,
+    initialValue: enabled ? 0 : parsed?.numeric ?? 0,
     durationMs: 980,
-    enabled: Boolean(parsed) && !reducedMotion,
+    enabled,
   })
 
   if (!parsed) return <>{value}</>
 
   return (
     <span key={value}>
+      {parsed.explicitPlus && animated >= 0 ? '+' : ''}
       {animated.toLocaleString('es-CL', {
         minimumFractionDigits: parsed.decimalDigits,
         maximumFractionDigits: parsed.decimalDigits,
       })}
       {parsed.suffix}
     </span>
+  )
+}
+
+function AnimatedMetric({ value, reducedMotion }: { value: string; reducedMotion: boolean | null }) {
+  return <AnimatedMetricToken value={value} reducedMotion={reducedMotion} />
+}
+
+export function AnimatedMetricText({ value, reducedMotion }: { value: string; reducedMotion: boolean | null }) {
+  const parts = value.split(/([+-]?\d[\d.,]*)/g)
+
+  return (
+    <>
+      {parts.map((part, index) => (
+        /^[+-]?\d[\d.,]*$/.test(part)
+          ? <AnimatedMetricToken key={`${index}-${part}`} value={part} reducedMotion={reducedMotion} />
+          : part
+      ))}
+    </>
   )
 }
 
@@ -119,10 +172,10 @@ export function KpiHero({
       initial={reduceMotion ? false : { opacity: 0, y: 14 }}
       animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
       transition={{ duration: 0.34, ease: 'easeOut' }}
-      className="relative rounded-lg border border-border-dim bg-card px-4 py-4 sm:px-5"
+      className={toneFrame({ tone })}
       aria-label={label}
     >
-      <div className="grid gap-4 lg:grid-cols-[minmax(250px,0.72fr)_minmax(0,1.28fr)] lg:items-end">
+      <div className="relative grid gap-4 lg:grid-cols-[minmax(250px,0.72fr)_minmax(0,1.28fr)] lg:items-end">
         <div>
           <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
             <span className="text-xs font-medium uppercase tracking-[0.1em] text-text-secondary">{label}</span>
@@ -163,7 +216,7 @@ export function KpiHero({
         {children && <div>{children}</div>}
       </div>
 
-      {footer && <div className="mt-3 border-t border-border-dim pt-3">{footer}</div>}
+      {footer && <div className="relative mt-3 border-t border-border-bright/35 pt-3">{footer}</div>}
     </motion.section>
   )
 }
@@ -197,7 +250,10 @@ export function StatItem({
       'min-w-0 grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-2 gap-y-0.5 lg:flex lg:flex-col lg:items-stretch lg:px-4 lg:first:pl-0 lg:last:pr-0',
       unavailable && 'opacity-50',
     )}>
-      <span className="text-xs font-medium leading-tight text-text-secondary">{label}</span>
+      <span className="flex min-w-0 items-center gap-1.5 text-xs font-medium leading-tight text-text-secondary">
+        <span className={toneDot({ tone })} aria-hidden="true" />
+        <span>{label}</span>
+      </span>
       <strong className="font-industrial-mono text-lg font-semibold leading-tight text-text-primary">
         <AnimatedMetric value={value} reducedMotion={reduceMotion} />
       </strong>
