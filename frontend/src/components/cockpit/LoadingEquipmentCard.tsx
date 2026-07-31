@@ -1,11 +1,22 @@
-import { motion, useReducedMotion } from 'framer-motion'
-import { ArrowUpRight } from 'lucide-react'
+import { useReducedMotion } from 'framer-motion'
+import { ChevronRight } from 'lucide-react'
 import type { CockpitEquipmentCardModel } from './cockpitModel'
 import { formatNumber, formatPct, formatTons } from './cockpitModel'
 import { getDetailModalAnchor, type DetailModalAnchor } from './detailModalPosition'
 import { useModuleT } from '../../i18n/useModuleT'
 import { cockpitT } from '../../i18n/modules/cockpit'
+import { cn } from '@/lib/utils'
 
+const toneDot: Record<CockpitEquipmentCardModel['tone'], string> = {
+  good: 'bg-success',
+  warn: 'bg-warning',
+  bad: 'bg-critical',
+  neutral: 'bg-text-tertiary',
+}
+
+// Fila densa, no tarjeta decorada: cada unidad de carguio es una linea de
+// una lista operacional. El detalle completo (foto, ruta, historial) vive
+// en el modal que ya abre esta misma fila (maestro-detalle, brief item 6).
 export function LoadingEquipmentCard({
   item,
   rank,
@@ -18,7 +29,7 @@ export function LoadingEquipmentCard({
   onOpenDetail?: (item: CockpitEquipmentCardModel, anchor: DetailModalAnchor) => void
 }) {
   const t = useModuleT(cockpitT)
-  const reduceMotion = useReducedMotion()
+  useReducedMotion()
   const openDetail = (element: HTMLElement) => {
     onOpenDetail?.(item, getDetailModalAnchor(element))
   }
@@ -30,18 +41,11 @@ export function LoadingEquipmentCard({
     : item.tone === 'warn' || (item.efficiency !== null && item.efficiency < 55)
       ? t.loading_card_revisar
       : t.loading_card_operando
-  const priorityClass = priority === t.loading_card_critico ? 'is-priority-bad' : priority === t.loading_card_revisar ? 'is-priority-warn' : 'is-priority-good'
 
   return (
-    <motion.article
-      className={`nmcp-equipment-card is-${item.tone} ${priorityClass}`}
+    <article
       role="button"
       tabIndex={0}
-      initial={reduceMotion ? false : { opacity: 0, y: 12 }}
-      animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
-      whileHover={reduceMotion ? undefined : { y: -5, scale: 1.012 }}
-      whileTap={reduceMotion ? undefined : { scale: 0.99 }}
-      transition={{ duration: 0.26, ease: 'easeOut' }}
       onClick={(event) => openDetail(event.currentTarget)}
       onKeyDown={(event) => {
         if (event.key === 'Enter' || event.key === ' ') {
@@ -50,46 +54,38 @@ export function LoadingEquipmentCard({
         }
       }}
       aria-label={t.loading_card_aria(item.id)}
+      className="grid cursor-pointer grid-cols-[auto_1fr_auto_auto_auto_auto] items-center gap-x-4 gap-y-1 border-b border-border-dim px-1 py-3 text-sm transition-colors last:border-b-0 hover:bg-hover"
     >
-      <div className="nmcp-equipment-card-top">
-        <div>
-          <span>{rank ? t.loading_card_rank(rank) : t.loading_card_unidad_carguio}</span>
-          <strong>{item.id}</strong>
-        </div>
-        <em>{priority}</em>
+      <span className={cn('h-2 w-2 shrink-0 rounded-full', toneDot[item.tone])} aria-hidden="true" />
+
+      <div className="flex min-w-0 flex-col">
+        <span className="truncate font-medium text-text-primary">
+          {item.id}
+          {rank && <span className="ml-2 text-xs font-normal text-text-tertiary">{t.loading_card_rank(rank)}</span>}
+        </span>
+        <span className="truncate text-xs text-text-tertiary">{item.operator ?? t.common_sin_dato}</span>
       </div>
 
-      <div className="nmcp-equipment-hero-metric">
-        <span>{t.loading_card_tonelaje_turno}</span>
-        <strong>{formatTons(item.tonnes)}</strong>
-        <small>{contributionPct === null ? t.loading_card_aporte_sin_dato : t.loading_card_pct_lider(formatPct(contributionPct, 1))}</small>
+      <div className="flex flex-col items-end">
+        <span className="font-industrial-mono font-semibold text-text-primary">{formatTons(item.tonnes)}</span>
+        <span className="text-xs text-text-tertiary">
+          {contributionPct === null ? t.loading_card_aporte_sin_dato : t.loading_card_pct_lider(formatPct(contributionPct, 1))}
+        </span>
       </div>
 
-      <div className="nmcp-equipment-chip-row">
-        <span><small>{t.loading_card_ciclos}</small><strong>{item.cycles === null ? t.common_sin_dato : formatNumber(item.cycles)}</strong></span>
-        <span><small>{t.loading_card_t_ciclo}</small><strong>{item.averageCycle === null ? t.common_sin_dato : formatNumber(item.averageCycle, 1)}</strong></span>
-        <span><small>{t.loading_card_eficiencia}</small><strong>{formatPct(item.efficiency, 1)}</strong></span>
+      <div className="hidden flex-col items-end sm:flex">
+        <span className="text-text-secondary">{item.cycles === null ? t.common_sin_dato : formatNumber(item.cycles)}</span>
+        <span className="text-xs text-text-tertiary">{t.loading_card_ciclos}</span>
       </div>
 
-      <div className="nmcp-equipment-operator-line">
-        <span>{t.loading_card_operador}</span>
-        <strong>{item.operator ?? t.common_sin_dato}</strong>
-      </div>
-
-      <div className="nmcp-route-block">
-        <span>{t.loading_card_origen_frente}</span>
-        <strong>{item.front}</strong>
-        <span>{t.loading_card_destino_principal}</span>
-        <strong>{item.destination}</strong>
-        <div className="nmcp-progress">
-          <i style={{ width: `${Math.max(0, Math.min(item.destinationPct ?? 0, 100))}%` }} />
-        </div>
-        <em>{item.destinationPct === null ? t.loading_card_participacion_sin_dato : t.loading_card_pct_destino(formatPct(item.destinationPct, 1))}</em>
-      </div>
-
-      <span className="nmcp-card-action" aria-hidden="true">
-        {t.loading_card_ver_detalle} <ArrowUpRight size={14} />
+      <span className={cn(
+        'hidden whitespace-nowrap text-xs font-medium md:inline',
+        item.tone === 'bad' ? 'text-critical' : item.tone === 'warn' ? 'text-warning' : 'text-success'
+      )}>
+        {priority}
       </span>
-    </motion.article>
+
+      <ChevronRight size={16} className="text-text-tertiary" aria-hidden="true" />
+    </article>
   )
 }
