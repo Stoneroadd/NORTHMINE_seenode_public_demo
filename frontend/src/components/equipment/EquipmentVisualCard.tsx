@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion'
-import { Activity, Gauge, Truck } from 'lucide-react'
+import { useState } from 'react'
+import { Activity, Gauge, ImageOff, Truck } from 'lucide-react'
 import { getEquipmentFamilyLabel, getEquipmentImage, getEquipmentLabel, getEquipmentType } from '../../data/equipmentAssets'
 import { useTilt3D } from '../../hooks/useTilt3D'
 import { CommandCard } from '../ui/CommandCard'
@@ -50,6 +51,7 @@ export function EquipmentVisualCard({
   const tone = toneFromOperationalState(state)
   const canOpenDetail = interactive && Boolean(onClick)
   const tilt = useTilt3D({ maxTilt: 5, scale: 1.012, enabled: interactive })
+  const [imageFailed, setImageFailed] = useState(false)
 
   return (
     <CommandCard
@@ -70,14 +72,22 @@ export function EquipmentVisualCard({
         tabIndex={canOpenDetail ? 0 : -1}
       >
         <div className="equipment-image-stage">
-          <motion.img
-            src={image}
-            alt={label}
-            className="equipment-image"
-            loading="lazy"
-            whileHover={{ scale: 1.08 }}
-            transition={{ duration: 0.25, ease: 'easeOut' }}
-          />
+          {imageFailed ? (
+            <div className="equipment-image-fallback" role="img" aria-label={label}>
+              <ImageOff aria-hidden="true" size={28} />
+              <span>{family}</span>
+            </div>
+          ) : (
+            <motion.img
+              src={image}
+              alt={label}
+              className="equipment-image"
+              loading="lazy"
+              whileHover={{ scale: 1.08 }}
+              transition={{ duration: 0.25, ease: 'easeOut' }}
+              onError={() => setImageFailed(true)}
+            />
+          )}
           <span className="equipment-scanline" />
           <span className="equipment-type">{family}</span>
           <MachineStatusOverlay state={state} toneladas={toneladas} ciclos={ciclos} rendimiento={tph} />

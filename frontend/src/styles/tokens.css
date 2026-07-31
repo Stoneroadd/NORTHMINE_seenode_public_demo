@@ -11339,6 +11339,20 @@ button:disabled,
   max-height: 190px;
 }
 
+.equipment-image-fallback {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  padding: 18px;
+  color: var(--nm-muted);
+}
+
+.equipment-image-fallback span {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
 .equipment-card-content {
   min-width: 0;
   height: auto;
@@ -11537,12 +11551,24 @@ button:disabled,
   .equipment-image-stage {
     min-height: 150px;
   }
+
+  .equipment-image {
+    max-height: 220px;
+  }
 }
 
 @media (min-width: 1280px) {
   .equipment-command-grid,
   .dashboard-equipment-panel .equipment-command-grid {
     grid-template-columns: repeat(3, minmax(280px, 1fr));
+  }
+
+  .equipment-image-stage {
+    min-height: 170px;
+  }
+
+  .equipment-image {
+    max-height: 240px;
   }
 
   .machine-hero-card {
