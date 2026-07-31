@@ -10,6 +10,7 @@ import { PremiumGaugeChart, PremiumHeatmapChart, PremiumLineAreaChart } from '..
 import { useAppStore } from '../store'
 import { useModuleT } from '../i18n/useModuleT'
 import { productionT, type ProductionT } from '../i18n/modules/production'
+import { formatHourLabel } from '../lib/time/operationalHour'
 
 function tons(value: number) {
   return `${Math.round(value).toLocaleString('es-CL')} t`
@@ -100,13 +101,13 @@ export function Production() {
     ? isProjectedGreen ? t.proyeccion_sobre_meta : t.proyeccion_riesgo
     : t.sin_evaluacion
   const hourlyChartData = data.produccion_acumulada.map((item) => ({
-    label: `${String(item.hora).padStart(2, '0')}:00`,
+    label: formatHourLabel(item.hora),
     toneladas: item.toneladas,
     acumulado: item.acumulado,
     meta: item.meta ?? 0,
   }))
-  const bestLabel = data.mejor_hora ? `${String(data.mejor_hora.hora).padStart(2, '0')}:00` : undefined
-  const worstLabel = data.peor_hora ? `${String(data.peor_hora.hora).padStart(2, '0')}:00` : undefined
+  const bestLabel = data.mejor_hora ? formatHourLabel(data.mejor_hora.hora) : undefined
+  const worstLabel = data.peor_hora ? formatHourLabel(data.peor_hora.hora) : undefined
   const state = productionState(hasTarget, currentGap, projectedGap, t)
   const elapsedLabel = typeof data.elapsed_pct === 'number' ? t.avance_pct(data.elapsed_pct.toFixed(1)) : t.avance_no_disponible
   const remainingTonnes = hasTarget ? Math.max(0, data.meta_turno - data.toneladas_turno) : null
@@ -224,7 +225,7 @@ export function Production() {
           tone={currentGap === null ? 'slate' : currentGap >= 0 ? 'green' : 'red'}
           icon={Clock3}
         />
-        <ExecutiveKpiCard title={t.kpi_mejor_hora} value={data.mejor_hora ? `${String(data.mejor_hora.hora).padStart(2, '0')}:00` : '-'} subtitle={data.mejor_hora ? tons(data.mejor_hora.toneladas) : t.kpi_sin_data} trend={t.kpi_pico} tone="cyan" icon={Clock3} />
+        <ExecutiveKpiCard title={t.kpi_mejor_hora} value={data.mejor_hora ? formatHourLabel(data.mejor_hora.hora) : '-'} subtitle={data.mejor_hora ? tons(data.mejor_hora.toneladas) : t.kpi_sin_data} trend={t.kpi_pico} tone="cyan" icon={Clock3} />
       </section>
 
       {hasProductionRows && <section className="chart-grid">

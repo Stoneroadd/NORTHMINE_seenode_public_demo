@@ -202,8 +202,11 @@ function comparisonSameWindow(t: CockpitT, comparison?: ShiftComparisonResponse)
   const reference = liveShift === 'NOCHE' ? dia : noche
   const delta = current - reference
   const pct = reference > 0 ? (current / reference) * 100 : null
+  const hourField = liveShift === 'NOCHE' ? 'noche_hour' : 'dia_hour'
+  const fromHour = rows[0]?.[hourField] ?? '--:--'
+  const toHour = rows[rows.length - 1]?.[hourField] ?? '--:--'
   return {
-    label: t.fair_comparison_ventana(slots),
+    label: t.fair_comparison_ventana(fromHour, toHour),
     value: delta >= 0 ? `+${formatTons(delta)}` : formatTons(delta),
     detail: pct === null
       ? t.fair_comparison_actual_sin_ref(formatTons(current))

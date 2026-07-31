@@ -18,6 +18,7 @@ import {
   useChartPaletteKey,
 } from '../components/charts/premium/chartTheme'
 import type { LoaderPerformance, PerformanceSummary } from '../lib/api'
+import { formatHourLabel } from '../lib/time/operationalHour'
 
 type PeriodKey = '7d' | '14d' | 'month' | 'custom'
 
@@ -148,7 +149,7 @@ function buildAverageCurveOption(data: PerformanceSummary): EChartsOption {
 
 function buildHeatmapOption(data: PerformanceSummary): EChartsOption {
   const weekdays = ['Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab', 'Dom']
-  const hours = Array.from({ length: 24 }, (_, hour) => `${String(hour).padStart(2, '0')}:00`)
+  const hours = Array.from({ length: 24 }, (_, hour) => formatHourLabel(hour))
   const values = data.heatmap.map((item) => [item.weekday, item.hora, item.promedio_ton, item.ranking])
   const maxValue = Math.max(...data.heatmap.map((item) => item.promedio_ton), 1)
 

@@ -260,8 +260,7 @@ export function EquipmentActivityModal({ target, onClose }: Props) {
                     return (
                       <article key={row.slot}>
                         <span className="nm-activity-hour">
-                          <b>{row.label}</b>
-                          <small>{hour}</small>
+                          <b>{hour}</b>
                         </span>
                         <span className="nm-activity-route">
                           <small>{origin}</small>

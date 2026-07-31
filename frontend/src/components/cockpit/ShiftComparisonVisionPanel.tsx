@@ -104,9 +104,20 @@ function selectedChartTonnes(row: ShiftComparisonHourlyPoint, focusShift: ShiftF
   return row.dia_tonnes + row.noche_tonnes
 }
 
+// The backend's `label` field ("H+1".."H+12") is an internal slot index, not a
+// real time -- every user-facing rendering resolves the real clock hour from
+// dia_hour/noche_hour instead (the "H+N" identifier stays intact on the row
+// for anything that still needs it internally, e.g. `slot`).
+function resolveHourLabel(row: ShiftComparisonHourlyPoint, focusShift: ShiftFocus): string {
+  if (focusShift === 'DIA') return row.dia_hour
+  if (focusShift === 'NOCHE') return row.noche_hour
+  return `${row.dia_hour} - ${row.noche_hour}`
+}
+
 function buildEquipmentVisualHourlyRows(rows: ShiftComparisonEquipmentHourlyPoint[], focusShift: ShiftFocus): EquipmentVisualHourlyPoint[] {
   return rows.map((row) => ({
     ...row,
+    label: resolveHourLabel(row, focusShift),
     hourly_total_tonnes: selectedChartTonnes(row, focusShift),
   }))
 }
@@ -128,6 +139,7 @@ function buildVisualHourlyRows(data: ShiftComparisonResponse, liveShift: ShiftFo
     }
     return {
       ...row,
+      label: resolveHourLabel(row, focusShift),
       dia_pending: diaPending,
       noche_pending: nochePending,
       hourly_total_tonnes: actualTotal,
@@ -149,6 +161,9 @@ function fairWindowSummary(data: ShiftComparisonResponse, liveShift: ShiftFocus)
   const fullReference = liveShift === 'DIA' ? data.summary.noche.total_tonnes : data.summary.dia.total_tonnes
   const currentRate = slots > 0 ? current / slots : 0
   const referenceRate = slots > 0 ? previous / slots : 0
+  const hourField = liveShift === 'DIA' ? 'dia_hour' : 'noche_hour'
+  const startHour = rows[0]?.[hourField] ?? '--:--'
+  const endHour = rows[rows.length - 1]?.[hourField] ?? '--:--'
   return {
     slots,
     dia,
@@ -159,6 +174,8 @@ function fairWindowSummary(data: ShiftComparisonResponse, liveShift: ShiftFocus)
     fullReference,
     currentRate,
     referenceRate,
+    startHour,
+    endHour,
     deltaSameWindow: current - previous,
     deltaProjection: projected - fullReference,
   }
@@ -348,18 +365,12 @@ function HourlyValuesStrip({
   animationId?: string
 }) {
   const t = useModuleT(cockpitT)
-  const hourLabel = (row: ShiftComparisonHourlyPoint) => {
-    if (focusShift === 'DIA') return row.dia_hour
-    if (focusShift === 'NOCHE') return row.noche_hour
-    return `${row.dia_hour} - ${row.noche_hour}`
-  }
 
   return (
     <div className={`nmcp-shift-hourly-values is-${focusShift.toLowerCase()}`} aria-label={t.sc_tonelajes_visibles_aria}>
       {rows.map((row) => (
         <article key={row.slot} className={row.dia_pending || row.noche_pending ? 'is-pending' : undefined}>
           <span>{row.label}</span>
-          <small className="nmcp-shift-hour-label">{hourLabel(row)}</small>
           {focusShift !== 'NOCHE' && (
             row.dia_pending
               ? <strong className="is-pending">{t.sc_pendiente}</strong>
@@ -436,7 +447,7 @@ function FairComparisonCard({ summary, liveShift }: { summary: ReturnType<typeof
     <div className="nmcp-shift-fair-card" aria-label={t.sc_lectura_justa_aria}>
       <div>
         <span>{t.sc_comparacion_justa}</span>
-        <strong>{t.sc_ventana(summary.slots)}</strong>
+        <strong>{t.sc_ventana(summary.startHour, summary.endHour)}</strong>
         <small>
           {currentLabel} {formatTons(summary.current)} vs {referenceLabel} {formatTons(summary.previous)}
         </small>
@@ -1341,7 +1352,7 @@ function EquipmentComparisonDetailModal({
   const equipmentStatuses = aggregateEquipmentStatuses(equipmentRows, focusShift)
   const detailAnimationId = `${type}-${item.id}-${focusShift}`
   const operationalRows = equipmentRows.map((row) => {
-    const hourLabel = focusShift === 'DIA' ? row.dia_hour : focusShift === 'NOCHE' ? row.noche_hour : `${row.dia_hour} / ${row.noche_hour}`
+    const hourLabel = resolveHourLabel(row, focusShift)
     const origin = selectedHourlyString(focusShift, row.dia_origin, row.noche_origin)
     const destination = selectedHourlyString(focusShift, row.dia_destination, row.noche_destination)
     const tonnes = selectedHourlyTonnes(row, focusShift)
@@ -1451,7 +1462,7 @@ function EquipmentComparisonDetailModal({
           {type === 'truck' && <span><small>{t.sc_retorno_n03}</small><strong>{formatMetric(avgEmptyReturnN03, 'min', t)}</strong></span>}
           {type === 'truck' && <span><small>{t.sc_espera_n06}</small><strong>{formatMetric(avgShovelWaitN06, 'min', t)}</strong></span>}
           {type === 'truck' && <span><small>{t.sc_ciclo_caex}</small><strong>{formatMetric(avgCaexCycle ?? avgTravelCycle, 'min', t)}</strong></span>}
-          <span><small>{t.sc_mejor_hora_label}</small><strong>{peak ? t.sc_mejor_hora_kv(peak.label, formatTons(selectedHourlyTonnes(peak, focusShift))) : t.common_sin_dato}</strong></span>
+          <span><small>{t.sc_mejor_hora_label}</small><strong>{peak ? t.sc_mejor_hora_kv(resolveHourLabel(peak, focusShift), formatTons(selectedHourlyTonnes(peak, focusShift))) : t.common_sin_dato}</strong></span>
         </div>
 
         {focusShift === 'AMBOS' && (
@@ -1464,7 +1475,7 @@ function EquipmentComparisonDetailModal({
               <span className="nmcp-section-kicker">{t.sc_tonelaje_hora_hora}</span>
               <h3>{focusLabel(focusShift, t)}</h3>
             </div>
-            <span className="nmcp-panel-tag">{peak ? t.sc_peak(peak.label) : 'API v1'}</span>
+            <span className="nmcp-panel-tag">{peak ? t.sc_peak(resolveHourLabel(peak, focusShift)) : 'API v1'}</span>
           </div>
           {equipmentRows.length ? (
             <>
@@ -1495,7 +1506,7 @@ function EquipmentComparisonDetailModal({
                     />
                         {peak && (
                           <ReferenceLine
-                            x={peak.label}
+                            x={resolveHourLabel(peak, focusShift)}
                             stroke="#FFC928"
                             strokeDasharray="4 4"
                             strokeOpacity={0.62}
@@ -1600,12 +1611,12 @@ function EquipmentComparisonDetailModal({
               <div className="nmcp-operational-summary-grid">
                 <article className="is-peak">
                   <span>Mejor hora</span>
-                  <strong>{peak ? peak.label : t.common_sin_dato}</strong>
+                  <strong>{peak ? resolveHourLabel(peak, focusShift) : t.common_sin_dato}</strong>
                   <small>{peak ? `${formatTons(selectedHourlyTonnes(peak, focusShift))} / ${t.sc_ciclos_n(formatNumber(selectedHourlyCycles(peak, focusShift)))}` : t.sc_sin_detalle_horario}</small>
                 </article>
                 <article>
                   <span>Hora baja</span>
-                  <strong>{lowProductionRow ? lowProductionRow.row.label : t.common_sin_dato}</strong>
+                  <strong>{lowProductionRow ? resolveHourLabel(lowProductionRow.row, focusShift) : t.common_sin_dato}</strong>
                   <small>{lowProductionRow ? `${formatTons(lowProductionRow.tonnes)} / ${t.sc_ciclos_n(formatNumber(lowProductionRow.cycles))}` : t.sc_sin_detalle_horario}</small>
                 </article>
                 <article>
@@ -1626,8 +1637,7 @@ function EquipmentComparisonDetailModal({
                     >
                       <div className="nmcp-slot-card-head">
                         <span>
-                          <b>{detail.row.label}</b>
-                          <small>{detail.hourLabel}</small>
+                          <b>{detail.hourLabel}</b>
                         </span>
                         <strong className="nmcp-slot-tonnes">{formatTons(detail.tonnes)}</strong>
                         <em className={detail.recommendationClass}>
@@ -2009,9 +2019,8 @@ export function ShiftComparisonVisionPanel({
           <div className="nmcp-shift-diff-list">
             {topDiffRows.map((row) => (
               <article key={row.slot} className={diffClass(row.difference_tonnes)}>
-                <span>{row.label}</span>
+                <span>{focusShift === 'DIA' ? row.dia_hour : focusShift === 'NOCHE' ? row.noche_hour : `${row.dia_hour} vs ${row.noche_hour}`}</span>
                 <strong>{focusShift === 'DIA' ? formatTons(row.dia_tonnes) : focusShift === 'NOCHE' ? formatTons(row.noche_tonnes) : formatTons(row.difference_tonnes)}</strong>
-                <small>{focusShift === 'DIA' ? row.dia_hour : focusShift === 'NOCHE' ? row.noche_hour : `${row.dia_hour} vs ${row.noche_hour}`}</small>
               </article>
             ))}
           </div>

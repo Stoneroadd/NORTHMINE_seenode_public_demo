@@ -11,6 +11,7 @@ import { ErrorState } from '../components/common/ErrorState'
 import { useAnimatedNumber } from '../hooks/useAnimatedNumber'
 import { useModuleT } from '../i18n/useModuleT'
 import { predictionT, type PredictionT } from '../i18n/modules/prediction'
+import { formatHourLabel } from '../lib/time/operationalHour'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -70,7 +71,7 @@ function buildProjectionOption(d: MlPrediction, t: PredictionT): EChartsOption {
     d.turno_actual.turno === 'NOCHE'
       ? [19, 20, 21, 22, 23, 0, 1, 2, 3, 4, 5, 6]
       : [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
-  const labels = hoursOrder.map((h) => `${String(h).padStart(2, '0')}:00`)
+  const labels = hoursOrder.map((h) => formatHourLabel(h))
   const elapsed = Math.round(d.turno_actual.horas_transcurridas)
   const { produccion_actual, proyeccion_final, meta_turno, intervalo_inf, intervalo_sup } =
     d.prediccion

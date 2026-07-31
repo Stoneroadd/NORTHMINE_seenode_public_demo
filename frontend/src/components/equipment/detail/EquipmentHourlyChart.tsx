@@ -5,13 +5,14 @@ import type { EquipmentHourlyPoint } from '../../../types/equipment'
 import { axisLabel, formatNumber, formatTons, premiumPalette, tooltipBase, useChartPaletteKey } from '../../charts/premium/chartTheme'
 import { useModuleT } from '../../../i18n/useModuleT'
 import { equipmentT } from '../../../i18n/modules/equipment'
+import { formatHourLabel } from '../../../lib/time/operationalHour'
 
 export function EquipmentHourlyChart({ data }: { data: EquipmentHourlyPoint[] }) {
   const t = useModuleT(equipmentT)
   const themeId = useChartPaletteKey()
   const chartRows = useMemo(() => data.map((item) => ({
     ...item,
-    label: `${String(item.hora).padStart(2, '0')}:00`,
+    label: formatHourLabel(item.hora),
   })), [data])
   const summary = useMemo(() => {
     const totalTonnes = chartRows.reduce((sum, item) => sum + item.toneladas, 0)

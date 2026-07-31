@@ -11,6 +11,7 @@ import type {
   ProductionShift,
   SmartAlert,
 } from './api'
+import { formatHourLabel } from './time/operationalHour'
 
 export type OperationalStatus = 'controlado' | 'preventivo' | 'critico'
 export type OperationalSeverity = 'critical' | 'high' | 'medium' | 'low'
@@ -545,7 +546,7 @@ export function buildOperationalInsights(input: OperationalInsightInput): Operat
       priority: 72,
       title: 'Caida de produccion horaria',
       explanation: worstHour
-        ? `Hora ${worstHour.hora} bajo meta por ${formatTons(Math.abs(worstHour.diferencia_meta ?? 0))}.`
+        ? `${formatHourLabel(worstHour.hora)} bajo meta por ${formatTons(Math.abs(worstHour.diferencia_meta ?? 0))}.`
         : 'La tendencia del turno muestra perdida de ritmo productivo.',
       recommendedAction: 'Confirmar colas, cambios de frente y demoras de ciclo en la ventana horaria afectada.',
       source: 'Perfil horario',

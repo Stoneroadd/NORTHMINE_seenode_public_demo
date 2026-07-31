@@ -1,4 +1,5 @@
 import type { CockpitResponse } from '../../lib/api'
+import { formatShiftTime } from '../../lib/time/operationalHour'
 
 export type DataAvailability = 'available' | 'missing' | 'partial'
 
@@ -154,10 +155,7 @@ function accumulatedHourly(points: CockpitResponse['hourly_production']): Cockpi
 }
 
 function timeLabel(value: string | null | undefined): string | null {
-  if (!value) return null
-  const parsed = new Date(value)
-  if (Number.isNaN(parsed.getTime())) return null
-  return parsed.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })
+  return formatShiftTime(value)
 }
 
 function shiftPeriod(response: CockpitResponse): string {
@@ -251,7 +249,7 @@ export function buildCockpitViewModel(response: CockpitResponse): CockpitViewMod
     shiftDate: response.selected_date ?? response.shift.date,
     selectedShift: response.selected_shift ?? response.shift.name,
     shiftPeriod: shiftPeriod(response),
-    lastRecordLabel: timeLabel(lastRealRecord) ?? new Date(response.generated_at).toLocaleTimeString('es-CL'),
+    lastRecordLabel: timeLabel(lastRealRecord) ?? formatShiftTime(response.generated_at) ?? 'Sin registro',
     lastRealRecordLabel: timeLabel(lastRealRecord) ?? 'Sin registro real',
     dataQualityLabel: response.data_quality?.status ?? (response.stale ? 'STALE' : 'OK'),
     dataQualityScore: response.data_quality?.score ?? null,

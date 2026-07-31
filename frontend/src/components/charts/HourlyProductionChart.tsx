@@ -11,6 +11,7 @@ import {
 import type { HourlyProduction } from '../../lib/api'
 import { useModuleT } from '../../i18n/useModuleT'
 import { chartsT } from '../../i18n/modules/charts'
+import { formatHourLabel } from '../../lib/time/operationalHour'
 
 const tooltipStyle = {
   background: 'rgba(13,18,29,0.96)',
@@ -22,7 +23,7 @@ const tooltipStyle = {
 export function HourlyProductionChart({ data }: { data: HourlyProduction[] }) {
   const t = useModuleT(chartsT)
   const chartData = data.map((item) => ({
-    hora: `${String(item.hora).padStart(2, '0')}:00`,
+    hora: formatHourLabel(item.hora),
     toneladas: item.toneladas,
     acumulado: item.acumulado ?? item.toneladas,
   }))

@@ -2,6 +2,7 @@ import type { DailyProduction, HourlyShift } from '../../lib/api'
 import { PremiumBarChart, PremiumLineAreaChart } from './premium'
 import { useModuleT } from '../../i18n/useModuleT'
 import { chartsT } from '../../i18n/modules/charts'
+import { formatHourLabel } from '../../lib/time/operationalHour'
 
 function shortDate(value: string) {
   const date = new Date(`${value}T00:00:00`)
@@ -23,7 +24,7 @@ export function ProductionTrendChart({ daily, hourly, planAvailable = true }: Pr
   }))
 
   const hourlyData = hourly.map((item) => ({
-    label: `${String(item.hora).padStart(2, '0')}:00`,
+    label: formatHourLabel(item.hora),
     toneladas: item.tonelaje,
   }))
 

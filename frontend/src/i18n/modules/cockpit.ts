@@ -68,7 +68,7 @@ export interface CockpitT {
   fair_comparison_label: string
   fair_comparison_sin_dato: string
   fair_comparison_sin_respuesta: string
-  fair_comparison_ventana: (slots: number) => string
+  fair_comparison_ventana: (fromHour: string, toHour: string) => string
   fair_comparison_actual_sin_ref: (current: string) => string
   fair_comparison_detalle: (current: string, reference: string, pct: string) => string
   required_green_meta_no_cargada: string
@@ -555,7 +555,7 @@ export interface CockpitT {
   sc_dia_misma_ventana: string
   sc_noche_misma_ventana: string
   sc_comparacion_justa: string
-  sc_ventana: (slots: number) => string
+  sc_ventana: (fromHour: string, toHour: string) => string
   sc_diferencia_misma_ventana: string
   sc_evita_comparar: string
   sc_proyeccion_vs_completo: string
@@ -746,7 +746,7 @@ export const cockpitT: ModuleDict<CockpitT> = {
     fair_comparison_label: 'Comparacion justa',
     fair_comparison_sin_dato: 'Sin dato',
     fair_comparison_sin_respuesta: 'No hay respuesta de /api/shift-comparison.',
-    fair_comparison_ventana: (slots) => `Ventana H+1-H+${slots}`,
+    fair_comparison_ventana: (fromHour, toHour) => `Ventana ${fromHour} - ${toHour}`,
     fair_comparison_actual_sin_ref: (current) => `${current} turno actual / referencia sin dato`,
     fair_comparison_detalle: (current, reference, pct) => `${current} actual vs ${reference} ref. (${pct}%)`,
     required_green_meta_no_cargada: 'Meta mensual no cargada.',
@@ -1216,7 +1216,7 @@ export const cockpitT: ModuleDict<CockpitT> = {
     sc_dia_misma_ventana: 'Dia misma ventana',
     sc_noche_misma_ventana: 'Noche misma ventana',
     sc_comparacion_justa: 'Comparacion justa',
-    sc_ventana: (slots) => `H+1-H+${slots}`,
+    sc_ventana: (fromHour, toHour) => `${fromHour} - ${toHour}`,
     sc_diferencia_misma_ventana: 'Diferencia misma ventana',
     sc_evita_comparar: 'Evita comparar 12 h contra turno parcial.',
     sc_proyeccion_vs_completo: 'Proyeccion vs turno completo',
@@ -1292,7 +1292,7 @@ export const cockpitT: ModuleDict<CockpitT> = {
     sc_noche_hora: (hour) => `Noche ${hour}`,
     sc_hora_futura: 'Hora futura',
     sc_dia_noche_disponible: 'Dia + noche disponible',
-    sc_linea_verde_proyectada: 'Linea verde: acumulado proyectado hacia H+12',
+    sc_linea_verde_proyectada: 'Linea verde: acumulado proyectado hacia el cierre de turno',
     sc_sin_operador: 'Sin operador',
     sc_total_hora: 'Total hora',
     sc_ton_h_label: 'Ton/h',
@@ -1405,7 +1405,7 @@ export const cockpitT: ModuleDict<CockpitT> = {
     fair_comparison_label: 'Fair comparison',
     fair_comparison_sin_dato: 'No data',
     fair_comparison_sin_respuesta: 'No response from /api/shift-comparison.',
-    fair_comparison_ventana: (slots) => `Window H+1-H+${slots}`,
+    fair_comparison_ventana: (fromHour, toHour) => `Window ${fromHour} - ${toHour}`,
     fair_comparison_actual_sin_ref: (current) => `${current} current shift / reference without data`,
     fair_comparison_detalle: (current, reference, pct) => `${current} current vs ${reference} ref. (${pct}%)`,
     required_green_meta_no_cargada: 'Monthly target not loaded.',
@@ -1875,7 +1875,7 @@ export const cockpitT: ModuleDict<CockpitT> = {
     sc_dia_misma_ventana: 'Day same window',
     sc_noche_misma_ventana: 'Night same window',
     sc_comparacion_justa: 'Fair comparison',
-    sc_ventana: (slots) => `H+1-H+${slots}`,
+    sc_ventana: (fromHour, toHour) => `${fromHour} - ${toHour}`,
     sc_diferencia_misma_ventana: 'Difference same window',
     sc_evita_comparar: 'Avoids comparing 12 h against a partial shift.',
     sc_proyeccion_vs_completo: 'Projection vs full shift',
@@ -1951,7 +1951,7 @@ export const cockpitT: ModuleDict<CockpitT> = {
     sc_noche_hora: (hour) => `Night ${hour}`,
     sc_hora_futura: 'Future hour',
     sc_dia_noche_disponible: 'Day + night available',
-    sc_linea_verde_proyectada: 'Green line: cumulative projected toward H+12',
+    sc_linea_verde_proyectada: 'Green line: cumulative projection toward shift close',
     sc_sin_operador: 'No operator',
     sc_total_hora: 'Total hour',
     sc_ton_h_label: 't/h',
