@@ -109,6 +109,9 @@ class Settings:
     log_level: str
     log_dir: str
     audit_db_path: str
+    demo_access_db_path: str
+    demo_access_fingerprint_key: str
+    demo_access_fingerprint_key_is_ephemeral: bool
     allow_demo_login: bool
     users_db_path: str
     bootstrap_admin_user: str
@@ -174,6 +177,16 @@ class Settings:
             errors.append("PASSWORD_SALT is using a placeholder value")
         if len(self.password_salt) < 32:
             errors.append("PASSWORD_SALT must contain at least 32 characters in production")
+        if self.demo_access_fingerprint_key_is_ephemeral:
+            errors.append(
+                "NORTHMINE_DEMO_ACCESS_FINGERPRINT_KEY is not set "
+                "(would use a random per-process value)"
+            )
+        if len(self.demo_access_fingerprint_key) < 32:
+            errors.append(
+                "NORTHMINE_DEMO_ACCESS_FINGERPRINT_KEY must contain at least "
+                "32 characters in production"
+            )
         if self.secret_key == self.refresh_secret_key:
             errors.append("SECRET_KEY and REFRESH_SECRET_KEY must be different in production")
         bootstrap_password = self.bootstrap_admin_password.strip()
@@ -248,6 +261,10 @@ def get_settings() -> Settings:
     env_secret_key = os.getenv("SECRET_KEY", "").strip()
     env_refresh_secret_key = os.getenv("REFRESH_SECRET_KEY", "").strip()
     env_password_salt = os.getenv("PASSWORD_SALT", "").strip()
+    env_demo_access_fingerprint_key = os.getenv(
+        "NORTHMINE_DEMO_ACCESS_FINGERPRINT_KEY",
+        "",
+    ).strip()
     env_cors_origins = os.getenv("NORTHMINE_CORS_ORIGINS", "").strip()
     return Settings(
         app_name=os.getenv("NORTHMINE_APP_NAME", "NORTHMINE SaaS API"),
@@ -279,6 +296,12 @@ def get_settings() -> Settings:
         log_level=os.getenv("LOG_LEVEL", "INFO"),
         log_dir=os.getenv("NORTHMINE_LOG_DIR", str(root_dir / "logs")),
         audit_db_path=os.getenv("NORTHMINE_AUDIT_DB", str(root_dir / "northmine_audit.db")),
+        demo_access_db_path=os.getenv(
+            "NORTHMINE_DEMO_ACCESS_DB",
+            str(root_dir / "northmine_demo_access.db"),
+        ),
+        demo_access_fingerprint_key=env_demo_access_fingerprint_key or _random_secret(),
+        demo_access_fingerprint_key_is_ephemeral=not env_demo_access_fingerprint_key,
         allow_demo_login=os.getenv("NORTHMINE_ALLOW_DEMO_LOGIN", "true").lower() == "true",
         users_db_path=os.getenv("NORTHMINE_USERS_DB", str(root_dir / "northmine_users.db")),
         bootstrap_admin_user=os.getenv("NORTHMINE_BOOTSTRAP_ADMIN_USER", ""),

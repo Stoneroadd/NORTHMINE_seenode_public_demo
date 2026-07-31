@@ -19,6 +19,8 @@ RATE_LIMITS: dict[str, str] = {
     "/api/averias/mail-sync": "5/minute",
     "/api/admin/audit-log": "30/minute",
     "/api/admin/metrics": "30/minute",
+    "/api/demo-access/requests": "5/hour",
+    "/api/demo-access/admin": "60/minute",
 }
 
 DEFAULT_RATE_LIMIT = "60/minute"

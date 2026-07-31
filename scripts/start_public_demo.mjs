@@ -97,6 +97,7 @@ const env = {
   NORTHMINE_LOCAL_AUTO_SYNC_ENABLED: "false",
   NORTHMINE_AUDIT_DB: process.env.NORTHMINE_AUDIT_DB || `${defaultDbDir}/northmine_demo_audit.db`,
   NORTHMINE_USERS_DB: process.env.NORTHMINE_USERS_DB || `${defaultDbDir}/northmine_demo_users.db`,
+  NORTHMINE_DEMO_ACCESS_DB: process.env.NORTHMINE_DEMO_ACCESS_DB || `${defaultDbDir}/northmine_demo_access.db`,
 };
 
 ensureUvicorn(python);
