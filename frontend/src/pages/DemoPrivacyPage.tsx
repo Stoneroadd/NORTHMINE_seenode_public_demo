@@ -53,18 +53,21 @@ export function DemoPrivacyPage() {
           <section>
             <h2>Conservacion y eliminacion</h2>
             <p>
-              Conservamos la solicitud durante el periodo necesario para su
-              revision y seguimiento. Para pedir su eliminacion, utiliza el
-              mismo canal por el que recibiste la respuesta o invitacion.
+              El plazo exacto de conservacion y el procedimiento permanente de
+              eliminacion deben ser definidos por el responsable antes del
+              lanzamiento comercial. Mientras este demo se encuentre en
+              evaluacion, no envies informacion sensible o confidencial.
             </p>
           </section>
           <section className="nm-privacy-page__pending">
-            <h2>Informacion del responsable pendiente</h2>
+            <h2>Bloqueos de privacidad pendientes</h2>
             <p>
               Antes de un lanzamiento comercial definitivo, el propietario
-              debe publicar aqui su identidad legal y un canal permanente para
-              solicitudes de privacidad. Este demo no afirma cumplimiento
-              certificado ni una jurisdiccion legal no verificada.
+              debe publicar aqui su identidad legal, un canal permanente para
+              solicitudes de privacidad, el plazo de conservacion y el
+              procedimiento de eliminacion o anonimizacion. Este demo no
+              afirma cumplimiento certificado ni una jurisdiccion legal no
+              verificada.
             </p>
           </section>
         </article>

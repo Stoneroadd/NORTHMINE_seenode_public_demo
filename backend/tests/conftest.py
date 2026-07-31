@@ -26,6 +26,8 @@ os.environ.setdefault(
     "NORTHMINE_DEMO_ACCESS_DB",
     str(Path(tempfile.gettempdir()) / f"northmine_demo_access_tests_{os.getpid()}.db"),
 )
+os.environ["NORTHMINE_DEMO_ACCESS_DATABASE_URL"] = ""
+os.environ["NORTHMINE_DEMO_ACCESS_REQUIRE_DURABLE"] = "false"
 os.environ.setdefault("NORTHMINE_DEMO_ACCESS_FINGERPRINT_KEY", "test-" * 16)
 
 from typing import Any, Generator

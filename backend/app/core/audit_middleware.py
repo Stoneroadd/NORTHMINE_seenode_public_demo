@@ -5,9 +5,11 @@ import time
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.core.audit import log_event
+from app.core.config import get_settings
 from app.core.security import verify_access_token
 
 SKIP_PATHS = {"/api/health", "/health", "/docs", "/openapi.json", "/redoc", "/"}
+PUBLIC_DEMO_ACCESS_PATH = f"{get_settings().api_prefix}/demo-access/requests"
 
 
 class AuditMiddleware(BaseHTTPMiddleware):
@@ -25,10 +27,13 @@ class AuditMiddleware(BaseHTTPMiddleware):
             payload = verify_access_token(auth[7:])
             if payload:
                 usuario = payload.get("sub", "anon")
+        audit_ip = request.client.host if request.client else "unknown"
+        if request.url.path == PUBLIC_DEMO_ACCESS_PATH and usuario == "anon":
+            audit_ip = "redacted"
 
         log_event(
             usuario=usuario,
-            ip=request.client.host if request.client else "unknown",
+            ip=audit_ip,
             metodo=request.method,
             endpoint=request.url.path,
             status_code=response.status_code,

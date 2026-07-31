@@ -141,6 +141,8 @@ export function DemoRequestForm() {
           message = 'Se alcanzo el limite temporal de solicitudes. Intenta nuevamente mas tarde.'
         } else if (error.status === 422) {
           message = 'La API rechazo uno o mas campos. Revisa los datos ingresados.'
+        } else if (error.status === 503) {
+          message = 'Las solicitudes estan temporalmente no disponibles. Tus datos no fueron guardados; intenta nuevamente mas tarde.'
         } else if (error.status >= 500) {
           message = 'El servicio de solicitudes no esta disponible en este momento.'
         }
