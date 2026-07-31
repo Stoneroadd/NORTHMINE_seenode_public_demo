@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import os
+import tempfile
+from pathlib import Path
 
 # BCRYPT_ROUNDS se lee una sola vez como constante de modulo en app.core.security,
 # asi que debe fijarse ANTES de importar app.main (que arrastra ese import).
@@ -20,6 +22,11 @@ os.environ.setdefault("BCRYPT_ROUNDS", "4")
 # El fixture _init_db de mas abajo tambien lo fija, pero corre DESPUES de este
 # import de modulo, demasiado tarde para el chequeo de crypto.py.
 os.environ.setdefault("ENVIRONMENT", "testing")
+os.environ.setdefault(
+    "NORTHMINE_DEMO_ACCESS_DB",
+    str(Path(tempfile.gettempdir()) / f"northmine_demo_access_tests_{os.getpid()}.db"),
+)
+os.environ.setdefault("NORTHMINE_DEMO_ACCESS_FINGERPRINT_KEY", "test-" * 16)
 
 from typing import Any, Generator
 

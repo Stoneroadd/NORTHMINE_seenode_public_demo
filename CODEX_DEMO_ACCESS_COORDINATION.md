@@ -5,7 +5,7 @@
 - Branch: `codex/demo-access-landing`
 - Worktree: `C:\Users\maste\Downloads\NORTHMINE_seenode_public_demo_codex_demo_access`
 - Base commit: `6f7a763`
-- Status: En curso
+- Status: Listo para integracion, sin push ni merge
 
 ## Objective
 
@@ -23,9 +23,11 @@ New frontend files under:
 - `frontend/src/pages/DemoRequestSuccessPage.tsx`
 - `frontend/src/pages/DemoPrivacyPage.tsx`
 - `frontend/src/pages/DemoAccessAdminPage.tsx`
+- `frontend/src/PublicRouter.tsx`
 - `frontend/src/services/demoAccessService.ts`
 - `frontend/src/types/demoAccess.ts`
 - `frontend/src/styles/demo-landing.css`
+- `frontend/src/styles/demo-access-admin.css`
 
 New backend files under:
 
@@ -38,6 +40,7 @@ New backend files under:
 Minimal integration changes, kept in a separate commit:
 
 - `frontend/src/App.tsx`
+- `frontend/src/main.tsx`
 - `backend/app/main.py`
 - `backend/app/core/config.py`
 - `backend/app/core/rate_limit.py`
@@ -77,3 +80,29 @@ Codex will not touch:
 - No automatic user creation, email delivery, or invitation issuance.
 - Existing authentication, refresh token, operational services, and demo
   datasets remain unchanged.
+
+## Validation
+
+- Frontend TypeScript: passed.
+- Frontend production build: passed.
+- Full Seenode build script: passed.
+- Demo access API tests: 10 passed.
+- Static Impeccable detector: 0 findings.
+- Local FastAPI health, SPA fallback, login, submit, list, and approve: passed.
+- Full backend suite: 123 passed, 14 unrelated failures in existing
+  WENCO/audit/security tests that require unavailable real SQL configuration
+  or fail in pre-existing code paths.
+
+## Integration Notes
+
+- `main` advanced from `6f7a763` to `1b42f4a` while this worktree was active.
+  Rebase this branch after Claude finishes before merging.
+- The later main commits do not modify the Codex landing, router, FastAPI
+  registration, or demo access files, but the rebase and build must still be
+  repeated.
+- No suitable Cockpit or Map 3D captures were present in the repository.
+  Honest placeholders remain until verified captures are supplied.
+- The connected browser was unavailable, so screenshot and human visual
+  validation remain blocked. No alternate browser surface was used.
+- Seenode filesystem durability is not documented. Local SQLite remains a
+  development fallback and must not be presented as reliable lead storage.
