@@ -1,3 +1,5 @@
+import { NorthmineBrand } from './NorthmineBrand'
+
 export function LandingFooter() {
   const year = new Date().getFullYear()
 
@@ -6,11 +8,7 @@ export function LandingFooter() {
       <div className="nm-public-shell nm-public-footer__inner">
         <div>
           <a className="nm-public-brand" href="/" aria-label="NORTHMINE Intelligence, inicio">
-            <span className="nm-public-brand__mark" aria-hidden="true">N</span>
-            <span>
-              <strong>NORTHMINE</strong>
-              <small>Intelligence</small>
-            </span>
+            <NorthmineBrand />
           </a>
           <p>Control y decision operacional para mineria a cielo abierto.</p>
         </div>

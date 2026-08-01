@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { LandingFooter } from './LandingFooter'
 import { LandingHeader } from './LandingHeader'
+import '../../styles/demo-brand-system.css'
 import '../../styles/demo-landing.css'
 
 interface PublicPageShellProps {

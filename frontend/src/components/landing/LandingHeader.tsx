@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { ArrowRight, Menu, X } from 'lucide-react'
+import { NorthmineBrand } from './NorthmineBrand'
 
 const navigation = [
   { label: 'Capacidades', href: '/#capacidades' },
@@ -17,11 +18,7 @@ export function LandingHeader() {
       </a>
       <div className="nm-public-header__inner">
         <a className="nm-public-brand" href="/" aria-label="NORTHMINE Intelligence, inicio">
-          <span className="nm-public-brand__mark" aria-hidden="true">N</span>
-          <span>
-            <strong>NORTHMINE</strong>
-            <small>Intelligence</small>
-          </span>
+          <NorthmineBrand />
         </a>
 
         <button
@@ -40,6 +37,7 @@ export function LandingHeader() {
           className={`nm-public-navigation${open ? ' is-open' : ''}`}
           aria-label="Navegacion principal"
         >
+          <span className="nm-public-navigation__status">Demo publico</span>
           {navigation.map((item) => (
             <a key={item.href} href={item.href} onClick={() => setOpen(false)}>
               {item.label}

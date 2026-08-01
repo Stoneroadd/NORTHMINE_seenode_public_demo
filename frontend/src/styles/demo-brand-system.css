@@ -1,0 +1,206 @@
+@font-face {
+  font-family: 'IBM Plex Sans';
+  src: url('/fonts/IBMPlexSans-SemiBold.woff') format('woff');
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'IBM Plex Mono';
+  src: url('/fonts/IBMPlexMono-Medium.woff') format('woff');
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+}
+
+:root {
+  --nm-brand-coal-950: #080a0a;
+  --nm-brand-coal-900: #0d0f0f;
+  --nm-brand-graphite-850: #121514;
+  --nm-brand-graphite-800: #171a19;
+  --nm-brand-steel-700: #252a28;
+  --nm-brand-steel-600: #343a37;
+  --nm-brand-mineral-300: #a9aeaa;
+  --nm-brand-mineral-200: #c7cbc6;
+  --nm-brand-ivory-100: #eeeee8;
+  --nm-brand-copper-500: #b8733f;
+  --nm-brand-copper-400: #cf8a53;
+  --nm-brand-bronze-600: #7d5433;
+  --nm-brand-amber-500: #d89b45;
+  --nm-brand-success-500: #6f9d78;
+  --nm-brand-risk-500: #c9655d;
+  --nm-brand-interaction-500: #6ea5ad;
+  --nm-brand-focus: #e8b96f;
+  --nm-brand-shadow: 0 22px 54px rgba(0, 0, 0, 0.34);
+  --nm-brand-transition: 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.nm-public-page {
+  --nm-public-bg: var(--nm-brand-coal-950);
+  --nm-public-surface: var(--nm-brand-graphite-850);
+  --nm-public-surface-raised: var(--nm-brand-graphite-800);
+  --nm-public-line: var(--nm-brand-steel-600);
+  --nm-public-line-soft: var(--nm-brand-steel-700);
+  --nm-public-text: var(--nm-brand-ivory-100);
+  --nm-public-muted: var(--nm-brand-mineral-300);
+  --nm-public-faint: #858b87;
+  --nm-public-amber: var(--nm-brand-copper-500);
+  --nm-public-amber-strong: var(--nm-brand-copper-400);
+  --nm-public-ink: #170f0a;
+  --nm-public-green: var(--nm-brand-success-500);
+  --nm-public-rust: var(--nm-brand-bronze-600);
+  --nm-public-danger: var(--nm-brand-risk-500);
+  background:
+    linear-gradient(180deg, var(--nm-brand-coal-950), var(--nm-brand-coal-900));
+  color: var(--nm-brand-ivory-100);
+}
+
+.nm-public-brand {
+  gap: 12px;
+}
+
+.nm-public-brand__mark {
+  position: relative;
+  display: block;
+  width: 36px;
+  height: 34px;
+  overflow: hidden;
+  border: 0;
+  background: transparent;
+}
+
+.nm-public-brand__mark::before,
+.nm-public-brand__mark::after {
+  position: absolute;
+  right: 1px;
+  left: 1px;
+  height: 9px;
+  border: 1px solid var(--nm-brand-copper-400);
+  content: '';
+  transform: skewY(-11deg);
+}
+
+.nm-public-brand__mark::before {
+  top: 5px;
+  background: rgba(184, 115, 63, 0.24);
+}
+
+.nm-public-brand__mark::after {
+  bottom: 5px;
+  border-color: var(--nm-brand-mineral-300);
+  background: rgba(169, 174, 170, 0.08);
+}
+
+.nm-public-brand__mark > span {
+  position: absolute;
+  top: 4px;
+  right: 7px;
+  bottom: 4px;
+  width: 1px;
+  background: var(--nm-brand-copper-400);
+  transform: rotate(31deg);
+}
+
+.nm-public-brand strong {
+  font-weight: 600;
+}
+
+.nm-public-brand small {
+  color: var(--nm-brand-mineral-300);
+}
+
+.nm-public-header {
+  height: 64px;
+  border-bottom-color: rgba(199, 203, 198, 0.14);
+  background: rgba(8, 10, 10, 0.93);
+  backdrop-filter: blur(10px);
+}
+
+.nm-public-navigation .nm-public-navigation__cta {
+  border-color: var(--nm-brand-copper-500);
+  background: var(--nm-brand-copper-500);
+  color: var(--nm-brand-coal-950);
+}
+
+.nm-public-navigation .nm-public-navigation__cta:hover {
+  border-color: var(--nm-brand-copper-400);
+  background: var(--nm-brand-copper-400);
+  color: var(--nm-brand-coal-950);
+}
+
+.nm-public-navigation__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--nm-brand-mineral-300);
+  font: 500 11px/1.2 'IBM Plex Mono', monospace;
+}
+
+.nm-public-navigation__status::before {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--nm-brand-copper-400);
+  content: '';
+}
+
+.nm-public-button {
+  transition:
+    transform var(--nm-brand-transition),
+    border-color var(--nm-brand-transition),
+    background-color var(--nm-brand-transition),
+    color var(--nm-brand-transition),
+    box-shadow var(--nm-brand-transition);
+}
+
+.nm-public-button--primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(184, 115, 63, 0.18);
+}
+
+.nm-public-button--quiet:hover {
+  transform: translateY(-1px);
+}
+
+.nm-public-page :focus-visible {
+  outline-color: var(--nm-brand-focus);
+}
+
+@media (max-width: 900px) {
+  .nm-public-navigation {
+    top: 64px;
+    background: var(--nm-brand-graphite-850);
+  }
+
+  .nm-public-navigation__status {
+    min-height: 44px;
+    padding-inline: 12px;
+    border-bottom: 1px solid var(--nm-public-line-soft);
+  }
+}
+
+@media (max-width: 600px) {
+  .nm-public-header {
+    height: 60px;
+  }
+
+  .nm-public-navigation {
+    top: 60px;
+  }
+
+  .nm-public-brand__mark {
+    width: 33px;
+    height: 31px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nm-public-button {
+    transition: none;
+  }
+
+  .nm-public-button:hover {
+    transform: none;
+  }
+}
