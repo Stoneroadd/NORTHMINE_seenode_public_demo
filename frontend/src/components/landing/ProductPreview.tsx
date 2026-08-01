@@ -102,20 +102,38 @@ export function ProductPreview() {
             </div>
           </div>
           <figure className="nm-product-frame nm-product-frame--map">
-            <div className="nm-map-geometry" role="img" aria-label="Vista tecnica bidimensional derivada de la geometria pit-shell incluida en el demo">
+            <div
+              className="nm-map-geometry"
+              role="img"
+              aria-label="Ortomosaico sintetico con capa DXF demostrativa derivada de la geometria pit-shell incluida en NORTHMINE"
+            >
+              <img
+                className="nm-map-geometry__orthomosaic"
+                src="/assets/landing/open-pit-orthomosaic-synthetic.webp"
+                alt=""
+                width="1600"
+                height="1000"
+                loading="lazy"
+                aria-hidden="true"
+              />
               <PitContourField />
+              <div className="nm-map-geometry__source" aria-hidden="true">
+                <span>ORTOMOSAICO SINTETICO</span>
+                <span>CAPA DXF DEMO</span>
+              </div>
               <div className="nm-map-geometry__axis" aria-hidden="true">
                 <span>E 489 033 - 491 496</span>
                 <span>N 7 446 732 - 7 449 154</span>
                 <span>RL 1 960 - 2 424</span>
               </div>
               <div className="nm-map-geometry__legend">
-                <strong>Pit shell del demo</strong>
-                <span>4.823 polilineas / geometria de referencia</span>
+                <strong>Geometria de rajo + ortomosaico</strong>
+                <span>4.823 polilineas / referencia visual sintetica</span>
               </div>
             </div>
             <figcaption>
-              Motivo 2D derivado de pit-shell.json. La captura de la escena 3D sigue pendiente.
+              Ortomosaico sintetico original con capa derivada de pit-shell.json.
+              No representa una faena ni datos operacionales reales.
             </figcaption>
           </figure>
         </div>

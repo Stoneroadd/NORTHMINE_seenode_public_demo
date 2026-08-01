@@ -5,6 +5,24 @@
     linear-gradient(118deg, #080a0a 0 55%, #111412 100%);
 }
 
+.nm-landing-hero__media {
+  object-position: 62% 50%;
+  filter: saturate(0.72) contrast(1.06);
+}
+
+.nm-landing-hero__veil {
+  background:
+    linear-gradient(
+      90deg,
+      rgba(5, 7, 7, 0.96) 0%,
+      rgba(5, 7, 7, 0.88) 31%,
+      rgba(5, 7, 7, 0.62) 52%,
+      rgba(5, 7, 7, 0.18) 78%,
+      rgba(5, 7, 7, 0.4) 100%
+    ),
+    linear-gradient(0deg, rgba(6, 8, 8, 0.72), transparent 48%);
+}
+
 .nm-landing-hero::before {
   position: absolute;
   inset: 0;
@@ -404,24 +422,65 @@
   position: relative;
   min-height: 410px;
   overflow: hidden;
-  background:
-    radial-gradient(circle at 63% 47%, rgba(184, 115, 63, 0.13), transparent 30%),
-    var(--nm-brand-coal-950);
+  background: var(--nm-brand-coal-950);
+  isolation: isolate;
 }
 
-.nm-map-geometry .nm-strata-contours {
+.nm-map-geometry::after {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background:
+    linear-gradient(90deg, rgba(8, 10, 10, 0.42), transparent 40%),
+    linear-gradient(0deg, rgba(8, 10, 10, 0.48), transparent 46%);
+  content: '';
+  pointer-events: none;
+}
+
+.nm-map-geometry__orthomosaic {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-  transform: perspective(700px) rotateX(54deg) rotateZ(-8deg) scale(1.16);
+  object-fit: cover;
+  filter: saturate(0.68) contrast(1.08) brightness(0.68);
+}
+
+.nm-map-geometry .nm-strata-contours {
+  position: absolute;
+  inset: 2%;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  opacity: 0.88;
+  mix-blend-mode: screen;
+  transform: rotate(-1.5deg) scale(1.04);
   transform-origin: 56% 53%;
+}
+
+.nm-map-geometry__source {
+  position: absolute;
+  top: 18px;
+  left: 20px;
+  z-index: 3;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.nm-map-geometry__source span {
+  border: 1px solid rgba(218, 151, 99, 0.42);
+  background: rgba(8, 10, 10, 0.78);
+  padding: 5px 7px;
+  color: var(--nm-brand-copper-300);
+  font: 600 9px/1 'IBM Plex Mono', monospace;
 }
 
 .nm-map-geometry__axis {
   position: absolute;
   top: 20px;
   right: 22px;
+  z-index: 3;
   display: grid;
   gap: 4px;
   color: rgba(199, 203, 198, 0.54);
@@ -433,6 +492,7 @@
   position: absolute;
   bottom: 20px;
   left: 22px;
+  z-index: 3;
   display: grid;
   gap: 6px;
   border-left: 1px solid var(--nm-brand-copper-500);
@@ -537,6 +597,16 @@
     background-size: 72px 72px;
   }
 
+  .nm-landing-hero__media {
+    object-position: 70% 50%;
+  }
+
+  .nm-landing-hero__veil {
+    background:
+      linear-gradient(0deg, rgba(5, 7, 7, 0.78), rgba(5, 7, 7, 0.58)),
+      linear-gradient(90deg, rgba(5, 7, 7, 0.91), rgba(5, 7, 7, 0.36));
+  }
+
   .nm-landing-hero__content {
     gap: 24px;
     padding-block: 38px 28px;
@@ -634,7 +704,25 @@
   }
 
   .nm-map-geometry .nm-strata-contours {
-    transform: perspective(600px) rotateX(52deg) rotateZ(-8deg) scale(1.3);
+    inset: 0;
+    transform: rotate(-1.5deg) scale(1.14);
+  }
+
+  .nm-map-geometry__source {
+    top: 12px;
+    left: 12px;
+    max-width: 190px;
+  }
+
+  .nm-map-geometry__axis {
+    right: 12px;
+    top: 62px;
+  }
+
+  .nm-map-geometry__legend {
+    bottom: 12px;
+    left: 12px;
+    max-width: 215px;
   }
 }
 

@@ -4,6 +4,16 @@ import { StrataHeroVisual } from './StrataHeroVisual'
 export function LandingHero() {
   return (
     <section className="nm-landing-hero" aria-labelledby="landing-title">
+      <img
+        className="nm-landing-hero__media"
+        src="/assets/landing/open-pit-blue-hour-synthetic.webp"
+        alt=""
+        width="1600"
+        height="900"
+        fetchPriority="high"
+        aria-hidden="true"
+      />
+      <div className="nm-landing-hero__veil" aria-hidden="true" />
       <div className="nm-public-shell nm-landing-hero__content">
         <div className="nm-landing-hero__copy">
           <p className="nm-public-eyebrow">Estratos de decision</p>
@@ -24,7 +34,7 @@ export function LandingHero() {
             </a>
           </div>
           <p className="nm-landing-hero__disclosure">
-            Demo publico con datos sinteticos y acceso revisado manualmente.
+            Imagen y datos sinteticos. Acceso revisado manualmente.
           </p>
         </div>
 
