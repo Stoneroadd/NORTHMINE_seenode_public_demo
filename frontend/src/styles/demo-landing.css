@@ -616,23 +616,30 @@
 .nm-equipment-story__machine {
   margin: 0;
   border: 1px solid var(--nm-public-line);
-  background: #e9e6df;
+  background: var(--nm-brand-coal-950);
 }
 
 .nm-equipment-story__machine img {
   display: block;
   width: 100%;
-  aspect-ratio: 4 / 3;
-  object-fit: contain;
-  padding: 10px;
+  aspect-ratio: 3 / 2;
+  object-fit: cover;
 }
 
 .nm-equipment-story__machine figcaption {
   display: grid;
-  gap: 2px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
   border-top: 1px solid #c6c1b6;
   background: #111414;
   padding: 13px 14px;
+}
+
+.nm-equipment-story__machine figcaption > div {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
 }
 
 .nm-equipment-story__machine strong {
@@ -644,6 +651,15 @@
 .nm-equipment-story__machine span {
   color: var(--nm-public-muted);
   font-size: 12px;
+}
+
+.nm-equipment-story__machine small {
+  max-width: 18ch;
+  color: var(--nm-public-amber);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  line-height: 1.35;
+  text-align: right;
 }
 
 .nm-equipment-story__facts {
@@ -1129,6 +1145,16 @@
 
   .nm-equipment-story__machine--shovel {
     align-self: stretch;
+  }
+
+  .nm-equipment-story__machine figcaption {
+    grid-template-columns: 1fr;
+    gap: 7px;
+  }
+
+  .nm-equipment-story__machine small {
+    max-width: none;
+    text-align: left;
   }
 
   .nm-equipment-story__facts > div {

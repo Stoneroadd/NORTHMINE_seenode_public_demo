@@ -49,23 +49,35 @@ export function ProductPreview() {
           <div className="nm-equipment-story__visual" aria-label="Equipos representados en NORTHMINE">
             <figure className="nm-equipment-story__machine nm-equipment-story__machine--truck">
               <img
-                src="/assets/equipment/camion_komatsu980.png"
-                alt="Camion de extraccion Komatsu 980E representado en la interfaz demo"
-                width="1920"
-                height="1080"
+                src="/assets/landing/caex-haul-road-synthetic.webp"
+                alt="CAEX sin marca circulando por una ruta de acarreo en un rajo abierto sintetico"
+                width="1200"
+                height="800"
                 loading="lazy"
               />
-              <figcaption><strong>CAEX</strong><span>Estado, ciclos, frente y destino</span></figcaption>
+              <figcaption>
+                <div>
+                  <strong>CAEX</strong>
+                  <span>Estado, ciclos, frente y destino</span>
+                </div>
+                <small>Escena sintetica original</small>
+              </figcaption>
             </figure>
             <figure className="nm-equipment-story__machine nm-equipment-story__machine--shovel">
               <img
-                src="/assets/equipment/pala_1.png"
-                alt="Pala electrica representada en la interfaz demo"
-                width="1254"
-                height="1254"
+                src="/assets/landing/electric-shovel-loading-synthetic.webp"
+                alt="Pala electrica sin marca cargando un CAEX en un banco minero sintetico"
+                width="1200"
+                height="800"
                 loading="lazy"
               />
-              <figcaption><strong>Carguio</strong><span>Rendimiento, cola, operador y alertas</span></figcaption>
+              <figcaption>
+                <div>
+                  <strong>Carguio</strong>
+                  <span>Rendimiento, cola, operador y alertas</span>
+                </div>
+                <small>Escena sintetica original</small>
+              </figcaption>
             </figure>
           </div>
 

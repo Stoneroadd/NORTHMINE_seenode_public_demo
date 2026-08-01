@@ -24,6 +24,26 @@ or a third-party stock library.
 - Restrictions: do not present as survey evidence, a georeferenced raster, a
   real customer orthomosaic, or operational data
 
+## caex-haul-road-synthetic.webp
+
+- Type: synthetic illustrative image
+- Created: 2026-08-01
+- Tool: OpenAI image generation
+- Intended use: public landing equipment context
+- Content: fictional, unbranded CAEX operating on an open-pit haul road
+- Restrictions: do not present as a real equipment record, customer asset, or
+  operational mine
+
+## electric-shovel-loading-synthetic.webp
+
+- Type: synthetic illustrative image
+- Created: 2026-08-01
+- Tool: OpenAI image generation
+- Intended use: public landing equipment context
+- Content: fictional, unbranded electric rope shovel loading a CAEX
+- Restrictions: do not present as a real equipment record, customer asset, or
+  operational mine
+
 ## DXF-style overlay
 
 The contour overlay is rendered by `PitContourField.tsx` from geometry already
