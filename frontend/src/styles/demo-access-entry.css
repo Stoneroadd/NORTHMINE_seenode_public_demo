@@ -1,0 +1,66 @@
+.login-page.nm-login-shell.nm-demo-entry {
+  --nm-demo-entry-copper: var(--nm-brand-copper-500, #b8733f);
+  --nm-demo-entry-copper-light: var(--nm-brand-copper-400, #cf8a53);
+  --nm-demo-entry-ivory: var(--nm-brand-ivory-100, #eeeee8);
+  --nm-demo-entry-mineral: var(--nm-brand-mineral-300, #a9aeaa);
+}
+
+.nm-demo-entry .nm-login-panel.login-card {
+  border-color: rgba(207, 138, 83, 0.32);
+  background:
+    linear-gradient(135deg, rgba(184, 115, 63, 0.08), transparent 34%),
+    rgba(10, 12, 12, 0.95);
+}
+
+.nm-demo-entry .nm-login-panel.login-card::before {
+  background: var(--nm-demo-entry-copper);
+}
+
+.nm-demo-entry .nm-login-panel .login-form input:focus {
+  border-color: var(--nm-demo-entry-copper-light);
+  box-shadow: 0 0 0 2px rgba(184, 115, 63, 0.16);
+}
+
+.nm-demo-entry .nm-login-panel .login-form .command-button {
+  border-color: var(--nm-demo-entry-copper);
+  background: var(--nm-demo-entry-copper);
+  color: #170f0a;
+}
+
+.nm-demo-entry__return {
+  position: absolute;
+  top: 18px;
+  left: 22px;
+  z-index: 20;
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  color: var(--nm-demo-entry-mineral);
+  font: 500 12px/1.2 'IBM Plex Sans', sans-serif;
+  text-decoration: none;
+}
+
+.nm-demo-entry__return:hover,
+.nm-demo-entry__return:focus-visible {
+  color: var(--nm-demo-entry-ivory);
+}
+
+.nm-demo-entry__return:focus-visible {
+  outline: 2px solid var(--nm-brand-focus, #e8b96f);
+  outline-offset: 3px;
+}
+
+.nm-demo-entry__disclosure {
+  margin: 4px 0 14px;
+  border-block: 1px solid rgba(169, 174, 170, 0.16);
+  padding-block: 10px;
+  color: var(--nm-demo-entry-mineral);
+  font: 500 10px/1.5 'IBM Plex Mono', monospace;
+}
+
+@media (max-width: 600px) {
+  .nm-demo-entry__return {
+    top: 8px;
+    left: 14px;
+  }
+}

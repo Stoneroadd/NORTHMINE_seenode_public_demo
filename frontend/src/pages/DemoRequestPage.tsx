@@ -1,4 +1,5 @@
 import { DemoRequestForm } from '../components/landing/DemoRequestForm'
+import { PitContourField } from '../components/landing/PitContourField'
 import { PublicPageMeta } from '../components/landing/PublicPageMeta'
 import { PublicPageShell } from '../components/landing/PublicPageShell'
 
@@ -25,6 +26,9 @@ export function DemoRequestPage() {
               <div><dt>Revision</dt><dd>Manual, antes de habilitar acceso</dd></div>
               <div><dt>Integraciones</dt><dd>Disponibles solo en entornos privados</dd></div>
             </dl>
+            <div className="nm-request-intro__contours" aria-hidden="true">
+              <PitContourField />
+            </div>
           </aside>
           <section className="nm-request-form-panel" aria-labelledby="request-form-title">
             <header>

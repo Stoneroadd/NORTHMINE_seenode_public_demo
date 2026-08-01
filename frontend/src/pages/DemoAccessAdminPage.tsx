@@ -8,7 +8,9 @@ import type {
   DemoAccessRequestAdminRecord,
   DemoAccessRequestStatus,
 } from '../types/demoAccess'
+import '../styles/demo-brand-system.css'
 import '../styles/demo-access-admin.css'
+import '../styles/demo-access-admin-brand.css'
 
 const filters: Array<{ label: string; value: DemoAccessRequestStatus | 'all' }> = [
   { label: 'Todas', value: 'all' },

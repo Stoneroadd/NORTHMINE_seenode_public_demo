@@ -12,6 +12,8 @@ import { useT } from '../store'
 import { settingsService } from '../services/settingsService'
 import { useModuleT } from '../i18n/useModuleT'
 import { loginT } from '../i18n/modules/login'
+import '../styles/demo-brand-system.css'
+import '../styles/demo-access-entry.css'
 
 interface Props {
   onAuthenticated: (session: AuthSession) => void
@@ -24,6 +26,7 @@ export function Login({ onAuthenticated }: Props) {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const isPublicDemoAccess = window.location.pathname.replace(/\/+$/, '') === '/acceso-demo'
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -60,7 +63,12 @@ export function Login({ onAuthenticated }: Props) {
   }
 
   return (
-    <main className="login-page nm-login-shell nm-responsive-compact">
+    <main className={`login-page nm-login-shell nm-responsive-compact${isPublicDemoAccess ? ' nm-demo-entry' : ''}`}>
+      {isPublicDemoAccess && (
+        <a className="nm-demo-entry__return" href="/">
+          Volver a NORTHMINE Intelligence
+        </a>
+      )}
       <CommandCenterBackground />
       <div className="login-backdrop" />
 
@@ -81,6 +89,11 @@ export function Login({ onAuthenticated }: Props) {
           transition={{ duration: 0.45, ease: 'easeOut' }}
         >
           <BrandHero />
+          {isPublicDemoAccess && (
+            <p className="nm-demo-entry__disclosure">
+              Demo publico con datos sinteticos. Acceso individual y revisado.
+            </p>
+          )}
 
           <div className="login-copy">
             <h2>{tl.acceso_titulo}</h2>

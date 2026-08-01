@@ -1,4 +1,5 @@
 import { CheckCircle2, LogIn } from 'lucide-react'
+import { PitContourField } from '../components/landing/PitContourField'
 import { PublicPageMeta } from '../components/landing/PublicPageMeta'
 import { PublicPageShell } from '../components/landing/PublicPageShell'
 
@@ -13,6 +14,9 @@ export function DemoRequestSuccessPage() {
         robots="noindex,nofollow"
       />
       <main id="contenido" className="nm-public-interior nm-request-success">
+        <div className="nm-request-success__contours" aria-hidden="true">
+          <PitContourField />
+        </div>
         <section className="nm-request-success__panel">
           <CheckCircle2 size={42} aria-hidden="true" />
           <p className="nm-public-eyebrow">Solicitud recibida</p>
