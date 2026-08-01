@@ -1,4 +1,5 @@
 import { lazy, Suspense, useEffect } from 'react'
+import { OperationalFontLoader } from './components/landing/OperationalFontLoader'
 import { PublicPageMeta } from './components/landing/PublicPageMeta'
 
 const OperationalApplication = lazy(() => import('./App'))
@@ -72,7 +73,12 @@ export function PublicRouter() {
 
   return (
     <Suspense fallback={<PublicRouteFallback />}>
-      {publicRoute ?? <OperationalApplication />}
+      {publicRoute ?? (
+        <>
+          <OperationalFontLoader />
+          <OperationalApplication />
+        </>
+      )}
     </Suspense>
   )
 }

@@ -3,6 +3,18 @@
   --nm-demo-entry-copper-light: var(--nm-brand-copper-400, #cf8a53);
   --nm-demo-entry-ivory: var(--nm-brand-ivory-100, #eeeee8);
   --nm-demo-entry-mineral: var(--nm-brand-mineral-300, #a9aeaa);
+  font-family: 'IBM Plex Sans', 'Segoe UI', sans-serif;
+}
+
+.nm-demo-entry .nm-login-panel,
+.nm-demo-entry .nm-login-panel button,
+.nm-demo-entry .nm-login-panel input {
+  font-family: 'IBM Plex Sans', 'Segoe UI', sans-serif;
+}
+
+.nm-demo-entry .mine-pit-hud,
+.nm-demo-entry .nm-demo-entry__disclosure {
+  font-family: 'IBM Plex Mono', monospace;
 }
 
 .nm-demo-entry .nm-login-panel.login-card {

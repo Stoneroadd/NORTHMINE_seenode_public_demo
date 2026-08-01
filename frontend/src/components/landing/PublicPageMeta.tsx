@@ -17,6 +17,11 @@ function setMeta(name: string, content: string, property = false) {
   element.content = content
 }
 
+function removeMeta(name: string, property = false) {
+  const attribute = property ? 'property' : 'name'
+  document.head.querySelector(`meta[${attribute}="${name}"]`)?.remove()
+}
+
 export function PublicPageMeta({
   title,
   description,
@@ -29,7 +34,7 @@ export function PublicPageMeta({
     setMeta('og:title', title, true)
     setMeta('og:description', description, true)
     setMeta('og:type', 'website', true)
-    setMeta('og:image', `${window.location.origin}/assets/brand/fondo_login.png`, true)
+    removeMeta('og:image', true)
   }, [description, robots, title])
 
   return null
