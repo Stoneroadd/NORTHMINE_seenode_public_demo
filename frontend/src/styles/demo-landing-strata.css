@@ -298,11 +298,6 @@
     padding-inline var(--nm-brand-transition);
 }
 
-.nm-capability-sequence li:hover {
-  background: rgba(184, 115, 63, 0.055);
-  padding-inline: 10px;
-}
-
 .nm-product-preview {
   background: var(--nm-brand-graphite-850);
 }
@@ -392,10 +387,6 @@
   border: 0;
   background: #d9d7cf;
   transition: transform var(--nm-brand-transition);
-}
-
-.nm-equipment-story__machine:hover {
-  transform: translateY(-2px);
 }
 
 .nm-equipment-story__machine figcaption {
@@ -653,11 +644,4 @@
     transition: none;
   }
 
-  .nm-capability-sequence li:hover {
-    padding-inline: 0;
-  }
-
-  .nm-equipment-story__machine:hover {
-    transform: none;
-  }
 }

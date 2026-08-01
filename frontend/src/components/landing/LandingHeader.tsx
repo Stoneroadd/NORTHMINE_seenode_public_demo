@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { ArrowRight, Menu, X } from 'lucide-react'
 import { NorthmineBrand } from './NorthmineBrand'
 
@@ -10,6 +10,17 @@ const navigation = [
 
 export function LandingHeader() {
   const [open, setOpen] = useState(false)
+
+  useEffect(() => {
+    if (!open) return undefined
+
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setOpen(false)
+    }
+
+    window.addEventListener('keydown', closeOnEscape)
+    return () => window.removeEventListener('keydown', closeOnEscape)
+  }, [open])
 
   return (
     <header className="nm-public-header">

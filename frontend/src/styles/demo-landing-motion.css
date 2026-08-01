@@ -1,0 +1,97 @@
+@keyframes nm-public-copy-arrive {
+  from {
+    opacity: 0.01;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes nm-public-contour-draw {
+  from {
+    opacity: 0.08;
+    stroke-dashoffset: 1;
+  }
+  to {
+    opacity: 1;
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes nm-public-plate-arrive {
+  from {
+    opacity: 0.01;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.nm-landing-hero__copy {
+  animation: nm-public-copy-arrive 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.nm-strata-contour {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: nm-public-contour-draw 920ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.nm-strata-contour:nth-child(2) { animation-delay: 55ms; }
+.nm-strata-contour:nth-child(3) { animation-delay: 100ms; }
+.nm-strata-contour:nth-child(4) { animation-delay: 145ms; }
+.nm-strata-contour:nth-child(5) { animation-delay: 190ms; }
+.nm-strata-contour:nth-child(6) { animation-delay: 235ms; }
+.nm-strata-contour:nth-child(7) { animation-delay: 280ms; }
+.nm-strata-contour:nth-child(8) { animation-delay: 325ms; }
+
+.nm-strata-hero-visual__plate {
+  animation: nm-public-plate-arrive 480ms 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .nm-product-frame {
+    transition:
+      border-color var(--nm-brand-transition),
+      transform var(--nm-brand-transition),
+      box-shadow var(--nm-brand-transition);
+  }
+
+  .nm-product-frame:hover {
+    border-color: rgba(207, 138, 83, 0.48);
+    transform: translateY(-2px);
+    box-shadow: var(--nm-brand-shadow);
+  }
+
+  .nm-equipment-story__machine:hover {
+    transform: translateY(-2px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nm-landing-hero__copy,
+  .nm-strata-contour,
+  .nm-strata-hero-visual__plate {
+    animation: none;
+  }
+
+  .nm-strata-contour {
+    opacity: 1;
+    stroke-dashoffset: 0;
+  }
+
+  .nm-product-frame,
+  .nm-equipment-story__machine {
+    transition: none;
+  }
+
+  .nm-product-frame:hover,
+  .nm-equipment-story__machine:hover {
+    transform: none;
+    box-shadow: none;
+  }
+}
