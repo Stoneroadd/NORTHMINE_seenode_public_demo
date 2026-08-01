@@ -1,4 +1,5 @@
 import { AlertTriangle, CheckCircle2, Layers3, RadioTower } from 'lucide-react'
+import { PitContourField } from './PitContourField'
 
 export function ProductPreview() {
   return (
@@ -18,13 +19,26 @@ export function ProductPreview() {
           </div>
 
           <figure className="nm-product-frame">
-            <div className="nm-product-placeholder" role="img" aria-label="Espacio reservado para una captura real del Decision Cockpit">
-              <span>CAPTURA REAL PENDIENTE</span>
-              <strong>Decision Cockpit</strong>
-              <p>La imagen se incorporara despues de una validacion visual del ultimo build.</p>
+            <div className="nm-product-evidence" role="img" aria-label="Diagrama conceptual de la lectura del Decision Cockpit; no es una captura del producto">
+              <div className="nm-product-evidence__brief">
+                <div>
+                  <span>Diagrama de lectura</span>
+                  <strong>Del estado del turno a una accion verificable.</strong>
+                </div>
+                <p>
+                  Representacion conceptual. La captura real se incorporara
+                  despues de validar el ultimo build del demo.
+                </p>
+              </div>
+              <div className="nm-product-evidence__trace">
+                <div><small>Estado</small><strong>Produccion y meta</strong><b /></div>
+                <div><small>Brecha</small><strong>Proyeccion y ritmo</strong><b /></div>
+                <div><small>Causa</small><strong>CAEX, carguio y riesgo</strong><b /></div>
+                <div><small>Accion</small><strong>Recomendacion y evidencia</strong><b /></div>
+              </div>
             </div>
             <figcaption>
-              Espacio reservado. No representa una captura ni datos del producto.
+              Diagrama conceptual, no captura de producto. Captura real pendiente.
             </figcaption>
           </figure>
         </div>
@@ -88,13 +102,20 @@ export function ProductPreview() {
             </div>
           </div>
           <figure className="nm-product-frame nm-product-frame--map">
-            <div className="nm-product-placeholder" role="img" aria-label="Espacio reservado para una captura real del Mapa Operacional 3D">
-              <span>CAPTURA REAL PENDIENTE</span>
-              <strong>Mapa Operacional 3D</strong>
-              <p>Se espera una imagen verificada de la escena DXF del demo publico.</p>
+            <div className="nm-map-geometry" role="img" aria-label="Vista tecnica bidimensional derivada de la geometria pit-shell incluida en el demo">
+              <PitContourField />
+              <div className="nm-map-geometry__axis" aria-hidden="true">
+                <span>E 489 033 - 491 496</span>
+                <span>N 7 446 732 - 7 449 154</span>
+                <span>RL 1 960 - 2 424</span>
+              </div>
+              <div className="nm-map-geometry__legend">
+                <strong>Pit shell del demo</strong>
+                <span>4.823 polilineas / geometria de referencia</span>
+              </div>
             </div>
             <figcaption>
-              Espacio reservado. No representa una geometria ni datos operacionales.
+              Motivo 2D derivado de pit-shell.json. La captura de la escena 3D sigue pendiente.
             </figcaption>
           </figure>
         </div>

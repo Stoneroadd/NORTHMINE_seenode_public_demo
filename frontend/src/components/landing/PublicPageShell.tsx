@@ -3,6 +3,7 @@ import { LandingFooter } from './LandingFooter'
 import { LandingHeader } from './LandingHeader'
 import '../../styles/demo-brand-system.css'
 import '../../styles/demo-landing.css'
+import '../../styles/demo-landing-strata.css'
 
 interface PublicPageShellProps {
   children: ReactNode
