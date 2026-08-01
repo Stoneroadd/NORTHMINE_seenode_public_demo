@@ -1,5 +1,5 @@
 import { FormEvent, useState } from 'react'
-import { motion } from 'framer-motion'
+import { motion, useReducedMotion } from 'framer-motion'
 import { LockKeyhole, RadioTower } from 'lucide-react'
 import { ApiError, type AuthSession } from '../lib/api'
 import { sanitize } from '../lib/sanitize'
@@ -26,6 +26,7 @@ export function Login({ onAuthenticated }: Props) {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const reduceMotion = useReducedMotion()
   const isPublicDemoAccess = window.location.pathname.replace(/\/+$/, '') === '/acceso-demo'
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -84,9 +85,9 @@ export function Login({ onAuthenticated }: Props) {
 
         <motion.section
           className="login-card nm-login-panel"
-          initial={{ opacity: 0, y: 18, scale: 0.98 }}
+          initial={reduceMotion ? false : { opacity: 0, y: 18, scale: 0.98 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: 0.45, ease: 'easeOut' }}
+          transition={reduceMotion ? { duration: 0 } : { duration: 0.45, ease: 'easeOut' }}
         >
           <BrandHero />
           {isPublicDemoAccess && (
