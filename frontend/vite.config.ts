@@ -62,6 +62,7 @@ export default defineConfig({
           if (/node_modules[\\/](three|@react-three)[\\/]/.test(id)) return 'vendor-three'
           if (/node_modules[\\/](zustand|@tanstack[\\/]react-query)[\\/]/.test(id)) return 'vendor-store'
           if (/node_modules[\\/]framer-motion[\\/]/.test(id)) return 'vendor-animation'
+          if (/node_modules[\\/](gsap|@gsap)[\\/]/.test(id)) return 'vendor-gsap'
           if (/node_modules[\\/]lucide-react[\\/]/.test(id)) return 'vendor-icons'
         },
       },
