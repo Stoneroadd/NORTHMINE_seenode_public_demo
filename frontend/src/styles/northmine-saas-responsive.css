@@ -1,0 +1,165 @@
+/* NORTHMINE SaaS — responsive rules. Mobile-first overrides on top of the desktop base. */
+
+.nm-saas .ns-saas__shell {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding-inline: clamp(20px, 5vw, 64px);
+}
+
+/* ---------------------------------------------------------------- *
+ * ≤ 1024px — tablet
+ * ---------------------------------------------------------------- */
+@media (max-width: 1024px) {
+  .nm-saas .ns-metrics__grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: none;
+  }
+
+  .nm-saas .ns-metrics__main {
+    grid-row: auto;
+  }
+
+  .nm-saas .ns-security__inner {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .nm-saas .ns-footer__inner {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .nm-saas .ns-footer__meta {
+    align-items: flex-start;
+    text-align: left;
+  }
+}
+
+/* ---------------------------------------------------------------- *
+ * ≤ 860px — nav collapses to the mobile menu
+ * ---------------------------------------------------------------- */
+@media (max-width: 860px) {
+  .nm-saas .ns-header__nav {
+    display: none;
+  }
+
+  .nm-saas .ns-header__inner .ns-header__login {
+    display: none;
+  }
+
+  .nm-saas .ns-header__menu-button {
+    display: inline-flex;
+  }
+
+  .nm-saas .ns-reading__indicators {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* ---------------------------------------------------------------- *
+ * ≤ 720px — single-column sections
+ * ---------------------------------------------------------------- */
+@media (max-width: 720px) {
+  .nm-saas .ns-hero {
+    padding-block: 48px 0;
+  }
+
+  .nm-saas .ns-hero__title {
+    font-size: clamp(30px, 8vw, 40px);
+  }
+
+  .nm-saas .ns-hero__actions {
+    flex-direction: column;
+    align-items: stretch;
+    margin-bottom: 40px;
+  }
+
+  .nm-saas .ns-hero__actions .ns-btn {
+    justify-content: center;
+  }
+
+  .nm-saas .ns-stage {
+    margin-bottom: -48px;
+  }
+
+  .nm-saas .ns-stage__frame {
+    border-radius: var(--ns-radius-md) var(--ns-radius-md) 0 0;
+  }
+
+  .nm-saas .ns-trust {
+    padding-block: 96px 48px;
+  }
+
+  .nm-saas .ns-trust__stats {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .nm-saas .ns-reading,
+  .nm-saas .ns-metrics,
+  .nm-saas .ns-gallery,
+  .nm-saas .ns-benefits,
+  .nm-saas .ns-flow,
+  .nm-saas .ns-security,
+  .nm-saas .ns-cta {
+    padding-block: 64px;
+  }
+
+  .nm-saas .ns-reading__indicators {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .nm-saas .ns-gallery__grid {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+
+  .nm-saas .ns-benefits__list {
+    grid-template-columns: 1fr;
+  }
+
+  .nm-saas .ns-benefits__list li {
+    border-right: 1px solid var(--ns-border);
+  }
+
+  .nm-saas .ns-flow__steps li {
+    grid-template-columns: 44px 1fr;
+    gap: 16px;
+  }
+
+  .nm-saas .ns-security__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .nm-saas .ns-footer__inner {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+
+  .nm-saas .ns-footer__meta {
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .nm-saas .ns-cta__actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .nm-saas .ns-cta__actions .ns-btn {
+    justify-content: center;
+  }
+}
+
+/* ---------------------------------------------------------------- *
+ * ≤ 480px — small phones
+ * ---------------------------------------------------------------- */
+@media (max-width: 480px) {
+  .nm-saas .ns-reading__indicators {
+    grid-template-columns: 1fr;
+  }
+
+  .nm-saas .ns-trust__ticker span {
+    font-size: 12px;
+  }
+}
