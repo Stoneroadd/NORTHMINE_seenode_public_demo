@@ -49,3 +49,54 @@ or a third-party stock library.
 The contour overlay is rendered by `PitContourField.tsx` from geometry already
 included in this repository. It was not downloaded from an external image
 provider. The public page labels it as a demo/reference layer.
+
+---
+
+# `prototype/` subfolder (NORTHMINE — Operational Archive prototype)
+
+Assets specific to the isolated `/brand-prototype` route
+(`claude/northmine-brand-experience`, not published, not linked from the
+public landing). No new photography or generated imagery was created for
+this prototype — see "Capability disclosure" below.
+
+## prototype/product/cockpit-operational-demo-capture.webp (+ -900.webp)
+
+- Type: sanitized product screenshot (real, not synthetic)
+- Captured: 2026-08-02
+- Tool: automated browser capture (Playwright) against the public demo
+  deployment (`https://northmine-seenode-public-demo-3.seenode.app/cockpit`),
+  authenticated with the public demo credentials, synthetic/demo data only
+- Intended use: Momento 5 (Evidencia) and as contextual imagery for three
+  Archivo Operacional chapters (Producción, Riesgo, Decisión) that read data
+  literally shown on this same screen
+- Content: the real Decision Cockpit interface, visibly labeled "MODO DEMO"
+  / "Datos sinteticos" / "Backend DEMO LOCAL" in the capture itself
+- Restrictions: demo data only; must be recaptured if the interface changes
+  materially; do not crop out the demo-mode badges
+
+## prototype/brand/*.svg (symbol-nm, symbol-nm-mono, wordmark-monumental, favicon)
+
+- Type: original vector artwork
+- Created: 2026-08-02
+- Tool: hand-authored SVG (coordinate geometry), no image-generation tool
+  involved; the wordmark uses IBM Plex Sans (already licensed and
+  self-hosted in `frontend/public/fonts/`) rendered as real SVG `<text>`,
+  not traced/modified letterforms
+- Content: the NORTHMINE symbol (two chamfered posts + a stepped diagonal —
+  a mine-bench cross-section that also reads as the letter N) and its
+  monumental wordmark treatment
+- Restrictions: none beyond standard project brand use
+
+## Capability disclosure
+
+No image or video generation tool was available for this prototype. Section
+13's imagery requirement ("vista aérea, operación pala–CAEX, vídeo") is
+satisfied by reusing the already-documented synthetic images above
+(`open-pit-blue-hour-synthetic.webp`, `caex-haul-road-synthetic.webp`,
+`electric-shovel-loading-synthetic.webp`, `open-pit-orthomosaic-synthetic.webp`)
+plus the one real capture documented above. No video was produced — Momento
+1's hero uses a static image with the same treatment a video poster would
+get; there is no video element to provide a reduced-motion/Save-Data
+fallback for, because no video was added in the first place. If a licensed
+video becomes available later, `MiningHero.tsx` is the single place to wire
+it in.
