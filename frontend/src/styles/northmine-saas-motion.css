@@ -39,6 +39,23 @@
   overflow: hidden;
 }
 
+.nm-saas .ns-btn--primary::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(140px circle at var(--mx, 50%) var(--my, 50%), rgba(255, 255, 255, 0.55), transparent 70%);
+  mix-blend-mode: overlay;
+  opacity: 0;
+  transition: opacity 220ms ease;
+  pointer-events: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .nm-saas .ns-btn--primary:hover::before {
+    opacity: 1;
+  }
+}
+
 .nm-saas .ns-btn--primary::after {
   content: '';
   position: absolute;
@@ -82,7 +99,8 @@
     transform: none !important;
   }
 
-  .nm-saas .ns-btn--primary::after {
+  .nm-saas .ns-btn--primary::after,
+  .nm-saas .ns-btn--primary::before {
     display: none;
   }
 

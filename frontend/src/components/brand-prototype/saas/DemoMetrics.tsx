@@ -1,7 +1,12 @@
 import { motion, useReducedMotion } from 'framer-motion'
+import { useCountUp } from '../../../hooks/useCountUp'
+
+const formatTonnes = new Intl.NumberFormat('es-CL')
 
 export function DemoMetrics() {
   const reduceMotion = useReducedMotion()
+  const estado = useCountUp(107043, Boolean(reduceMotion))
+  const brecha = useCountUp(42600, Boolean(reduceMotion))
   const fadeUp = (delay: number) => ({
     initial: reduceMotion ? false : { opacity: 0, y: 14 },
     whileInView: { opacity: 1, y: 0 },
@@ -20,13 +25,17 @@ export function DemoMetrics() {
         <div className="ns-metrics__grid">
           <motion.div className="ns-metrics__main" {...fadeUp(0)}>
             <span className="mono-label">Estado del turno</span>
-            <strong className="ns-metrics__value ns-metrics__value--positive">107.043 t</strong>
+            <strong ref={estado.ref} className="ns-metrics__value ns-metrics__value--positive">
+              {formatTonnes.format(estado.value)} t
+            </strong>
             <span className="ns-metrics__sub">152,9% de avance real sobre meta de turno (70.000 t)</span>
           </motion.div>
 
           <motion.div className="ns-metrics__side" {...fadeUp(0.08)}>
             <span className="mono-label">Brecha</span>
-            <strong className="ns-metrics__value">+42.600 t</strong>
+            <strong ref={brecha.ref} className="ns-metrics__value">
+              +{formatTonnes.format(brecha.value)} t
+            </strong>
             <span className="ns-metrics__sub">Proyección de cierre 112.600 t</span>
           </motion.div>
 

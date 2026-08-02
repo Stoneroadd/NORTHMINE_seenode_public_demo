@@ -1,16 +1,53 @@
+import { useEffect, useRef } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 import { PitContourField } from '../../landing/PitContourField'
+import { useSaveData } from '../../../hooks/useSaveData'
 
 export function SaaSHero() {
   const reduceMotion = useReducedMotion()
+  const saveData = useSaveData()
+  const bgRef = useRef<HTMLImageElement>(null)
   const fadeUp = (delay: number) => ({
     initial: reduceMotion ? false : { opacity: 0, y: 16 },
     animate: { opacity: 1, y: 0 },
     transition: { duration: 0.6, delay, ease: [0.22, 1, 0.36, 1] as const },
   })
 
+  useEffect(() => {
+    if (reduceMotion) return undefined
+    let ticking = false
+    const update = () => {
+      ticking = false
+      const y = window.scrollY
+      bgRef.current?.style.setProperty('--ns-hero-parallax', String(Math.min(y * 0.18, 120)))
+    }
+    const onScroll = () => {
+      if (ticking) return
+      ticking = true
+      requestAnimationFrame(update)
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [reduceMotion])
+
   return (
     <section className="ns-hero" id="hero" aria-labelledby="ns-hero-title">
+      <div className="ns-hero__backdrop" aria-hidden="true">
+        <img
+          ref={bgRef}
+          className="ns-hero__backdrop-image"
+          src={
+            saveData
+              ? '/assets/landing/prototype/materials/terrain-openpit-kennecott-900.webp'
+              : '/assets/landing/prototype/materials/terrain-openpit-kennecott.webp'
+          }
+          alt=""
+          width={1920}
+          height={1301}
+          fetchPriority="high"
+        />
+        <div className="ns-hero__backdrop-veil" />
+      </div>
       <div className="ns-hero__glow" aria-hidden="true" />
       <div className="ns-hero__contours" aria-hidden="true">
         <PitContourField />
