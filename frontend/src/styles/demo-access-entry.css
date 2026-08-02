@@ -1,9 +1,36 @@
 .login-page.nm-login-shell.nm-demo-entry {
-  --nm-demo-entry-copper: var(--nm-brand-copper-500, #b8733f);
-  --nm-demo-entry-copper-light: var(--nm-brand-copper-400, #cf8a53);
-  --nm-demo-entry-ivory: var(--nm-brand-ivory-100, #eeeee8);
-  --nm-demo-entry-mineral: var(--nm-brand-mineral-300, #a9aeaa);
+  --nm-demo-entry-blue: #2fd4ff;
+  --nm-demo-entry-blue-light: #7dd3fc;
+  --nm-demo-entry-blue-deep: #0f6f9a;
+  --nm-demo-entry-indigo: #7c8cff;
+  --nm-demo-entry-ivory: #eef8ff;
+  --nm-demo-entry-mineral: #9fb3c8;
+  --bg-void: #050b14;
+  --bg-elevated: #0a1624;
+  --bg-card: #08121e;
+  --text-primary: var(--nm-demo-entry-ivory);
+  --cyan: var(--nm-demo-entry-blue);
+  --mineral: var(--nm-demo-entry-indigo);
+  --nm-green: var(--nm-brand-success-500, #6f9d78);
+  background:
+    linear-gradient(90deg, rgba(5, 11, 20, 0.97), rgba(5, 11, 20, 0.76)),
+    url('/assets/landing/open-pit-blue-hour-synthetic.webp') center / cover no-repeat !important;
+  color: var(--nm-demo-entry-ivory);
   font-family: 'IBM Plex Sans', 'Segoe UI', sans-serif;
+}
+
+.nm-demo-entry .command-center-background {
+  display: none;
+}
+
+.nm-demo-entry .login-backdrop {
+  background: linear-gradient(
+    180deg,
+    rgba(47, 212, 255, 0.07),
+    transparent 46%,
+    rgba(124, 58, 237, 0.05)
+  ) !important;
+  opacity: 0.32;
 }
 
 .nm-demo-entry .nm-login-panel,
@@ -18,25 +45,117 @@
 }
 
 .nm-demo-entry .nm-login-panel.login-card {
-  border-color: rgba(207, 138, 83, 0.32);
+  border: 1px solid rgba(47, 212, 255, 0.34) !important;
+  border-radius: 6px !important;
   background:
-    linear-gradient(135deg, rgba(184, 115, 63, 0.08), transparent 34%),
-    rgba(10, 12, 12, 0.95);
+    linear-gradient(135deg, rgba(47, 212, 255, 0.08), transparent 38%),
+    rgba(5, 11, 20, 0.97) !important;
+  box-shadow:
+    0 28px 72px rgba(0, 0, 0, 0.48),
+    inset 0 1px rgba(238, 248, 255, 0.04) !important;
 }
 
 .nm-demo-entry .nm-login-panel.login-card::before {
-  background: var(--nm-demo-entry-copper);
+  right: 0;
+  left: 0;
+  height: 2px;
+  background: var(--nm-demo-entry-blue) !important;
+  opacity: 1;
+}
+
+.nm-demo-entry .nm-wireframe-panel.login-canvas-panel {
+  border: 1px solid rgba(47, 212, 255, 0.3) !important;
+  border-radius: 6px !important;
+  background: var(--bg-void) !important;
+  box-shadow:
+    0 28px 72px rgba(0, 0, 0, 0.42),
+    inset 0 0 0 1px rgba(125, 211, 252, 0.025) !important;
+}
+
+.nm-demo-entry .login-pit-canvas canvas {
+  filter: saturate(1.08) brightness(0.9) contrast(1.1);
+}
+
+.nm-demo-entry .nm-brand-title.login-brand-name {
+  color: var(--nm-demo-entry-ivory) !important;
+  font-family: 'IBM Plex Mono', monospace;
+  letter-spacing: 0.035em !important;
+}
+
+.nm-demo-entry .nm-brand-subtitle.brand-intelligence {
+  color: var(--nm-demo-entry-blue-light) !important;
+}
+
+.nm-demo-entry .nm-brand-system-subtitle,
+.nm-demo-entry .nm-login-panel .login-form label,
+.nm-demo-entry .nm-login-panel .login-status {
+  color: var(--nm-demo-entry-mineral) !important;
+}
+
+.nm-demo-entry .nm-login-panel .login-copy {
+  border-top-color: rgba(125, 211, 252, 0.16) !important;
+}
+
+.nm-demo-entry .nm-login-panel .login-copy h2 {
+  color: var(--nm-demo-entry-ivory) !important;
+}
+
+.nm-demo-entry .nm-login-panel .login-form input {
+  border-color: rgba(125, 211, 252, 0.22) !important;
+  border-radius: 4px !important;
+  background: rgba(5, 11, 20, 0.84) !important;
+  color: var(--nm-demo-entry-ivory) !important;
+  box-shadow: inset 0 1px rgba(238, 248, 255, 0.04) !important;
+}
+
+.nm-demo-entry .nm-login-panel .login-form input::placeholder {
+  color: #71869b;
 }
 
 .nm-demo-entry .nm-login-panel .login-form input:focus {
-  border-color: var(--nm-demo-entry-copper-light);
-  box-shadow: 0 0 0 2px rgba(184, 115, 63, 0.16);
+  border-color: var(--nm-demo-entry-blue) !important;
+  box-shadow: 0 0 0 3px rgba(47, 212, 255, 0.15) !important;
 }
 
 .nm-demo-entry .nm-login-panel .login-form .command-button {
-  border-color: var(--nm-demo-entry-copper);
-  background: var(--nm-demo-entry-copper);
-  color: #170f0a;
+  border-color: var(--nm-demo-entry-blue-deep) !important;
+  border-radius: 4px !important;
+  background: var(--nm-demo-entry-blue-deep) !important;
+  color: #f5fbff !important;
+  box-shadow: 0 12px 28px rgba(15, 111, 154, 0.26) !important;
+}
+
+.nm-demo-entry .nm-login-panel .login-form .command-button:hover:not(:disabled) {
+  border-color: var(--nm-demo-entry-blue) !important;
+  background: #1485b8 !important;
+  box-shadow: 0 16px 34px rgba(47, 212, 255, 0.18) !important;
+}
+
+.nm-demo-entry .nm-login-panel .login-form .command-button:disabled {
+  border-color: #264154 !important;
+  background: #1b3142 !important;
+  color: rgba(238, 248, 255, 0.56) !important;
+  opacity: 0.62;
+}
+
+.nm-demo-entry .login-error {
+  border-color: rgba(201, 101, 93, 0.44);
+  background: rgba(201, 101, 93, 0.1);
+  color: #efc1bc;
+}
+
+.nm-demo-entry .login-status {
+  border-top-color: rgba(125, 211, 252, 0.14) !important;
+}
+
+.nm-demo-entry .login-status svg {
+  color: var(--nm-demo-entry-blue);
+}
+
+.nm-demo-entry .mine-pit-hud {
+  border-color: rgba(47, 212, 255, 0.34);
+  background: rgba(5, 11, 20, 0.76);
+  color: var(--nm-demo-entry-mineral);
 }
 
 .nm-demo-entry__return {
@@ -54,11 +173,11 @@
 
 .nm-demo-entry__return:hover,
 .nm-demo-entry__return:focus-visible {
-  color: var(--nm-demo-entry-ivory);
+  color: var(--nm-demo-entry-blue-light);
 }
 
 .nm-demo-entry__return:focus-visible {
-  outline: 2px solid var(--nm-brand-focus, #e8b96f);
+  outline: 2px solid var(--nm-demo-entry-blue);
   outline-offset: 3px;
 }
 
@@ -74,5 +193,12 @@
   .nm-demo-entry__return {
     top: 8px;
     left: 14px;
+  }
+
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nm-demo-entry .nm-login-panel .login-form .command-button {
+    transition: none !important;
   }
 }
