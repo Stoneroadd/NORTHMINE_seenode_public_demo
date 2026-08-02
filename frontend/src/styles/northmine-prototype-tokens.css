@@ -1,0 +1,89 @@
+/*
+ * NORTHMINE — Operational Archive prototype.
+ * Editorial mineral palette: light (marfil) base for the narrative moments,
+ * dark (carbón) reserved for the Archivo Operacional and depth moments.
+ * Semantic names per the creative brief (section 6.2).
+ */
+
+.nm-proto {
+  /* Base neutrals */
+  --nmp-marfil: #f3efe6;
+  --nmp-blanco-polvo: #faf8f2;
+  --nmp-carbon: #171410;
+  --nmp-grafito: #221e19;
+  --nmp-acero: #4a443c;
+  --nmp-piedra: #d9d2c2;
+
+  /* Ink */
+  --nmp-ink-on-light: #1c1812;
+  --nmp-ink-muted-on-light: #6b6357;
+  --nmp-ink-on-dark: #f2eee2;
+  --nmp-ink-muted-on-dark: #a39a89;
+
+  /* Brand accents */
+  --nmp-cobre: #b8733f;
+  --nmp-cobre-fuerte: #9c5e30;
+  --nmp-ambar: #c99a4a;
+
+  /* Semantic state (separate from the accent, per craft floor) */
+  --nmp-verde-cumplimiento: #6f9d78;
+  --nmp-rojo-riesgo: #c9655d;
+
+  /* Motion durations (section 14) */
+  --nmp-t-micro: 220ms;
+  --nmp-t-enter: 700ms;
+  --nmp-t-editorial: 1100ms;
+  --nmp-ease: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* Intensity variant hooks — overridden by .nm-proto--premium */
+  --nmp-surface-shadow: none;
+  --nmp-surface-lift: 0px;
+  --nmp-glow-opacity: 0;
+
+  background: var(--nmp-marfil);
+  color: var(--nmp-ink-on-light);
+  font-family: 'IBM Plex Sans', 'Segoe UI', sans-serif;
+}
+
+.nm-proto--premium {
+  --nmp-surface-shadow: 0 24px 60px rgba(23, 20, 16, 0.16);
+  --nmp-surface-lift: -2px;
+  --nmp-glow-opacity: 0.14;
+}
+
+.nm-proto * {
+  box-sizing: border-box;
+}
+
+.nm-proto ::selection {
+  background: var(--nmp-cobre);
+  color: var(--nmp-blanco-polvo);
+}
+
+.nm-proto__shell {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding-inline: clamp(20px, 5vw, 72px);
+}
+
+/* Editorial mono label used for eyebrows/coordinates/technical tags */
+.nm-proto .mono-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.nm-proto :focus-visible {
+  outline: 2px solid var(--nmp-cobre);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nm-proto * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

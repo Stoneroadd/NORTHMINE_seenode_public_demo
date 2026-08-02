@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="nm-proto-mono-title">
+  <title id="nm-proto-mono-title">Símbolo NORTHMINE, monocromático</title>
+  <g fill="currentColor">
+    <path d="M8,8 L18,8 L18,56 L13,56 L8,51 Z"/>
+    <path d="M46,8 L51,8 L56,13 L56,56 L46,56 Z"/>
+    <rect x="18" y="11" width="16" height="10"/>
+    <rect x="29" y="16" width="10" height="16"/>
+    <rect x="34" y="27" width="12" height="10"/>
+  </g>
+</svg>
