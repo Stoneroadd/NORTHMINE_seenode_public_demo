@@ -1,0 +1,116 @@
+/* NORTHMINE — Operational Archive prototype. Responsive rules. */
+
+@media (max-width: 900px) {
+  .nmp-header__nav {
+    display: none;
+  }
+
+  .nmp-hero__grid {
+    grid-template-columns: 1fr;
+    min-height: 0;
+  }
+
+  .nmp-hero__figure {
+    order: -1;
+  }
+
+  .nmp-hero__title {
+    max-width: none;
+  }
+
+  .nmp-manifesto {
+    grid-template-columns: 1fr;
+  }
+
+  .nmp-manifesto__scene {
+    display: none;
+  }
+
+  .nmp-transition {
+    grid-template-columns: 1fr;
+  }
+
+  .nmp-transition__scene {
+    order: -1;
+  }
+
+  .nmp-archive__body {
+    grid-template-columns: 1fr;
+  }
+
+  .nmp-archive__chapters {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+
+  .nmp-archive__chapter-tab {
+    border: 1px solid var(--nmp-acero);
+    padding: 10px 12px;
+    min-height: 44px;
+  }
+
+  .nmp-archive__chapter-tab[aria-selected='true'] {
+    padding-left: 12px;
+    border-color: var(--nmp-cobre);
+  }
+
+  .nmp-archive__facts {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .nmp-header__intensity .mono-label {
+    display: none;
+  }
+
+  .nmp-hero {
+    padding-block: 24px 20px;
+  }
+
+  .nmp-hero__title {
+    font-size: clamp(32px, 9vw, 40px);
+  }
+
+  .nmp-hero__coordinates {
+    display: none;
+  }
+
+  .nmp-hero__actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .nmp-hero__actions .nmp-btn {
+    justify-content: center;
+  }
+
+  .nmp-archive__facts {
+    grid-template-columns: 1fr;
+  }
+
+  .nmp-evidence__actions {
+    width: 100%;
+  }
+
+  .nmp-evidence__actions .nmp-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .nmp-footer__inner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+/* Ultra-wide desktop: keep line lengths sane rather than stretching */
+@media (min-width: 1600px) {
+  .nmp-hero__lead,
+  .nmp-manifesto__body,
+  .nmp-archive__chapter-description {
+    max-width: 52ch;
+  }
+}
