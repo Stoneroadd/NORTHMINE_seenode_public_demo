@@ -52,7 +52,6 @@
   }
 
   .nmp-archive__chapter-tab[aria-selected='true'] {
-    padding-left: 12px;
     border-color: var(--nmp-cobre);
   }
 

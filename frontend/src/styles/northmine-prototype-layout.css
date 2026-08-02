@@ -492,7 +492,8 @@
   font-family: 'IBM Plex Sans', sans-serif;
   font-size: 16px;
   cursor: pointer;
-  transition: color var(--nmp-t-micro) var(--nmp-ease), padding-left var(--nmp-t-micro) var(--nmp-ease);
+  transform: translateX(0);
+  transition: color var(--nmp-t-micro) var(--nmp-ease), transform var(--nmp-t-micro) var(--nmp-ease);
 }
 
 .nmp-archive__chapter-tab .mono-label {
@@ -503,7 +504,7 @@
 .nmp-archive__chapter-tab[aria-selected='true'] {
   color: var(--nmp-ink-on-dark);
   font-weight: 600;
-  padding-left: 12px;
+  transform: translateX(8px);
 }
 
 .nmp-archive__chapter-tab:hover,
