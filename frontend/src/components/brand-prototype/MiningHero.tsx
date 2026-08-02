@@ -1,7 +1,26 @@
+import { useEffect, useState } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
+
+/**
+ * navigator.connection.saveData has no CSS/srcset equivalent — the browser
+ * always picks the "best" srcset candidate for the viewport regardless of
+ * the user's data-saver preference. This is the only asset in the prototype
+ * that loads eagerly (fetchPriority="high"), so it's the one place a
+ * Save-Data check has a real effect: on, it skips the 1600w request and
+ * commits to the smaller 900w image outright.
+ */
+function useSaveData() {
+  const [saveData, setSaveData] = useState(false)
+  useEffect(() => {
+    const connection = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection
+    setSaveData(Boolean(connection?.saveData))
+  }, [])
+  return saveData
+}
 
 export function MiningHero() {
   const reduceMotion = useReducedMotion()
+  const saveData = useSaveData()
 
   return (
     <section className="nmp-hero" aria-labelledby="nmp-hero-title">
@@ -38,9 +57,17 @@ export function MiningHero() {
         <div className="nmp-hero__figure">
           <img
             className="nmp-hero__image"
-            src="/assets/landing/open-pit-blue-hour-synthetic.webp"
-            srcSet="/assets/landing/open-pit-blue-hour-synthetic-900.webp 900w, /assets/landing/open-pit-blue-hour-synthetic.webp 1600w"
-            sizes="(max-width: 900px) 100vw, 56vw"
+            src={
+              saveData
+                ? '/assets/landing/open-pit-blue-hour-synthetic-900.webp'
+                : '/assets/landing/open-pit-blue-hour-synthetic.webp'
+            }
+            srcSet={
+              saveData
+                ? undefined
+                : '/assets/landing/open-pit-blue-hour-synthetic-900.webp 900w, /assets/landing/open-pit-blue-hour-synthetic.webp 1600w'
+            }
+            sizes={saveData ? undefined : '(max-width: 900px) 100vw, 56vw'}
             alt=""
             width="1600"
             height="900"
