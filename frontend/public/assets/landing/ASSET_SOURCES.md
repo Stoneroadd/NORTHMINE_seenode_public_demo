@@ -74,6 +74,25 @@ this prototype — see "Capability disclosure" below.
 - Restrictions: demo data only; must be recaptured if the interface changes
   materially; do not crop out the demo-mode badges
 
+## prototype/product/module-{production,fleet,loading,breakdowns,alerts,map3d,aerial}.webp (+ -600.webp)
+
+- Type: sanitized product screenshots (real, not synthetic)
+- Captured: 2026-08-02
+- Tool: automated browser capture (Playwright) against the public demo
+  deployment (`https://northmine-seenode-public-demo-3.seenode.app`),
+  authenticated with the public demo credentials, navigating to
+  `/produccion`, `/flota`, `/carguio`, `/averias`, `/alertas`,
+  `/operational-map-3d` and `/aerea` respectively — synthetic/demo data only
+- Intended use: SaaS-direction module gallery (`ModuleGallery.tsx`) on the
+  isolated `/brand-prototype` route
+- Content: the real corresponding module interface, visibly labeled
+  "MODO DEMO" / "Datos sinteticos" / "Backend DEMO LOCAL" in each capture
+- Restrictions: demo data only; must be recaptured if the interface changes
+  materially; do not crop out the demo-mode badges. No "Plan Mensual"
+  capture exists — there is no standalone route for it (it only appears as a
+  category label inside the Mapa Operacional 3D module), so it was left out
+  of the gallery rather than fabricated.
+
 ## prototype/brand/*.svg (symbol-nm, symbol-nm-mono, wordmark-monumental, favicon)
 
 - Type: original vector artwork
