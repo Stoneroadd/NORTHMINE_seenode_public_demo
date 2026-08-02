@@ -1,20 +1,15 @@
-import { motion, useReducedMotion } from 'framer-motion'
 import { useSaveData } from '../../../hooks/useSaveData'
+import { useProductStageReveal } from '../../../lib/animation/effects'
 
 export function ProductStage() {
-  const reduceMotion = useReducedMotion()
   const saveData = useSaveData()
+  const scope = useProductStageReveal<HTMLDivElement>()
 
   return (
-    <div className="ns-stage">
-      <motion.figure
-        className="ns-stage__frame"
-        initial={reduceMotion ? false : { opacity: 0, y: 40 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: '-60px' }}
-        transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-      >
+    <div ref={scope} className="ns-stage">
+      <figure className="ns-stage__frame" data-product-stage>
         <div className="ns-stage__glow" aria-hidden="true" />
+        <div className="ns-stage__sweep" data-stage-sweep aria-hidden="true" />
         <div className="ns-stage__toolbar">
           <span className="ns-stage__toolbar-dots" aria-hidden="true">
             <i />
@@ -42,7 +37,7 @@ export function ProductStage() {
           fetchPriority="high"
         />
         <div className="ns-stage__fade" aria-hidden="true" />
-      </motion.figure>
+      </figure>
     </div>
   )
 }

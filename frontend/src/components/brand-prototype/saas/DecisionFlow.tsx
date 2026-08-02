@@ -1,4 +1,4 @@
-import { motion, useReducedMotion } from 'framer-motion'
+import { useDecisionFlowTimeline } from '../../../lib/animation/effects'
 
 const steps = [
   {
@@ -19,10 +19,10 @@ const steps = [
 ]
 
 export function DecisionFlow() {
-  const reduceMotion = useReducedMotion()
+  const scope = useDecisionFlowTimeline<HTMLElement>()
 
   return (
-    <section className="ns-flow" aria-labelledby="ns-flow-title">
+    <section ref={scope} className="ns-flow" aria-labelledby="ns-flow-title">
       <div className="ns-saas__shell">
         <p className="mono-label">Cómo funciona</p>
         <h2 id="ns-flow-title" className="ns-flow__title">
@@ -31,22 +31,16 @@ export function DecisionFlow() {
 
         <ol className="ns-flow__steps">
           {steps.map((step, index) => (
-            <motion.li
-              key={step.number}
-              initial={reduceMotion ? false : { opacity: 0, y: 16 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-80px' }}
-              transition={{ duration: 0.5, delay: reduceMotion ? 0 : index * 0.12, ease: [0.22, 1, 0.36, 1] }}
-            >
-              <div className="ns-flow__marker">
+            <li key={step.number} data-flow-step>
+              <div className="ns-flow__marker" data-flow-marker>
                 <span className="mono-label">{step.number}</span>
-                {index < steps.length - 1 && <span className="ns-flow__line" aria-hidden="true" />}
+                {index < steps.length - 1 && <span className="ns-flow__line" data-flow-line aria-hidden="true" />}
               </div>
-              <div className="ns-flow__copy">
+              <div className="ns-flow__copy" data-flow-copy>
                 <h3>{step.title}</h3>
                 <p>{step.description}</p>
               </div>
-            </motion.li>
+            </li>
           ))}
         </ol>
       </div>

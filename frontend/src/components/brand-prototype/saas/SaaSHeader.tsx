@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 
 const navItems = [
   { label: 'Plataforma', href: '#hero' },
@@ -12,6 +13,7 @@ export function SaaSHeader() {
   const [scrolled, setScrolled] = useState(false)
   const [open, setOpen] = useState(false)
   const menuButtonRef = useRef<HTMLButtonElement>(null)
+  const reduceMotion = useReducedMotion()
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24)
@@ -85,24 +87,31 @@ export function SaaSHeader() {
         </button>
       </div>
 
-      <nav
-        id="ns-mobile-nav"
-        className={`ns-header__mobile-nav${open ? ' is-open' : ''}`}
-        aria-label="Navegación móvil"
-        hidden={!open}
-      >
-        {navItems.map((item) => (
-          <a key={item.href} href={item.href} onClick={() => setOpen(false)}>
-            {item.label}
-          </a>
-        ))}
-        <a className="ns-header__login" href="/acceso-demo" onClick={() => setOpen(false)}>
-          Acceder
-        </a>
-        <a className="ns-btn ns-btn--primary" href="/solicitar-demo" onClick={() => setOpen(false)}>
-          Solicitar demo
-        </a>
-      </nav>
+      <AnimatePresence>
+        {open && (
+          <motion.nav
+            id="ns-mobile-nav"
+            className="ns-header__mobile-nav is-open"
+            aria-label="Navegación móvil"
+            initial={reduceMotion ? false : { opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={reduceMotion ? undefined : { opacity: 0, y: -8 }}
+            transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+          >
+            {navItems.map((item) => (
+              <a key={item.href} href={item.href} onClick={() => setOpen(false)}>
+                {item.label}
+              </a>
+            ))}
+            <a className="ns-header__login" href="/acceso-demo" onClick={() => setOpen(false)}>
+              Acceder
+            </a>
+            <a className="ns-btn ns-btn--primary" href="/solicitar-demo" onClick={() => setOpen(false)}>
+              Solicitar demo
+            </a>
+          </motion.nav>
+        )}
+      </AnimatePresence>
     </header>
   )
 }

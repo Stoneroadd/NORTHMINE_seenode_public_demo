@@ -2,11 +2,13 @@ import { useMemo, useState } from 'react'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { modules, moduleFilters } from './moduleData'
 import { useSaveData } from '../../../hooks/useSaveData'
+import { useModuleGalleryReveal } from '../../../lib/animation/effects'
 
 export function ModuleGallery() {
   const [filter, setFilter] = useState<(typeof moduleFilters)[number]>('Todos')
   const reduceMotion = useReducedMotion()
   const saveData = useSaveData()
+  const scope = useModuleGalleryReveal<HTMLElement>()
 
   const visible = useMemo(
     () => (filter === 'Todos' ? modules : modules.filter((m) => m.category === filter)),
@@ -14,9 +16,9 @@ export function ModuleGallery() {
   )
 
   return (
-    <section className="ns-gallery" id="modulos" aria-labelledby="ns-gallery-title">
+    <section ref={scope} className="ns-gallery" id="modulos" aria-labelledby="ns-gallery-title">
       <div className="ns-saas__shell">
-        <div className="ns-gallery__head">
+        <div className="ns-gallery__head" data-gallery-head>
           <p className="mono-label">Módulos</p>
           <h2 id="ns-gallery-title" className="ns-gallery__title">
             Evidencia del producto, no promesas
@@ -27,7 +29,7 @@ export function ModuleGallery() {
           </p>
         </div>
 
-        <div className="ns-gallery__filters" role="tablist" aria-label="Filtrar módulos por categoría">
+        <div className="ns-gallery__filters" data-gallery-filters role="tablist" aria-label="Filtrar módulos por categoría">
           {moduleFilters.map((item) => (
             <button
               key={item}

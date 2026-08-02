@@ -1,41 +1,17 @@
-import { useEffect, useRef } from 'react'
-import { motion, useReducedMotion } from 'framer-motion'
 import { PitContourField } from '../../landing/PitContourField'
 import { useSaveData } from '../../../hooks/useSaveData'
+import { useHeroRevealTimeline } from '../../../lib/animation/effects'
 
 export function SaaSHero() {
-  const reduceMotion = useReducedMotion()
   const saveData = useSaveData()
-  const bgRef = useRef<HTMLImageElement>(null)
-  const fadeUp = (delay: number) => ({
-    initial: reduceMotion ? false : { opacity: 0, y: 16 },
-    animate: { opacity: 1, y: 0 },
-    transition: { duration: 0.6, delay, ease: [0.22, 1, 0.36, 1] as const },
-  })
-
-  useEffect(() => {
-    if (reduceMotion) return undefined
-    let ticking = false
-    const update = () => {
-      ticking = false
-      const y = window.scrollY
-      bgRef.current?.style.setProperty('--ns-hero-parallax', String(Math.min(y * 0.18, 120)))
-    }
-    const onScroll = () => {
-      if (ticking) return
-      ticking = true
-      requestAnimationFrame(update)
-    }
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [reduceMotion])
+  const scope = useHeroRevealTimeline<HTMLElement>()
 
   return (
-    <section className="ns-hero" id="hero" aria-labelledby="ns-hero-title">
+    <section ref={scope} className="ns-hero" id="hero" aria-labelledby="ns-hero-title">
       <div className="ns-hero__backdrop" aria-hidden="true">
         <img
-          ref={bgRef}
           className="ns-hero__backdrop-image"
+          data-hero-backdrop
           src={
             saveData
               ? '/assets/landing/prototype/materials/terrain-openpit-kennecott-900.webp'
@@ -49,36 +25,36 @@ export function SaaSHero() {
         <div className="ns-hero__backdrop-veil" />
       </div>
       <div className="ns-hero__glow" aria-hidden="true" />
-      <div className="ns-hero__contours" aria-hidden="true">
+      <div className="ns-hero__contours" data-hero-contours aria-hidden="true">
         <PitContourField />
       </div>
 
       <div className="ns-hero__content">
-        <motion.p className="ns-hero__badge" {...fadeUp(0)}>
+        <p className="ns-hero__badge" data-hero-badge>
           <span className="ns-hero__badge-dot" />
           Inteligencia operacional para minería
-        </motion.p>
+        </p>
 
-        <motion.h1 id="ns-hero-title" className="ns-hero__title" {...fadeUp(0.08)}>
+        <h1 id="ns-hero-title" className="ns-hero__title" data-hero-title>
           Observe la operación completa.
           <br />
           Decida con contexto.
-        </motion.h1>
+        </h1>
 
-        <motion.p className="ns-hero__lead" {...fadeUp(0.16)}>
+        <p className="ns-hero__lead" data-hero-lead>
           NORTHMINE conecta producción, flota, carguío y riesgo para
           transformar señales operacionales dispersas en decisiones
           comprensibles.
-        </motion.p>
+        </p>
 
-        <motion.div className="ns-hero__actions" {...fadeUp(0.24)}>
+        <div className="ns-hero__actions" data-hero-actions>
           <a className="ns-btn ns-btn--primary" href="/solicitar-demo">
             Solicitar acceso al demo
           </a>
           <a className="ns-btn ns-btn--ghost" href="#modulos">
             Explorar la plataforma
           </a>
-        </motion.div>
+        </div>
       </div>
     </section>
   )

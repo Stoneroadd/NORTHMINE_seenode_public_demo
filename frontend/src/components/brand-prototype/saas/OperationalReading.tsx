@@ -1,4 +1,4 @@
-import { motion, useReducedMotion } from 'framer-motion'
+import { useSectionReveal } from '../../../lib/animation/effects'
 
 const indicators = [
   { label: 'Turno a esta hora', value: '+37.743 t', tone: 'positive' as const },
@@ -8,7 +8,19 @@ const indicators = [
 ]
 
 export function OperationalReading() {
-  const reduceMotion = useReducedMotion()
+  const indicatorsScope = useSectionReveal<HTMLDivElement>({
+    targets: '[data-indicator]',
+    distance: 12,
+    stagger: 0.06,
+    duration: 0.4,
+    start: 'top 88%',
+  })
+  const frameScope = useSectionReveal<HTMLDivElement>({
+    targets: '[data-reading-frame]',
+    distance: 20,
+    duration: 0.6,
+    start: 'top 85%',
+  })
 
   return (
     <section className="ns-reading" id="lectura" aria-labelledby="ns-reading-title">
@@ -25,29 +37,16 @@ export function OperationalReading() {
         </div>
 
         <div className="ns-reading__surface">
-          <div className="ns-reading__indicators">
-            {indicators.map((indicator, index) => (
-              <motion.div
-                key={indicator.label}
-                className={`ns-reading__indicator ns-reading__indicator--${indicator.tone}`}
-                initial={reduceMotion ? false : { opacity: 0, y: 10 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: '-60px' }}
-                transition={{ duration: 0.4, delay: reduceMotion ? 0 : index * 0.06 }}
-              >
+          <div ref={indicatorsScope} className="ns-reading__indicators">
+            {indicators.map((indicator) => (
+              <div key={indicator.label} className={`ns-reading__indicator ns-reading__indicator--${indicator.tone}`} data-indicator>
                 <span className="mono-label">{indicator.label}</span>
                 <strong>{indicator.value}</strong>
-              </motion.div>
+              </div>
             ))}
           </div>
 
-          <motion.div
-            className="ns-reading__frame"
-            initial={reduceMotion ? false : { opacity: 0, scale: 0.98 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true, margin: '-80px' }}
-            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-          >
+          <div ref={frameScope} className="ns-reading__frame" data-reading-frame>
             <img
               src="/assets/landing/prototype/product/cockpit-operational-demo-capture.webp"
               srcSet="/assets/landing/prototype/product/cockpit-operational-demo-capture-900.webp 900w, /assets/landing/prototype/product/cockpit-operational-demo-capture.webp 1600w"
@@ -59,7 +58,7 @@ export function OperationalReading() {
               style={{ objectPosition: '30% 62%' }}
             />
             <div className="ns-reading__plate mono-label">LECTURA EJECUTIVA · DATOS SINTÉTICOS</div>
-          </motion.div>
+          </div>
         </div>
       </div>
     </section>

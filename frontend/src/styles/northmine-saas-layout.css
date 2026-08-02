@@ -245,7 +245,6 @@
 }
 
 .ns-hero__backdrop-image {
-  --ns-hero-parallax: 0;
   position: absolute;
   inset: -60px 0 0 0;
   width: 100%;
@@ -253,8 +252,6 @@
   object-fit: cover;
   object-position: center 38%;
   opacity: 0.34;
-  transform: translate3d(0, calc(var(--ns-hero-parallax) * 1px), 0);
-  will-change: transform;
 }
 
 .ns-hero__backdrop-veil {
@@ -403,6 +400,14 @@
   display: block;
   width: 100%;
   height: auto;
+}
+
+.ns-stage__sweep {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 42%, rgba(255, 255, 255, 0.16) 50%, transparent 58%);
+  pointer-events: none;
+  z-index: 2;
 }
 
 .ns-stage__fade {

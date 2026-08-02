@@ -1,11 +1,11 @@
-import { motion, useReducedMotion } from 'framer-motion'
 import { terrainPhotos } from './terrainData'
+import { useSectionReveal } from '../../../lib/animation/effects'
 
 export function TerrainMaterials() {
-  const reduceMotion = useReducedMotion()
+  const scope = useSectionReveal<HTMLElement>({ targets: '[data-terrain-card]', distance: 22, stagger: 0.07 })
 
   return (
-    <section className="py-[100px] border-t border-[color:var(--ns-border)]" id="terreno" aria-labelledby="ns-terrain-title">
+    <section ref={scope} className="py-[100px] border-t border-[color:var(--ns-border)]" id="terreno" aria-labelledby="ns-terrain-title">
       <div className="ns-saas__shell">
         <div className="max-w-[640px] mx-auto text-center mb-11">
           <p className="mono-label">Terreno</p>
@@ -19,15 +19,8 @@ export function TerrainMaterials() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-7">
-          {terrainPhotos.map((photo, index) => (
-            <motion.figure
-              key={photo.id}
-              className="group m-0"
-              initial={reduceMotion ? false : { opacity: 0, y: 18 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-40px' }}
-              transition={{ duration: 0.55, delay: (index % 3) * 0.08, ease: [0.22, 1, 0.36, 1] }}
-            >
+          {terrainPhotos.map((photo) => (
+            <figure key={photo.id} className="group m-0" data-terrain-card>
               <div
                 className="ns-terrain__frame relative overflow-hidden rounded-[var(--ns-radius-md)] border border-[color:var(--ns-border)] bg-[color:var(--ns-graphite)] shadow-[var(--ns-shadow-card)] transition-[border-color,box-shadow] duration-200 group-hover:border-[color:var(--ns-border-strong)]"
                 style={{ aspectRatio: photo.id === 'topografia' ? '16 / 9' : '4 / 3' }}
@@ -60,7 +53,7 @@ export function TerrainMaterials() {
                   Foto: {photo.credit}
                 </a>
               </figcaption>
-            </motion.figure>
+            </figure>
           ))}
         </div>
       </div>
