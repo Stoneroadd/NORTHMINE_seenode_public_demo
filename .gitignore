@@ -29,6 +29,8 @@ tmp_visual_checks/
 visual_checks/
 coverage/
 .vite/
+frontend/playwright-report/
+frontend/test-results/
 Averias/*.xls*
 data/aerial/
 
