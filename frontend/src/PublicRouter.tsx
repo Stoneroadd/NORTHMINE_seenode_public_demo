@@ -15,6 +15,9 @@ const DemoRequestSuccessPage = lazy(() => (
 const DemoPrivacyPage = lazy(() => (
   import('./pages/DemoPrivacyPage').then((module) => ({ default: module.DemoPrivacyPage }))
 ))
+const BrandPrototypePage = lazy(() => (
+  import('./pages/BrandPrototypePage').then((module) => ({ default: module.BrandPrototypePage }))
+))
 
 function PublicRouteFallback() {
   return (
@@ -69,6 +72,7 @@ export function PublicRouter() {
     '/solicitar-demo': <DemoRequestPage />,
     '/solicitud-recibida': <DemoRequestSuccessPage />,
     '/privacy': <DemoPrivacyPage />,
+    '/brand-prototype': <BrandPrototypePage />,
   }[path]
 
   return (
