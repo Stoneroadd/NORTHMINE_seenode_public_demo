@@ -68,7 +68,8 @@ export function PublicRouter() {
   }
 
   const publicRoute = {
-    '/': <DemoLandingPage />,
+    '/': <BrandPrototypePage />,
+    '/landing-anterior': <DemoLandingPage />,
     '/solicitar-demo': <DemoRequestPage />,
     '/solicitud-recibida': <DemoRequestSuccessPage />,
     '/privacy': <DemoPrivacyPage />,
