@@ -1,5 +1,4 @@
 import { ScrollProgress } from './ScrollProgress'
-import { CursorGlow } from './CursorGlow'
 import { SaaSHeader } from './SaaSHeader'
 import { SaaSHero } from './SaaSHero'
 import { ProductStage } from './ProductStage'
@@ -8,7 +7,6 @@ import { TrustStrip } from './TrustStrip'
 import { OperationalReading } from './OperationalReading'
 import { DemoMetrics } from './DemoMetrics'
 import { ModuleGallery } from './ModuleGallery'
-import { TerrainMaterials } from './TerrainMaterials'
 import { OperationalBenefits } from './OperationalBenefits'
 import { DecisionFlow } from './DecisionFlow'
 import { SecurityTransparency } from './SecurityTransparency'
@@ -30,7 +28,6 @@ export function SaaSPrototypePage() {
   return (
     <div className="nm-saas">
       <ScrollProgress />
-      <CursorGlow />
       <SaaSHeader />
       <main id="ns-contenido">
         <SaaSHero />
@@ -40,7 +37,6 @@ export function SaaSPrototypePage() {
         <OperationalReading />
         <DemoMetrics />
         <ModuleGallery />
-        <TerrainMaterials />
         <OperationalBenefits />
         <DecisionFlow />
         <SecurityTransparency />

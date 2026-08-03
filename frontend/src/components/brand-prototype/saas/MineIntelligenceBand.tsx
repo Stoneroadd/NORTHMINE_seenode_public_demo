@@ -47,10 +47,10 @@ export function MineIntelligenceBand() {
     <section ref={scope} className="ns-mine-band" aria-labelledby="ns-mine-band-title">
       <div className="ns-mine-band__media" data-mine-media aria-hidden="true">
         <img
-          src="/assets/landing/saas/decision-pit-blue-hour.webp"
+          src="/assets/landing/saas/connected-operation-loader.webp"
           alt=""
-          width={1915}
-          height={821}
+          width={1672}
+          height={941}
           loading="lazy"
         />
       </div>

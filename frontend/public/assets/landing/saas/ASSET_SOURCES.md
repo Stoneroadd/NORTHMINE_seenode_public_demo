@@ -13,6 +13,9 @@
   datos e inteligencia operacional.
 - `hero-dozer-openpit-premium.webp`: imagen entregada por el propietario de
   NORTHMINE el 3 de agosto de 2026 y optimizada para la primera pantalla.
+- `connected-operation-loader.webp`: imagen entregada por el propietario de
+  NORTHMINE el 3 de agosto de 2026 para la transición entre operación física
+  e inteligencia conectada.
 
 ## Original generado
 
