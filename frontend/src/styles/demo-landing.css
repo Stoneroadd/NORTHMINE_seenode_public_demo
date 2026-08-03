@@ -113,6 +113,14 @@
   gap: 11px;
 }
 
+.nm-public-brand__logo {
+  display: block;
+  width: 144px;
+  height: 48px;
+  object-fit: contain;
+  object-position: left center;
+}
+
 .nm-public-brand__mark {
   display: grid;
   width: 34px;

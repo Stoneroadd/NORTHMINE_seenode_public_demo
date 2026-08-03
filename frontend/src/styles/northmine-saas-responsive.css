@@ -72,6 +72,12 @@
     display: none;
   }
 
+  .nm-saas .ns-header__brand {
+    width: 132px;
+    min-width: 132px;
+    height: 44px;
+  }
+
   .nm-saas .ns-header__inner {
     padding-block: 10px;
   }

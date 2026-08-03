@@ -43,19 +43,13 @@ export function SaaSHeader() {
       </a>
       <div className="ns-header__inner">
         <a className="ns-header__brand" href="/" aria-label="NORTHMINE Intelligence, inicio">
-          <svg className="ns-header__mark" viewBox="0 0 64 64" aria-hidden="true">
-            <path d="M8,8 L18,8 L18,56 L13,56 L8,51 Z" fill="currentColor" />
-            <path d="M46,8 L51,8 L56,13 L56,56 L46,56 Z" fill="currentColor" />
-            <path
-              d="M18,16 L34,16 L34,32 L46,32"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={10}
-              strokeLinecap="butt"
-              strokeLinejoin="miter"
-            />
-          </svg>
-          <span className="ns-header__word">NORTHMINE</span>
+          <img
+            className="ns-header__logo"
+            src="/assets/brand/northmine-header-logo.png"
+            alt="NORTHMINE Intelligence Hub"
+            width="330"
+            height="218"
+          />
         </a>
 
         <nav className="ns-header__nav" aria-label="Navegación principal">

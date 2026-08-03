@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { ArrowRight, Menu, X } from 'lucide-react'
-import { NorthmineBrand } from './NorthmineBrand'
 
 const navigation = [
   { label: 'Capacidades', href: '/#capacidades' },
@@ -29,7 +28,13 @@ export function LandingHeader() {
       </a>
       <div className="nm-public-header__inner">
         <a className="nm-public-brand" href="/" aria-label="NORTHMINE Intelligence, inicio">
-          <NorthmineBrand />
+          <img
+            className="nm-public-brand__logo"
+            src="/assets/brand/northmine-header-logo.png"
+            alt="NORTHMINE Intelligence Hub"
+            width="330"
+            height="218"
+          />
         </a>
 
         <button
