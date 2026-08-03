@@ -177,6 +177,40 @@ def _client_ip(request: Request) -> str:
     return request.client.host if request.client else "unknown"
 
 
+def _is_public_demo_runtime() -> bool:
+    settings = get_settings()
+    return settings.is_demo or settings.demo_mode or settings.mode == "demo" or settings.data_mode == "DEMO"
+
+
+def _protect_demo_audit_rows(rows: list[dict]) -> list[dict]:
+    if not _is_public_demo_runtime():
+        return rows
+    return [{**row, "ip": "PROTEGIDA"} for row in rows]
+
+
+def _protect_demo_system_status(system: dict) -> dict:
+    if not _is_public_demo_runtime():
+        return system
+    protected = {
+        **system,
+        "backend": {
+            **system.get("backend", {}),
+            "pid": 0,
+            "platform": "entorno administrado",
+            "python": "protegido",
+        },
+        "frontend": {
+            **system.get("frontend", {}),
+            "expected_origin": "entorno demo protegido",
+        },
+        "logs": {
+            "directory": "protegido",
+            "recent_errors": [],
+        },
+    }
+    return protected
+
+
 def _user_token_claims(user, settings) -> dict:
     return {
         "sub": user.username,
@@ -1396,7 +1430,8 @@ def audit_log(
     user: dict = RequireAdmin,
 ) -> dict:
     rows = query_audit_log(limit=limit, usuario=usuario, endpoint=endpoint, desde=desde)
-    return {"count": len(rows), "items": rows}
+    protected_rows = _protect_demo_audit_rows(rows)
+    return {"count": len(protected_rows), "items": protected_rows}
 
 
 @router.post("/auth/change-password")
@@ -1461,8 +1496,9 @@ def security_metrics(user: dict = RequireAdmin) -> SecurityMetricsResponse:
     size = get_audit_log_size_mb()
     most_active = get_most_active_user()
     suspicious = failed >= 10 or len(blocked) > 0
+    visible_blocked = ["PROTEGIDA"] * len(blocked) if _is_public_demo_runtime() else blocked
     return SecurityMetricsResponse(
-        blocked_ips=blocked,
+        blocked_ips=visible_blocked,
         failed_logins_last_hour=failed,
         active_sessions=sessions,
         audit_log_size_mb=size,
@@ -1473,4 +1509,4 @@ def security_metrics(user: dict = RequireAdmin) -> SecurityMetricsResponse:
 
 @router.get("/admin/system")
 def admin_system(user: dict = RequireAdmin) -> dict:
-    return build_admin_system_status()
+    return _protect_demo_system_status(build_admin_system_status())

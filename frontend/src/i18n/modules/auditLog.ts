@@ -7,6 +7,7 @@ export interface AuditLogT {
   eyebrow: string
   titulo: string
   btn_exportar_csv: string
+  privacy_notice: string
 
   label_usuario: string
   label_endpoint: string
@@ -17,7 +18,6 @@ export interface AuditLogT {
 
   col_timestamp: string
   col_usuario: string
-  col_ip: string
   col_metodo: string
   col_endpoint: string
   col_status: string
@@ -37,6 +37,7 @@ export const auditLogT: ModuleDict<AuditLogT> = {
     eyebrow: 'Seguridad',
     titulo: '🔒 Log de Auditoría',
     btn_exportar_csv: 'Exportar CSV',
+    privacy_notice: 'Las identidades de red se protegen y no se muestran en este entorno demostrativo.',
 
     label_usuario: 'Usuario',
     label_endpoint: 'Endpoint',
@@ -47,7 +48,6 @@ export const auditLogT: ModuleDict<AuditLogT> = {
 
     col_timestamp: 'TIMESTAMP',
     col_usuario: 'USUARIO',
-    col_ip: 'IP',
     col_metodo: 'MÉTODO',
     col_endpoint: 'ENDPOINT',
     col_status: 'STATUS',
@@ -65,6 +65,7 @@ export const auditLogT: ModuleDict<AuditLogT> = {
     eyebrow: 'Security',
     titulo: '🔒 Audit Log',
     btn_exportar_csv: 'Export CSV',
+    privacy_notice: 'Network identities are protected and are not displayed in this demo environment.',
 
     label_usuario: 'User',
     label_endpoint: 'Endpoint',
@@ -75,7 +76,6 @@ export const auditLogT: ModuleDict<AuditLogT> = {
 
     col_timestamp: 'TIMESTAMP',
     col_usuario: 'USER',
-    col_ip: 'IP',
     col_metodo: 'METHOD',
     col_endpoint: 'ENDPOINT',
     col_status: 'STATUS',

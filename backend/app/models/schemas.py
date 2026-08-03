@@ -72,7 +72,7 @@ class UserPublic(BaseModel):
     created_at: str
     updated_at: str
     last_login_at: str | None = None
-    faena: str = "Rajo DES"
+    faena: str = "MINA CHILE DEMO"
     empresa: str = "NORTHMINE"
 
 
@@ -88,7 +88,7 @@ class UserCreateRequest(BaseModel):
     password: str = Field(min_length=10, max_length=128)
     role: UserRole
     is_active: bool = True
-    faena: str = Field(default="Rajo DES", min_length=1, max_length=120)
+    faena: str = Field(default="MINA CHILE DEMO", min_length=1, max_length=120)
     empresa: str = Field(default="NORTHMINE", min_length=1, max_length=120)
 
     @field_validator("email")

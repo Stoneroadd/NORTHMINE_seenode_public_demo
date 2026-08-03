@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { Activity, AlertTriangle, Cpu, Database, HardDrive, RadioTower, Server, ShieldCheck, type LucideIcon } from 'lucide-react'
-import { API_BASE_URL, apiFetch, northmineApi, type HealthResponse } from '../lib/api'
+import { apiFetch, northmineApi, type HealthResponse } from '../lib/api'
 import { settingsService } from '../services/settingsService'
 import { useModuleT } from '../i18n/useModuleT'
 import { systemPageT } from '../i18n/modules/systemPage'
@@ -82,7 +82,7 @@ export function SystemPage() {
       <div style={{ marginTop: 18, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 12 }}>
         <div className="command-card">
           <h3 style={{ marginBottom: 12 }}>{t.conectividad_titulo}</h3>
-          <p>{t.conectividad_api}: {API_BASE_URL}</p>
+          <p>{t.conectividad_api}: {t.conectividad_api_protegida}</p>
           <p>{t.conectividad_estado}: {health?.status ?? t.verificando}</p>
           <p>{t.conectividad_produccion_lista}: {health?.production_ready ? t.conectividad_si : t.conectividad_no}</p>
           <p>{t.conectividad_frontend_esperado}: {system?.frontend.expected_origin ?? t.conectividad_local}</p>

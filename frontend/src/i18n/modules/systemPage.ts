@@ -17,6 +17,7 @@ export interface SystemPageT {
 
   conectividad_titulo: string
   conectividad_api: string
+  conectividad_api_protegida: string
   conectividad_estado: string
   conectividad_produccion_lista: string
   conectividad_si: string
@@ -52,6 +53,7 @@ export const systemPageT: ModuleDict<SystemPageT> = {
 
     conectividad_titulo: 'Conectividad',
     conectividad_api: 'API',
+    conectividad_api_protegida: 'Canal protegido',
     conectividad_estado: 'Estado',
     conectividad_produccion_lista: 'Produccion lista',
     conectividad_si: 'si',
@@ -62,7 +64,7 @@ export const systemPageT: ModuleDict<SystemPageT> = {
     seguridad_titulo: 'Seguridad',
     seguridad_sesiones_activas: 'Sesiones activas',
     seguridad_intentos_fallidos: 'Intentos fallidos ultima hora',
-    seguridad_ips_bloqueadas: 'IPs bloqueadas',
+    seguridad_ips_bloqueadas: 'Bloqueos de red',
     seguridad_audit_log: 'Audit log',
 
     ultimos_errores_titulo: 'Ultimos errores',
@@ -85,6 +87,7 @@ export const systemPageT: ModuleDict<SystemPageT> = {
 
     conectividad_titulo: 'Connectivity',
     conectividad_api: 'API',
+    conectividad_api_protegida: 'Protected channel',
     conectividad_estado: 'Status',
     conectividad_produccion_lista: 'Production ready',
     conectividad_si: 'yes',
@@ -95,7 +98,7 @@ export const systemPageT: ModuleDict<SystemPageT> = {
     seguridad_titulo: 'Security',
     seguridad_sesiones_activas: 'Active sessions',
     seguridad_intentos_fallidos: 'Failed logins in the last hour',
-    seguridad_ips_bloqueadas: 'Blocked IPs',
+    seguridad_ips_bloqueadas: 'Network blocks',
     seguridad_audit_log: 'Audit log',
 
     ultimos_errores_titulo: 'Latest errors',

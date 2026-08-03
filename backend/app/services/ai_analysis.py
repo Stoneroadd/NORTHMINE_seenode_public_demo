@@ -6,7 +6,7 @@ ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 
 _SYSTEM = (
     "Eres el analista operacional de NORTHMINE Intelligence, sistema de "
-    "control de operaciones mineras de TEPSAC/EPSA en Rajo DES (Faena OXE). "
+    "control de una operacion minera sintetica identificada como MINA CHILE DEMO. "
     "Responde siempre en español. Sé conciso, directo y técnico. "
     "Usa terminología minera real. Máximo 3 párrafos cortos. "
     "NO uses markdown, NO uses asteriscos, NO uses bullet points. "

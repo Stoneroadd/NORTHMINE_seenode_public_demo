@@ -31,7 +31,7 @@ export function MindMapSearch({ nodes, value, onChange, onFocusNode, onClear }: 
           id="mindmap-search"
           value={value}
           onChange={event => onChange(event.target.value)}
-          placeholder="EX3600, CAEX, F01, Hidden Loss..."
+          placeholder="PALA 1, CAEX01, F01, Perdida oculta..."
           autoComplete="off"
         />
         {value && (

@@ -9,7 +9,6 @@ interface AuditEntry {
   id: number
   timestamp: string
   usuario: string
-  ip: string
   metodo: string
   endpoint: string
   status_code: number
@@ -63,9 +62,9 @@ export function AuditLog() {
 
   function exportCsv() {
     if (!data?.items) return
-    const header = 'timestamp,usuario,ip,metodo,endpoint,status_code,duracion_ms\n'
+    const header = 'timestamp,usuario,metodo,endpoint,status_code,duracion_ms\n'
     const rows = data.items.map(r =>
-      `"${r.timestamp}","${r.usuario}","${r.ip}","${r.metodo}","${r.endpoint}",${r.status_code},${r.duracion_ms}`
+      `"${r.timestamp}","${r.usuario}","${r.metodo}","${r.endpoint}",${r.status_code},${r.duracion_ms}`
     ).join('\n')
     const blob = new Blob([header + rows], { type: 'text/csv' })
     const url  = URL.createObjectURL(blob)
@@ -87,6 +86,9 @@ export function AuditLog() {
           <h1 style={{ fontSize: 22, fontWeight: 800, margin: '4px 0 0', fontFamily: 'var(--font-display)' }}>
             {t.titulo}
           </h1>
+          <p style={{ margin: '6px 0 0', maxWidth: 620, color: 'var(--text-secondary)', fontSize: 12 }}>
+            {t.privacy_notice}
+          </p>
         </div>
         <button
           onClick={exportCsv}
@@ -133,7 +135,7 @@ export function AuditLog() {
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, fontFamily: 'var(--font-mono)' }}>
               <thead>
                 <tr style={{ background: 'var(--bg-elevated)', borderBottom: '1px solid var(--border-mid)' }}>
-                  {[t.col_timestamp, t.col_usuario, t.col_ip, t.col_metodo, t.col_endpoint, t.col_status, t.col_ms].map(h => (
+                  {[t.col_timestamp, t.col_usuario, t.col_metodo, t.col_endpoint, t.col_status, t.col_ms].map(h => (
                     <th key={h} style={{ padding: '8px 12px', textAlign: 'left', fontSize: 10, letterSpacing: '0.1em', color: 'var(--text-tertiary)', fontWeight: 800 }}>
                       {h}
                     </th>
@@ -147,7 +149,6 @@ export function AuditLog() {
                       {row.timestamp.replace('T', ' ').slice(0, 19)}
                     </td>
                     <td style={{ padding: '7px 12px', color: 'var(--op-green)' }}>{row.usuario}</td>
-                    <td style={{ padding: '7px 12px', color: 'var(--text-secondary)' }}>{row.ip}</td>
                     <td style={{ padding: '7px 12px', color: 'var(--data-cyan)' }}>{row.metodo}</td>
                     <td style={{ padding: '7px 12px', color: 'var(--text-primary)', maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {row.endpoint}

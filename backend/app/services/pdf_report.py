@@ -106,7 +106,7 @@ def build_shift_pdf(fecha: str | None = None, turno: str | None = None, username
         Paragraph("NORTHMINE Intelligence", styles["title"]),
         Paragraph("Reporte Operacional de Turno", styles["subtitle"]),
         Paragraph(
-            f"Faena: Rajo DES - Empresa: TEPSAC/EPSA<br/>"
+            f"Faena: MINA CHILE DEMO - Empresa: NORTHMINE DEMO<br/>"
             f"Turno: {turno or current['turno']} - Fecha: {fecha or current['fecha']} - "
             f"{current['started_at'][11:16]} a {current['ends_at'][11:16]}<br/>"
             f"Generado automaticamente - Usuario: {username}",

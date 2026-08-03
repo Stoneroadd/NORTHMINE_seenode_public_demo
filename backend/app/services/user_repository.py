@@ -18,33 +18,33 @@ DEMO_USER_SEEDS: tuple[dict[str, str], ...] = (
         "username": "admin",
         "password": "admin",
         "role": "admin",
-        "full_name": "Administrador NORTHMINE",
-        "faena": "Rajo DES",
-        "empresa": "NORTHMINE",
+        "full_name": "Administrador Demo",
+        "faena": "MINA CHILE DEMO",
+        "empresa": "NORTHMINE DEMO",
     },
     {
         "username": "demo",
         "password": "demo",
         "role": "admin",
-        "full_name": "Demo Ejecutivo",
-        "faena": "Rajo DES",
-        "empresa": "NORTHMINE",
+        "full_name": "Mina Chile Demo",
+        "faena": "FAENA SINTETICA",
+        "empresa": "NORTHMINE DEMO",
     },
     {
         "username": "supervisor",
         "password": "supervisor",
         "role": "supervisor",
-        "full_name": "Supervisor Turno",
-        "faena": "Rajo DES",
-        "empresa": "Operaciones Mina",
+        "full_name": "Supervisor Demo",
+        "faena": "MINA CHILE DEMO",
+        "empresa": "NORTHMINE DEMO",
     },
     {
         "username": "operador",
         "password": "operador",
         "role": "operador",
-        "full_name": "Operador Control",
-        "faena": "Rajo DES",
-        "empresa": "Operaciones Mina",
+        "full_name": "Operador Demo",
+        "faena": "MINA CHILE DEMO",
+        "empresa": "NORTHMINE DEMO",
     },
 )
 
@@ -69,7 +69,7 @@ class BaseUserRepository(Protocol):
     def get_by_username(self, username: str) -> User | None: ...
     def get_by_id(self, user_id: str) -> User | None: ...
     def get_user_by_id(self, user_id: str) -> User | None: ...
-    def create_user(self, username: str, password: str, *, full_name: str, role: str, email: str | None = None, is_active: bool = True, is_demo: bool = False, faena: str = "Rajo DES", empresa: str = "NORTHMINE") -> User: ...
+    def create_user(self, username: str, password: str, *, full_name: str, role: str, email: str | None = None, is_active: bool = True, is_demo: bool = False, faena: str = "MINA CHILE DEMO", empresa: str = "NORTHMINE") -> User: ...
     def update_user(self, user_id: str, *, full_name: str | None = None, email: str | None = None, faena: str | None = None, empresa: str | None = None) -> User: ...
     def update_role(self, user_id: str, role: str) -> User: ...
     def set_active_status(self, user_id: str, is_active: bool) -> User: ...
@@ -143,7 +143,7 @@ class SQLiteUserRepository:
                     updated_at    TEXT NOT NULL,
                     last_login_at TEXT,
                     auth_version  INTEGER NOT NULL DEFAULT 1,
-                    faena         TEXT NOT NULL DEFAULT 'Rajo DES',
+                    faena         TEXT NOT NULL DEFAULT 'MINA CHILE DEMO',
                     empresa       TEXT NOT NULL DEFAULT 'NORTHMINE'
                 )
                 """
@@ -228,7 +228,7 @@ class SQLiteUserRepository:
         email: str | None = None,
         is_active: bool = True,
         is_demo: bool = False,
-        faena: str = "Rajo DES",
+        faena: str = "MINA CHILE DEMO",
         empresa: str = "NORTHMINE",
     ) -> User:
         normalized_username = _normalize_username(username)
@@ -501,6 +501,20 @@ class SQLiteUserRepository:
             if not password_matches:
                 self.update_password(seed["username"], seed["password"])
                 created_or_updated.append(seed["username"])
+            metadata_matches = (
+                existing.full_name == seed["full_name"]
+                and existing.faena == seed["faena"]
+                and existing.empresa == seed["empresa"]
+            )
+            if not metadata_matches:
+                self.update_user(
+                    existing.id,
+                    full_name=seed["full_name"],
+                    faena=seed["faena"],
+                    empresa=seed["empresa"],
+                )
+                if seed["username"] not in created_or_updated:
+                    created_or_updated.append(seed["username"])
         return created_or_updated
 
     def ensure_bootstrap_admin(self, settings: Settings | None = None) -> User | None:
@@ -531,7 +545,7 @@ class SQLiteUserRepository:
             email=settings.bootstrap_admin_email or None,
             role=role,
             is_demo=False,
-            faena="Rajo DES",
+            faena="MINA CHILE DEMO",
             empresa="NORTHMINE",
         )
 

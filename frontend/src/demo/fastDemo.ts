@@ -630,7 +630,7 @@ export const FAST_DEMO_AERIAL = {
   status: {
     source: 'fast-demo',
     status: 'LISTO_DEMO',
-    faena: 'Rajo DES Demo',
+    faena: 'MINA CHILE DEMO',
     latest_file: aerialFiles[0],
     files_count: aerialFiles.length,
     viewer_status: 'Capa sintetica ligera',

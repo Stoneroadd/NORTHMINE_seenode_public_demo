@@ -12,7 +12,7 @@ const equipmentBase = '/assets/equipment'
 const equipmentById: Record<string, EquipmentAsset> = {
   PALA1: { image: 'pala_1.png', label: 'Pala 1', type: 'pala' },
   'PALA 1': { image: 'pala_1.png', label: 'Pala 1', type: 'pala' },
-  EX3600: { image: 'pala_komatsu.png', label: 'Pala Komatsu EX3600', type: 'pala' },
+  'PALA-DEMO-01': { image: 'pala_komatsu.png', label: 'Pala Demo 01', type: 'pala' },
   EX3517: { image: 'pala_komatsu.png', label: 'Pala Komatsu EX3517', type: 'pala' },
   EX3470: { image: 'pala_komatsu.png', label: 'Pala Komatsu EX3470', type: 'pala' },
   EX3420: { image: 'pala_cat390.png', label: 'Pala CAT EX3420', type: 'pala' },

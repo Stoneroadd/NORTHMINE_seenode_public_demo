@@ -39,7 +39,7 @@ const nodes: NodeDefinition[] = [
     staticY: 420,
   },
   {
-    id: 'EX3600',
+    id: 'PALA-DEMO-01',
     label: 'UC',
     routeId: 'route-loader-1',
     routePath: 'M322 304 L406 286 L518 266 L622 244 L670 254 L704 276 L734 306',

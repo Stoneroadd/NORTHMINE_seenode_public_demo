@@ -7,6 +7,7 @@ import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
 
+from app.core.config import get_settings
 from app.core.database import close_db_connections, execute_query
 
 logger = logging.getLogger(__name__)
@@ -14,6 +15,13 @@ audit_logger = logging.getLogger("northmine.audit")
 AUDIT_DB = Path(os.environ.get("NORTHMINE_AUDIT_DB", "northmine_audit.db"))
 
 LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO")
+
+
+def _protected_network_identity(ip: str) -> str:
+    settings = get_settings()
+    if settings.is_demo or settings.demo_mode or settings.mode == "demo" or settings.data_mode == "DEMO":
+        return "PROTEGIDA"
+    return ip
 
 
 class AuditStoreUnavailable(RuntimeError):
@@ -280,9 +288,10 @@ def get_failed_logins_last_hour() -> int:
 def register_active_session(username: str, token: str, ip: str, user_agent: str) -> None:
     try:
         conn = _conn()
+        protected_ip = _protected_network_identity(ip)
         conn.execute(
             "INSERT INTO active_sessions (username, token, ip, user_agent) VALUES (?, ?, ?, ?)",
-            (username, token, ip, (user_agent or "")[:200]),
+            (username, token, protected_ip, (user_agent or "")[:200]),
         )
         conn.commit()
         pass
@@ -359,6 +368,7 @@ def log_event(
     try:
         conn = _conn()
         from app.core.crypto import encrypt_sensitive_data
+        protected_ip = _protected_network_identity(ip)
         resolved_action = accion or f"{metodo} {endpoint}".strip()
         resolved_result = resultado or ("ok" if 200 <= int(status_code) < 400 else "error")
         conn.execute(
@@ -370,7 +380,7 @@ def log_event(
             (
                 datetime.now(timezone.utc).isoformat(),
                 usuario[:100],
-                ip[:50],
+                protected_ip[:50],
                 resolved_action[:120],
                 resolved_result[:40],
                 metodo[:10],
@@ -385,7 +395,7 @@ def log_event(
         audit_logger.info(
             "usuario=%s ip=%s accion=%s resultado=%s status=%s",
             usuario,
-            ip,
+            protected_ip,
             resolved_action,
             resolved_result,
             status_code,

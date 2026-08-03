@@ -33,8 +33,8 @@ const emptyForm: UserFormState = {
   password: '',
   role: 'operador',
   is_active: true,
-  faena: 'Rajo DES',
-  empresa: 'NORTHMINE',
+  faena: 'MINA CHILE DEMO',
+  empresa: 'NORTHMINE DEMO',
 }
 
 function formatDate(value: string | null, t: AdminUsersT): string {

@@ -35,7 +35,7 @@ class User:
     updated_at: str
     last_login_at: str | None
     auth_version: int = 1
-    faena: str = "Rajo DES"
+    faena: str = "MINA CHILE DEMO"
     empresa: str = "NORTHMINE"
 
     def public_dict(self) -> dict[str, object]:

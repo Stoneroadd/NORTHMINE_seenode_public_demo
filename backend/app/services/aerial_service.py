@@ -106,7 +106,7 @@ def get_latest_aerial_status() -> dict[str, Any]:
     return {
         "source": "metadata",
         "status": "en_validacion" if latest else "sin_ortomosaico",
-        "faena": "Rajo DES",
+        "faena": "MINA CHILE DEMO",
         "latest_file": latest,
         "files_count": files["count"],
         "viewer_status": "metadata_only",

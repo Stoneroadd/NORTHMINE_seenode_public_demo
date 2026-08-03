@@ -84,7 +84,8 @@ Conexion a SQL Server:
 
 ```bash
 # backend/.env
-SQL_SERVER=172.30.10.110
+# Direccion reservada para documentacion; no corresponde a una red operacional.
+SQL_SERVER=192.0.2.10
 SQL_PORT=1433
 SQL_DATABASE=WENCO
 SQL_USER=northmine

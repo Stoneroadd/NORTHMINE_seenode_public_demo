@@ -1,8 +1,14 @@
 from __future__ import annotations
 
+from dataclasses import replace
+
 import pytest
 
+from app.core import audit as audit_module
+from app.core.audit import log_event
+from app.core.config import get_settings
 from app.core.rate_limit import limiter
+from app.api import routes as routes_module
 
 
 def test_operator_cannot_access_supervisor_endpoints(client, login_as_operador):
@@ -87,6 +93,42 @@ def test_security_metrics_endpoint(client, login_as_admin):
     assert "active_sessions" in data
     assert "audit_log_size_mb" in data
     assert "suspicious_activity" in data
+
+
+def test_public_demo_protects_network_identity_and_system_details(client, monkeypatch):
+    demo_settings = replace(
+        get_settings(),
+        mode="demo",
+        demo_mode=True,
+        data_mode="DEMO",
+        environment="demo",
+    )
+    monkeypatch.setattr(routes_module, "get_settings", lambda: demo_settings)
+    monkeypatch.setattr(audit_module, "get_settings", lambda: demo_settings)
+
+    log_event(
+        usuario="demo",
+        ip="203.0.113.42",
+        metodo="GET",
+        endpoint="/api/demo/protected-network-test",
+        status_code=200,
+    )
+    login = client.post("/api/auth/login", json={"username": "admin", "password": "admin"})
+    assert login.status_code == 200
+    headers = {"Authorization": f"Bearer {login.json()['access_token']}"}
+
+    audit_response = client.get("/api/admin/audit-log", headers=headers)
+    system_response = client.get("/api/admin/system", headers=headers)
+
+    assert audit_response.status_code == 200
+    assert all(item["ip"] == "PROTEGIDA" for item in audit_response.json()["items"])
+    assert "203.0.113.42" not in audit_response.text
+    assert system_response.status_code == 200
+    assert system_response.json()["logs"] == {
+        "directory": "protegido",
+        "recent_errors": [],
+    }
+    assert system_response.json()["frontend"]["expected_origin"] == "entorno demo protegido"
 
 
 def test_revoke_user_tokens(client, login_as_admin):
