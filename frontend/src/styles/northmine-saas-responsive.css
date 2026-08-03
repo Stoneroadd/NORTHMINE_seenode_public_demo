@@ -83,8 +83,8 @@
 
   .nm-saas .ns-hero__backdrop-veil {
     background:
-      linear-gradient(0deg, var(--ns-black) 4%, rgba(7,8,7,.82) 47%, rgba(7,8,7,.18) 100%),
-      linear-gradient(90deg, rgba(7,8,7,.58), transparent 75%);
+      linear-gradient(0deg, rgba(7,8,7,.92) 0%, rgba(7,8,7,.52) 52%, rgba(7,8,7,.08) 100%),
+      linear-gradient(90deg, rgba(7,8,7,.54), transparent 82%);
   }
 
   .nm-saas .ns-hero__content {

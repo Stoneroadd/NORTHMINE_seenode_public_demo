@@ -135,7 +135,13 @@ async def global_exception_handler(request: Request, exc: Exception) -> JSONResp
 @app.get("/", include_in_schema=False)
 def root():
     if FRONTEND_INDEX.exists():
-        return FileResponse(FRONTEND_INDEX)
+        return FileResponse(
+            FRONTEND_INDEX,
+            headers={
+                "Cache-Control": "no-store, no-cache, must-revalidate",
+                "Pragma": "no-cache",
+            },
+        )
     return {
         "app": settings.app_name,
         "service": settings.service_name,
@@ -162,6 +168,10 @@ def frontend_fallback(full_path: str):
     if FRONTEND_INDEX.exists():
         return FileResponse(
             FRONTEND_INDEX,
-            headers={"X-Robots-Tag": "noindex, nofollow"},
+            headers={
+                "X-Robots-Tag": "noindex, nofollow",
+                "Cache-Control": "no-store, no-cache, must-revalidate",
+                "Pragma": "no-cache",
+            },
         )
     raise HTTPException(status_code=404, detail="Frontend build not found")
