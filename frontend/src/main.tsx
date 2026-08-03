@@ -7,6 +7,7 @@ import './styles/northmine-tokens.css'
 import './styles/tailwind.css'
 import { PublicRouter } from './PublicRouter'
 import { FAST_PUBLIC_DEMO } from './demo/fastDemo'
+import { NorthmineLogo } from './components/brand/NorthmineLogo'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -83,9 +84,9 @@ class RootErrorBoundary extends React.Component<
               boxShadow: '0 24px 70px rgba(0, 0, 0, 0.36)',
             }}
           >
-            <p style={{ color: '#75d6a0', fontWeight: 800, letterSpacing: '0.08em' }}>
-              NORTHMINE
-            </p>
+            <NorthmineLogo
+              style={{ display: 'block', width: 180, height: 'auto', marginBottom: 14 }}
+            />
             <h1 style={{ marginTop: 10, fontSize: 24 }}>No fue posible iniciar la interfaz</h1>
             <p style={{ marginTop: 12, color: '#9aa8a8', lineHeight: 1.6 }}>
               Se detecto una configuracion local incompatible o un error de runtime. Puedes restaurar la interfaz sin perder datos operacionales.

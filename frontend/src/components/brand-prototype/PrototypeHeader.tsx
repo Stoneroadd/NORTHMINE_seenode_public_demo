@@ -1,3 +1,5 @@
+import { NorthmineLogo } from '../brand/NorthmineLogo'
+
 interface PrototypeHeaderProps {
   intensity: 'pure' | 'premium'
   onIntensityChange: (intensity: 'pure' | 'premium') => void
@@ -11,19 +13,7 @@ export function PrototypeHeader({ intensity, onIntensityChange }: PrototypeHeade
       </a>
       <div className="nmp-header__inner">
         <a className="nmp-header__brand" href="/" aria-label="NORTHMINE Intelligence, inicio">
-          <svg className="nmp-header__mark" viewBox="0 0 64 64" aria-hidden="true">
-            <path d="M8,8 L18,8 L18,56 L13,56 L8,51 Z" fill="currentColor" />
-            <path d="M46,8 L51,8 L56,13 L56,56 L46,56 Z" fill="currentColor" />
-            <path
-              d="M18,16 L34,16 L34,32 L46,32"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={10}
-              strokeLinecap="butt"
-              strokeLinejoin="miter"
-            />
-          </svg>
-          <span className="nmp-header__word">NORTHMINE</span>
+          <NorthmineLogo className="nmp-header__logo" variant="horizontal" />
         </a>
 
         <nav className="nmp-header__nav" aria-label="Navegación del prototipo">

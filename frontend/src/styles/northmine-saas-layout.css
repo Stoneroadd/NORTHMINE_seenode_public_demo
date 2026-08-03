@@ -126,8 +126,8 @@
 
 .ns-header__brand {
   display: inline-flex;
-  width: 150px;
-  min-width: 150px;
+  width: 168px;
+  min-width: 168px;
   height: 48px;
   align-items: center;
   text-decoration: none;
@@ -1010,20 +1010,16 @@
 
 .ns-footer__brand {
   display: flex;
+  flex-direction: column;
   gap: 12px;
 }
 
-.ns-footer__mark {
-  width: 28px;
-  height: 28px;
-  color: var(--ns-copper);
-  flex: none;
-}
-
-.ns-footer__brand strong {
+.ns-footer__logo {
   display: block;
-  font-size: 15px;
-  margin-bottom: 4px;
+  width: 184px;
+  height: auto;
+  object-fit: contain;
+  object-position: left center;
 }
 
 .ns-footer__brand span {

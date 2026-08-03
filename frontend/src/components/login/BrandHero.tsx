@@ -1,4 +1,5 @@
 import { useT } from '../../store'
+import { NorthmineLogo } from '../brand/NorthmineLogo'
 
 export function BrandHero() {
   const t = useT()
@@ -6,8 +7,10 @@ export function BrandHero() {
   return (
     <div className="brand-hero nm-brand-hero">
       <div className="brand-hero-copy nm-brand-title-wrap">
-        <h1 className="login-brand-name nm-brand-title">NORTHMINE</h1>
-        <div className="brand-intelligence nm-brand-subtitle">INTELLIGENCE</div>
+        <h1 className="sr-only">NORTHMINE Intelligence Hub</h1>
+        <div className="brand-hero-mark nm-brand-logo">
+          <NorthmineLogo className="nm-login-brand-logo" />
+        </div>
         <p className="nm-brand-system-subtitle">{t.auth.subtitulo}</p>
       </div>
     </div>

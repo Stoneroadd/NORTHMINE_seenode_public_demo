@@ -1,13 +1,11 @@
+import { NorthmineLogo } from '../brand/NorthmineLogo'
+
 export function NorthmineBrand() {
   return (
-    <>
-      <span className="nm-public-brand__mark" aria-hidden="true">
-        <span />
-      </span>
-      <span>
-        <strong>NORTHMINE</strong>
-        <small>Intelligence</small>
-      </span>
-    </>
+    <NorthmineLogo
+      className="nm-public-brand__logo"
+      variant="horizontal"
+      alt="NORTHMINE Intelligence Hub"
+    />
   )
 }

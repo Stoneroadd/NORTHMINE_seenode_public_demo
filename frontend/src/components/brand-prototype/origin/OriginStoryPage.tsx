@@ -2,6 +2,7 @@ import { useRef } from 'react'
 import { useGSAP } from '@gsap/react'
 import { gsap } from '../../../lib/animation/gsap'
 import { useSectionReveal } from '../../../lib/animation/effects/SectionReveal'
+import { NorthmineLogo } from '../../brand/NorthmineLogo'
 import { modules } from '../saas/moduleData'
 import '../../../styles/northmine-origin-story.css'
 
@@ -67,8 +68,7 @@ function OriginHeader() {
     <header className="no-header">
       <div className="no-header__inner">
         <a className="no-brand" href="/" aria-label="NORTHMINE, inicio">
-          <img src="/assets/landing/prototype/brand/symbol-nm-mono.svg" alt="" width="30" height="30" />
-          <span>NORTHMINE</span>
+          <NorthmineLogo className="no-brand__logo" variant="horizontal" />
         </a>
         <nav className="no-nav" aria-label="Navegación principal">
           <a href="#historia">Origen</a>
@@ -287,7 +287,13 @@ export function OriginStoryPage() {
             <a className="no-button" href="/solicitar-demo">Solicitar acceso al demo</a>
             <a className="no-text-link" href="/acceso-demo">Ya tengo acceso <span aria-hidden="true">↗</span></a>
           </div>
-          <footer><strong>NORTHMINE Intelligence</strong><span>Simón Mazuela Robles · Founder</span></footer>
+          <footer>
+            <span className="no-final__brand">
+              <NorthmineLogo variant="symbol" alt="" aria-hidden="true" />
+              <strong>NORTHMINE Intelligence</strong>
+            </span>
+            <span>Simón Mazuela Robles · Founder</span>
+          </footer>
         </section>
       </main>
     </div>

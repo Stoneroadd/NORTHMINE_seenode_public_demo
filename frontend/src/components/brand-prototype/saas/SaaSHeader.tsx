@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
+import { NorthmineLogo } from '../../brand/NorthmineLogo'
 
 const navItems = [
   { label: 'Plataforma', href: '#hero' },
@@ -43,12 +44,10 @@ export function SaaSHeader() {
       </a>
       <div className="ns-header__inner">
         <a className="ns-header__brand" href="/" aria-label="NORTHMINE Intelligence, inicio">
-          <img
+          <NorthmineLogo
             className="ns-header__logo"
-            src="/assets/brand/northmine-header-logo.png"
+            variant="horizontal"
             alt="NORTHMINE Intelligence Hub"
-            width="330"
-            height="218"
           />
         </a>
 

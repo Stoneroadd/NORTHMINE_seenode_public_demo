@@ -22,6 +22,7 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import { useAppStore, useT } from '../../store'
+import { NorthmineLogo } from '../brand/NorthmineLogo'
 
 export type SectionId =
   | 'cockpit'
@@ -83,7 +84,7 @@ export function Sidebar({ active, onSelect, mobileOpen = false, onNavigate }: Pr
     <aside className={`sidebar ${mobileOpen ? 'is-mobile-open' : ''} ${sidebarCollapsed ? 'is-collapsed' : ''}`}>
       <div className="brand-block">
         <div className="brand-mark">
-          <img src="/assets/brand/Logo%20moderno%20de%20NORTHMINE.png" alt="" aria-hidden="true" />
+          <NorthmineLogo variant="symbol" alt="" aria-hidden="true" />
         </div>
         <div className="brand-copy">
           <div className="brand-name">NORTHMINE</div>

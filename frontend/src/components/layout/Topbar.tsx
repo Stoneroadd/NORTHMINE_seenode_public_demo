@@ -5,6 +5,7 @@ import { useAppStore, useT } from '../../store'
 import { SystemStatusBadge } from '../status/SystemStatusBadge'
 import { CommandButton } from '../ui/CommandButton'
 import { StatusPill } from '../ui/StatusPill'
+import { NorthmineLogo } from '../brand/NorthmineLogo'
 
 interface Props {
   session: AuthSession
@@ -50,13 +51,16 @@ export function Topbar({
       <CommandButton className="topbar-menu-button" variant="ghost" icon={Menu} onClick={onMenuClick ?? (() => undefined)} aria-label="Abrir navegacion">
         Menu
       </CommandButton>
-      <div>
-        <div className="eyebrow">Command Center Minero</div>
-        <h1>NORTHMINE Intelligence Hub</h1>
-        <div className="topbar-terminal-line">
-          <TerminalSquare size={13} />
-          <span>Command Center Online</span>
-          <strong>{clock.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</strong>
+      <div className="topbar-brand-identity">
+        <NorthmineLogo className="topbar-brand-symbol" variant="symbol" alt="" aria-hidden="true" />
+        <div className="topbar-brand-copy">
+          <div className="eyebrow">Command Center Minero</div>
+          <h1>NORTHMINE Intelligence Hub</h1>
+          <div className="topbar-terminal-line">
+            <TerminalSquare size={13} />
+            <span>Command Center Online</span>
+            <strong>{clock.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</strong>
+          </div>
         </div>
       </div>
 

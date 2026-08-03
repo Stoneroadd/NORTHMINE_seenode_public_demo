@@ -47,24 +47,19 @@
 
 .nmp-header__brand {
   display: inline-flex;
+  width: 164px;
+  height: 48px;
   align-items: center;
-  gap: 10px;
   text-decoration: none;
   color: var(--nmp-ink-on-light);
 }
 
-.nmp-header__mark {
-  width: 26px;
-  height: 26px;
-  color: var(--nmp-cobre);
-  flex: none;
-}
-
-.nmp-header__word {
-  font-family: 'IBM Plex Sans', sans-serif;
-  font-weight: 600;
-  font-size: 15px;
-  letter-spacing: 0.02em;
+.nmp-header__logo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: left center;
 }
 
 .nmp-header__nav {
