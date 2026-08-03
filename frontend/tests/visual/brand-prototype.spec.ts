@@ -1,112 +1,101 @@
 import { test, expect, type Page } from '@playwright/test'
 
 const URL = '/brand-prototype'
+const SETTLE_MS = 1800
 
-// GSAP tweens are JS-driven (rAF), not CSS transitions/animations, so
-// there's no CSS "animation-duration: 0" trick that stops them. Stability
-// instead comes from: (a) reduced-motion tests, where our own code sets
-// the final state synchronously with no tween at all, and (b) a fixed
-// settle wait long enough for every scroll-triggered timeline on this
-// page (verified during development, none exceed ~2s) to finish.
-const SETTLE_MS = 2800
-
-async function gotoAndSettle(page: Page, { settleMs = SETTLE_MS }: { settleMs?: number } = {}) {
+async function gotoAndSettle(page: Page, settleMs = SETTLE_MS) {
   await page.goto(URL, { waitUntil: 'networkidle' })
   await page.evaluate(() => document.fonts.ready)
-  // Only the eager (above-the-fold) images need to be loaded here — most
-  // images on this page are loading="lazy" and won't fetch at all until
-  // scrolled into view, so waiting on ALL <img> elements would hang.
   await page.waitForFunction(() =>
-    Array.from(document.querySelectorAll('img:not([loading="lazy"])')).every((img) => (img as HTMLImageElement).complete),
+    Array.from(document.querySelectorAll('img:not([loading="lazy"])'))
+      .every((img) => (img as HTMLImageElement).complete),
   )
-  // The scroll-progress bar's width is a function of exact scroll position;
-  // hide it so pixel-level scroll jitter between runs can't fail a diff.
-  await page.addStyleTag({ content: '.ns-scroll-progress { display: none !important; }' })
   await page.waitForTimeout(settleMs)
 }
 
-/** For sections reached by scrolling: wait for that container's own images (lazy or not). */
 async function waitForImagesIn(page: Page, selector: string) {
   await page.waitForFunction(
-    (sel) => Array.from(document.querySelectorAll(`${sel} img`)).every((img) => (img as HTMLImageElement).complete),
+    (sel) => Array.from(document.querySelectorAll(`${sel} img`))
+      .every((img) => (img as HTMLImageElement).complete),
     selector,
   )
 }
 
-test.describe('brand-prototype visual', () => {
+test.describe('ORIGIN brand story', () => {
   test('hero — desktop', async ({ page }) => {
     await page.setViewportSize({ width: 1600, height: 1000 })
     await gotoAndSettle(page)
-    await expect(page.locator('.ns-hero')).toHaveScreenshot('hero-desktop.png')
+    await expect(page.locator('.no-skip')).toHaveCount(0)
+    await expect(page.locator('.no-hero')).toHaveScreenshot('origin-hero-desktop.png')
   })
 
   test('hero — mobile', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 })
     await gotoAndSettle(page)
-    await expect(page.locator('.ns-hero')).toHaveScreenshot('hero-mobile.png')
+    await expect(page.locator('.no-skip')).toHaveCount(0)
+    await expect(page.locator('.no-hero')).toHaveScreenshot('origin-hero-mobile.png')
   })
 
-  test('product stage — main capture', async ({ page }) => {
+  test('first operational chapter', async ({ page }) => {
     await page.setViewportSize({ width: 1600, height: 1000 })
     await gotoAndSettle(page)
-    await expect(page.locator('.ns-stage__frame')).toHaveScreenshot('product-stage.png')
+    await page.locator('.no-chapter').first().scrollIntoViewIfNeeded()
+    await waitForImagesIn(page, '.no-chapter')
+    await page.waitForTimeout(900)
+    await expect(page.locator('.no-chapter').first()).toHaveScreenshot('origin-first-line.png')
   })
 
-  test('module gallery', async ({ page }) => {
+  test('operational questions', async ({ page }) => {
     await page.setViewportSize({ width: 1600, height: 1200 })
     await gotoAndSettle(page)
-    await page.locator('#modulos').scrollIntoViewIfNeeded()
-    // The card grid uses Motion's `layout` prop, which keeps re-measuring
-    // for a bit after mount; give it extra room beyond the usual settle
-    // before asking for a pixel-stable screenshot.
-    await page.waitForTimeout(SETTLE_MS + 1500)
-    await expect(page.locator('.ns-gallery')).toHaveScreenshot('module-gallery.png', { timeout: 15_000 })
+    await page.locator('#preguntas').scrollIntoViewIfNeeded()
+    await page.waitForTimeout(900)
+    await expect(page.locator('#preguntas')).toHaveScreenshot('origin-questions.png')
   })
 
-  test('module gallery — filtered', async ({ page }) => {
+  test('product evidence', async ({ page }) => {
     await page.setViewportSize({ width: 1600, height: 1200 })
     await gotoAndSettle(page)
-    await page.locator('#modulos').scrollIntoViewIfNeeded()
-    await page.waitForTimeout(SETTLE_MS)
-    await page.getByRole('tab', { name: 'Riesgo' }).click()
-    await page.waitForTimeout(500)
-    await expect(page.locator('.ns-gallery__grid')).toHaveScreenshot('module-gallery-filtered.png')
+    await page.locator('#northmine').scrollIntoViewIfNeeded()
+    await waitForImagesIn(page, '#northmine')
+    await page.waitForTimeout(1200)
+    await expect(page.locator('.no-product__hero')).toHaveScreenshot('origin-product-evidence.png')
   })
 
   test('final CTA', async ({ page }) => {
     await page.setViewportSize({ width: 1600, height: 1000 })
     await gotoAndSettle(page)
-    await page.locator('#cta').scrollIntoViewIfNeeded()
+    await page.locator('.no-final').scrollIntoViewIfNeeded()
     await page.waitForTimeout(600)
-    await expect(page.locator('.ns-cta')).toHaveScreenshot('final-cta.png')
+    await expect(page.locator('.no-final')).toHaveScreenshot('origin-final-cta.png')
   })
 
-  test('reduced motion — hero shows final state immediately', async ({ page }) => {
+  test('reduced motion shows final state immediately', async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'reduce' })
     await page.setViewportSize({ width: 1600, height: 1000 })
-    // Deliberately short settle: reduced motion must not need the animated
-    // budget above — if it does, that's the bug this test exists to catch.
-    await gotoAndSettle(page, { settleMs: 300 })
-    await expect(page.locator('.ns-hero')).toHaveScreenshot('hero-reduced-motion.png')
-
+    await gotoAndSettle(page, 300)
     const opacities = await page.evaluate(() =>
-      Array.from(document.querySelectorAll('[data-hero-badge], [data-hero-title], [data-hero-lead], [data-hero-actions]')).map(
-        (el) => getComputedStyle(el).opacity,
-      ),
+      Array.from(document.querySelectorAll('[data-hero]')).map((el) => getComputedStyle(el).opacity),
     )
-    expect(opacities.every((o) => o === '1')).toBe(true)
+    expect(opacities.every((opacity) => opacity === '1')).toBe(true)
   })
 
-  test('reduced motion — no horizontal overflow, filters still work', async ({ page }) => {
+  test('responsive viewports have no horizontal overflow', async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'reduce' })
-    await page.setViewportSize({ width: 390, height: 844 })
-    await gotoAndSettle(page, { settleMs: 300 })
-
-    const overflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth)
-    expect(overflow).toBe(false)
-
-    await page.locator('#modulos').scrollIntoViewIfNeeded()
-    await page.getByRole('tab', { name: 'Equipos' }).click()
-    await expect(page.getByRole('tab', { name: 'Equipos' })).toHaveAttribute('aria-selected', 'true')
+    for (const viewport of [
+      { width: 320, height: 568 },
+      { width: 390, height: 844 },
+      { width: 768, height: 1024 },
+      { width: 1366, height: 768 },
+      { width: 1920, height: 1080 },
+    ]) {
+      await page.setViewportSize(viewport)
+      await gotoAndSettle(page, 150)
+      const overflow = await page.evaluate(
+        () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
+      )
+      expect(overflow, `${viewport.width}x${viewport.height}`).toBe(false)
+    }
+    await expect(page.locator('.no-product__modules article')).toHaveCount(6)
   })
 })

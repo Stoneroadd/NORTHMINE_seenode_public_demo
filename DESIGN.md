@@ -2,16 +2,17 @@
 
 ## Direction
 
-Premium industrial mining control room: precise, sober, technical, and
-specialized. The operation is the visual subject; the interface is the
-instrument.
+Premium industrial mining origin story: precise, sober, technical, and
+personal. The real trajectory from plant and pit to dispatch and software is
+the visual subject; the interface is evidence of that experience.
 
 ## Typography
 
 - IBM Plex Sans for narrative and controls.
 - IBM Plex Mono for operational labels and values.
-- No viewport-scaled font sizes.
-- Letter spacing stays at zero.
+- Display type may scale responsively with `clamp()` up to 6.6rem.
+- Display tracking may tighten to -0.04em; body and control tracking stays at
+  zero.
 
 ## Color
 
@@ -26,7 +27,9 @@ instrument.
 
 - Full-bleed open-pit hero with text directly over the image.
 - Editorial bands rather than a grid of identical cards.
-- Operational flow reads: state, gap, cause, risk, decision, result.
+- Public narrative reads: first line, equipment, dispatch, questions,
+  inflection point, NORTHMINE.
+- Operational product flow reads: state, gap, cause, risk, decision, result.
 - Product evidence uses real screenshots when available and honest preview
   frames otherwise.
 - Corners stay at 8px or less.
@@ -34,14 +37,14 @@ instrument.
 
 ## Motion
 
-- Short opacity and transform transitions on direct interaction only.
-- No parallax, automatic carousel, continuous scroll animation, or ambient
-  particles.
+- One restrained GSAP scroll-linked hero movement and discrete section
+  reveals are allowed when they support the chronology.
+- No automatic carousel, looping ambient animation, or particles.
 - `prefers-reduced-motion` removes nonessential motion.
 
 ## Accessibility
 
-- One `h1`, complete landmark structure, and a skip link.
+- One `h1` and complete landmark structure.
 - Visible labels and focus states.
 - WCAG AA contrast.
 - Touch targets are at least 44px on compact screens.

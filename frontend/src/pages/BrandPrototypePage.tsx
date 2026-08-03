@@ -1,15 +1,15 @@
-import { SaaSPrototypePage } from '../components/brand-prototype/saas/SaaSPrototypePage'
+import { OriginStoryPage } from '../components/brand-prototype/origin/OriginStoryPage'
 import { PublicPageMeta } from '../components/landing/PublicPageMeta'
 
 export function BrandPrototypePage() {
   return (
     <>
       <PublicPageMeta
-        title="Prototipo de marca | NORTHMINE Intelligence"
-        description="Prototipo interno de landing SaaS para NORTHMINE Intelligence. No publicado."
-        robots="noindex,nofollow"
+        title="ORIGIN | La historia de NORTHMINE Intelligence"
+        description="Quince años de experiencia minera dieron origen a NORTHMINE, una plataforma de inteligencia operacional construida desde la operación."
+        robots="index,follow"
       />
-      <SaaSPrototypePage />
+      <OriginStoryPage />
     </>
   )
 }

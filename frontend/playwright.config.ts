@@ -14,16 +14,16 @@ export default defineConfig({
   reporter: [['list'], ['html', { open: 'never', outputFolder: 'playwright-report' }]],
   snapshotPathTemplate: '{testDir}/__screenshots__/{testFilePath}/{arg}{ext}',
   use: {
-    baseURL: 'http://localhost:5199',
+    baseURL: 'http://localhost:5204',
     trace: 'retain-on-failure',
   },
   expect: {
     toHaveScreenshot: { maxDiffPixelRatio: 0.02 },
   },
   webServer: {
-    command: 'npm run preview -- --port 5199',
-    url: 'http://localhost:5199/brand-prototype',
-    reuseExistingServer: true,
+    command: 'npm run preview -- --host 127.0.0.1 --port 5204',
+    url: 'http://localhost:5204/brand-prototype',
+    reuseExistingServer: false,
     timeout: 30_000,
   },
   projects: [
