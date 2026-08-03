@@ -1,0 +1,684 @@
+/* NORTHMINE — Operational Archive prototype. Layout for all five moments. */
+
+.nm-proto h1, .nm-proto h2, .nm-proto h3, .nm-proto p, .nm-proto ul, .nm-proto ol, .nm-proto dl {
+  margin: 0;
+}
+
+.nm-proto a {
+  color: inherit;
+}
+
+/* ---------------------------------------------------------------- *
+ * Header
+ * ---------------------------------------------------------------- */
+.nmp-header {
+  position: relative;
+  z-index: 5;
+  border-bottom: 1px solid var(--nmp-piedra);
+  background: var(--nmp-blanco-polvo);
+}
+
+.nmp-header__skip {
+  position: absolute;
+  top: -60px;
+  left: 12px;
+  z-index: 10;
+  background: var(--nmp-carbon);
+  color: var(--nmp-ink-on-dark);
+  padding: 10px 16px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  text-decoration: none;
+}
+
+.nmp-header__skip:focus {
+  top: 12px;
+}
+
+.nmp-header__inner {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 16px clamp(20px, 5vw, 72px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.nmp-header__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--nmp-ink-on-light);
+}
+
+.nmp-header__mark {
+  width: 26px;
+  height: 26px;
+  color: var(--nmp-cobre);
+  flex: none;
+}
+
+.nmp-header__word {
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-weight: 600;
+  font-size: 15px;
+  letter-spacing: 0.02em;
+}
+
+.nmp-header__nav {
+  display: flex;
+  gap: 24px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.nmp-header__nav a {
+  text-decoration: none;
+  color: var(--nmp-ink-muted-on-light);
+  transition: color var(--nmp-t-micro) var(--nmp-ease);
+}
+
+.nmp-header__nav a:hover,
+.nmp-header__nav a:focus-visible {
+  color: var(--nmp-cobre);
+}
+
+.nmp-header__intensity {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.nmp-header__intensity .mono-label {
+  color: var(--nmp-ink-muted-on-light);
+}
+
+.nmp-header__switch {
+  display: flex;
+  border: 1px solid var(--nmp-piedra);
+}
+
+.nmp-header__switch button {
+  border: 0;
+  background: transparent;
+  padding: 6px 12px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  color: var(--nmp-ink-muted-on-light);
+}
+
+.nmp-header__switch button + button {
+  border-left: 1px solid var(--nmp-piedra);
+}
+
+.nmp-header__switch button[aria-pressed='true'] {
+  background: var(--nmp-cobre);
+  color: var(--nmp-blanco-polvo);
+}
+
+/* ---------------------------------------------------------------- *
+ * Buttons (shared)
+ * ---------------------------------------------------------------- */
+.nmp-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 13px 20px;
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  border: 1px solid transparent;
+  min-height: 44px;
+  transition: transform var(--nmp-t-micro) var(--nmp-ease), box-shadow var(--nmp-t-micro) var(--nmp-ease);
+}
+
+.nmp-btn--primary {
+  background: var(--nmp-cobre);
+  color: var(--nmp-blanco-polvo);
+}
+
+.nmp-btn--primary:hover {
+  background: var(--nmp-cobre-fuerte);
+}
+
+.nmp-btn--quiet {
+  border-color: var(--nmp-piedra);
+  color: var(--nmp-ink-on-light);
+}
+
+.nmp-btn--quiet:hover {
+  border-color: var(--nmp-cobre);
+  color: var(--nmp-cobre);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .nmp-btn:hover {
+    transform: translateY(-2px);
+  }
+}
+
+/* ---------------------------------------------------------------- *
+ * Momento 1 — Hero
+ * ---------------------------------------------------------------- */
+.nmp-hero {
+  position: relative;
+  background: var(--nmp-marfil);
+  padding-block: clamp(40px, 6vw, 72px) 28px;
+}
+
+.nmp-hero__grid {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding-inline: clamp(20px, 5vw, 72px);
+  display: grid;
+  grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+  gap: clamp(28px, 5vw, 64px);
+  align-items: center;
+  min-height: min(680px, 82svh);
+}
+
+.nmp-hero__eyebrow {
+  color: var(--nmp-cobre);
+  margin-bottom: 18px;
+}
+
+.nmp-hero__title {
+  font-size: clamp(38px, 5.4vw, 68px);
+  font-weight: 600;
+  line-height: 1.02;
+  letter-spacing: -0.01em;
+  max-width: 12ch;
+  margin-bottom: 20px;
+  text-wrap: balance;
+}
+
+.nmp-hero__lead {
+  font-size: 17px;
+  line-height: 1.6;
+  color: var(--nmp-ink-muted-on-light);
+  max-width: 46ch;
+  margin-bottom: 28px;
+}
+
+.nmp-hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-bottom: 22px;
+}
+
+.nmp-hero__disclosure {
+  color: var(--nmp-ink-muted-on-light);
+}
+
+.nmp-hero__figure {
+  position: relative;
+}
+
+.nmp-hero__image {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 11;
+  object-fit: cover;
+  object-position: 60% 45%;
+  box-shadow: var(--nmp-surface-shadow);
+  transform: translateY(var(--nmp-surface-lift));
+}
+
+.nmp-hero__coordinates {
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
+  display: flex;
+  gap: 12px;
+  color: var(--nmp-blanco-polvo);
+  background: rgba(23, 20, 16, 0.55);
+  padding: 6px 10px;
+}
+
+.nmp-hero__scroll {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 24px;
+  color: var(--nmp-ink-muted-on-light);
+  text-decoration: none;
+}
+
+/* ---------------------------------------------------------------- *
+ * Momento 2 — Manifiesto (light -> dark)
+ * ---------------------------------------------------------------- */
+.nmp-manifesto {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  overflow: hidden;
+}
+
+.nmp-manifesto__panel {
+  position: relative;
+  z-index: 1;
+  padding: clamp(48px, 8vw, 96px) clamp(24px, 5vw, 64px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.nmp-manifesto__panel--light {
+  background: var(--nmp-marfil);
+  color: var(--nmp-ink-on-light);
+}
+
+.nmp-manifesto__panel--dark {
+  background: var(--nmp-carbon);
+  color: var(--nmp-ink-on-dark);
+}
+
+.nmp-manifesto__title {
+  font-size: clamp(26px, 3.4vw, 40px);
+  font-weight: 600;
+  line-height: 1.12;
+  margin-top: 10px;
+}
+
+.nmp-manifesto__body {
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--nmp-ink-muted-on-dark);
+  max-width: 40ch;
+  margin-bottom: 24px;
+}
+
+.nmp-manifesto__categories {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 0;
+  border-top: 1px solid var(--nmp-acero);
+}
+
+.nmp-manifesto__categories li {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-block: 12px;
+  border-bottom: 1px solid var(--nmp-acero);
+  font-size: 15px;
+}
+
+.nmp-manifesto__categories .mono-label {
+  color: var(--nmp-cobre);
+}
+
+/* the wedge object that "crosses" the light/dark seam */
+.nmp-manifesto__scene {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.nmp-manifesto__wedge {
+  width: 60px;
+  height: 100%;
+  color: var(--nmp-cobre);
+  opacity: 0.9;
+}
+
+/* ---------------------------------------------------------------- *
+ * Momento 3 — Terrain/data transition
+ * ---------------------------------------------------------------- */
+.nmp-transition {
+  background: var(--nmp-carbon);
+  color: var(--nmp-ink-on-dark);
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: clamp(24px, 4vw, 56px);
+  padding: clamp(48px, 7vw, 88px) clamp(20px, 5vw, 72px);
+}
+
+.nmp-transition__scene {
+  position: relative;
+  aspect-ratio: 16 / 11;
+  overflow: hidden;
+  border: 1px solid var(--nmp-acero);
+}
+
+.nmp-transition__ortho {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.7;
+  filter: saturate(0.85);
+}
+
+.nmp-transition__contours {
+  position: absolute;
+  inset: 0;
+  color: var(--nmp-cobre);
+  mix-blend-mode: screen;
+}
+
+.nmp-transition__contours .nm-strata-contours {
+  width: 100%;
+  height: 100%;
+}
+
+/* PitContourField ships no stroke styling of its own; the public landing
+   supplies it via demo-landing-strata.css, which this prototype does not
+   import (to avoid pulling in unrelated hero/equipment/map selectors).
+   Scoped equivalent: */
+.nm-proto .nm-strata-contour {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.1;
+  vector-effect: non-scaling-stroke;
+}
+
+.nmp-transition__convergence {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--nmp-ambar);
+  box-shadow: 0 0 0 8px rgba(201, 154, 74, calc(var(--nmp-glow-opacity) + 0.08));
+  transform: translate(-50%, -50%);
+}
+
+.nmp-transition__copy {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.nmp-transition__title {
+  font-size: clamp(24px, 2.8vw, 32px);
+  font-weight: 600;
+  margin-block: 10px 24px;
+  max-width: 16ch;
+}
+
+.nmp-transition__steps {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 0;
+}
+
+.nmp-transition__steps li {
+  display: grid;
+  grid-template-columns: 28px 1fr auto;
+  align-items: baseline;
+  gap: 12px;
+  padding-block: 11px;
+  border-top: 1px solid var(--nmp-acero);
+}
+
+.nmp-transition__steps .mono-label {
+  color: var(--nmp-cobre);
+}
+
+.nmp-transition__step-label {
+  font-size: 14px;
+}
+
+.nmp-transition__step-detail {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  color: var(--nmp-ink-muted-on-dark);
+}
+
+/* ---------------------------------------------------------------- *
+ * Momento 4 — Operational Archive
+ * ---------------------------------------------------------------- */
+.nmp-archive {
+  background: var(--nmp-grafito);
+  color: var(--nmp-ink-on-dark);
+  padding: clamp(48px, 7vw, 88px) clamp(20px, 5vw, 72px);
+}
+
+.nmp-archive__head {
+  max-width: 1440px;
+  margin: 0 auto 40px;
+}
+
+.nmp-archive__title {
+  font-size: clamp(26px, 3.2vw, 36px);
+  font-weight: 600;
+  margin-top: 10px;
+  max-width: 20ch;
+}
+
+.nmp-archive__body {
+  max-width: 1440px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 0.42fr) minmax(0, 0.58fr);
+  gap: clamp(20px, 3vw, 40px);
+  border-top: 1px solid var(--nmp-acero);
+}
+
+.nmp-archive__chapters {
+  display: flex;
+  flex-direction: column;
+}
+
+.nmp-archive__chapter-tab {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--nmp-acero);
+  padding: 18px 4px;
+  color: var(--nmp-ink-muted-on-dark);
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 16px;
+  cursor: pointer;
+  transform: translateX(0);
+  transition: color var(--nmp-t-micro) var(--nmp-ease), transform var(--nmp-t-micro) var(--nmp-ease);
+}
+
+.nmp-archive__chapter-tab .mono-label {
+  color: var(--nmp-cobre);
+  flex: none;
+}
+
+.nmp-archive__chapter-tab[aria-selected='true'] {
+  color: var(--nmp-ink-on-dark);
+  font-weight: 600;
+  transform: translateX(8px);
+}
+
+.nmp-archive__chapter-tab:hover,
+.nmp-archive__chapter-tab:focus-visible {
+  color: var(--nmp-ink-on-dark);
+}
+
+.nmp-archive__evidence {
+  padding-block: 6px 20px;
+}
+
+.nmp-archive__evidence-frame {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: var(--nmp-carbon);
+  border: 1px solid var(--nmp-acero);
+  margin-bottom: 20px;
+  box-shadow: var(--nmp-surface-shadow);
+}
+
+.nmp-archive__evidence-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+.nmp-archive__evidence-plate {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  background: rgba(23, 20, 16, 0.8);
+  border: 1px solid rgba(184, 115, 63, 0.4);
+  padding: 6px 9px;
+  color: var(--nmp-cobre);
+}
+
+.nmp-archive__evidence-coord {
+  position: absolute;
+  right: 12px;
+  top: 12px;
+  color: var(--nmp-ink-on-dark);
+  background: rgba(23, 20, 16, 0.7);
+  padding: 5px 8px;
+}
+
+.nmp-archive__eyebrow {
+  color: var(--nmp-cobre);
+  margin-bottom: 8px;
+}
+
+.nmp-archive__chapter-title {
+  font-size: 22px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.nmp-archive__chapter-description {
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--nmp-ink-muted-on-dark);
+  max-width: 48ch;
+  margin-bottom: 22px;
+}
+
+.nmp-archive__facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  border-top: 1px solid var(--nmp-acero);
+  padding-top: 18px;
+  margin-bottom: 22px;
+}
+
+.nmp-archive__facts dt {
+  color: var(--nmp-cobre);
+  margin-bottom: 4px;
+}
+
+.nmp-archive__facts dd {
+  margin: 0;
+  font-size: 14px;
+}
+
+.nmp-archive__evidence-link {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--nmp-cobre);
+}
+
+/* ---------------------------------------------------------------- *
+ * Momento 5 — Product Evidence + CTA
+ * ---------------------------------------------------------------- */
+.nmp-evidence {
+  background: var(--nmp-marfil);
+  color: var(--nmp-ink-on-light);
+  padding: clamp(48px, 7vw, 88px) clamp(20px, 5vw, 72px) clamp(64px, 8vw, 100px);
+}
+
+.nmp-evidence__head {
+  max-width: 900px;
+  margin: 0 auto 32px;
+  text-align: center;
+}
+
+.nmp-evidence__title {
+  font-size: clamp(24px, 3vw, 34px);
+  font-weight: 600;
+  line-height: 1.2;
+  margin-top: 10px;
+}
+
+.nmp-evidence__frame {
+  max-width: 1200px;
+  margin: 0 auto 32px;
+  border: 1px solid var(--nmp-piedra);
+  box-shadow: var(--nmp-surface-shadow);
+}
+
+.nmp-evidence__image {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.nmp-evidence__caption {
+  padding: 10px 14px;
+  border-top: 1px solid var(--nmp-piedra);
+  color: var(--nmp-ink-muted-on-light);
+}
+
+.nmp-evidence__actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.nmp-evidence__link {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--nmp-ink-muted-on-light);
+}
+
+/* ---------------------------------------------------------------- *
+ * Footer
+ * ---------------------------------------------------------------- */
+.nmp-footer {
+  background: var(--nmp-carbon);
+  color: var(--nmp-ink-muted-on-dark);
+  padding: 20px clamp(20px, 5vw, 72px);
+}
+
+.nmp-footer__inner {
+  max-width: 1440px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.nmp-footer a {
+  text-decoration: none;
+  color: var(--nmp-cobre);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+}

@@ -1,0 +1,127 @@
+/* NORTHMINE SaaS — purposeful, finite motion. No loops, no scroll-jacking. */
+
+.nm-saas .ns-stage__frame {
+  animation: ns-stage-rise var(--ns-t-section) var(--ns-ease) both;
+}
+
+@keyframes ns-stage-rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.nm-saas .ns-cta {
+  transition: background-color var(--ns-t-section) var(--ns-ease);
+}
+
+@supports (animation-timeline: view()) {
+  .nm-saas .ns-cta__glow {
+    opacity: 0;
+    animation: ns-cta-glow-in var(--ns-t-section) var(--ns-ease) forwards;
+    animation-timeline: view();
+    animation-range: entry 0% cover 30%;
+  }
+}
+
+@keyframes ns-cta-glow-in {
+  to {
+    opacity: 1;
+  }
+}
+
+.nm-saas .ns-btn--primary {
+  position: relative;
+  overflow: hidden;
+}
+
+.nm-saas .ns-btn--primary::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(140px circle at var(--mx, 50%) var(--my, 50%), rgba(255, 255, 255, 0.55), transparent 70%);
+  mix-blend-mode: overlay;
+  opacity: 0;
+  transition: opacity 220ms ease;
+  pointer-events: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .nm-saas .ns-btn--primary:hover::before {
+    opacity: 1;
+  }
+}
+
+.nm-saas .ns-btn--primary::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, transparent 30%, rgba(255, 255, 255, 0.25) 48%, transparent 66%);
+  transform: translateX(-120%);
+  transition: transform var(--ns-t-enter) var(--ns-ease);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .nm-saas .ns-btn--primary:hover::after {
+    transform: translateX(120%);
+  }
+}
+
+.nm-saas .ns-gallery__card-frame,
+.nm-saas .ns-metrics__main,
+.nm-saas .ns-metrics__side,
+.nm-saas .ns-reading__indicator {
+  transition: border-color var(--ns-t-micro) var(--ns-ease), box-shadow var(--ns-t-micro) var(--ns-ease), transform var(--ns-t-micro) var(--ns-ease);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .nm-saas .ns-metrics__main:hover,
+  .nm-saas .ns-metrics__side:hover,
+  .nm-saas .ns-reading__indicator:hover {
+    border-color: var(--ns-border-strong);
+    transform: translateY(-2px);
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Reduced motion: content appears immediately, filters/nav still work,
+ * no automatic displacement or scaling, no information is lost.
+ * ------------------------------------------------------------------ */
+@media (prefers-reduced-motion: reduce) {
+  .nm-saas .ns-stage__frame,
+  .nm-saas .ns-cta__glow {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .nm-saas .ns-btn--primary::after,
+  .nm-saas .ns-btn--primary::before {
+    display: none;
+  }
+
+  .nm-saas .ns-gallery__card-frame img {
+    transition: none !important;
+    transform: none !important;
+  }
+
+  .nm-saas .ns-metrics__main:hover,
+  .nm-saas .ns-metrics__side:hover,
+  .nm-saas .ns-reading__indicator:hover {
+    transform: none;
+  }
+
+  .nm-saas .ns-btn:hover {
+    transform: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .nm-saas [data-motion='fade-up'] {
+    transition: opacity var(--ns-t-enter) var(--ns-ease), transform var(--ns-t-enter) var(--ns-ease);
+  }
+}

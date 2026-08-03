@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 140" role="img" aria-labelledby="nm-proto-word-title">
+  <title id="nm-proto-word-title">NORTHMINE</title>
+  <text x="0" y="92" font-family="'IBM Plex Sans', 'Segoe UI', sans-serif" font-weight="600" font-size="96" letter-spacing="-1" fill="currentColor">NORTHMINE</text>
+  <!-- bench-cut terrace beneath the wordmark, echoing the symbol's diagonal -->
+  <path d="M4,116 L220,116 L246,100 L246,108 L720,108" fill="none" stroke="currentColor" stroke-width="3" opacity="0.55"/>
+  <path d="M4,124 L180,124 L200,112" fill="none" stroke="currentColor" stroke-width="1.4" opacity="0.3"/>
+</svg>

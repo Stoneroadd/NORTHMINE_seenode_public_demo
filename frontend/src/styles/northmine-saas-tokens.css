@@ -1,0 +1,95 @@
+/*
+ * NORTHMINE — Mining Intelligence SaaS. Dark SaaS-premium direction,
+ * replacing the rejected "Operational Archive" editorial prototype at
+ * /brand-prototype. Exact palette as specified by the brief — no
+ * substitutions.
+ */
+
+.nm-saas {
+  /* Base */
+  --ns-black: #070807;
+  --ns-carbon: #0b0d0c;
+  --ns-graphite: #111412;
+  --ns-surface: #151816;
+  --ns-surface-raised: #191d1a;
+  --ns-border: rgba(255, 255, 255, 0.08);
+  --ns-border-strong: rgba(255, 255, 255, 0.14);
+  --ns-text: #f2f3ef;
+  --ns-text-secondary: #a7aca5;
+  --ns-text-muted: #6f756f;
+
+  /* Brand */
+  --ns-copper: #c87941;
+  --ns-copper-strong: #ad6636;
+  --ns-amber: #d99a2b;
+
+  /* Semantic data (separate from the accent) */
+  --ns-positive: #32c77a;
+  --ns-critical: #d9574f;
+  --ns-info: #4f91b8;
+  --ns-projection: #42b7a6;
+  --ns-no-data: #747a7d;
+
+  /* Motion */
+  --ns-t-micro: 200ms;
+  --ns-t-enter: 650ms;
+  --ns-t-section: 900ms;
+  --ns-ease: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* Depth (identical structure in both scenarios; premium sensation is the
+     baseline here, there is no "pure/premium" toggle in this direction) */
+  --ns-shadow-card: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 20px 44px rgba(0, 0, 0, 0.5);
+  --ns-shadow-stage: 0 40px 100px rgba(0, 0, 0, 0.6);
+  --ns-radius-sm: 8px;
+  --ns-radius-md: 12px;
+  --ns-radius-lg: 18px;
+
+  background: var(--ns-black);
+  color: var(--ns-text);
+  font-family: 'IBM Plex Sans', 'Segoe UI', sans-serif;
+}
+
+.nm-saas * {
+  box-sizing: border-box;
+}
+
+.nm-saas ::selection {
+  background: var(--ns-copper);
+  color: var(--ns-black);
+}
+
+.nm-saas h1, .nm-saas h2, .nm-saas h3, .nm-saas p, .nm-saas ul, .nm-saas ol, .nm-saas dl {
+  margin: 0;
+}
+
+.nm-saas a {
+  color: inherit;
+}
+
+.nm-saas__shell {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding-inline: clamp(20px, 5vw, 64px);
+}
+
+.nm-saas .mono-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ns-text-muted);
+}
+
+.nm-saas :focus-visible {
+  outline: 2px solid var(--ns-copper);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nm-saas * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
