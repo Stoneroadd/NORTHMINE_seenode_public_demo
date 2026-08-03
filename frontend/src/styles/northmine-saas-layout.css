@@ -1201,3 +1201,194 @@
   font-size: 13px;
   backdrop-filter: blur(8px);
 }
+
+/* ---------------------------------------------------------------- *
+ * Commercial narrative: definition, problem and one product proof
+ * ---------------------------------------------------------------- */
+.ns-definition {
+  position: relative;
+  padding-block: clamp(88px, 10vw, 140px);
+  border-block: 1px solid var(--ns-border);
+  background: rgba(7, 8, 7, 0.5);
+}
+
+.ns-definition__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.84fr) minmax(0, 1.16fr);
+  gap: clamp(56px, 8vw, 120px);
+  align-items: start;
+}
+
+.ns-definition__copy h2,
+.ns-problem__head h2,
+.ns-evidence__head h2 {
+  margin-top: 14px;
+  font-size: clamp(2.35rem, 4.6vw, 4.6rem);
+  line-height: 1.02;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+
+.ns-definition__copy > p:last-child,
+.ns-problem__head > p:last-child,
+.ns-evidence__head > p:last-child {
+  margin-top: 24px;
+  max-width: 58ch;
+  color: var(--ns-text-secondary);
+  font-size: clamp(1rem, 1.35vw, 1.16rem);
+  line-height: 1.7;
+}
+
+.ns-definition__system {
+  border-left: 2px solid var(--ns-copper);
+  padding-left: clamp(24px, 4vw, 48px);
+}
+
+.ns-definition__system > p {
+  max-width: 42ch;
+  font-size: clamp(1.2rem, 2vw, 1.65rem);
+  line-height: 1.4;
+}
+
+.ns-definition__system ol {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  list-style: none;
+  padding: 0;
+  margin: 36px 0 0;
+  border-top: 1px solid var(--ns-border);
+  border-left: 1px solid var(--ns-border);
+}
+
+.ns-definition__system li {
+  min-height: 92px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 16px;
+  border-right: 1px solid var(--ns-border);
+  border-bottom: 1px solid var(--ns-border);
+  background: rgba(255, 255, 255, 0.018);
+}
+
+.ns-definition__system li strong {
+  font-size: 1rem;
+}
+
+.ns-definition__boundary {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 18px;
+  align-items: baseline;
+  margin-top: 20px;
+  color: var(--ns-text-secondary);
+  font-size: 0.88rem;
+}
+
+.ns-definition__boundary span {
+  color: var(--ns-copper);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.ns-problem {
+  padding-block: clamp(96px, 11vw, 156px);
+  background: linear-gradient(180deg, rgba(7, 8, 7, 0.72), rgba(11, 13, 12, 0.82));
+}
+
+.ns-problem__head {
+  max-width: 920px;
+}
+
+.ns-problem__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 0.78fr) minmax(0, 1.22fr);
+  gap: clamp(40px, 7vw, 100px);
+  margin-top: clamp(54px, 7vw, 92px);
+}
+
+.ns-problem__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  border-top: 1px solid var(--ns-border);
+}
+
+.ns-problem__list li {
+  display: grid;
+  grid-template-columns: 38px 1fr;
+  gap: 18px;
+  padding-block: 24px;
+  border-bottom: 1px solid var(--ns-border);
+}
+
+.ns-problem__list h3 {
+  margin: 0 0 7px;
+  font-size: 1.08rem;
+}
+
+.ns-problem__list p {
+  color: var(--ns-text-secondary);
+  line-height: 1.55;
+}
+
+.ns-problem__answer {
+  padding: clamp(28px, 4vw, 52px);
+  border: 1px solid var(--ns-border-strong);
+  background:
+    linear-gradient(145deg, rgba(200, 121, 65, 0.14), transparent 46%),
+    rgba(17, 20, 18, 0.9);
+  box-shadow: var(--ns-shadow-card);
+}
+
+.ns-problem__answer h3 {
+  margin: 14px 0 32px;
+  max-width: 18ch;
+  font-size: clamp(1.7rem, 3vw, 3rem);
+  line-height: 1.08;
+  letter-spacing: -0.025em;
+}
+
+.ns-problem__answer dl {
+  margin: 0;
+  border-top: 1px solid var(--ns-border);
+}
+
+.ns-problem__answer dl > div {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  gap: 20px;
+  padding-block: 16px;
+  border-bottom: 1px solid var(--ns-border);
+}
+
+.ns-problem__answer dt {
+  color: var(--ns-text-muted);
+}
+
+.ns-problem__answer dd {
+  margin: 0;
+  color: var(--ns-text);
+  font-weight: 600;
+}
+
+.ns-evidence {
+  padding-block: clamp(88px, 10vw, 138px);
+  border-top: 1px solid var(--ns-border);
+  background: rgba(7, 8, 7, 0.72);
+}
+
+.ns-evidence__head {
+  margin-bottom: 48px;
+}
+
+.ns-evidence__head h2 {
+  max-width: 16ch;
+}
+
+.ns-evidence .ns-stage {
+  margin: 0;
+}

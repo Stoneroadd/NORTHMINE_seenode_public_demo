@@ -2,10 +2,11 @@
 
 ## Direction
 
-Premium industrial SaaS for open-pit mining. The public homepage sells the
-platform through operational evidence, cinematic mining scale and a restrained
-decision narrative. The founder story remains available at `/origen`, but it
-does not dominate the commercial homepage.
+Premium industrial SaaS for open-pit mining. The public homepage defines
+NORTHMINE as a decision layer over existing operational systems, then explains
+the industry problem, the transformation offered and the differentiators. The
+founder story remains available at `/origen`, but it does not dominate the
+commercial homepage.
 
 ## Typography
 
@@ -25,18 +26,19 @@ does not dominate the commercial homepage.
 
 - The first viewport is a full-scale product proposition over real mining
   imagery, with one primary commercial action.
-- Product evidence appears early and at substantial scale.
-- Sections alternate cinematic imagery, operational UI and quiet explanatory
-  passages; the page never becomes a grid of identical cards.
-- The public narrative reads: problem, connected operation, evidence,
-  capabilities, decision flow, security and demo request.
+- Product evidence is limited to one clearly identified synthetic-data capture
+  after the commercial proposition is understood.
+- Sections alternate cinematic imagery and quiet explanatory passages; the
+  page never becomes a catalogue of modules or a grid of screenshots.
+- The public narrative reads: definition, problem, connected operation,
+  solution, differentiation, one product proof, security and demo request.
 
 ## Motion
 
 - GSAP coordinates the hero reveal, DXF drawing, scroll-linked image depth and
   one cinematic mining transition.
-- Pointer light and scroll progress respond to the visitor without looping
-  ambient animation.
+- Scroll progress provides orientation without replacing the system cursor or
+  adding a decorative pointer follower.
 - `prefers-reduced-motion` reveals all content immediately and removes parallax.
 
 ## Imagery

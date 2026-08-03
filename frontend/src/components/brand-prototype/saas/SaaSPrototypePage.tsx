@@ -1,12 +1,10 @@
 import { ScrollProgress } from './ScrollProgress'
 import { SaaSHeader } from './SaaSHeader'
 import { SaaSHero } from './SaaSHero'
+import { NorthmineDefinition } from './NorthmineDefinition'
 import { ProductStage } from './ProductStage'
 import { MineIntelligenceBand } from './MineIntelligenceBand'
-import { TrustStrip } from './TrustStrip'
-import { OperationalReading } from './OperationalReading'
-import { DemoMetrics } from './DemoMetrics'
-import { ModuleGallery } from './ModuleGallery'
+import { ProblemSolution } from './ProblemSolution'
 import { OperationalBenefits } from './OperationalBenefits'
 import { DecisionFlow } from './DecisionFlow'
 import { SecurityTransparency } from './SecurityTransparency'
@@ -31,14 +29,22 @@ export function SaaSPrototypePage() {
       <SaaSHeader />
       <main id="ns-contenido">
         <SaaSHero />
-        <ProductStage />
+        <NorthmineDefinition />
         <MineIntelligenceBand />
-        <TrustStrip />
-        <OperationalReading />
-        <DemoMetrics />
-        <ModuleGallery />
-        <OperationalBenefits />
+        <ProblemSolution />
         <DecisionFlow />
+        <OperationalBenefits />
+        <section className="ns-evidence" aria-labelledby="ns-evidence-title">
+          <div className="ns-saas__shell ns-evidence__head">
+            <p className="mono-label">Evidencia del producto</p>
+            <h2 id="ns-evidence-title">Una lectura ejecutiva, no otra colección de KPI.</h2>
+            <p>
+              El Decision Cockpit concentra estado, brecha, ritmo, riesgo y
+              acción. Esta única captura usa datos sintéticos identificados.
+            </p>
+          </div>
+          <ProductStage />
+        </section>
         <SecurityTransparency />
         <DemoCTA />
       </main>

@@ -10,6 +10,15 @@
  * ≤ 1024px — tablet
  * ---------------------------------------------------------------- */
 @media (max-width: 1024px) {
+  .nm-saas .ns-definition__grid,
+  .nm-saas .ns-problem__layout {
+    grid-template-columns: 1fr;
+  }
+
+  .nm-saas .ns-definition__system {
+    max-width: 760px;
+  }
+
   .nm-saas .ns-metrics__grid {
     grid-template-columns: 1fr;
     grid-template-rows: none;
@@ -99,6 +108,24 @@
 
   .nm-saas .ns-hero__actions .ns-btn {
     justify-content: center;
+  }
+
+  .nm-saas .ns-definition__system {
+    padding-left: 20px;
+  }
+
+  .nm-saas .ns-definition__system ol {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .nm-saas .ns-definition__boundary,
+  .nm-saas .ns-problem__answer dl > div {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .nm-saas .ns-problem__answer {
+    padding: 24px 20px;
   }
 
   .nm-saas .ns-stage {

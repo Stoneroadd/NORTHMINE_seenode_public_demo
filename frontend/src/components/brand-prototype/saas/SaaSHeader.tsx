@@ -3,8 +3,9 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 
 const navItems = [
   { label: 'Plataforma', href: '#hero' },
-  { label: 'Capacidades', href: '#lectura' },
-  { label: 'Módulos', href: '#modulos' },
+  { label: 'Propuesta', href: '#propuesta' },
+  { label: 'Problema', href: '#problema' },
+  { label: 'Diferencia', href: '#diferenciadores' },
   { label: 'Seguridad', href: '#seguridad' },
   { label: 'Origen', href: '/origen' },
   { label: 'Demo', href: '#cta' },

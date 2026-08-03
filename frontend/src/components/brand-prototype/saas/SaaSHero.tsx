@@ -36,9 +36,8 @@ export function SaaSHero() {
         </h1>
 
         <p className="ns-hero__lead" data-hero-lead>
-          NORTHMINE conecta producción, flota, carguío y riesgo para
-          transformar señales operacionales dispersas en decisiones
-          comprensibles.
+          NORTHMINE es un Command Center minero que transforma datos dispersos
+          en decisiones priorizadas, explicables y trazables durante el turno.
         </p>
 
         <div className="ns-hero__actions" data-hero-actions>
