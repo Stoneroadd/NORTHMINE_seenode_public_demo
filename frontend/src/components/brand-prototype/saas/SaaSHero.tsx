@@ -10,7 +10,7 @@ export function SaaSHero() {
         <img
           className="ns-hero__backdrop-image"
           data-hero-backdrop
-          src="/assets/landing/saas/hero-dozer-openpit.webp"
+          src="/assets/landing/saas/hero-dozer-openpit-premium.webp"
           alt=""
           width={1672}
           height={941}

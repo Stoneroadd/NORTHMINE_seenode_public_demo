@@ -44,7 +44,13 @@
   --ns-radius-md: 12px;
   --ns-radius-lg: 18px;
 
-  background: var(--ns-black);
+  background-color: var(--ns-black);
+  background-image:
+    linear-gradient(rgba(7, 8, 7, 0.94), rgba(7, 8, 7, 0.97)),
+    url('/assets/landing/saas/mineral-copper-macro.webp');
+  background-size: auto, min(72vw, 980px) auto;
+  background-position: center, 110% 35%;
+  background-attachment: scroll, fixed;
   color: var(--ns-text);
   font-family: 'IBM Plex Sans', 'Segoe UI', sans-serif;
 }

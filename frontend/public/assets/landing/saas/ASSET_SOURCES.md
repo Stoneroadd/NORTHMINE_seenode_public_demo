@@ -6,11 +6,13 @@
   el 3 de agosto de 2026 para el hero comercial.
 - `mineral-copper-macro.webp`: imagen entregada por el propietario de
   NORTHMINE el 3 de agosto de 2026 para la narrativa mineral.
-- `mineral-iridescent.png`: imagen entregada por el propietario de NORTHMINE
+- `mineral-iridescent.webp`: imagen entregada por el propietario de NORTHMINE
   el 3 de agosto de 2026 para representar el valor material del mineral.
-- `caex-digital-twin.png`: imagen conceptual entregada por el propietario de
+- `caex-digital-twin.webp`: imagen conceptual entregada por el propietario de
   NORTHMINE el 3 de agosto de 2026 para representar el puente entre equipos,
   datos e inteligencia operacional.
+- `hero-dozer-openpit-premium.webp`: imagen entregada por el propietario de
+  NORTHMINE el 3 de agosto de 2026 y optimizada para la primera pantalla.
 
 ## Original generado
 
