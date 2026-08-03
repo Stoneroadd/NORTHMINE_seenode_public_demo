@@ -13,8 +13,8 @@ export function TerrainMaterials() {
             El terreno detrás de los datos
           </h2>
           <p className="text-[16px] leading-relaxed text-[color:var(--ns-text-secondary)]">
-            Fotografías reales de operación minera con licencia libre — no ilustraciones
-            genéricas de plantilla. Créditos y licencia de cada una abajo.
+            Activos visuales de NORTHMINE y fotografías mineras con licencia
+            abierta. Cada fuente externa conserva su atribución visible.
           </p>
         </div>
 
@@ -44,14 +44,20 @@ export function TerrainMaterials() {
                 <p className="text-[13px] leading-relaxed text-[color:var(--ns-text-secondary)] m-0 mb-2 max-w-[42ch]">
                   {photo.description}
                 </p>
-                <a
-                  className="text-[12px] text-[color:var(--ns-text-muted)] hover:text-[color:var(--ns-copper)] underline decoration-[color:var(--ns-border-strong)] underline-offset-2"
-                  href={photo.creditUrl}
-                  target="_blank"
-                  rel="noreferrer noopener"
-                >
-                  Foto: {photo.credit}
-                </a>
+                {photo.credit && photo.creditUrl ? (
+                  <a
+                    className="text-[12px] text-[color:var(--ns-text-muted)] hover:text-[color:var(--ns-copper)] underline decoration-[color:var(--ns-border-strong)] underline-offset-2"
+                    href={photo.creditUrl}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                  >
+                    Foto: {photo.credit}
+                  </a>
+                ) : photo.credit ? (
+                  <span className="text-[12px] text-[color:var(--ns-text-muted)]">
+                    {photo.credit}
+                  </span>
+                ) : null}
               </figcaption>
             </figure>
           ))}

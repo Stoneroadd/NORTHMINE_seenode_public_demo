@@ -1064,3 +1064,140 @@
   color: var(--ns-text-muted);
   font-size: 12px;
 }
+
+/* ---------------------------------------------------------------- *
+ * Elite SaaS campaign layer
+ * ---------------------------------------------------------------- */
+.nm-saas .ns-hero {
+  min-height: min(960px, 100svh);
+  display: grid;
+  align-items: center;
+  text-align: left;
+  padding-block: clamp(110px, 13vw, 180px) clamp(120px, 14vw, 190px);
+}
+
+.nm-saas .ns-hero__backdrop-image {
+  inset: -5% 0;
+  width: 100%;
+  height: 110%;
+  object-position: center 54%;
+  opacity: .86;
+  filter: saturate(.82) contrast(1.08);
+  will-change: transform;
+}
+
+.nm-saas .ns-hero__backdrop-veil {
+  background:
+    linear-gradient(90deg, rgba(7,8,7,.98) 0%, rgba(7,8,7,.92) 32%, rgba(7,8,7,.46) 62%, rgba(7,8,7,.22) 100%),
+    linear-gradient(0deg, var(--ns-black) 0%, transparent 38%, rgba(7,8,7,.3) 100%);
+}
+
+.nm-saas .ns-hero__content {
+  width: min(100% - 40px, 1280px);
+  max-width: none;
+  margin: 0 auto;
+  padding-inline: clamp(20px, 5vw, 64px);
+}
+
+.nm-saas .ns-hero__content > * {
+  max-width: 720px;
+}
+
+.nm-saas .ns-hero__title {
+  font-size: clamp(3.25rem, 6.2vw, 6rem);
+  line-height: .98;
+  letter-spacing: -.035em;
+}
+
+.nm-saas .ns-hero__lead {
+  margin: 0 0 34px;
+  max-width: 58ch;
+  color: #d4d6d0;
+  font-size: clamp(1rem, 1.4vw, 1.2rem);
+}
+
+.nm-saas .ns-hero__actions {
+  justify-content: flex-start;
+  margin-bottom: 0;
+}
+
+.nm-saas .ns-hero__contours {
+  opacity: .2;
+  mask-image: linear-gradient(90deg, black, transparent 70%);
+}
+
+.ns-mine-band {
+  position: relative;
+  min-height: clamp(620px, 72vw, 840px);
+  display: grid;
+  align-items: end;
+  overflow: hidden;
+  isolation: isolate;
+  margin-top: 80px;
+}
+
+.ns-mine-band__media,
+.ns-mine-band__veil {
+  position: absolute;
+  inset: -8% 0;
+}
+
+.ns-mine-band__media {
+  will-change: transform;
+}
+
+.ns-mine-band__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  filter: saturate(.78) contrast(1.08);
+}
+
+.ns-mine-band__veil {
+  background:
+    linear-gradient(90deg, rgba(7,8,7,.96) 0%, rgba(7,8,7,.72) 46%, rgba(7,8,7,.16) 78%),
+    linear-gradient(0deg, var(--ns-black) 0%, transparent 46%, rgba(7,8,7,.32) 100%);
+  z-index: 1;
+}
+
+.ns-mine-band__content {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  padding-bottom: clamp(70px, 9vw, 120px);
+}
+
+.ns-mine-band__content h2 {
+  max-width: 760px;
+  margin: 14px 0 22px;
+  font-size: clamp(3rem, 6vw, 5.8rem);
+  font-weight: 600;
+  line-height: .98;
+  letter-spacing: -.035em;
+  text-wrap: balance;
+}
+
+.ns-mine-band__content > p:not(.mono-label) {
+  max-width: 58ch;
+  color: #d0d3cd;
+  font-size: clamp(1rem, 1.4vw, 1.18rem);
+  line-height: 1.65;
+}
+
+.ns-mine-band__signals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 34px;
+}
+
+.ns-mine-band__signals span {
+  padding: 9px 13px;
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: 999px;
+  background: rgba(7,8,7,.5);
+  color: #eef0ea;
+  font-size: 13px;
+  backdrop-filter: blur(8px);
+}

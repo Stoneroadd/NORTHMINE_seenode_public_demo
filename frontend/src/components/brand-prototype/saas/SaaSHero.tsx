@@ -1,9 +1,7 @@
 import { PitContourField } from '../../landing/PitContourField'
-import { useSaveData } from '../../../hooks/useSaveData'
 import { useHeroRevealTimeline } from '../../../lib/animation/effects'
 
 export function SaaSHero() {
-  const saveData = useSaveData()
   const scope = useHeroRevealTimeline<HTMLElement>()
 
   return (
@@ -12,14 +10,10 @@ export function SaaSHero() {
         <img
           className="ns-hero__backdrop-image"
           data-hero-backdrop
-          src={
-            saveData
-              ? '/assets/landing/prototype/materials/terrain-openpit-kennecott-900.webp'
-              : '/assets/landing/prototype/materials/terrain-openpit-kennecott.webp'
-          }
+          src="/assets/landing/saas/hero-dozer-openpit.webp"
           alt=""
-          width={1920}
-          height={1301}
+          width={1672}
+          height={941}
           fetchPriority="high"
         />
         <div className="ns-hero__backdrop-veil" />

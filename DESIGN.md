@@ -2,58 +2,54 @@
 
 ## Direction
 
-Premium industrial mining origin story: precise, sober, technical, and
-personal. The real trajectory from plant and pit to dispatch and software is
-the visual subject; the interface is evidence of that experience.
+Premium industrial SaaS for open-pit mining. The public homepage sells the
+platform through operational evidence, cinematic mining scale and a restrained
+decision narrative. The founder story remains available at `/origen`, but it
+does not dominate the commercial homepage.
 
 ## Typography
 
-- IBM Plex Sans for narrative and controls.
-- IBM Plex Mono for operational labels and values.
-- Display type may scale responsively with `clamp()` up to 6.6rem.
-- Display tracking may tighten to -0.04em; body and control tracking stays at
-  zero.
+- IBM Plex Sans for narrative, product explanation and controls.
+- IBM Plex Mono only for operational labels, data and coordinates.
+- Display type scales responsively up to 6rem with tracking no tighter than
+  -0.04em.
 
 ## Color
 
-- Near-black graphite page backgrounds.
-- Neutral steel surfaces with thin borders.
-- Warm safety amber for primary commercial actions.
-- Muted green for verified/available status.
-- Red only for genuine error or risk.
-- Cyan is limited to existing product evidence and never dominates the page.
+- Near-black graphite fields reflect control-room use.
+- Copper and amber identify the NORTHMINE brand and primary actions.
+- Green, red, blue and teal remain semantic data colors.
+- Large photographic fields carry geological blue, steel and mineral tones.
 
 ## Layout
 
-- Full-bleed open-pit hero with text directly over the image.
-- Editorial bands rather than a grid of identical cards.
-- Public narrative reads: first line, equipment, dispatch, questions,
-  inflection point, NORTHMINE.
-- Operational product flow reads: state, gap, cause, risk, decision, result.
-- Product evidence uses real screenshots when available and honest preview
-  frames otherwise.
-- Corners stay at 8px or less.
-- No cards nested inside cards.
+- The first viewport is a full-scale product proposition over real mining
+  imagery, with one primary commercial action.
+- Product evidence appears early and at substantial scale.
+- Sections alternate cinematic imagery, operational UI and quiet explanatory
+  passages; the page never becomes a grid of identical cards.
+- The public narrative reads: problem, connected operation, evidence,
+  capabilities, decision flow, security and demo request.
 
 ## Motion
 
-- One restrained GSAP scroll-linked hero movement and discrete section
-  reveals are allowed when they support the chronology.
-- No automatic carousel, looping ambient animation, or particles.
-- `prefers-reduced-motion` removes nonessential motion.
+- GSAP coordinates the hero reveal, DXF drawing, scroll-linked image depth and
+  one cinematic mining transition.
+- Pointer light and scroll progress respond to the visitor without looping
+  ambient animation.
+- `prefers-reduced-motion` reveals all content immediately and removes parallax.
 
-## Accessibility
+## Imagery
 
-- One `h1` and complete landmark structure.
-- Visible labels and focus states.
-- WCAG AA contrast.
-- Touch targets are at least 44px on compact screens.
-- Form errors use a summary, field associations, and focus management.
+- Use project-owner photographs, verified licensed material and clearly
+  documented original generated assets.
+- Mining geometry, equipment and geology must remain plausible.
+- Product screenshots always identify demo or synthetic data where applicable.
 
-## Responsive Rules
+## Accessibility and responsive rules
 
-- Desktop navigation condenses into a menu under 900px.
-- Hero leaves the next section visible in the first viewport.
-- Product evidence remains legible without horizontal page overflow.
-- Forms use one column on mobile and two columns only where labels and inputs
-  remain readable.
+- One `h1`, complete landmarks, visible focus and touch targets of at least
+  44px.
+- Mobile removes parallax and preserves the equipment focal point behind
+  readable copy.
+- No horizontal page overflow from 320px through wide desktop.

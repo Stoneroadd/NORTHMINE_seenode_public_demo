@@ -6,8 +6,8 @@ export interface TerrainPhoto {
   image: string
   imageMobile: string
   imageAlt: string
-  credit: string
-  creditUrl: string
+  credit?: string
+  creditUrl?: string
 }
 
 // Real, freely licensed photographs (Wikimedia Commons — public domain or
@@ -15,6 +15,36 @@ export interface TerrainPhoto {
 // frontend/public/assets/landing/ASSET_SOURCES.md. Visible credit lines
 // below satisfy the CC BY / BY-SA attribution requirement on-page.
 export const terrainPhotos: TerrainPhoto[] = [
+  {
+    id: 'mineral-northmine',
+    category: 'Mineral',
+    title: 'Materia convertida en señal',
+    description: 'La textura física del mineral inspira una lectura digital donde cada señal conserva su contexto operacional.',
+    image: '/assets/landing/saas/mineral-copper-macro.webp',
+    imageMobile: '/assets/landing/saas/mineral-copper-macro.webp',
+    imageAlt: 'Macro de minerales de cobre con tonos metálicos y turquesa',
+    credit: 'Activo visual proporcionado por NORTHMINE',
+  },
+  {
+    id: 'mineral-iridescent',
+    category: 'Mineral',
+    title: 'El valor comienza en la materia',
+    description: 'Texturas iridiscentes que recuerdan que cada indicador digital representa material, variabilidad y valor operacional real.',
+    image: '/assets/landing/saas/mineral-iridescent.png',
+    imageMobile: '/assets/landing/saas/mineral-iridescent.png',
+    imageAlt: 'Macro de minerales iridiscentes en tonos cobre, verde, azul y violeta',
+    credit: 'Activo visual proporcionado por NORTHMINE',
+  },
+  {
+    id: 'caex-digital',
+    category: 'Inteligencia',
+    title: 'Del equipo a su gemelo operacional',
+    description: 'Una representación conceptual del CAEX convertido en señales, contexto y decisiones dentro de NORTHMINE.',
+    image: '/assets/landing/saas/caex-digital-twin.png',
+    imageMobile: '/assets/landing/saas/caex-digital-twin.png',
+    imageAlt: 'Representación digital luminosa de un camión minero CAEX sobre circuitos electrónicos',
+    credit: 'Activo visual proporcionado por NORTHMINE',
+  },
   {
     id: 'rajo',
     category: 'Rajo',

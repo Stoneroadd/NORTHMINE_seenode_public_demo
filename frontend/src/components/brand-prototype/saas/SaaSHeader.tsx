@@ -6,6 +6,7 @@ const navItems = [
   { label: 'Capacidades', href: '#lectura' },
   { label: 'Módulos', href: '#modulos' },
   { label: 'Seguridad', href: '#seguridad' },
+  { label: 'Origen', href: '/origen' },
   { label: 'Demo', href: '#cta' },
 ]
 

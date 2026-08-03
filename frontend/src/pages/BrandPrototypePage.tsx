@@ -1,15 +1,15 @@
-import { OriginStoryPage } from '../components/brand-prototype/origin/OriginStoryPage'
+import { SaaSPrototypePage } from '../components/brand-prototype/saas/SaaSPrototypePage'
 import { PublicPageMeta } from '../components/landing/PublicPageMeta'
 
 export function BrandPrototypePage() {
   return (
     <>
       <PublicPageMeta
-        title="ORIGIN | La historia de NORTHMINE Intelligence"
-        description="Quince años de experiencia minera dieron origen a NORTHMINE, una plataforma de inteligencia operacional construida desde la operación."
+        title="NORTHMINE Intelligence | Decisiones operacionales mineras"
+        description="NORTHMINE conecta producción, flota, carguío y riesgo para convertir señales operacionales dispersas en decisiones comprensibles y trazables."
         robots="index,follow"
       />
-      <OriginStoryPage />
+      <SaaSPrototypePage />
     </>
   )
 }

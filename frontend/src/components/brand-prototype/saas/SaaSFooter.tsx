@@ -17,6 +17,7 @@ export function SaaSFooter() {
         </div>
 
         <nav aria-label="Enlaces del pie">
+          <a href="/origen">Nuestra historia</a>
           <a href="/privacy">Privacidad</a>
           <a href="/solicitar-demo">Solicitar acceso</a>
           <a href="/acceso-demo">Acceso al demo</a>
