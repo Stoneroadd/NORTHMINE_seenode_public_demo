@@ -46,7 +46,7 @@
 
   background-color: var(--ns-black);
   background-image:
-    linear-gradient(rgba(7, 8, 7, 0.82), rgba(7, 8, 7, 0.9)),
+    linear-gradient(rgba(7, 8, 7, 0.74), rgba(7, 8, 7, 0.84)),
     url('/assets/landing/saas/mineral-copper-macro.webp');
   background-size: auto, min(92vw, 1280px) auto;
   background-position: center, 115% 38%;
