@@ -95,7 +95,13 @@
   }
 
   .nm-saas .ns-hero__title {
-    font-size: clamp(2.5rem, 12vw, 4rem);
+    font-size: clamp(1.9rem, 9vw, 2.75rem);
+  }
+
+  .nm-saas .ns-definition__copy h2,
+  .nm-saas .ns-problem__head h2,
+  .nm-saas .ns-evidence__head h2 {
+    font-size: clamp(1.75rem, 7.5vw, 2.5rem);
   }
 
   .nm-saas .ns-hero__backdrop-image {
@@ -142,6 +148,14 @@
 
   .nm-saas .ns-stage {
     margin-bottom: -48px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-inline: contain;
+  }
+
+  .nm-saas .ns-stage__frame {
+    width: 640px;
+    max-width: none;
   }
 
   .nm-saas .ns-mine-band {
@@ -167,7 +181,7 @@
   }
 
   .nm-saas .ns-mine-band__content h2 {
-    font-size: clamp(2.4rem, 11vw, 3.8rem);
+    font-size: clamp(1.9rem, 8vw, 2.6rem);
   }
 
   .nm-saas .ns-stage__frame {
