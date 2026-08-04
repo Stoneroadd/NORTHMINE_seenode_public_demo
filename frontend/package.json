@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "start": "node server.mjs",
     "test:visual": "playwright test",
-    "test:visual:update": "playwright test --update-snapshots"
+    "test:visual:update": "playwright test --update-snapshots",
+    "test:responsive": "playwright test --config=playwright.responsive.config.ts"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",
