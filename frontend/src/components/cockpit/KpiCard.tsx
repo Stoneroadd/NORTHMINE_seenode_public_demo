@@ -101,7 +101,7 @@ function parseMetric(value: string) {
 function AnimatedMetricToken({ value, reducedMotion }: { value: string; reducedMotion: boolean | null }) {
   const parsed = parseMetric(value)
   const enabled = Boolean(parsed) && !reducedMotion
-  const animated = useAnimatedNumber(parsed?.numeric ?? 0, {
+  const { value: animated, ref } = useAnimatedNumber(parsed?.numeric ?? 0, {
     initialValue: enabled ? 0 : parsed?.numeric ?? 0,
     durationMs: 980,
     enabled,
@@ -110,7 +110,7 @@ function AnimatedMetricToken({ value, reducedMotion }: { value: string; reducedM
   if (!parsed) return <>{value}</>
 
   return (
-    <span key={value}>
+    <span key={value} ref={ref}>
       {parsed.explicitPlus && animated >= 0 ? '+' : ''}
       {animated.toLocaleString('es-CL', {
         minimumFractionDigits: parsed.decimalDigits,

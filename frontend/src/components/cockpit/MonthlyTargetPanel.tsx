@@ -4,6 +4,7 @@ import type { MonthlyTargetResponse } from '../../lib/api'
 import { formatNumber, formatPct } from './cockpitModel'
 import { useModuleT } from '../../i18n/useModuleT'
 import { cockpitT, type CockpitT } from '../../i18n/modules/cockpit'
+import { useInView } from '../../hooks/useInView'
 
 interface MonthlyTargetPanelProps {
   data?: MonthlyTargetResponse
@@ -59,10 +60,12 @@ function shouldReduceMotion(): boolean {
   return typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
 }
 
-function useAnimatedNumber(value: number, animationId: string, duration = 900): number {
-  const [displayValue, setDisplayValue] = useState(value)
+function useAnimatedNumber<T extends HTMLElement = HTMLElement>(value: number, animationId: string, duration = 900) {
+  const { ref, inView } = useInView<T>()
+  const [displayValue, setDisplayValue] = useState(0)
 
   useEffect(() => {
+    if (!inView) return
     if (shouldReduceMotion()) {
       setDisplayValue(value)
       return
@@ -80,9 +83,9 @@ function useAnimatedNumber(value: number, animationId: string, duration = 900): 
     setDisplayValue(startValue)
     frame = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(frame)
-  }, [animationId, duration, value])
+  }, [animationId, duration, value, inView])
 
-  return displayValue
+  return { value: displayValue, ref }
 }
 
 function AnimatedNumber({
@@ -96,8 +99,8 @@ function AnimatedNumber({
   digits?: number
   suffix?: string
 }) {
-  const animated = useAnimatedNumber(value, animationId)
-  return <>{formatNumber(animated, digits)}{suffix}</>
+  const { value: animated, ref } = useAnimatedNumber<HTMLSpanElement>(value, animationId)
+  return <span ref={ref}>{formatNumber(animated, digits)}{suffix}</span>
 }
 
 function Row({
@@ -132,7 +135,8 @@ export function MonthlyTargetPanel({
     ? `${data.generated_at}-${data.period.end_date}-${data.mov_real_acumulado}-${data.mov_programado_acumulado}`
     : 'monthly-target-empty'
   const progress = data ? Math.max(0, Math.min(data.cumplimiento_pct ?? 0, 140)) : 0
-  const animatedProgress = Math.max(0, Math.min(useAnimatedNumber(progress, `${animationId}-progress`, 950), 140))
+  const { value: rawAnimatedProgress, ref: progressRef } = useAnimatedNumber<HTMLDivElement>(progress, `${animationId}-progress`, 950)
+  const animatedProgress = Math.max(0, Math.min(rawAnimatedProgress, 140))
 
   if (loading) {
     return (
@@ -211,7 +215,7 @@ export function MonthlyTargetPanel({
                 : <AnimatedNumber value={data.cumplimiento_pct} animationId={`${animationId}-pct`} digits={1} suffix="%" />}
             </strong>
           </div>
-          <div className="nmcp-monthly-progress" aria-label={t.monthly_cumplimiento_aria(formatPct(data.cumplimiento_pct, 1))}>
+          <div ref={progressRef} className="nmcp-monthly-progress" aria-label={t.monthly_cumplimiento_aria(formatPct(data.cumplimiento_pct, 1))}>
             <span style={{ width: `${animatedProgress}%` }} className={diffTone} />
           </div>
           <p>

@@ -36,12 +36,12 @@ async function downloadCsv(setLoading: (value: boolean) => void) {
 
 function AnimatedMetric({ value, digits = 0, suffix = '', delay = 0 }: { value: number; digits?: number; suffix?: string; delay?: number }) {
   const reducedMotion = useReducedMotion()
-  const animated = useAnimatedNumber(value, {
+  const { value: animated, ref } = useAnimatedNumber(value, {
     durationMs: 900 + delay,
     initialValue: 0,
     enabled: !reducedMotion,
   })
-  return <>{number(animated, digits)}{suffix}</>
+  return <span ref={ref}>{number(animated, digits)}{suffix}</span>
 }
 
 interface UnitRowProps {

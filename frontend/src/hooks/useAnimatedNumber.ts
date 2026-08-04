@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useInView } from './useInView'
 
 interface AnimatedNumberOptions {
   durationMs?: number
@@ -10,15 +11,29 @@ function easeOutCubic(value: number) {
   return 1 - Math.pow(1 - value, 3)
 }
 
-export function useAnimatedNumber(
+/**
+ * Counts from `initialValue` up to `target`, holding at `initialValue` until
+ * the returned `ref` scrolls into view (once) — attach `ref` to the element
+ * that should trigger the count-up.
+ */
+export function useAnimatedNumber<T extends HTMLElement = HTMLElement>(
   target: number,
   { durationMs = 720, enabled = true, initialValue }: AnimatedNumberOptions = {},
 ) {
+  const { ref, inView } = useInView<T>()
   const [value, setValue] = useState(initialValue ?? target)
   const previous = useRef(initialValue ?? target)
 
   useEffect(() => {
-    if (!enabled || durationMs <= 0) {
+    if (!enabled) {
+      previous.current = target
+      setValue(target)
+      return
+    }
+
+    if (!inView) return
+
+    if (durationMs <= 0) {
       previous.current = target
       setValue(target)
       return
@@ -46,7 +61,7 @@ export function useAnimatedNumber(
     return () => {
       cancelAnimationFrame(frame)
     }
-  }, [durationMs, enabled, target])
+  }, [durationMs, enabled, target, inView])
 
-  return value
+  return { value, ref }
 }

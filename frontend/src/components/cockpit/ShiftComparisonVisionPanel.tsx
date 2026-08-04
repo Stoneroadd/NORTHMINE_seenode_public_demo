@@ -27,6 +27,7 @@ import { getDetailModalAnchor, getDetailModalStyle, type DetailModalAnchor } fro
 import { useModuleT } from '../../i18n/useModuleT'
 import { cockpitT, type CockpitT } from '../../i18n/modules/cockpit'
 import { premiumPalette, useChartPaletteKey } from '../charts/premium/chartTheme'
+import { useInView } from '../../hooks/useInView'
 
 // Dia/noche son un codigo de color semantico fijo (no un accent de marca),
 // por eso usan su propio token --vision-night en vez de premiumPalette.amber
@@ -214,10 +215,12 @@ function shouldReduceMotion(): boolean {
   return typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
 }
 
-function useAnimatedNumber(value: number, animationId?: string, duration = 850): number {
-  const [displayValue, setDisplayValue] = useState(value)
+function useAnimatedNumber<T extends HTMLElement = HTMLElement>(value: number, animationId?: string, duration = 850) {
+  const { ref, inView } = useInView<T>()
+  const [displayValue, setDisplayValue] = useState(0)
 
   useEffect(() => {
+    if (!inView) return
     if (!value || shouldReduceMotion()) {
       setDisplayValue(value)
       return
@@ -233,9 +236,9 @@ function useAnimatedNumber(value: number, animationId?: string, duration = 850):
     setDisplayValue(0)
     frame = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(frame)
-  }, [animationId, duration, value])
+  }, [animationId, duration, value, inView])
 
-  return displayValue
+  return { value: displayValue, ref }
 }
 
 function AnimatedTons({
@@ -249,14 +252,14 @@ function AnimatedTons({
   className?: string
   as?: 'strong' | 'b'
 }) {
-  const animated = useAnimatedNumber(value, animationId)
+  const { value: animated, ref } = useAnimatedNumber<HTMLElement>(value, animationId)
   const Tag = as
-  return <Tag className={className}>{formatTons(animated)}</Tag>
+  return <Tag ref={ref} className={className}>{formatTons(animated)}</Tag>
 }
 
 function AnimatedCompactTons({ value, animationId }: { value: number; animationId?: string }) {
-  const animated = useAnimatedNumber(value, animationId, 760)
-  return <>{compactTons(animated)}</>
+  const { value: animated, ref } = useAnimatedNumber<HTMLSpanElement>(value, animationId, 760)
+  return <span ref={ref}>{compactTons(animated)}</span>
 }
 
 function barGradientStops(variant: string | undefined, fallback: string) {
