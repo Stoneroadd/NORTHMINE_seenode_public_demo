@@ -13,6 +13,8 @@ const MIME_TYPES = {
   ".gif": "image/gif",
   ".html": "text/html; charset=utf-8",
   ".ico": "image/x-icon",
+  ".jpeg": "image/jpeg",
+  ".jpg": "image/jpeg",
   ".js": "text/javascript; charset=utf-8",
   ".json": "application/json; charset=utf-8",
   ".png": "image/png",
@@ -66,6 +68,16 @@ createServer(async (request, response) => {
 
     const assetPath = safeAssetPath(request.url);
     if (assetPath && await sendFile(response, assetPath)) return;
+
+    // A request for something that looks like a static file (has an
+    // extension we know how to serve) but wasn't found on disk is a real
+    // 404, not a client-side route — falling through to index.html here
+    // would mask missing/renamed assets as a silent blank page instead of
+    // a loud, debuggable error.
+    if (assetPath && MIME_TYPES[extname(assetPath)]) {
+      sendJson(response, 404, { detail: "Asset not found", service: "northmine-frontend" });
+      return;
+    }
 
     const indexHtml = await readFile(join(BUILD_DIR, "index.html"));
     response.writeHead(200, {

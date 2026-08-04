@@ -622,19 +622,21 @@ export const FAST_DEMO_AVERIAS_INSIGHTS: AveriaInsights = {
 }
 
 const aerialFiles: AerialFileItem[] = [
-  { file_name: 'ortomosaico_demo_rajo_norte.tif', extension: 'tif', size_mb: 18.6, updated_at: DEMO_NOW, status: 'READY' },
-  { file_name: 'ortomosaico_demo_botadero.png', extension: 'png', size_mb: 4.2, updated_at: '2026-07-28T18:00:00-04:00', status: 'READY' },
+  { file_name: '20260731_AVA_DES_F1-F2_PCP.tif', extension: 'tif', size_mb: 104.01, updated_at: '2026-07-31T11:27:17', status: 'READY' },
+  { file_name: '20260730_AVA_DES_F1-F2_PCP.tif', extension: 'tif', size_mb: 105.46, updated_at: '2026-07-30T18:56:49', status: 'READY' },
+  { file_name: '20260729_AVA_DES_F1-F2_PCP.tif', extension: 'tif', size_mb: 111.47, updated_at: '2026-07-29T19:34:12', status: 'READY' },
+  { file_name: '20260729_AVA_DES_BOT_2420-2440_PCP.tif', extension: 'tif', size_mb: 252.17, updated_at: '2026-07-29T19:34:36', status: 'READY' },
 ]
 
 export const FAST_DEMO_AERIAL = {
   status: {
     source: 'fast-demo',
-    status: 'LISTO_DEMO',
+    status: 'READY',
     faena: 'MINA CHILE DEMO',
     latest_file: aerialFiles[0],
     files_count: aerialFiles.length,
-    viewer_status: 'Capa sintetica ligera',
-    heavy_tif_loaded: false,
+    viewer_status: 'Ortomosaicos reales',
+    heavy_tif_loaded: true,
     equipment_counts: { caex: 18, palas: 3, botaderos: 2, chancadores: 1 },
     generated_at: DEMO_NOW,
   } satisfies AerialStatus,
