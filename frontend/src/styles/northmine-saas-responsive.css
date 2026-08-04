@@ -41,6 +41,14 @@
     align-items: flex-start;
     text-align: left;
   }
+
+  .nm-saas .ns-header__logo {
+    width: 240px;
+  }
+
+  .nm-saas .ns-footer__logo {
+    width: 240px;
+  }
 }
 
 /* ---------------------------------------------------------------- *
@@ -72,10 +80,8 @@
     display: none;
   }
 
-  .nm-saas .ns-header__brand {
-    width: 150px;
-    min-width: 150px;
-    height: 44px;
+  .nm-saas .ns-header__logo {
+    width: 200px;
   }
 
   .nm-saas .ns-header__inner {
@@ -89,7 +95,7 @@
   }
 
   .nm-saas .ns-hero__title {
-    font-size: clamp(2.9rem, 13vw, 4.2rem);
+    font-size: clamp(2.5rem, 12vw, 4rem);
   }
 
   .nm-saas .ns-hero__backdrop-image {
@@ -161,7 +167,7 @@
   }
 
   .nm-saas .ns-mine-band__content h2 {
-    font-size: clamp(2.7rem, 12vw, 4rem);
+    font-size: clamp(2.4rem, 11vw, 3.8rem);
   }
 
   .nm-saas .ns-stage__frame {
@@ -217,6 +223,10 @@
   .nm-saas .ns-footer__inner {
     grid-template-columns: 1fr;
     gap: 28px;
+  }
+
+  .nm-saas .ns-footer__logo {
+    width: 200px;
   }
 
   .nm-saas .ns-footer__meta {
