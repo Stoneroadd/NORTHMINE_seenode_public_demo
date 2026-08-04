@@ -91,6 +91,20 @@ body,
   min-height: 100%;
 }
 
+html,
+body {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+img,
+video,
+svg,
+canvas {
+  max-width: 100%;
+}
+
 body {
   margin: 0;
   min-width: 320px;
@@ -9120,10 +9134,11 @@ input[type="date"] {
 
 .nm-brand-subtitle.brand-intelligence {
   justify-content: flex-start;
-  font-size: 0.82rem;
+  font-size: clamp(0.68rem, 2.6vw, 0.82rem);
   line-height: 1.35;
-  letter-spacing: 0.34em;
+  letter-spacing: clamp(0.14em, 1.4vw, 0.34em);
   color: var(--cyan);
+  white-space: nowrap;
 }
 
 .nm-brand-system-subtitle {

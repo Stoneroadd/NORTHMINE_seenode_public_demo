@@ -209,6 +209,7 @@
 
 @media (max-width: 900px) {
   .nm-request-layout {
+    grid-template-columns: 1fr;
     gap: 36px;
   }
 
