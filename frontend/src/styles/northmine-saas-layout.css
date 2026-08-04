@@ -14,7 +14,7 @@
   border: 1px solid transparent;
   border-radius: var(--ns-radius-sm);
   min-height: 44px;
-  transition: transform var(--ns-t-micro) var(--ns-ease), box-shadow var(--ns-t-micro) var(--ns-ease), border-color var(--ns-t-micro) var(--ns-ease);
+  transition: transform var(--ns-t-micro) var(--ns-ease), box-shadow var(--ns-t-micro) var(--ns-ease), border-color var(--ns-t-micro) var(--ns-ease), background var(--ns-t-micro) var(--ns-ease);
 }
 
 .ns-btn--sm {
@@ -24,13 +24,19 @@
 }
 
 .ns-btn--primary {
-  background: var(--ns-copper);
+  background: linear-gradient(155deg, var(--ns-amber) 0%, var(--ns-copper) 55%, var(--ns-copper-strong) 100%);
   color: #170f0a;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.32) inset, 0 10px 24px rgba(200, 121, 65, 0.2);
 }
 
 .ns-btn--primary:hover {
+  background: linear-gradient(155deg, var(--ns-amber) 0%, var(--ns-copper-strong) 65%, var(--ns-copper-strong) 100%);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.4) inset, 0 14px 32px rgba(200, 121, 65, 0.4);
+}
+
+.ns-btn--primary:active {
   background: var(--ns-copper-strong);
-  box-shadow: 0 8px 24px rgba(200, 121, 65, 0.28);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.15) inset, 0 4px 12px rgba(200, 121, 65, 0.28);
 }
 
 .ns-btn--ghost {
@@ -42,12 +48,22 @@
 .ns-btn--ghost:hover {
   border-color: var(--ns-copper);
   color: var(--ns-copper);
+  background: rgba(200, 121, 65, 0.08);
+}
+
+.ns-btn--ghost:active {
+  background: rgba(200, 121, 65, 0.15);
 }
 
 @media (hover: hover) and (pointer: fine) {
   .ns-btn:hover {
     transform: translateY(-1px);
   }
+}
+
+.ns-btn:active {
+  transform: scale(0.97);
+  transition-duration: 90ms;
 }
 
 /* ---------------------------------------------------------------- *
@@ -746,11 +762,11 @@
   font-size: 13px;
   cursor: pointer;
   min-height: 40px;
-  transition: border-color var(--ns-t-micro) var(--ns-ease), color var(--ns-t-micro) var(--ns-ease), background-color var(--ns-t-micro) var(--ns-ease);
+  transition: border-color var(--ns-t-micro) var(--ns-ease), color var(--ns-t-micro) var(--ns-ease), background-color var(--ns-t-micro) var(--ns-ease), transform var(--ns-t-micro) var(--ns-ease);
 }
 
 .ns-gallery__filter[aria-selected='true'] {
-  background: var(--ns-copper);
+  background: linear-gradient(155deg, var(--ns-amber) 0%, var(--ns-copper) 100%);
   border-color: var(--ns-copper);
   color: #170f0a;
 }
@@ -758,6 +774,12 @@
 .ns-gallery__filter:hover:not([aria-selected='true']) {
   border-color: var(--ns-border-strong);
   color: var(--ns-text);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.ns-gallery__filter:active {
+  transform: scale(0.96);
+  transition-duration: 90ms;
 }
 
 .ns-gallery__grid {
