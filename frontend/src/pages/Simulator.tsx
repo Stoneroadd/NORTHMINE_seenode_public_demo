@@ -311,7 +311,7 @@ export function Simulator() {
   }, [values, retryTick])
 
   // Animated production value
-  const animProd = useAnimatedNumber(result?.resultado.produccion_estimada ?? 0, {
+  const { value: animProd, ref: animProdRef } = useAnimatedNumber<HTMLDivElement>(result?.resultado.produccion_estimada ?? 0, {
     durationMs: prefersReduced ? 0 : 600,
   })
 
@@ -539,6 +539,7 @@ export function Simulator() {
               {t.produccion_estimada}
             </div>
             <div
+              ref={animProdRef}
               style={{
                 fontFamily: '"JetBrains Mono",monospace',
                 fontSize: 'clamp(2rem, 5vw, 3.5rem)',

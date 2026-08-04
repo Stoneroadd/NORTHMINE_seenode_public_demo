@@ -47,7 +47,7 @@ function parseNumericValue(value: string) {
 function AnimatedKpiValue({ value }: { value: string }) {
   const reducedMotion = usePrefersReducedMotion()
   const parsed = parseNumericValue(value)
-  const animated = useAnimatedNumber(parsed?.numeric ?? 0, {
+  const { value: animated, ref } = useAnimatedNumber(parsed?.numeric ?? 0, {
     enabled: Boolean(parsed) && !reducedMotion,
     initialValue: 0,
     durationMs: 900,
@@ -56,13 +56,13 @@ function AnimatedKpiValue({ value }: { value: string }) {
   if (!parsed) return <>{value}</>
 
   return (
-    <>
+    <span ref={ref}>
       {animated.toLocaleString('es-CL', {
         minimumFractionDigits: parsed.decimalDigits,
         maximumFractionDigits: parsed.decimalDigits,
       })}
       {parsed.suffix}
-    </>
+    </span>
   )
 }
 

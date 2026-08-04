@@ -38,7 +38,7 @@ function PremiumGaugeChartBase({
   const t = useModuleT(chartsT)
   const themeId = useChartPaletteKey()
   const resolvedLabel = label ?? t.complianceLabel
-  const animated = useAnimatedNumber(value, { durationMs: 900 })
+  const { value: animated } = useAnimatedNumber(value, { durationMs: 900 })
   const pulse = useDemoLivePulse({ enabled: value < 100, intervalMs: 2600, amplitude: 0.02 })
   const color = gaugeColor(value)
 

@@ -1,5 +1,6 @@
 import { LucideIcon } from 'lucide-react'
 import { useAnimatedNumber } from '../../hooks/useAnimatedNumber'
+import { usePrefersReducedMotion } from '../../hooks/usePrefersReducedMotion'
 import { CommandCard } from './CommandCard'
 import { StatusPill, type StatusTone } from './StatusPill'
 import { useModuleT } from '../../i18n/useModuleT'
@@ -27,7 +28,12 @@ export function InteractiveMetricCard({
   onHover,
 }: Props) {
   const t = useModuleT(uiT)
-  const animated = useAnimatedNumber(value, { durationMs: 760 })
+  const reducedMotion = usePrefersReducedMotion()
+  const { value: animated, ref } = useAnimatedNumber(value, {
+    durationMs: 760,
+    enabled: !reducedMotion,
+    initialValue: 0,
+  })
 
   return (
     <CommandCard state={tone === 'critical' ? 'critical' : tone === 'warning' ? 'warning' : tone === 'success' ? 'success' : 'normal'} onMouseEnter={onHover}>
@@ -36,7 +42,7 @@ export function InteractiveMetricCard({
         <StatusPill tone={tone}>{delta ?? t.live}</StatusPill>
       </div>
       <span className="interactive-metric-title">{title}</span>
-      <strong className="interactive-metric-value">
+      <strong className="interactive-metric-value" ref={ref}>
         {Math.round(animated).toLocaleString('es-CL')}{suffix}
       </strong>
       {subtitle && <span className="interactive-metric-subtitle">{subtitle}</span>}

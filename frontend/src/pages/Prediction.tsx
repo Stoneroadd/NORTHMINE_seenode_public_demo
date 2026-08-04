@@ -432,7 +432,7 @@ export function Prediction() {
     staleTime: 60_000,
   })
 
-  const animProd = useAnimatedNumber(query.data?.prediccion.produccion_actual ?? 0, {
+  const { value: animProd } = useAnimatedNumber(query.data?.prediccion.produccion_actual ?? 0, {
     durationMs: 700,
   })
 
