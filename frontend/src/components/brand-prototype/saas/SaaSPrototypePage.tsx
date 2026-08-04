@@ -1,3 +1,4 @@
+import { AmbientWash } from './AmbientWash'
 import { ScrollProgress } from './ScrollProgress'
 import { CursorGlow } from './CursorGlow'
 import { SaaSHeader } from './SaaSHeader'
@@ -21,6 +22,7 @@ import '../../../styles/northmine-saas-responsive.css'
 export function SaaSPrototypePage() {
   return (
     <div className="nm-saas">
+      <AmbientWash />
       <ScrollProgress />
       <CursorGlow />
       <SaaSHeader />

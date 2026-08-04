@@ -1,3 +1,4 @@
+export { useAmbientScrollWash } from './AmbientScrollWash'
 export { useHeroRevealTimeline } from './HeroRevealTimeline'
 export { useProductStageReveal } from './ProductStageReveal'
 export { mineralLightSweep } from './MineralLightSweep'

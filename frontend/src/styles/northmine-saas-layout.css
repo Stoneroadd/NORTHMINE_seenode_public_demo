@@ -51,6 +51,47 @@
 }
 
 /* ---------------------------------------------------------------- *
+ * Ambient wash — ambient background layer sitting behind every
+ * section (sections paint no background of their own, so this shows
+ * through). Fixed, never intercepts pointer events.
+ * ---------------------------------------------------------------- */
+.ns-ambient {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.ns-ambient__blob {
+  position: absolute;
+  width: min(56vw, 820px);
+  height: min(56vw, 820px);
+  border-radius: 50%;
+  filter: blur(92px);
+  opacity: 0.13;
+  will-change: transform;
+}
+
+.ns-ambient__blob--copper {
+  top: -14%;
+  left: -12%;
+  background: radial-gradient(circle, var(--ns-copper), transparent 70%);
+}
+
+.ns-ambient__blob--amber {
+  bottom: -18%;
+  right: -10%;
+  background: radial-gradient(circle, var(--ns-amber), transparent 70%);
+}
+
+@media (max-width: 640px) {
+  .ns-ambient__blob {
+    opacity: 0.09;
+  }
+}
+
+/* ---------------------------------------------------------------- *
  * Scroll progress
  * ---------------------------------------------------------------- */
 .ns-scroll-progress {
@@ -152,14 +193,33 @@
 }
 
 .ns-header__nav a {
+  position: relative;
   text-decoration: none;
   color: var(--ns-text-secondary);
+  padding-bottom: 3px;
   transition: color var(--ns-t-micro) var(--ns-ease);
+}
+
+.ns-header__nav a::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  right: 50%;
+  bottom: 0;
+  height: 1px;
+  background: var(--ns-copper);
+  transition: left var(--ns-t-enter) var(--ns-ease), right var(--ns-t-enter) var(--ns-ease);
 }
 
 .ns-header__nav a:hover,
 .ns-header__nav a:focus-visible {
   color: var(--ns-text);
+}
+
+.ns-header__nav a:hover::after,
+.ns-header__nav a:focus-visible::after {
+  left: 0;
+  right: 0;
 }
 
 .ns-header__actions {
@@ -446,6 +506,13 @@
   padding: 7px 14px;
   font-size: 13px;
   color: var(--ns-text-secondary);
+  background: rgba(255, 255, 255, 0.03);
+  transition: border-color var(--ns-t-micro) var(--ns-ease), background-color var(--ns-t-micro) var(--ns-ease);
+}
+
+.ns-trust__ticker span:hover {
+  border-color: var(--ns-border-strong);
+  background: rgba(200, 121, 65, 0.08);
 }
 
 .ns-trust__stats {
@@ -592,7 +659,9 @@
   grid-row: 1 / -1;
   border: 1px solid var(--ns-border);
   border-radius: var(--ns-radius-lg);
-  background: var(--ns-surface);
+  background: rgba(21, 24, 22, 0.55);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   padding: 32px;
   display: flex;
   flex-direction: column;
@@ -604,7 +673,9 @@
 .ns-metrics__side {
   border: 1px solid var(--ns-border);
   border-radius: var(--ns-radius-md);
-  background: var(--ns-surface-raised);
+  background: rgba(25, 29, 26, 0.6);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   padding: 20px;
   display: flex;
   flex-direction: column;
@@ -668,7 +739,7 @@
 
 .ns-gallery__filter {
   border: 1px solid var(--ns-border);
-  background: transparent;
+  background: rgba(255, 255, 255, 0.02);
   color: var(--ns-text-secondary);
   padding: 9px 16px;
   border-radius: 999px;
@@ -774,6 +845,14 @@
   filter: grayscale(0.25) sepia(0.16) saturate(1.2) contrast(1.1) brightness(0.8);
 }
 
+.ns-terrain__frame {
+  transition: border-color var(--ns-t-micro) var(--ns-ease), box-shadow var(--ns-t-micro) var(--ns-ease);
+}
+
+.group:hover .ns-terrain__frame {
+  box-shadow: 0 0 0 1px rgba(200, 121, 65, 0.35), 0 24px 56px rgba(0, 0, 0, 0.55);
+}
+
 .ns-terrain__frame::after {
   content: '';
   position: absolute;
@@ -815,6 +894,14 @@
   padding: 28px;
   border-right: 1px solid var(--ns-border);
   border-bottom: 1px solid var(--ns-border);
+  background: transparent;
+  transition: background-color var(--ns-t-micro) var(--ns-ease);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .ns-benefits__list li:hover {
+    background: rgba(200, 121, 65, 0.045);
+  }
 }
 
 .ns-benefits__number {
@@ -934,8 +1021,15 @@
 }
 
 .ns-security__grid > div {
-  background: var(--ns-black);
+  background: rgba(7, 8, 7, 0.65);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   padding: 20px;
+  transition: background-color var(--ns-t-micro) var(--ns-ease);
+}
+
+.ns-security__grid > div:hover {
+  background: rgba(200, 121, 65, 0.05);
 }
 
 .ns-security__grid dt {

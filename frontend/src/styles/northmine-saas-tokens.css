@@ -6,6 +6,13 @@
  */
 
 .nm-saas {
+  /* position + z-index (not just position) so a position:fixed,
+     z-index:-1 descendant (.ns-ambient) gets its own stacking context to
+     sit inside — otherwise the negative z-index escapes to the document
+     root and can end up painted behind the page's own background. */
+  position: relative;
+  z-index: 0;
+
   /* Base */
   --ns-black: #070807;
   --ns-carbon: #0b0d0c;
