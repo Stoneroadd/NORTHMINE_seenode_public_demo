@@ -79,10 +79,15 @@
 
   .nm-saas .ns-stage {
     margin-bottom: -48px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-inline: contain;
   }
 
   .nm-saas .ns-stage__frame {
     border-radius: var(--ns-radius-md) var(--ns-radius-md) 0 0;
+    width: 640px;
+    max-width: none;
   }
 
   .nm-saas .ns-trust {
