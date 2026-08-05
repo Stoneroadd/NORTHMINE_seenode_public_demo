@@ -37,6 +37,44 @@
   --nm-shadow-glow-red: 0 0 18px color-mix(in srgb, var(--red) 18%, transparent);
 }
 
+.lang-switcher {
+  --lang-border: rgba(255, 255, 255, 0.16);
+  --lang-text: rgba(255, 255, 255, 0.72);
+  --lang-hover: #ffffff;
+  --lang-active-bg: rgba(255, 255, 255, 0.9);
+  --lang-active-text: #0b0d0e;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--lang-border);
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.lang-switcher button {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--lang-text);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  line-height: 1;
+  padding: 6px 8px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+.lang-switcher button:hover {
+  color: var(--lang-hover);
+}
+
+.lang-switcher button.is-active {
+  background: var(--lang-active-bg);
+  color: var(--lang-active-text);
+}
+
 .nmcp-shell {
   /* Cockpit operacional: hereda la apariencia activa (Startup Intelligence,
      Oscuro Negro, Light, Futur, Minimal, Carbon) en vez de un negro/grafito

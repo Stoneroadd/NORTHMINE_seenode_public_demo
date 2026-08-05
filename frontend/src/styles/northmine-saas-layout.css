@@ -210,6 +210,23 @@
   color: var(--ns-text);
 }
 
+.ns-header .lang-switcher {
+  border-color: var(--ns-border);
+}
+
+.ns-header .lang-switcher button {
+  color: var(--ns-text-muted);
+}
+
+.ns-header .lang-switcher button:hover {
+  color: var(--ns-text);
+}
+
+.ns-header .lang-switcher button.is-active {
+  background: var(--ns-copper);
+  color: var(--ns-black);
+}
+
 .ns-header__menu-button {
   display: none;
   width: 44px;
@@ -255,6 +272,11 @@
 .ns-header__mobile-nav .ns-btn {
   margin-top: 8px;
   justify-content: center;
+}
+
+.ns-header__mobile-nav .lang-switcher {
+  align-self: flex-start;
+  margin: 10px 4px 14px;
 }
 
 /* ---------------------------------------------------------------- *

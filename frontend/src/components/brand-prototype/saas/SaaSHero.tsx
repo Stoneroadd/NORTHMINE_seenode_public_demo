@@ -1,7 +1,10 @@
 import { PitContourField } from '../../landing/PitContourField'
 import { useHeroRevealTimeline } from '../../../lib/animation/effects'
+import { useModuleT } from '../../../i18n/useModuleT'
+import { landingT } from '../../../i18n/modules/landing'
 
 export function SaaSHero() {
+  const t = useModuleT(landingT)
   const scope = useHeroRevealTimeline<HTMLElement>()
 
   return (
@@ -26,26 +29,25 @@ export function SaaSHero() {
       <div className="ns-hero__content">
         <p className="ns-hero__badge" data-hero-badge>
           <span className="ns-hero__badge-dot" />
-          Inteligencia operacional para minería
+          {t.hero.badge}
         </p>
 
         <h1 id="ns-hero-title" className="ns-hero__title" data-hero-title>
-          Observe la operación completa.
+          {t.hero.title1}
           <br />
-          Decida con contexto.
+          {t.hero.title2}
         </h1>
 
         <p className="ns-hero__lead" data-hero-lead>
-          NORTHMINE es un Command Center minero que transforma datos dispersos
-          en decisiones priorizadas, explicables y trazables durante el turno.
+          {t.hero.lead}
         </p>
 
         <div className="ns-hero__actions" data-hero-actions>
           <a className="ns-btn ns-btn--primary" href="/solicitar-demo">
-            Solicitar acceso al demo
+            {t.hero.ctaDemo}
           </a>
           <a className="ns-btn ns-btn--ghost" href="#modulos">
-            Explorar la plataforma
+            {t.hero.ctaExplorar}
           </a>
         </div>
       </div>

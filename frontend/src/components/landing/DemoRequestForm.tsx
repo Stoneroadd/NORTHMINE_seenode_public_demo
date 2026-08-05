@@ -7,22 +7,8 @@ import {
   type DemoAccessInterest,
   type DemoAccessRequestPayload,
 } from '../../types/demoAccess'
-
-const countries = [
-  'Argentina',
-  'Australia',
-  'Bolivia',
-  'Brasil',
-  'Canada',
-  'Chile',
-  'Colombia',
-  'Ecuador',
-  'Estados Unidos',
-  'Mexico',
-  'Peru',
-  'Sudafrica',
-  'Otro',
-] as const
+import { useModuleT } from '../../i18n/useModuleT'
+import { publicPagesT } from '../../i18n/modules/publicPages'
 
 const initialForm: DemoAccessRequestPayload = {
   first_name: '',
@@ -50,26 +36,12 @@ function cleanText(value: string) {
   return value.normalize('NFKC').replace(/[\u0000-\u001f\u007f]/g, ' ').trim()
 }
 
-function validate(form: DemoAccessRequestPayload): FormErrors {
-  const errors: FormErrors = {}
-  if (cleanText(form.first_name).length < 2) errors.first_name = 'Ingresa un nombre de al menos 2 caracteres.'
-  if (cleanText(form.last_name).length < 2) errors.last_name = 'Ingresa un apellido de al menos 2 caracteres.'
-  if (!emailPattern.test(form.email.trim())) errors.email = 'Ingresa un correo valido.'
-  if (cleanText(form.company).length < 2) errors.company = 'Ingresa el nombre de la empresa.'
-  if (cleanText(form.role).length < 2) errors.role = 'Indica tu cargo o funcion.'
-  if (!form.country) errors.country = 'Selecciona un pais.'
-  if (form.interests.length === 0) errors.interests = 'Selecciona al menos un interes.'
-  if (!form.consent_accepted) errors.consent_accepted = 'Debes aceptar el tratamiento de estos datos.'
-  if ((form.message?.length ?? 0) > 1200) errors.message = 'El mensaje no puede superar 1200 caracteres.'
-  if ((form.phone?.length ?? 0) > 40) errors.phone = 'El telefono no puede superar 40 caracteres.'
-  return errors
-}
-
 function inputErrorId(field: string) {
   return `demo-request-${field}-error`
 }
 
 export function DemoRequestForm() {
+  const t = useModuleT(publicPagesT)
   const [form, setForm] = useState<DemoAccessRequestPayload>(initialForm)
   const [errors, setErrors] = useState<FormErrors>({})
   const [submitting, setSubmitting] = useState(false)
@@ -80,6 +52,21 @@ export function DemoRequestForm() {
     () => Object.entries(errors).filter(([field]) => field !== 'form'),
     [errors],
   )
+
+  const validate = (form: DemoAccessRequestPayload): FormErrors => {
+    const errors: FormErrors = {}
+    if (cleanText(form.first_name).length < 2) errors.first_name = t.requestForm.errFirstName
+    if (cleanText(form.last_name).length < 2) errors.last_name = t.requestForm.errLastName
+    if (!emailPattern.test(form.email.trim())) errors.email = t.requestForm.errEmail
+    if (cleanText(form.company).length < 2) errors.company = t.requestForm.errCompany
+    if (cleanText(form.role).length < 2) errors.role = t.requestForm.errRole
+    if (!form.country) errors.country = t.requestForm.errCountry
+    if (form.interests.length === 0) errors.interests = t.requestForm.errInterests
+    if (!form.consent_accepted) errors.consent_accepted = t.requestForm.errConsent
+    if ((form.message?.length ?? 0) > 1200) errors.message = t.requestForm.errMessageLen
+    if ((form.phone?.length ?? 0) > 40) errors.phone = t.requestForm.errPhoneLen
+    return errors
+  }
 
   const setText = (field: keyof DemoAccessRequestPayload, value: string) => {
     setForm((current) => ({ ...current, [field]: value }))
@@ -135,16 +122,16 @@ export function DemoRequestForm() {
       sessionStorage.setItem('northmine.demo-access.reference', receipt.reference)
       window.location.assign('/solicitud-recibida')
     } catch (error) {
-      let message = 'No fue posible enviar la solicitud. Revisa tu conexion e intenta nuevamente.'
+      let message = t.requestForm.errGeneric
       if (error instanceof ApiError) {
         if (error.status === 429) {
-          message = 'Se alcanzo el limite temporal de solicitudes. Intenta nuevamente mas tarde.'
+          message = t.requestForm.errApi429
         } else if (error.status === 422) {
-          message = 'La API rechazo uno o mas campos. Revisa los datos ingresados.'
+          message = t.requestForm.errApi422
         } else if (error.status === 503) {
-          message = 'Las solicitudes estan temporalmente no disponibles. Tus datos no fueron guardados; intenta nuevamente mas tarde.'
+          message = t.requestForm.errApi503
         } else if (error.status >= 500) {
-          message = 'El servicio de solicitudes no esta disponible en este momento.'
+          message = t.requestForm.errApi500
         }
       }
       const nextErrors = { form: message }
@@ -172,7 +159,7 @@ export function DemoRequestForm() {
           <AlertCircle size={20} aria-hidden="true" />
           <div>
             <h2 id="demo-request-errors-title">
-              {errors.form ? 'No se pudo enviar la solicitud' : 'Revisa los campos indicados'}
+              {errors.form ? t.requestForm.summaryError : t.requestForm.summaryFields}
             </h2>
             {errors.form && <p>{errors.form}</p>}
             {errorEntries.length > 0 && (
@@ -187,11 +174,11 @@ export function DemoRequestForm() {
       )}
 
       <fieldset className="nm-form-section">
-        <legend>Datos de contacto</legend>
-        <p>Usaremos esta informacion exclusivamente para revisar tu solicitud de demostracion.</p>
+        <legend>{t.requestForm.contactLegend}</legend>
+        <p>{t.requestForm.contactHint}</p>
         <div className="nm-form-grid">
           <label>
-            <span>Nombre <b aria-hidden="true">*</b></span>
+            <span>{t.requestForm.firstName} <b aria-hidden="true">*</b></span>
             <input
               ref={(node) => { fieldRefs.current.first_name = node }}
               value={form.first_name}
@@ -205,7 +192,7 @@ export function DemoRequestForm() {
             {errors.first_name && <small id={inputErrorId('first_name')}>{errors.first_name}</small>}
           </label>
           <label>
-            <span>Apellido <b aria-hidden="true">*</b></span>
+            <span>{t.requestForm.lastName} <b aria-hidden="true">*</b></span>
             <input
               ref={(node) => { fieldRefs.current.last_name = node }}
               value={form.last_name}
@@ -219,7 +206,7 @@ export function DemoRequestForm() {
             {errors.last_name && <small id={inputErrorId('last_name')}>{errors.last_name}</small>}
           </label>
           <label>
-            <span>Correo <b aria-hidden="true">*</b></span>
+            <span>{t.requestForm.email} <b aria-hidden="true">*</b></span>
             <input
               ref={(node) => { fieldRefs.current.email = node }}
               value={form.email}
@@ -235,7 +222,7 @@ export function DemoRequestForm() {
             {errors.email && <small id={inputErrorId('email')}>{errors.email}</small>}
           </label>
           <label>
-            <span>Telefono <em>opcional</em></span>
+            <span>{t.requestForm.phone} <em>{t.requestForm.optional}</em></span>
             <input
               ref={(node) => { fieldRefs.current.phone = node }}
               value={form.phone}
@@ -253,11 +240,11 @@ export function DemoRequestForm() {
       </fieldset>
 
       <fieldset className="nm-form-section">
-        <legend>Contexto profesional</legend>
-        <p>No solicites ni incluyas credenciales, servidores o datos productivos confidenciales.</p>
+        <legend>{t.requestForm.professionalLegend}</legend>
+        <p>{t.requestForm.professionalHint}</p>
         <div className="nm-form-grid">
           <label>
-            <span>Empresa <b aria-hidden="true">*</b></span>
+            <span>{t.requestForm.company} <b aria-hidden="true">*</b></span>
             <input
               ref={(node) => { fieldRefs.current.company = node }}
               value={form.company}
@@ -271,7 +258,7 @@ export function DemoRequestForm() {
             {errors.company && <small id={inputErrorId('company')}>{errors.company}</small>}
           </label>
           <label>
-            <span>Cargo o funcion <b aria-hidden="true">*</b></span>
+            <span>{t.requestForm.role} <b aria-hidden="true">*</b></span>
             <input
               ref={(node) => { fieldRefs.current.role = node }}
               value={form.role}
@@ -285,7 +272,7 @@ export function DemoRequestForm() {
             {errors.role && <small id={inputErrorId('role')}>{errors.role}</small>}
           </label>
           <label>
-            <span>Pais <b aria-hidden="true">*</b></span>
+            <span>{t.requestForm.country} <b aria-hidden="true">*</b></span>
             <select
               ref={(node) => { fieldRefs.current.country = node }}
               value={form.country}
@@ -295,45 +282,39 @@ export function DemoRequestForm() {
               aria-invalid={Boolean(errors.country)}
               aria-describedby={describedBy('country')}
             >
-              <option value="">Selecciona un pais</option>
-              {countries.map((country) => <option key={country}>{country}</option>)}
+              <option value="">{t.requestForm.selectCountry}</option>
+              {t.requestForm.countries.map((country) => <option key={country}>{country}</option>)}
             </select>
             {errors.country && <small id={inputErrorId('country')}>{errors.country}</small>}
           </label>
           <label>
-            <span>Tipo de operacion <em>opcional</em></span>
+            <span>{t.requestForm.operationType} <em>{t.requestForm.optional}</em></span>
             <select
               value={form.operation_type}
               onChange={(event) => setText('operation_type', event.target.value)}
             >
-              <option value="">No especificado</option>
-              <option>Mineria a cielo abierto</option>
-              <option>Mineria subterranea</option>
-              <option>Servicios mineros</option>
-              <option>Tecnologia e integracion</option>
-              <option>Otro</option>
+              {t.requestForm.operationOptions.map((option, index) => (
+                <option key={option} value={index === 0 ? '' : option}>{option}</option>
+              ))}
             </select>
           </label>
           <label>
-            <span>Tamano aproximado de flota <em>opcional</em></span>
+            <span>{t.requestForm.fleetSize} <em>{t.requestForm.optional}</em></span>
             <select
               value={form.fleet_size_range}
               onChange={(event) => setText('fleet_size_range', event.target.value)}
             >
-              <option value="">No especificado</option>
-              <option>1-10 equipos</option>
-              <option>11-30 equipos</option>
-              <option>31-75 equipos</option>
-              <option>76-150 equipos</option>
-              <option>Mas de 150 equipos</option>
+              {t.requestForm.fleetOptions.map((option, index) => (
+                <option key={option} value={index === 0 ? '' : option}>{option}</option>
+              ))}
             </select>
           </label>
         </div>
       </fieldset>
 
       <fieldset className="nm-form-section">
-        <legend>Que necesitas evaluar</legend>
-        <p>Selecciona una o mas capacidades.</p>
+        <legend>{t.requestForm.interestsLegend}</legend>
+        <p>{t.requestForm.interestsHint}</p>
         <div
           className="nm-interest-grid"
           aria-invalid={Boolean(errors.interests)}
@@ -357,9 +338,9 @@ export function DemoRequestForm() {
       </fieldset>
 
       <fieldset className="nm-form-section">
-        <legend>Contexto adicional</legend>
+        <legend>{t.requestForm.additionalLegend}</legend>
         <label className="nm-form-field--wide">
-          <span>Mensaje <em>opcional</em></span>
+          <span>{t.requestForm.message} <em>{t.requestForm.optional}</em></span>
           <textarea
             ref={(node) => { fieldRefs.current.message = node }}
             value={form.message}
@@ -370,7 +351,7 @@ export function DemoRequestForm() {
             aria-describedby={`demo-request-message-help${errors.message ? ` ${inputErrorId('message')}` : ''}`}
           />
           <span id="demo-request-message-help" className="nm-field-help">
-            Describe el flujo o modulo que deseas revisar. No incluyas informacion confidencial.
+            {t.requestForm.messageHelp}
           </span>
           {errors.message && <small id={inputErrorId('message')}>{errors.message}</small>}
         </label>
@@ -378,7 +359,7 @@ export function DemoRequestForm() {
 
       <div className="nm-honeypot">
         <label>
-          Sitio web. Deja este campo vacio.
+          {t.requestForm.honeypot}
           <input
             value={form.website}
             onChange={(event) => setText('website', event.target.value)}
@@ -405,8 +386,8 @@ export function DemoRequestForm() {
             aria-describedby={describedBy('consent_accepted')}
           />
           <span>
-            Acepto que estos datos se utilicen para revisar y responder mi solicitud de demostracion.
-            Consulte la <a href="/privacy">politica de privacidad</a>.
+            {t.requestForm.consentBefore}{' '}
+            {t.requestForm.consentAfter} <a href={t.requestForm.privacyLink}>{t.requestForm.consentLink}</a>.
           </span>
         </label>
         {errors.consent_accepted && (
@@ -415,17 +396,17 @@ export function DemoRequestForm() {
       </div>
 
       <div className="nm-form-submit">
-        <p>La solicitud sera revisada. El envio no crea una cuenta ni garantiza aprobacion inmediata.</p>
+        <p>{t.requestForm.submitHint}</p>
         <button className="nm-public-button nm-public-button--primary" type="submit" disabled={submitting}>
           {submitting ? (
-            <><LoaderCircle className="nm-form-spinner" size={18} aria-hidden="true" /> Enviando solicitud</>
+            <><LoaderCircle className="nm-form-spinner" size={18} aria-hidden="true" /> {t.requestForm.submitting}</>
           ) : (
-            <>Enviar solicitud <ArrowRight size={18} aria-hidden="true" /></>
+            <>{t.requestForm.submitLabel} <ArrowRight size={18} aria-hidden="true" /></>
           )}
         </button>
       </div>
       <div className="nm-form-live" aria-live="polite">
-        {submitting ? 'Enviando solicitud. No cierres esta pagina.' : ''}
+        {submitting ? t.requestForm.liveSubmitting : ''}
       </div>
     </form>
   )

@@ -2,29 +2,30 @@ import { DemoRequestForm } from '../components/landing/DemoRequestForm'
 import { PitContourField } from '../components/landing/PitContourField'
 import { PublicPageMeta } from '../components/landing/PublicPageMeta'
 import { PublicPageShell } from '../components/landing/PublicPageShell'
+import { useModuleT } from '../i18n/useModuleT'
+import { publicPagesT } from '../i18n/modules/publicPages'
 
 export function DemoRequestPage() {
+  const t = useModuleT(publicPagesT)
   return (
     <PublicPageShell compactHeader>
       <PublicPageMeta
-        title="Solicitar acceso al demo | NORTHMINE Intelligence"
-        description="Solicita acceso controlado al demo interactivo de NORTHMINE Intelligence con datos operacionales sinteticos."
+        title={t.requestPage.metaTitle}
+        description={t.requestPage.metaDescription}
         robots="noindex,follow"
       />
       <main id="contenido" className="nm-public-interior">
         <div className="nm-public-shell nm-request-layout">
           <aside className="nm-request-intro">
-            <p className="nm-public-eyebrow">Solicitud de acceso</p>
-            <h1>Evalua NORTHMINE en un entorno controlado.</h1>
+            <p className="nm-public-eyebrow">{t.requestPage.eyebrow}</p>
+            <h1>{t.requestPage.title}</h1>
             <p>
-              Completa el formulario para que podamos revisar tu contexto y
-              habilitar el acceso adecuado. No se solicitan credenciales ni
-              informacion operacional sensible.
+              {t.requestPage.body}
             </p>
             <dl>
-              <div><dt>Entorno</dt><dd>Demo con datos sinteticos</dd></div>
-              <div><dt>Revision</dt><dd>Manual, antes de habilitar acceso</dd></div>
-              <div><dt>Integraciones</dt><dd>Disponibles solo en entornos privados</dd></div>
+              {t.requestPage.facts.map((fact) => (
+                <div key={fact.label}><dt>{fact.label}</dt><dd>{fact.value}</dd></div>
+              ))}
             </dl>
             <div className="nm-request-intro__contours" aria-hidden="true">
               <PitContourField />
@@ -32,9 +33,9 @@ export function DemoRequestPage() {
           </aside>
           <section className="nm-request-form-panel" aria-labelledby="request-form-title">
             <header>
-              <span>Paso unico</span>
-              <h2 id="request-form-title">Informacion para la demostracion</h2>
-              <p>Los campos marcados con * son obligatorios.</p>
+              <span>{t.requestPage.stepLabel}</span>
+              <h2 id="request-form-title">{t.requestPage.formTitle}</h2>
+              <p>{t.requestPage.formHint}</p>
             </header>
             <DemoRequestForm />
           </section>

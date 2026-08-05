@@ -1,6 +1,8 @@
 import { lazy, Suspense, useEffect } from 'react'
 import { OperationalFontLoader } from './components/landing/OperationalFontLoader'
 import { PublicPageMeta } from './components/landing/PublicPageMeta'
+import { useModuleT } from './i18n/useModuleT'
+import { publicPagesT } from './i18n/modules/publicPages'
 
 const OperationalApplication = lazy(() => import('./App'))
 const DemoLandingPage = lazy(() => (
@@ -45,11 +47,12 @@ function RedirectToCockpit() {
 }
 
 function DemoAccessLoginRoute() {
+  const t = useModuleT(publicPagesT)
   return (
     <>
       <PublicPageMeta
-        title="Acceso al demo | NORTHMINE Intelligence"
-        description="Acceso protegido al demo interactivo de NORTHMINE Intelligence."
+        title={t.meta.access.title}
+        description={t.meta.access.description}
         robots="noindex,nofollow"
       />
       <OperationalApplication />

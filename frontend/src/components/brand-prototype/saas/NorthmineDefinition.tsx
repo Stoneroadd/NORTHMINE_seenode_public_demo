@@ -1,8 +1,9 @@
 import { useSectionReveal } from '../../../lib/animation/effects'
-
-const decisionSequence = ['Estado', 'Brecha', 'Causa', 'Riesgo', 'Acción', 'Resultado']
+import { useModuleT } from '../../../i18n/useModuleT'
+import { landingT } from '../../../i18n/modules/landing'
 
 export function NorthmineDefinition() {
+  const t = useModuleT(landingT)
   const scope = useSectionReveal<HTMLElement>({
     targets: '[data-definition-reveal]',
     distance: 18,
@@ -14,24 +15,21 @@ export function NorthmineDefinition() {
     <section ref={scope} className="ns-definition" id="propuesta" aria-labelledby="ns-definition-title">
       <div className="ns-saas__shell ns-definition__grid">
         <div className="ns-definition__copy" data-definition-reveal>
-          <p className="mono-label">Qué es NORTHMINE</p>
+          <p className="mono-label">{t.definition.kicker}</p>
           <h2 id="ns-definition-title">
-            Una capa de decisión sobre sus sistemas operacionales.
+            {t.definition.title}
           </h2>
           <p>
-            NORTHMINE es un Command Center para minería a cielo abierto. Integra
-            producción, carguío, transporte, mantenimiento, riesgos y planificación
-            en una lectura operacional común.
+            {t.definition.body}
           </p>
         </div>
 
         <div className="ns-definition__system" data-definition-reveal>
           <p>
-            Convierte datos dispersos en decisiones priorizadas, explicables y
-            trazables dentro del turno.
+            {t.definition.system}
           </p>
-          <ol aria-label="Secuencia de decisión operacional">
-            {decisionSequence.map((step, index) => (
+          <ol aria-label={t.definition.ariaSequence}>
+            {t.definition.sequence.map((step, index) => (
               <li key={step}>
                 <span className="mono-label">{String(index + 1).padStart(2, '0')}</span>
                 <strong>{step}</strong>
@@ -39,8 +37,8 @@ export function NorthmineDefinition() {
             ))}
           </ol>
           <div className="ns-definition__boundary">
-            <span>Integra</span>
-            <p>No reemplaza despacho, mantenimiento, SQL ni los sistemas fuente existentes.</p>
+            <span>{t.definition.boundaryLabel}</span>
+            <p>{t.definition.boundary}</p>
           </div>
         </div>
       </div>

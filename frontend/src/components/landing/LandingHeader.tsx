@@ -1,15 +1,19 @@
 import { useEffect, useState } from 'react'
 import { ArrowRight, Menu, X } from 'lucide-react'
 import { NorthmineLogo } from '../brand/NorthmineLogo'
-
-const navigation = [
-  { label: 'Capacidades', href: '/#capacidades' },
-  { label: 'Como funciona', href: '/#flujo' },
-  { label: 'Demo', href: '/#demo' },
-]
+import { useModuleT } from '../../i18n/useModuleT'
+import { publicPagesT } from '../../i18n/modules/publicPages'
+import { LanguageSwitcher } from '../common/LanguageSwitcher'
 
 export function LandingHeader() {
+  const t = useModuleT(publicPagesT)
   const [open, setOpen] = useState(false)
+
+  const navigation = [
+    { label: t.landingHeader.nav.capacidades, href: '/#capacidades' },
+    { label: t.landingHeader.nav.flujo, href: '/#flujo' },
+    { label: t.landingHeader.nav.demo, href: '/#demo' },
+  ]
 
   useEffect(() => {
     if (!open) return undefined
@@ -25,14 +29,14 @@ export function LandingHeader() {
   return (
     <header className="nm-public-header">
       <a className="nm-skip-link" href="#contenido">
-        Saltar al contenido
+        {t.landingHeader.skip}
       </a>
       <div className="nm-public-header__inner">
-        <a className="nm-public-brand" href="/" aria-label="NORTHMINE Intelligence, inicio">
+        <a className="nm-public-brand" href="/" aria-label={t.landingHeader.ariaBrand}>
           <NorthmineLogo
             className="nm-public-brand__logo"
             variant="horizontal"
-            alt="NORTHMINE Intelligence Hub"
+            alt={t.landingHeader.brandAlt}
           />
         </a>
 
@@ -41,7 +45,7 @@ export function LandingHeader() {
           type="button"
           aria-expanded={open}
           aria-controls="public-navigation"
-          aria-label={open ? 'Cerrar navegacion' : 'Abrir navegacion'}
+          aria-label={open ? t.landingHeader.ariaCerrar : t.landingHeader.ariaAbrir}
           onClick={() => setOpen((value) => !value)}
         >
           {open ? <X size={20} /> : <Menu size={20} />}
@@ -50,19 +54,20 @@ export function LandingHeader() {
         <nav
           id="public-navigation"
           className={`nm-public-navigation${open ? ' is-open' : ''}`}
-          aria-label="Navegacion principal"
+          aria-label={t.landingHeader.ariaNav}
         >
-          <span className="nm-public-navigation__status">Demo publico</span>
+          <LanguageSwitcher ariaLabel={t.switcherAria} />
+          <span className="nm-public-navigation__status">{t.landingHeader.status}</span>
           {navigation.map((item) => (
             <a key={item.href} href={item.href} onClick={() => setOpen(false)}>
               {item.label}
             </a>
           ))}
           <a className="nm-public-navigation__login" href="/acceso-demo">
-            Ya tengo acceso
+            {t.landingHeader.accesoTengo}
           </a>
           <a className="nm-public-navigation__cta" href="/solicitar-demo">
-            Solicitar acceso <ArrowRight size={16} aria-hidden="true" />
+            {t.landingHeader.cta} <ArrowRight size={16} aria-hidden="true" />
           </a>
         </nav>
       </div>

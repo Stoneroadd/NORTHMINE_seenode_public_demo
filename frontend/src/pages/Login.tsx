@@ -12,6 +12,7 @@ import { useT } from '../store'
 import { settingsService } from '../services/settingsService'
 import { useModuleT } from '../i18n/useModuleT'
 import { loginT } from '../i18n/modules/login'
+import { publicPagesT } from '../i18n/modules/publicPages'
 import '../styles/demo-brand-system.css'
 import '../styles/demo-access-entry.css'
 
@@ -22,6 +23,7 @@ interface Props {
 export function Login({ onAuthenticated }: Props) {
   const t = useT()
   const tl = useModuleT(loginT)
+  const tp = useModuleT(publicPagesT)
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -67,7 +69,7 @@ export function Login({ onAuthenticated }: Props) {
     <main className={`login-page nm-login-shell nm-responsive-compact${isPublicDemoAccess ? ' nm-demo-entry' : ''}`}>
       {isPublicDemoAccess && (
         <a className="nm-demo-entry__return" href="/">
-          Volver a NORTHMINE Intelligence
+          {tp.login.back}
         </a>
       )}
       <CommandCenterBackground />
@@ -92,7 +94,7 @@ export function Login({ onAuthenticated }: Props) {
           <BrandHero />
           {isPublicDemoAccess && (
             <p className="nm-demo-entry__disclosure">
-              Demo publico con datos sinteticos. Acceso individual y revisado.
+              {tp.login.disclosure}
             </p>
           )}
 

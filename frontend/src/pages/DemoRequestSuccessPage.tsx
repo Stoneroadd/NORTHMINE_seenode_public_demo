@@ -2,15 +2,18 @@ import { CheckCircle2, LogIn } from 'lucide-react'
 import { PitContourField } from '../components/landing/PitContourField'
 import { PublicPageMeta } from '../components/landing/PublicPageMeta'
 import { PublicPageShell } from '../components/landing/PublicPageShell'
+import { useModuleT } from '../i18n/useModuleT'
+import { publicPagesT } from '../i18n/modules/publicPages'
 
 export function DemoRequestSuccessPage() {
+  const t = useModuleT(publicPagesT)
   const reference = sessionStorage.getItem('northmine.demo-access.reference')
 
   return (
     <PublicPageShell compactHeader>
       <PublicPageMeta
-        title="Solicitud recibida | NORTHMINE Intelligence"
-        description="Confirmacion de solicitud de acceso al demo de NORTHMINE Intelligence."
+        title={t.success.metaTitle}
+        description={t.success.metaDescription}
         robots="noindex,nofollow"
       />
       <main id="contenido" className="nm-public-interior nm-request-success">
@@ -19,24 +22,23 @@ export function DemoRequestSuccessPage() {
         </div>
         <section className="nm-request-success__panel">
           <CheckCircle2 size={42} aria-hidden="true" />
-          <p className="nm-public-eyebrow">Solicitud recibida</p>
-          <h1>Gracias. Revisaremos la informacion enviada.</h1>
+          <p className="nm-public-eyebrow">{t.success.eyebrow}</p>
+          <h1>{t.success.title}</h1>
           <p>
-            El envio no crea credenciales automaticamente. Si la solicitud es
-            aprobada, recibiras instrucciones de acceso por un canal acordado.
+            {t.success.body}
           </p>
           {reference && (
             <dl>
-              <dt>Referencia</dt>
+              <dt>{t.success.reference}</dt>
               <dd>{reference}</dd>
             </dl>
           )}
           <div>
             <a className="nm-public-button nm-public-button--primary" href="/">
-              Volver a NORTHMINE
+              {t.success.back}
             </a>
             <a className="nm-public-button nm-public-button--quiet" href="/acceso-demo">
-              <LogIn size={18} aria-hidden="true" /> Ya tengo acceso
+              <LogIn size={18} aria-hidden="true" /> {t.success.acceso}
             </a>
           </div>
         </section>

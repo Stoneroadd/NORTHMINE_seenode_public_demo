@@ -1,24 +1,27 @@
 import { NorthmineBrand } from './NorthmineBrand'
+import { useModuleT } from '../../i18n/useModuleT'
+import { publicPagesT } from '../../i18n/modules/publicPages'
 
 export function LandingFooter() {
+  const t = useModuleT(publicPagesT)
   const year = new Date().getFullYear()
 
   return (
     <footer className="nm-public-footer">
       <div className="nm-public-shell nm-public-footer__inner">
         <div>
-          <a className="nm-public-brand" href="/" aria-label="NORTHMINE Intelligence, inicio">
+          <a className="nm-public-brand" href="/" aria-label={t.landingFooter.ariaBrand}>
             <NorthmineBrand />
           </a>
-          <p>Control y decision operacional para mineria a cielo abierto.</p>
+          <p>{t.landingFooter.tagline}</p>
         </div>
-        <nav aria-label="Enlaces del pie">
-          <a href="/privacy">Privacidad</a>
-          <a href="/solicitar-demo">Solicitar acceso</a>
-          <a href="/acceso-demo">Acceso al demo</a>
+        <nav aria-label={t.landingFooter.ariaNav}>
+          <a href="/privacy">{t.landingFooter.navPrivacidad}</a>
+          <a href="/solicitar-demo">{t.landingFooter.navSolicitar}</a>
+          <a href="/acceso-demo">{t.landingFooter.navAcceso}</a>
         </nav>
         <div className="nm-public-footer__status">
-          <span>Demo con datos sinteticos</span>
+          <span>{t.landingFooter.status}</span>
           <small>&copy; {year} NORTHMINE Intelligence</small>
         </div>
       </div>

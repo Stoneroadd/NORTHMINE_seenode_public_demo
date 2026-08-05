@@ -10,6 +10,8 @@ import { DecisionFlow } from './DecisionFlow'
 import { SecurityTransparency } from './SecurityTransparency'
 import { DemoCTA } from './DemoCTA'
 import { SaaSFooter } from './SaaSFooter'
+import { useModuleT } from '../../../i18n/useModuleT'
+import { landingT } from '../../../i18n/modules/landing'
 import '../../../styles/northmine-saas-tokens.css'
 import '../../../styles/northmine-saas-layout.css'
 import '../../../styles/northmine-saas-motion.css'
@@ -23,6 +25,8 @@ import '../../../styles/northmine-saas-responsive.css'
  * FORM: premium B2B mining campaign with scroll-linked geological depth and restrained operational motion.
  */
 export function SaaSPrototypePage() {
+  const t = useModuleT(landingT)
+
   return (
     <div className="nm-saas">
       <ScrollProgress />
@@ -36,11 +40,10 @@ export function SaaSPrototypePage() {
         <OperationalBenefits />
         <section className="ns-evidence" aria-labelledby="ns-evidence-title">
           <div className="ns-saas__shell ns-evidence__head">
-            <p className="mono-label">Evidencia del producto</p>
-            <h2 id="ns-evidence-title">Una lectura ejecutiva, no otra colección de KPI.</h2>
+            <p className="mono-label">{t.evidence.kicker}</p>
+            <h2 id="ns-evidence-title">{t.evidence.title}</h2>
             <p>
-              El Decision Cockpit concentra estado, brecha, ritmo, riesgo y
-              acción. Esta única captura usa datos sintéticos identificados.
+              {t.evidence.body}
             </p>
           </div>
           <ProductStage />

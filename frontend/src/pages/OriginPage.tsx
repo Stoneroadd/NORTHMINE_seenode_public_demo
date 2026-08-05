@@ -1,12 +1,15 @@
 import { OriginStoryPage } from '../components/brand-prototype/origin/OriginStoryPage'
 import { PublicPageMeta } from '../components/landing/PublicPageMeta'
+import { useModuleT } from '../i18n/useModuleT'
+import { originT } from '../i18n/modules/origin'
 
 export function OriginPage() {
+  const t = useModuleT(originT)
   return (
     <>
       <PublicPageMeta
-        title="Origen | La historia de NORTHMINE Intelligence"
-        description="La trayectoria operacional que dio origen a NORTHMINE Intelligence, desde la primera línea minera hasta el desarrollo de una plataforma de decisión."
+        title={t.meta.title}
+        description={t.meta.description}
         robots="index,follow"
       />
       <OriginStoryPage />

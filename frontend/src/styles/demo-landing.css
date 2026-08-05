@@ -1704,3 +1704,18 @@
     animation-iteration-count: 1 !important;
   }
 }
+
+.nm-public-header .lang-switcher {
+  --lang-border: rgba(255, 255, 255, 0.18);
+  --lang-text: var(--nm-public-muted);
+  --lang-hover: var(--nm-public-text);
+  --lang-active-bg: var(--nm-public-amber-strong);
+  --lang-active-text: #0b0d0e;
+}
+
+@media (max-width: 900px) {
+  .nm-public-navigation .lang-switcher {
+    justify-self: start;
+    margin: 8px 12px 14px;
+  }
+}
