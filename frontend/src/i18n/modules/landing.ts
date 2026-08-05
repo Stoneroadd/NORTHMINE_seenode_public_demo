@@ -86,6 +86,14 @@ export interface LandingT {
     levels: { name: string; items: string[] }[]
     closing: string
   }
+  operationalFlow?: {
+    kicker: string
+    title: string
+    body: string
+    benefits: string[]
+    disclaimer: string
+    imageAlt: string
+  }
   flow: {
     kicker: string
     title: string
@@ -267,6 +275,21 @@ export const landingT: ModuleDict<LandingT> = {
         { name: 'Económico', items: ['Estimación del costo de cada brecha', 'Impacto proyectado en el cierre del mes', 'Priorización de decisiones por retorno esperado'] },
       ],
       closing: 'Cada nivel se apoya en el anterior: sin lectura operacional confiable no hay análisis útil, y sin análisis no hay estimación económica defendible.',
+    },
+    operationalFlow: {
+      kicker: 'Vista completa',
+      title: 'De los datos operacionales a decisiones con impacto.',
+      body: 'Este es el mismo flujo que ya recorrió esta página, en una sola imagen: NORTHMINE lee sus sistemas fuente mediante conectores read-only, aplica una capa de inteligencia sobre estado, brecha, causa, riesgo y acción, y entrega una lectura distinta según quién la usa: Decision Cockpit, gerencia de mina, despacho, mantenimiento o planificación. La diferencia con su FMS no es qué datos existen, sino qué se puede hacer con ellos antes de que la ventana de decisión se cierre.',
+      benefits: [
+        'Más toneladas con los mismos recursos',
+        'Menor costo por tonelada producida',
+        'Decisiones más rápidas, con contexto y trazabilidad',
+        'Acciones priorizadas por impacto y factibilidad',
+        'Menos riesgos operacionales y ambientales',
+        'Mayor valor económico para la operación',
+      ],
+      disclaimer: 'NORTHMINE no reemplaza su FMS ni los sistemas fuente. Los complementa.',
+      imageAlt: 'Diagrama completo: sistemas fuente (FMS, SQL Server, telemetría IoT, ERP) conectados vía conectores read-only a NORTHMINE, que aplica inteligencia sobre estado, brecha, causa, riesgo, acción y valor económico, y distribuye la lectura al Decision Cockpit, gerencia de mina, despacho, mantenimiento y planificación.',
     },
     flow: {
       kicker: 'Cómo funciona',
@@ -489,6 +512,21 @@ export const landingT: ModuleDict<LandingT> = {
         { name: 'Economic', items: ['Estimated cost of each gap', "Projected impact on the month's close", 'Decision prioritization by expected return'] },
       ],
       closing: 'Each level builds on the previous one: without a reliable operational reading there is no useful analysis, and without analysis there is no defensible economic estimate.',
+    },
+    operationalFlow: {
+      kicker: 'The full picture',
+      title: 'From operational data to decisions with impact.',
+      body: "This is the same flow you've already seen across this page, in a single image: NORTHMINE reads your source systems through read-only connectors, applies an intelligence layer over status, gap, cause, risk and action, and delivers a different reading depending on who uses it: Decision Cockpit, mine management, dispatch, maintenance or planning. The difference from your FMS isn't which data exists, it's what can be done with it before the decision window closes.",
+      benefits: [
+        'More tonnes with the same resources',
+        'Lower cost per tonne produced',
+        'Faster decisions, with context and traceability',
+        'Actions prioritized by impact and feasibility',
+        'Lower operational and environmental risk',
+        'Higher economic value for the operation',
+      ],
+      disclaimer: "NORTHMINE does not replace your FMS or source systems. It complements them.",
+      imageAlt: 'Full diagram: source systems (FMS, SQL Server, IoT telemetry, ERP) connected via read-only connectors to NORTHMINE, which applies intelligence over status, gap, cause, risk, action and economic value, and distributes the reading to the Decision Cockpit, mine management, dispatch, maintenance and planning.',
     },
     flow: {
       kicker: 'How it works',
