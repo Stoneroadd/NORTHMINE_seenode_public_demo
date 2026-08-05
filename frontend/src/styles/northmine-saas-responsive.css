@@ -338,6 +338,11 @@
     height: 44px;
   }
 
+  .nm-saas .ns-footer__inner {
+    padding: 24px 20px;
+    border-radius: 14px;
+  }
+
   .nm-saas .ns-definition__system ol {
     grid-template-columns: 1fr;
   }

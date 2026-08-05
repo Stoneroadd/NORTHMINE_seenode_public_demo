@@ -934,16 +934,31 @@
   background: var(--ns-graphite);
 }
 
+/*
+ * Same treatment as ArchitectureDiagram (its closest structural sibling: a
+ * numbered sequential flow): centered head above a centered, moderate-width
+ * column, rather than a left-anchored ~500px block floating in a 1152px
+ * shell with dead space on the right. Text inside the column stays
+ * left-aligned - only the column itself is centered.
+ */
+.ns-flow .mono-label,
+.ns-flow__title {
+  text-align: center;
+}
+
 .ns-flow__title {
   font-size: clamp(26px, 3.2vw, 36px);
   font-weight: 600;
-  margin: 10px 0 48px;
-  max-width: 26ch;
+  margin: 10px auto 48px;
+  max-width: 30ch;
+  text-wrap: balance;
 }
 
 .ns-flow__steps {
   list-style: none;
   padding: 0;
+  max-width: 640px;
+  margin-inline: auto;
   display: grid;
   gap: 0;
 }
@@ -1101,6 +1116,10 @@
   grid-template-columns: 1.2fr 1fr 1fr;
   gap: 24px;
   align-items: start;
+  background: rgba(0, 0, 0, 0.42);
+  border: 1px solid var(--ns-border);
+  border-radius: 18px;
+  padding: 32px 40px;
 }
 
 .ns-footer__brand {
@@ -1313,7 +1332,7 @@
 
 .ns-definition__grid {
   display: grid;
-  grid-template-columns: minmax(0, 0.84fr) minmax(0, 1.16fr);
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
   gap: clamp(56px, 8vw, 120px);
   align-items: start;
 }
@@ -2009,19 +2028,28 @@
  * Decision flow — closing phrase
  * ---------------------------------------------------------------- */
 .ns-flow__closing {
-  margin-top: 8px;
+  margin: 8px auto 0;
   padding-top: 28px;
   border-top: 1px solid var(--ns-border);
   color: var(--ns-text-secondary);
   font-size: 15px;
-  max-width: 60ch;
+  max-width: 46ch;
+  text-align: center;
 }
 
 /* ---------------------------------------------------------------- *
  * Security — integration disclaimer
  * ---------------------------------------------------------------- */
 .ns-security__disclaimer {
-  margin-top: 20px;
+  /* .ns-security__inner is a 2-column grid (head, points); as the 3rd
+     child this was auto-placed into row 2 of the head's narrow column,
+     orphaned below a large gap instead of reading as a footnote for the
+     whole section. Span both columns so it sits as a full-width caption
+     under the grid, where a general disclaimer belongs. */
+  grid-column: 1 / -1;
+  margin-top: 28px;
+  padding-top: 24px;
+  border-top: 1px solid var(--ns-border);
   font-family: 'IBM Plex Mono', monospace;
   font-size: 12px;
   color: var(--ns-text-muted);
