@@ -285,7 +285,7 @@
   width: 16px;
   height: 1.5px;
   background: var(--ns-text);
-  transition: transform 220ms var(--ns-ease), opacity 220ms var(--ns-ease), width 220ms var(--ns-ease);
+  transition: transform 220ms var(--ns-ease), opacity 220ms var(--ns-ease);
 }
 
 /* Hamburger morphs into a close mark instead of just vanishing under the
