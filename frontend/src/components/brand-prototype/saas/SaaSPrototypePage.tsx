@@ -1,6 +1,7 @@
 import { ScrollProgress } from './ScrollProgress'
 import { SaaSHeader } from './SaaSHeader'
 import { SaaSHero } from './SaaSHero'
+import { NorthmineDefinition } from './NorthmineDefinition'
 import { ProductStage } from './ProductStage'
 import { MineIntelligenceBand } from './MineIntelligenceBand'
 import { ProblemSolution } from './ProblemSolution'
@@ -10,7 +11,6 @@ import { FMSComparison } from './FMSComparison'
 import { IntelligenceLevels } from './IntelligenceLevels'
 import { DecisionFlow } from './DecisionFlow'
 import { DecisionCases } from './DecisionCases'
-import { ModuleGallery } from './ModuleGallery'
 import { ResponsibleAI } from './ResponsibleAI'
 import { SecurityTransparency } from './SecurityTransparency'
 import { DemoCTA } from './DemoCTA'
@@ -26,13 +26,14 @@ import '../../../styles/northmine-saas-responsive.css'
 /*
  * THESIS: NORTHMINE is an Operational Intelligence Layer that complements FMS
  * platforms (Wenco, Modular, MineStar, Hexagon) — it does not replace them.
- * STORY: the FMS registers and controls; NORTHMINE interprets, relates causes
- * and prioritizes decisions. Problem -> positioning -> how it connects -> what
- * it adds -> how it reasons -> how it works -> concrete decisions -> real
- * product evidence -> responsible-AI boundaries -> integration security ->
- * public demo -> request evaluation.
+ * STORY: what NORTHMINE is -> problem -> positioning -> how it connects ->
+ * what it adds -> how it reasons -> how it works -> concrete decisions ->
+ * real product evidence -> responsible-AI boundaries -> integration security
+ * -> public demo -> request evaluation.
  * FORM: premium B2B mining campaign with scroll-linked geological depth and
  * restrained operational motion; no new animation dependency was added.
+ * Product evidence stays to the single Decision Cockpit capture in
+ * ProductStage per DESIGN.md — no module-catalogue grid on the public page.
  */
 export function SaaSPrototypePage() {
   const t = useModuleT(landingT)
@@ -44,6 +45,7 @@ export function SaaSPrototypePage() {
       <SaaSHeader />
       <main id="ns-contenido">
         <SaaSHero />
+        <NorthmineDefinition />
         <ProblemSolution />
         <FMSComplement />
         <ArchitectureDiagram />
@@ -62,7 +64,6 @@ export function SaaSPrototypePage() {
           </div>
           <ProductStage />
         </section>
-        <ModuleGallery />
         <ResponsibleAI />
         <SecurityTransparency />
         <DemoCTA />
