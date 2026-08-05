@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { NorthmineLogo } from '../../brand/NorthmineLogo'
 import { LanguageSwitcher } from '../../common/LanguageSwitcher'
@@ -11,6 +12,14 @@ export function SaaSHeader() {
   const [open, setOpen] = useState(false)
   const menuButtonRef = useRef<HTMLButtonElement>(null)
   const reduceMotion = useReducedMotion()
+  // Portal target resolved post-mount: must stay inside .nm-saas (all the
+  // theme's CSS custom properties and .nm-saas-scoped rules live there) but
+  // outside .ns-header (see the comment further down on why).
+  const [portalTarget, setPortalTarget] = useState<Element | null>(null)
+
+  useEffect(() => {
+    setPortalTarget(document.querySelector('.nm-saas'))
+  }, [])
   const navItems = [
     { label: t.header.nav.plataforma, href: '#hero' },
     { label: t.header.nav.propuesta, href: '#propuesta' },
@@ -95,32 +104,45 @@ export function SaaSHeader() {
         </button>
       </div>
 
-      <AnimatePresence>
-        {open && (
-          <motion.nav
-            id="ns-mobile-nav"
-            className="ns-header__mobile-nav is-open"
-            aria-label={t.header.ariaMovil}
-            initial={reduceMotion ? false : { opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={reduceMotion ? undefined : { opacity: 0, y: -8 }}
-            transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
-          >
-            {navItems.map((item) => (
-              <a key={item.href} href={item.href} onClick={() => setOpen(false)}>
-                {item.label}
+      {/*
+        Portaled to .nm-saas (not document.body - see portalTarget above):
+        .ns-header has `backdrop-filter: blur(0px)` (present even at 0px,
+        which still counts per spec), and that makes the header itself the
+        containing block for any position:fixed descendant instead of the
+        viewport. Left inline, this panel's `inset:0` resolved against the
+        ~72px-tall header box, not the screen, and it rendered as a ~37px
+        sliver instead of a full-height drawer. Portaling out from under
+        that ancestor is the robust fix, not chasing z-index further.
+      */}
+      {portalTarget && createPortal(
+        <AnimatePresence>
+          {open && (
+            <motion.nav
+              id="ns-mobile-nav"
+              className="ns-header__mobile-nav is-open"
+              aria-label={t.header.ariaMovil}
+              initial={reduceMotion ? false : { opacity: 0, y: -12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={reduceMotion ? undefined : { opacity: 0, y: -12 }}
+              transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+            >
+              {navItems.map((item) => (
+                <a key={item.href} href={item.href} onClick={() => setOpen(false)}>
+                  {item.label}
+                </a>
+              ))}
+              <LanguageSwitcher ariaLabel={t.switcherAria} />
+              <a className="ns-header__login" href="/acceso-demo" onClick={() => setOpen(false)}>
+                {t.header.acceder}
               </a>
-            ))}
-            <LanguageSwitcher ariaLabel={t.switcherAria} />
-            <a className="ns-header__login" href="/acceso-demo" onClick={() => setOpen(false)}>
-              {t.header.acceder}
-            </a>
-            <a className="ns-btn ns-btn--primary" href="/solicitar-demo" onClick={() => setOpen(false)}>
-              {t.header.solicitarDemo}
-            </a>
-          </motion.nav>
-        )}
-      </AnimatePresence>
+              <a className="ns-btn ns-btn--primary" href="/solicitar-demo" onClick={() => setOpen(false)}>
+                {t.header.solicitarDemo}
+              </a>
+            </motion.nav>
+          )}
+        </AnimatePresence>,
+        portalTarget,
+      )}
     </header>
   )
 }
