@@ -53,7 +53,7 @@ export interface LandingT {
     kicker: string
     title: string
     body: string
-    items: { title: string; description: string }[]
+    items: { title: string; description: string; group?: string }[]
     answerKicker: string
     answerTitle: string
     transformations: { before: string; after: string }[]
@@ -118,7 +118,6 @@ export interface LandingT {
     title: string
     body: string
     badges: string[]
-    cta: string
   }
   cta: { title: string; lead: string; ctaDemo: string; ctaAcceso: string; microcopy?: string }
   footer: {
@@ -197,14 +196,14 @@ export const landingT: ModuleDict<LandingT> = {
       title: 'La mina tiene datos. La decisión sigue fragmentada.',
       body: 'El desafío no es producir otro reporte. Es relacionar la condición del turno, su causa y la acción disponible antes de que la ventana de recuperación desaparezca.',
       items: [
-        { title: 'Datos abundantes, decisión lenta', description: 'El FMS registra cada evento del turno, pero relacionar causa, impacto y acción sigue siendo manual.' },
-        { title: 'Información fragmentada', description: 'Producción, flota, carguío y mantenimiento generan reportes separados que nadie concilia a tiempo.' },
+        { group: 'Datos y tiempo', title: 'Datos abundantes, decisión lenta', description: 'El FMS registra cada evento del turno, pero relacionar causa, impacto y acción sigue siendo manual.' },
         { title: 'Brechas detectadas tarde', description: 'Cuando la desviación se entiende, queda poco tiempo para recuperar el turno.' },
-        { title: 'Indicadores sin prioridad', description: 'Decenas de KPI muestran qué ocurrió, pero no explican qué atender primero.' },
-        { title: 'Pérdidas ocultas', description: 'Ciclos degradados, esperas y microparadas rara vez se cuantifican en su impacto económico real.' },
-        { title: 'Conocimiento no escrito', description: 'La experiencia del supervisor no queda registrada ni disponible para el próximo turno.' },
         { title: 'Reportes que llegan tarde', description: 'El análisis ejecutivo se arma horas o días después de la decisión que debía informar.' },
+        { group: 'Fragmentación', title: 'Información fragmentada', description: 'Producción, flota, carguío y mantenimiento generan reportes separados que nadie concilia a tiempo.' },
+        { title: 'Conocimiento no escrito', description: 'La experiencia del supervisor no queda registrada ni disponible para el próximo turno.' },
         { title: 'Dependencia de un solo sistema', description: 'Cuando todo vive solo en el FMS, la mina pierde la lectura económica de lo que el FMS no fue diseñado para explicar.' },
+        { group: 'Prioridad económica', title: 'Indicadores sin prioridad', description: 'Decenas de KPI muestran qué ocurrió, pero no explican qué atender primero.' },
+        { title: 'Pérdidas ocultas', description: 'Ciclos degradados, esperas y microparadas rara vez se cuantifican en su impacto económico real.' },
       ],
       answerKicker: 'La respuesta NORTHMINE',
       answerTitle: 'De múltiples fuentes a una lectura operacional común.',
@@ -343,7 +342,6 @@ export const landingT: ModuleDict<LandingT> = {
       title: 'Explore la demo pública con datos sintéticos.',
       body: 'El entorno de demostración usa datos representativos, claramente identificados, y no se conecta a ninguna base operacional real.',
       badges: ['Datos sintéticos', 'Sin acceso a sistemas reales', 'Acceso individual revisado', 'Entorno aislado', 'Actualizado por versión'],
-      cta: 'Ingresar a la demo',
     },
     cta: {
       title: 'Convierta los datos de su FMS en ventaja operacional.',
@@ -418,14 +416,14 @@ export const landingT: ModuleDict<LandingT> = {
       title: 'The mine has data. The decision is still fragmented.',
       body: 'The challenge is not to produce another report. It is to relate the shift condition, its cause and the available action before the recovery window closes.',
       items: [
-        { title: 'Plenty of data, slow decisions', description: 'The FMS records every event of the shift, but relating cause, impact and action is still manual.' },
-        { title: 'Fragmented information', description: 'Production, fleet, loading and maintenance produce separate reports nobody reconciles in time.' },
+        { group: 'Data and timing', title: 'Plenty of data, slow decisions', description: 'The FMS records every event of the shift, but relating cause, impact and action is still manual.' },
         { title: 'Gaps detected too late', description: 'By the time the deviation is understood, there is little time left to recover the shift.' },
-        { title: 'Unprioritized indicators', description: 'Dozens of KPIs show what happened, but not what to tackle first.' },
-        { title: 'Hidden losses', description: 'Degraded cycles, waiting time and micro-stops are rarely quantified in real economic impact.' },
-        { title: 'Unwritten knowledge', description: "The supervisor's experience is never recorded or available for the next shift." },
         { title: 'Late reporting', description: 'Executive analysis gets assembled hours or days after the decision it should have informed.' },
+        { group: 'Fragmentation', title: 'Fragmented information', description: 'Production, fleet, loading and maintenance produce separate reports nobody reconciles in time.' },
+        { title: 'Unwritten knowledge', description: "The supervisor's experience is never recorded or available for the next shift." },
         { title: 'Single-system dependency', description: 'When everything lives only in the FMS, the mine loses the economic reading of what the FMS was never designed to explain.' },
+        { group: 'Economic priority', title: 'Unprioritized indicators', description: 'Dozens of KPIs show what happened, but not what to tackle first.' },
+        { title: 'Hidden losses', description: 'Degraded cycles, waiting time and micro-stops are rarely quantified in real economic impact.' },
       ],
       answerKicker: 'The NORTHMINE answer',
       answerTitle: 'From multiple sources to one common operational reading.',
@@ -564,7 +562,6 @@ export const landingT: ModuleDict<LandingT> = {
       title: 'Explore the public demo with synthetic data.',
       body: 'The demo environment uses clearly identified, representative data and never connects to a real operational database.',
       badges: ['Synthetic data', 'No access to real systems', 'Reviewed individual access', 'Isolated environment', 'Updated per release'],
-      cta: 'Enter the demo',
     },
     cta: {
       title: 'Turn your FMS data into operational advantage.',

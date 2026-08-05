@@ -924,6 +924,7 @@
 .ns-flow {
   padding-block: 100px;
   border-top: 1px solid var(--ns-border);
+  background: var(--ns-graphite);
 }
 
 .ns-flow__title {
@@ -1391,6 +1392,16 @@
   margin-top: clamp(54px, 7vw, 92px);
 }
 
+.ns-problem__groups {
+  display: grid;
+  gap: 28px;
+}
+
+.ns-problem__group-label {
+  margin-bottom: 10px;
+  color: var(--ns-copper);
+}
+
 .ns-problem__list {
   list-style: none;
   padding: 0;
@@ -1652,6 +1663,7 @@
 .ns-comparison {
   padding-block: clamp(88px, 10vw, 138px);
   border-top: 1px solid var(--ns-border);
+  background: var(--ns-carbon);
 }
 
 .ns-comparison__head {

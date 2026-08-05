@@ -18,9 +18,6 @@ export function DemoCTA() {
               <li key={badge}>{badge}</li>
             ))}
           </ul>
-          <a className="ns-btn ns-btn--ghost" href="/acceso-demo">
-            {demoBadges.cta}
-          </a>
         </div>
       </section>
 
