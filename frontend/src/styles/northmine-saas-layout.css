@@ -4,6 +4,7 @@
  * Shared surfaces / buttons
  * ---------------------------------------------------------------- */
 .nm-saas .ns-btn {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -14,7 +15,30 @@
   border: 1px solid transparent;
   border-radius: var(--ns-radius-sm);
   min-height: 44px;
+  overflow: hidden;
   transition: transform var(--ns-t-micro) var(--ns-ease), box-shadow var(--ns-t-micro) var(--ns-ease), border-color var(--ns-t-micro) var(--ns-ease), background var(--ns-t-micro) var(--ns-ease);
+}
+
+/* Cursor-tracking highlight, position driven by --gx/--gy from
+   usePointerInteractions. A negative z-index keeps it between the
+   button's own background and its (often unwrapped, plain-text) label:
+   painting order puts positioned z-index:0+ layers above inline text,
+   so this must stay negative or it would wash out the label on hover. */
+.ns-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: radial-gradient(120px circle at var(--gx, 50%) var(--gy, 50%), rgba(255, 255, 255, 0.4), transparent 65%);
+  opacity: 0;
+  transition: opacity var(--ns-t-micro) var(--ns-ease);
+  pointer-events: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .ns-btn:hover::before {
+    opacity: 1;
+  }
 }
 
 .ns-btn--sm {
@@ -422,6 +446,7 @@
   z-index: 1;
   padding-inline: clamp(16px, 4vw, 48px);
   margin-bottom: -80px;
+  perspective: 1400px;
 }
 
 .ns-stage__frame {
@@ -791,6 +816,7 @@
 .ns-gallery__card {
   display: flex;
   flex-direction: column;
+  perspective: 800px;
 }
 
 .ns-gallery__card-category {
@@ -819,6 +845,7 @@
   border: 1px solid var(--ns-border);
   aspect-ratio: 16 / 9.2;
   background: var(--ns-graphite);
+  will-change: transform;
 }
 
 .ns-gallery__card-frame img {

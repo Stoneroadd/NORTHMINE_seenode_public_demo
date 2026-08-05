@@ -14,14 +14,17 @@ import { DecisionFlow } from './DecisionFlow'
 import { SecurityTransparency } from './SecurityTransparency'
 import { DemoCTA } from './DemoCTA'
 import { SaaSFooter } from './SaaSFooter'
+import { usePointerInteractions } from '../../../lib/animation/effects'
 import '../../../styles/northmine-saas-tokens.css'
 import '../../../styles/northmine-saas-layout.css'
 import '../../../styles/northmine-saas-motion.css'
 import '../../../styles/northmine-saas-responsive.css'
 
 export function SaaSPrototypePage() {
+  const scope = usePointerInteractions<HTMLDivElement>()
+
   return (
-    <div className="nm-saas">
+    <div className="nm-saas" ref={scope}>
       <AmbientWash />
       <ScrollProgress />
       <CursorGlow />

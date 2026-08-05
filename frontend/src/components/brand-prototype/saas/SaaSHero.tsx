@@ -35,7 +35,7 @@ export function SaaSHero() {
           Inteligencia operacional para minería
         </p>
 
-        <h1 id="ns-hero-title" className="ns-hero__title" data-hero-title>
+        <h1 id="ns-hero-title" className="ns-hero__title" data-hero-title data-magnetic-text>
           Observe la operación completa.
           <br />
           Decida con contexto.

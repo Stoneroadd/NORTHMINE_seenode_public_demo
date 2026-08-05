@@ -58,7 +58,7 @@ export function SaaSHeader() {
 
         <nav className="ns-header__nav" aria-label="Navegación principal">
           {navItems.map((item) => (
-            <a key={item.href} href={item.href}>
+            <a key={item.href} href={item.href} data-magnetic-text>
               {item.label}
             </a>
           ))}
