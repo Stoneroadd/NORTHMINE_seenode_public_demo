@@ -1111,9 +1111,10 @@
 
 .ns-footer__logo {
   display: block;
-  width: 552px;
+  align-self: flex-start;
+  width: auto;
+  height: 64px;
   max-width: 100%;
-  height: auto;
   object-fit: contain;
   object-position: left center;
 }
