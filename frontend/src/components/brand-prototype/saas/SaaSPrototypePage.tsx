@@ -1,12 +1,17 @@
 import { ScrollProgress } from './ScrollProgress'
 import { SaaSHeader } from './SaaSHeader'
 import { SaaSHero } from './SaaSHero'
-import { NorthmineDefinition } from './NorthmineDefinition'
 import { ProductStage } from './ProductStage'
 import { MineIntelligenceBand } from './MineIntelligenceBand'
 import { ProblemSolution } from './ProblemSolution'
-import { OperationalBenefits } from './OperationalBenefits'
+import { FMSComplement } from './FMSComplement'
+import { ArchitectureDiagram } from './ArchitectureDiagram'
+import { FMSComparison } from './FMSComparison'
+import { IntelligenceLevels } from './IntelligenceLevels'
 import { DecisionFlow } from './DecisionFlow'
+import { DecisionCases } from './DecisionCases'
+import { ModuleGallery } from './ModuleGallery'
+import { ResponsibleAI } from './ResponsibleAI'
 import { SecurityTransparency } from './SecurityTransparency'
 import { DemoCTA } from './DemoCTA'
 import { SaaSFooter } from './SaaSFooter'
@@ -19,11 +24,15 @@ import '../../../styles/northmine-saas-motion.css'
 import '../../../styles/northmine-saas-responsive.css'
 
 /*
- * THESIS: NORTHMINE sells connected operational judgment, not another dashboard grid.
- * OWN-WORLD: graphite control-room fields, copper actions, cinematic mine scale and real product evidence.
- * STORY: recognize fragmented signals, see them converge, inspect the platform, request a controlled demo.
- * FIRST VIEWPORT: left-aligned value proposition over a full-scale dozer and pit, followed immediately by the product.
- * FORM: premium B2B mining campaign with scroll-linked geological depth and restrained operational motion.
+ * THESIS: NORTHMINE is an Operational Intelligence Layer that complements FMS
+ * platforms (Wenco, Modular, MineStar, Hexagon) — it does not replace them.
+ * STORY: the FMS registers and controls; NORTHMINE interprets, relates causes
+ * and prioritizes decisions. Problem -> positioning -> how it connects -> what
+ * it adds -> how it reasons -> how it works -> concrete decisions -> real
+ * product evidence -> responsible-AI boundaries -> integration security ->
+ * public demo -> request evaluation.
+ * FORM: premium B2B mining campaign with scroll-linked geological depth and
+ * restrained operational motion; no new animation dependency was added.
  */
 export function SaaSPrototypePage() {
   const t = useModuleT(landingT)
@@ -35,12 +44,15 @@ export function SaaSPrototypePage() {
       <SaaSHeader />
       <main id="ns-contenido">
         <SaaSHero />
-        <NorthmineDefinition />
-        <MineIntelligenceBand />
         <ProblemSolution />
+        <FMSComplement />
+        <ArchitectureDiagram />
+        <FMSComparison />
+        <IntelligenceLevels />
         <DecisionFlow />
-        <OperationalBenefits />
-        <section className="ns-evidence" aria-labelledby="ns-evidence-title">
+        <DecisionCases />
+        <MineIntelligenceBand />
+        <section className="ns-evidence" id="modulos" aria-labelledby="ns-evidence-title">
           <div className="ns-saas__shell ns-evidence__head">
             <p className="mono-label">{t.evidence.kicker}</p>
             <h2 id="ns-evidence-title">{t.evidence.title}</h2>
@@ -50,6 +62,8 @@ export function SaaSPrototypePage() {
           </div>
           <ProductStage />
         </section>
+        <ModuleGallery />
+        <ResponsibleAI />
         <SecurityTransparency />
         <DemoCTA />
       </main>

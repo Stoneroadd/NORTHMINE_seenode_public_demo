@@ -48,6 +48,8 @@ export function ProblemSolution() {
             </dl>
           </div>
         </div>
+
+        {t.problem.impact && <p className="ns-problem__impact">{t.problem.impact}</p>}
       </div>
     </section>
   )
