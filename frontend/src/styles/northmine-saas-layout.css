@@ -24,7 +24,7 @@
    button's own background and its (often unwrapped, plain-text) label:
    painting order puts positioned z-index:0+ layers above inline text,
    so this must stay negative or it would wash out the label on hover. */
-.ns-btn::before {
+.nm-saas .ns-btn::before {
   content: '';
   position: absolute;
   inset: 0;
@@ -36,56 +36,63 @@
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .ns-btn:hover::before {
+  .nm-saas .ns-btn:hover::before {
     opacity: 1;
   }
 }
 
-.ns-btn--sm {
+.nm-saas .ns-btn--sm {
   padding: 9px 16px;
   min-height: 36px;
   font-size: 13px;
 }
 
-.ns-btn--primary {
+/*
+ * Explicit .nm-saas prefix here (not just .ns-btn--primary) is load-bearing:
+ * .nm-saas a { color: inherit } outranks a bare .ns-btn--primary on
+ * specificity, which was silently overriding this dark text with the
+ * page's light body color — leaving ~2.2:1 white-on-amber contrast on the
+ * primary CTA. Every rule below needs the same prefix to actually win.
+ */
+.nm-saas .ns-btn--primary {
   background: linear-gradient(155deg, var(--ns-amber) 0%, var(--ns-copper) 55%, var(--ns-copper-strong) 100%);
   color: #170f0a;
   box-shadow: 0 1px 0 rgba(255, 255, 255, 0.32) inset, 0 10px 24px rgba(200, 121, 65, 0.2);
 }
 
-.ns-btn--primary:hover {
+.nm-saas .ns-btn--primary:hover {
   background: linear-gradient(155deg, var(--ns-amber) 0%, var(--ns-copper-strong) 65%, var(--ns-copper-strong) 100%);
   box-shadow: 0 1px 0 rgba(255, 255, 255, 0.4) inset, 0 14px 32px rgba(200, 121, 65, 0.4);
 }
 
-.ns-btn--primary:active {
+.nm-saas .ns-btn--primary:active {
   background: var(--ns-copper-strong);
   box-shadow: 0 1px 0 rgba(255, 255, 255, 0.15) inset, 0 4px 12px rgba(200, 121, 65, 0.28);
 }
 
-.ns-btn--ghost {
+.nm-saas .ns-btn--ghost {
   border-color: var(--ns-border-strong);
   color: var(--ns-text);
   background: rgba(255, 255, 255, 0.02);
 }
 
-.ns-btn--ghost:hover {
+.nm-saas .ns-btn--ghost:hover {
   border-color: var(--ns-copper);
   color: var(--ns-copper);
   background: rgba(200, 121, 65, 0.08);
 }
 
-.ns-btn--ghost:active {
+.nm-saas .ns-btn--ghost:active {
   background: rgba(200, 121, 65, 0.15);
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .ns-btn:hover {
+  .nm-saas .ns-btn:hover {
     transform: translateY(-1px);
   }
 }
 
-.ns-btn:active {
+.nm-saas .ns-btn:active {
   transform: scale(0.97);
   transition-duration: 90ms;
 }
@@ -1428,6 +1435,9 @@
 }
 
 .ns-problem__answer {
+  align-self: start;
+  position: sticky;
+  top: 96px;
   padding: clamp(28px, 4vw, 52px);
   border: 1px solid var(--ns-border-strong);
   background:
