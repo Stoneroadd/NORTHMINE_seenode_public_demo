@@ -34,8 +34,7 @@ export function SaaSHero() {
 
         <h1 id="ns-hero-title" className="ns-hero__title" data-hero-title data-magnetic-text>
           {t.hero.title1}
-          <br />
-          {t.hero.title2}
+          <br className="ns-hero__title-break" /> {t.hero.title2}
         </h1>
 
         <p className="ns-hero__lead" data-hero-lead>
