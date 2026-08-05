@@ -1550,12 +1550,17 @@
 .ns-fms {
   padding-block: clamp(88px, 10vw, 138px);
   border-top: 1px solid var(--ns-border);
+  background: var(--ns-carbon);
 }
 
 .ns-fms__inner {
-  max-width: 860px;
-  text-align: center;
+  max-width: 760px;
   margin-inline: auto;
+}
+
+.ns-fms__inner > .mono-label,
+.ns-fms__title {
+  text-align: center;
 }
 
 .ns-fms__title {
@@ -1566,15 +1571,21 @@
   text-wrap: balance;
 }
 
+/* Kicker + title read as the section's headline and stay centered like
+   the other short section intros (ArchitectureDiagram, IntelligenceLevels);
+   the longer body copy and highlight below are left-aligned since a
+   multi-line centered paragraph reads as ragged, not deliberate. */
 .ns-fms__body {
+  text-align: left;
   color: var(--ns-text-secondary);
   font-size: 16px;
   line-height: 1.65;
-  max-width: 68ch;
-  margin: 0 auto 32px;
+  max-width: 62ch;
+  margin: 0 0 32px;
 }
 
 .ns-fms__highlight {
+  text-align: left;
   font-size: clamp(18px, 2.2vw, 24px);
   font-weight: 600;
   line-height: 1.4;
