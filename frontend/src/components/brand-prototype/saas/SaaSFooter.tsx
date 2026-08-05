@@ -13,6 +13,7 @@ export function SaaSFooter() {
           <NorthmineLogo className="ns-footer__logo" variant="horizontal" loading="lazy" />
           <div>
             <span>{t.footer.tagline}</span>
+            {t.footer.address && <address className="ns-footer__address">{t.footer.address}</address>}
           </div>
         </div>
 

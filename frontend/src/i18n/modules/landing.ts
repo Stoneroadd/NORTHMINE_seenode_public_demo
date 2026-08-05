@@ -122,6 +122,7 @@ export interface LandingT {
   cta: { title: string; lead: string; ctaDemo: string; ctaAcceso: string; microcopy?: string }
   footer: {
     tagline: string
+    address?: string
     navHistoria: string
     navPrivacidad: string
     navSolicitar: string
@@ -352,6 +353,7 @@ export const landingT: ModuleDict<LandingT> = {
     },
     footer: {
       tagline: 'Inteligencia operacional para minería a cielo abierto.',
+      address: 'Kennedy #5600, OF 507, Vitacura, Santiago',
       navHistoria: 'Nuestra historia',
       navPrivacidad: 'Privacidad',
       navSolicitar: 'Solicitar acceso',
@@ -572,6 +574,7 @@ export const landingT: ModuleDict<LandingT> = {
     },
     footer: {
       tagline: 'Operational intelligence for open-pit mining.',
+      address: 'Kennedy #5600, OF 507, Vitacura, Santiago',
       navHistoria: 'Our story',
       navPrivacidad: 'Privacy',
       navSolicitar: 'Request access',
@@ -697,6 +700,7 @@ export const landingT: ModuleDict<LandingT> = {
     },
     footer: {
       tagline: 'Operative Intelligenz für den Tagebau.',
+      address: 'Kennedy #5600, OF 507, Vitacura, Santiago',
       navHistoria: 'Unsere Geschichte',
       navPrivacidad: 'Datenschutz',
       navSolicitar: 'Zugang anfordern',
@@ -822,6 +826,7 @@ export const landingT: ModuleDict<LandingT> = {
     },
     footer: {
       tagline: '面向露天矿的运营智能。',
+      address: 'Kennedy #5600, OF 507, Vitacura, Santiago',
       navHistoria: '我们的故事',
       navPrivacidad: '隐私',
       navSolicitar: '申请访问',
@@ -947,6 +952,7 @@ export const landingT: ModuleDict<LandingT> = {
     },
     footer: {
       tagline: 'ذكاء تشغيلي للتعدين المكشوف.',
+      address: 'Kennedy #5600, OF 507, Vitacura, Santiago',
       navHistoria: 'قصتنا',
       navPrivacidad: 'الخصوصية',
       navSolicitar: 'طلب الوصول',
@@ -1072,6 +1078,7 @@ export const landingT: ModuleDict<LandingT> = {
     },
     footer: {
       tagline: 'Операционный интеллект для открытых горных работ.',
+      address: 'Kennedy #5600, OF 507, Vitacura, Santiago',
       navHistoria: 'Наша история',
       navPrivacidad: 'Конфиденциальность',
       navSolicitar: 'Запросить доступ',

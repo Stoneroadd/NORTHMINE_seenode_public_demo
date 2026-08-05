@@ -1125,6 +1125,15 @@
   display: block;
 }
 
+.ns-footer__address {
+  font-size: 13px;
+  font-style: normal;
+  color: var(--ns-text-muted);
+  max-width: 32ch;
+  display: block;
+  margin-top: 4px;
+}
+
 .ns-footer nav {
   display: flex;
   flex-direction: column;
