@@ -1621,6 +1621,7 @@
   width: 48px;
   height: 48px;
   color: var(--ns-border-strong);
+  transition: color var(--ns-t-micro) var(--ns-ease);
 }
 
 .ns-arch__node .mono-label {
@@ -1631,6 +1632,17 @@
   justify-content: center;
   color: var(--ns-copper);
   flex: none;
+  transition: color var(--ns-t-micro) var(--ns-ease);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .ns-arch__stage:hover .ns-arch__node-ring {
+    color: var(--ns-copper);
+  }
+
+  .ns-arch__stage:hover .ns-arch__node .mono-label {
+    color: var(--ns-amber);
+  }
 }
 
 .ns-arch__connector {
@@ -1725,18 +1737,43 @@
   font-size: 14px;
   line-height: 1.55;
   color: var(--ns-text-secondary);
-  padding-left: 18px;
+  padding: 6px 8px 6px 18px;
+  margin-inline: -8px;
+  border-radius: var(--ns-radius-sm);
   position: relative;
+  transition: background-color var(--ns-t-micro) var(--ns-ease), padding-left var(--ns-t-micro) var(--ns-ease);
 }
 
 .ns-comparison__column li::before {
   content: '';
   position: absolute;
-  left: 0;
-  top: 8px;
+  left: 8px;
+  top: 14px;
   width: 6px;
   height: 1px;
   background: var(--ns-border-strong);
+  transition: width var(--ns-t-micro) var(--ns-ease), background-color var(--ns-t-micro) var(--ns-ease);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .ns-comparison__column li:hover {
+    background: rgba(255, 255, 255, 0.03);
+    padding-left: 22px;
+  }
+
+  .ns-comparison__column li:hover::before {
+    width: 10px;
+    background: var(--ns-border-strong);
+  }
+
+  .ns-comparison__column--accent li:hover {
+    background: rgba(200, 121, 65, 0.08);
+  }
+
+  .ns-comparison__column--accent li:hover::before {
+    width: 10px;
+    background: var(--ns-copper);
+  }
 }
 
 .ns-comparison__column--accent li {
@@ -1789,10 +1826,22 @@
 .ns-levels__card {
   background: var(--ns-black);
   padding: clamp(22px, 2.6vw, 30px);
+  transition: background-color var(--ns-t-micro) var(--ns-ease);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .ns-levels__card:hover {
+    background: var(--ns-surface);
+  }
+
+  .ns-levels__card:hover .ns-levels__index {
+    color: var(--ns-amber);
+  }
 }
 
 .ns-levels__index {
   color: var(--ns-copper);
+  transition: color var(--ns-t-micro) var(--ns-ease);
 }
 
 .ns-levels__card h3 {
@@ -1868,10 +1917,15 @@
   .ns-cases__item:hover {
     background: rgba(200, 121, 65, 0.06);
   }
+
+  .ns-cases__item:hover .ns-cases__number {
+    color: var(--ns-amber);
+  }
 }
 
 .ns-cases__number {
   color: var(--ns-copper);
+  transition: color var(--ns-t-micro) var(--ns-ease);
 }
 
 .ns-cases__item p {
