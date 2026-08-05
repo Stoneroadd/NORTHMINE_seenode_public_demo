@@ -1741,7 +1741,7 @@
   margin-inline: -8px;
   border-radius: var(--ns-radius-sm);
   position: relative;
-  transition: background-color var(--ns-t-micro) var(--ns-ease), padding-left var(--ns-t-micro) var(--ns-ease);
+  transition: background-color var(--ns-t-micro) var(--ns-ease);
 }
 
 .ns-comparison__column li::before {
@@ -1749,20 +1749,21 @@
   position: absolute;
   left: 8px;
   top: 14px;
-  width: 6px;
+  width: 10px;
   height: 1px;
   background: var(--ns-border-strong);
-  transition: width var(--ns-t-micro) var(--ns-ease), background-color var(--ns-t-micro) var(--ns-ease);
+  transform-origin: left center;
+  transform: scaleX(0.6);
+  transition: transform var(--ns-t-micro) var(--ns-ease), background-color var(--ns-t-micro) var(--ns-ease);
 }
 
 @media (hover: hover) and (pointer: fine) {
   .ns-comparison__column li:hover {
     background: rgba(255, 255, 255, 0.03);
-    padding-left: 22px;
   }
 
   .ns-comparison__column li:hover::before {
-    width: 10px;
+    transform: scaleX(1);
     background: var(--ns-border-strong);
   }
 
@@ -1771,7 +1772,7 @@
   }
 
   .ns-comparison__column--accent li:hover::before {
-    width: 10px;
+    transform: scaleX(1);
     background: var(--ns-copper);
   }
 }
