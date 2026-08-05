@@ -27,6 +27,7 @@ export interface LandingT {
     title1: string
     title2: string
     lead: string
+    techNote?: string
     ctaDemo: string
     ctaExplorar: string
   }
@@ -52,15 +53,49 @@ export interface LandingT {
     kicker: string
     title: string
     body: string
-    items: { title: string; description: string }[]
+    items: { title: string; description: string; group?: string }[]
     answerKicker: string
     answerTitle: string
     transformations: { before: string; after: string }[]
+    impact?: string
+  }
+  fmsComplement?: {
+    kicker: string
+    title: string
+    body: string
+    highlight: string
+  }
+  architecture?: {
+    kicker: string
+    title: string
+    stages: { label: string; sublabel: string }[]
+    note: string
+  }
+  comparison?: {
+    kicker: string
+    title: string
+    fmsLabel: string
+    fmsItems: string[]
+    northmineLabel: string
+    northmineItems: string[]
+    closing: string
+  }
+  intelligenceLevels?: {
+    kicker: string
+    title: string
+    levels: { name: string; items: string[] }[]
+    closing: string
   }
   flow: {
     kicker: string
     title: string
     steps: { title: string; description: string }[]
+    closing?: string
+  }
+  decisionCases?: {
+    kicker: string
+    title: string
+    cases: string[]
   }
   benefits: {
     title: string
@@ -68,12 +103,23 @@ export interface LandingT {
   }
   evidence: { kicker: string; title: string; body: string }
   stage: { toolbar: string; alt: string }
-  security: {
+  responsibleAI?: {
     kicker: string
     title: string
     points: { label: string; detail: string }[]
   }
-  cta: { title: string; lead: string; ctaDemo: string; ctaAcceso: string }
+  security: {
+    kicker: string
+    title: string
+    points: { label: string; detail: string }[]
+    disclaimer?: string
+  }
+  demoBadges?: {
+    title: string
+    body: string
+    badges: string[]
+  }
+  cta: { title: string; lead: string; ctaDemo: string; ctaAcceso: string; microcopy?: string }
   footer: {
     tagline: string
     navHistoria: string
@@ -84,6 +130,17 @@ export interface LandingT {
     aria: string
   }
   meta: { title: string; description: string }
+}
+
+/**
+ * Optional sections (fmsComplement, architecture, comparison, intelligenceLevels,
+ * decisionCases, responsibleAI, demoBadges) and optional sub-fields (techNote,
+ * impact, closing, disclaimer, microcopy) are populated for es/en only. For
+ * locales without a translation yet, fall back to the es copy instead of
+ * rendering blank — mirrors the existing whole-locale fallback in useModuleT.
+ */
+export function landingFallback<K extends keyof LandingT>(t: LandingT, key: K): NonNullable<LandingT[K]> {
+  return (t[key] ?? landingT.es[key]) as NonNullable<LandingT[K]>
 }
 
 export const landingT: ModuleDict<LandingT> = {
@@ -108,12 +165,13 @@ export const landingT: ModuleDict<LandingT> = {
       ariaCerrar: 'Cerrar navegación',
     },
     hero: {
-      badge: 'Inteligencia operacional para minería',
-      title1: 'Observe la operación completa.',
-      title2: 'Decida con contexto.',
-      lead: 'NORTHMINE es un Command Center minero que transforma datos dispersos en decisiones priorizadas, explicables y trazables durante el turno.',
-      ctaDemo: 'Solicitar acceso al demo',
-      ctaExplorar: 'Explorar la plataforma',
+      badge: 'OPERATIONAL INTELLIGENCE LAYER FOR MINING',
+      title1: 'Transforme los datos de su FMS en',
+      title2: 'decisiones operacionales rentables.',
+      lead: 'NORTHMINE no reemplaza su sistema de gestión de flota. Interpreta lo que Wenco, Modular, MineStar o Hexagon ya registran y lo convierte en decisiones priorizadas, explicables y trazables durante el turno.',
+      techNote: 'Compatible mediante conectores configurables con los principales FMS de la industria. Disponibilidad según arquitectura y permisos del cliente.',
+      ctaDemo: 'Solicitar evaluación técnica',
+      ctaExplorar: 'Explorar demo operacional',
     },
     definition: {
       kicker: 'Qué es NORTHMINE',
@@ -138,9 +196,14 @@ export const landingT: ModuleDict<LandingT> = {
       title: 'La mina tiene datos. La decisión sigue fragmentada.',
       body: 'El desafío no es producir otro reporte. Es relacionar la condición del turno, su causa y la acción disponible antes de que la ventana de recuperación desaparezca.',
       items: [
-        { title: 'Información fragmentada', description: 'Cada área posee datos correctos, pero no una visión operacional compartida.' },
+        { group: 'Datos y tiempo', title: 'Datos abundantes, decisión lenta', description: 'El FMS registra cada evento del turno, pero relacionar causa, impacto y acción sigue siendo manual.' },
         { title: 'Brechas detectadas tarde', description: 'Cuando la desviación se entiende, queda poco tiempo para recuperar el turno.' },
-        { title: 'Indicadores sin prioridad', description: 'Muchos KPI muestran qué ocurrió, pero no explican qué atender primero.' },
+        { title: 'Reportes que llegan tarde', description: 'El análisis ejecutivo se arma horas o días después de la decisión que debía informar.' },
+        { group: 'Fragmentación', title: 'Información fragmentada', description: 'Producción, flota, carguío y mantenimiento generan reportes separados que nadie concilia a tiempo.' },
+        { title: 'Conocimiento no escrito', description: 'La experiencia del supervisor no queda registrada ni disponible para el próximo turno.' },
+        { title: 'Dependencia de un solo sistema', description: 'Cuando todo vive solo en el FMS, la mina pierde la lectura económica de lo que el FMS no fue diseñado para explicar.' },
+        { group: 'Prioridad económica', title: 'Indicadores sin prioridad', description: 'Decenas de KPI muestran qué ocurrió, pero no explican qué atender primero.' },
+        { title: 'Pérdidas ocultas', description: 'Ciclos degradados, esperas y microparadas rara vez se cuantifican en su impacto económico real.' },
       ],
       answerKicker: 'La respuesta NORTHMINE',
       answerTitle: 'De múltiples fuentes a una lectura operacional común.',
@@ -150,14 +213,84 @@ export const landingT: ModuleDict<LandingT> = {
         { before: 'Alertas planas', after: 'Riesgo priorizado' },
         { before: 'Decisiones informales', after: 'Acción y resultado trazables' },
       ],
+      impact: 'El resultado no es falta de datos: es falta de tiempo para convertirlos en decisión antes de que la oportunidad desaparezca.',
+    },
+    fmsComplement: {
+      kicker: 'No reemplazamos su FMS',
+      title: 'Su FMS captura lo que ocurre. NORTHMINE explica qué hacer después.',
+      body: 'Wenco, Modular, MineStar y Hexagon están diseñados para registrar y controlar la operación en tiempo real: posición de equipos, ciclos, asignaciones, alarmas. NORTHMINE se conecta a esos datos para agregar la capa que el FMS no está diseñado para entregar: por qué ocurrió la desviación, cuánto cuesta y qué decisión priorizar.',
+      highlight: 'El FMS registra y controla la operación. NORTHMINE interpreta, relaciona y convierte esos datos en decisiones.',
+    },
+    architecture: {
+      kicker: 'Cómo se integra',
+      title: 'De la operación física a la decisión, en cinco capas.',
+      stages: [
+        { label: 'Operación minera', sublabel: 'Carguío, transporte, procesos y mantenimiento en el rajo.' },
+        { label: 'FMS y sistemas fuente', sublabel: 'Wenco, Modular, MineStar, Hexagon, SQL y planillas operacionales.' },
+        { label: 'Conectores read-only', sublabel: 'Lectura configurable, sin escribir ni modificar los sistemas fuente.' },
+        { label: 'NORTHMINE', sublabel: 'Interpreta las señales, relaciona causas y prioriza el riesgo económico.' },
+        { label: 'Decisión operacional', sublabel: 'Recomendación explicable y auditable, ejecutada por el equipo de turno.' },
+      ],
+      note: 'Integración compatible mediante conectores configurables. Disponibilidad y alcance según la arquitectura y los permisos de cada sitio.',
+    },
+    comparison: {
+      kicker: 'Complementarios, no en competencia',
+      title: 'Lo que hace su FMS. Lo que agrega NORTHMINE.',
+      fmsLabel: 'FMS (Wenco, Modular, MineStar, Hexagon)',
+      fmsItems: [
+        'Registra posición y estado de cada equipo en tiempo real',
+        'Controla asignaciones de carguío y transporte',
+        'Ejecuta el despacho operacional del turno',
+        'Genera alarmas por evento',
+        'Almacena el historial operacional crudo',
+        'Opera como sistema de control de misión crítica',
+      ],
+      northmineLabel: 'NORTHMINE',
+      northmineItems: [
+        'Relaciona señales de producción, flota, riesgo y plan',
+        'Explica la causa probable de una brecha',
+        'Prioriza qué decisión evaluar primero según impacto económico',
+        'Traduce eventos operacionales en pérdida estimada',
+        'Deja trazabilidad de la decisión y su resultado',
+        'Apoya al equipo de turno sin ejecutar acciones críticas de forma autónoma',
+      ],
+      closing: 'FMS = ejecución operacional. NORTHMINE = inteligencia para decidir.',
+    },
+    intelligenceLevels: {
+      kicker: 'Tres niveles de inteligencia',
+      title: 'De lo que pasó en el turno a lo que le cuesta a la operación.',
+      levels: [
+        { name: 'Operacional', items: ['Estado de equipos y frentes en el turno actual', 'Brechas frente al plan del día', 'Alertas priorizadas por riesgo'] },
+        { name: 'Analítico', items: ['Causas recurrentes de pérdida de ciclo', 'Comparación entre turnos, palas y frentes', 'Patrones que anteceden una avería'] },
+        { name: 'Económico', items: ['Estimación del costo de cada brecha', 'Impacto proyectado en el cierre del mes', 'Priorización de decisiones por retorno esperado'] },
+      ],
+      closing: 'Cada nivel se apoya en el anterior: sin lectura operacional confiable no hay análisis útil, y sin análisis no hay estimación económica defendible.',
     },
     flow: {
       kicker: 'Cómo funciona',
       title: 'De la señal dispersa a la decisión trazable.',
       steps: [
-        { title: 'Conectar señales', description: 'Producción, flota, carguío y riesgo se integran desde sus fuentes operacionales, sin planillas intermedias.' },
-        { title: 'Interpretar la operación', description: 'NORTHMINE ordena las señales en estado, brecha y ritmo requerido para cerrar el turno.' },
-        { title: 'Recomendar y auditar decisiones', description: 'Cada recomendación queda registrada junto a la acción tomada y su resultado posterior.' },
+        { title: 'Conectar', description: 'NORTHMINE se integra a su FMS y sistemas fuente mediante conectores read-only configurables, sin intervenir la operación.' },
+        { title: 'Validar', description: 'Las señales se contrastan contra el plan y reglas de calidad antes de convertirse en lectura operacional.' },
+        { title: 'Interpretar', description: 'NORTHMINE ordena las señales en estado, brecha, causa probable y riesgo asociado.' },
+        { title: 'Recomendar', description: 'El sistema estima el impacto económico y prioriza qué decisión evaluar primero.' },
+        { title: 'Decidir', description: 'El equipo de turno revisa la recomendación, decide y ejecuta con supervisión humana.' },
+      ],
+      closing: 'NORTHMINE recomienda; las personas deciden. Ninguna acción crítica se ejecuta de forma autónoma.',
+    },
+    decisionCases: {
+      kicker: 'Casos de decisión',
+      title: 'Preguntas que NORTHMINE ayuda a responder cada turno.',
+      cases: [
+        '¿Qué frente está arriesgando el cumplimiento del plan diario?',
+        '¿Qué CAEX concentra más pérdida de ciclo esta semana?',
+        '¿Qué avería recurrente está costando más disponibilidad?',
+        '¿Qué pala rinde por debajo de su capacidad esperada?',
+        '¿Dónde está la pérdida oculta que ningún reporte muestra?',
+        '¿Qué decisión del turno anterior no se documentó?',
+        '¿Qué riesgo operacional debería priorizarse hoy?',
+        '¿Cuánto cuesta, en términos económicos, la brecha actual?',
+        '¿Qué acción tiene el mayor retorno esperado antes de que cierre el turno?',
       ],
     },
     benefits: {
@@ -180,23 +313,42 @@ export const landingT: ModuleDict<LandingT> = {
       toolbar: 'CAPTURA DEL DEMO · DATOS SINTÉTICOS',
       alt: 'Captura del Decision Cockpit de NORTHMINE mostrando la lectura ejecutiva del turno con datos de demostración sintéticos',
     },
+    responsibleAI: {
+      kicker: 'IA responsable',
+      title: 'Recomienda con contexto. Decide el equipo de turno.',
+      points: [
+        { label: 'Supervisión humana', detail: 'Ninguna recomendación se ejecuta automáticamente sobre equipos o el plan operacional.' },
+        { label: 'Explicabilidad', detail: 'Cada recomendación muestra la señal, la causa estimada y el cálculo que la sustenta.' },
+        { label: 'Trazabilidad', detail: 'Condición, decisión, responsable y resultado quedan registrados y son auditables.' },
+        { label: 'Alcance definido', detail: 'NORTHMINE apoya la decisión operacional; no reemplaza el juicio profesional ni sistemas de seguridad crítica.' },
+      ],
+    },
     security: {
-      kicker: 'Seguridad y transparencia',
+      kicker: 'Integración segura',
       title: 'Acceso controlado, sin mezclar entornos.',
       points: [
+        { label: 'Conectores read-only', detail: 'La integración lee datos del FMS sin escribir ni modificar su configuración.' },
+        { label: 'Arquitectura desacoplada', detail: 'NORTHMINE opera en un entorno separado; una falla en la integración no afecta al FMS ni a la operación.' },
         { label: 'Entorno demostrativo', detail: 'Separado del producto real, sin acceso a bases operacionales.' },
         { label: 'Datos sintéticos', detail: 'Valores representativos, identificados en cada pantalla del demo.' },
         { label: 'Autenticación', detail: 'Acceso individual, revisado antes de habilitarse.' },
-        { label: 'Control administrativo', detail: 'Roles y permisos gestionados desde el panel de administración.' },
+        { label: 'Control administrativo (RBAC)', detail: 'Roles y permisos gestionados desde el panel de administración.' },
         { label: 'Persistencia', detail: 'Solicitudes almacenadas por separado de los datos operacionales.' },
         { label: 'Privacidad', detail: 'Tratamiento de datos documentado y disponible para revisión.' },
       ],
+      disclaimer: 'La disponibilidad y el alcance de cada conector dependen de la arquitectura, versión y permisos del sitio cliente.',
+    },
+    demoBadges: {
+      title: 'Explore la demo pública con datos sintéticos.',
+      body: 'El entorno de demostración usa datos representativos, claramente identificados, y no se conecta a ninguna base operacional real.',
+      badges: ['Datos sintéticos', 'Sin acceso a sistemas reales', 'Acceso individual revisado', 'Entorno aislado', 'Actualizado por versión'],
     },
     cta: {
-      title: 'Vea NORTHMINE operando con contexto.',
-      lead: 'Solicite acceso al entorno demostrativo y explore el Cockpit, los equipos y el Mapa Operacional 3D.',
-      ctaDemo: 'Solicitar acceso',
-      ctaAcceso: 'Acceder al demo',
+      title: 'Convierta los datos de su FMS en ventaja operacional.',
+      lead: 'Solicite una evaluación técnica o explore el entorno de demostración con datos sintéticos.',
+      ctaDemo: 'Solicitar evaluación técnica',
+      ctaAcceso: 'Ingresar a la demo',
+      microcopy: 'Respuesta en menos de 48 horas hábiles. Sin costo ni compromiso.',
     },
     footer: {
       tagline: 'Inteligencia operacional para minería a cielo abierto.',
@@ -208,8 +360,8 @@ export const landingT: ModuleDict<LandingT> = {
       aria: 'Enlaces del pie',
     },
     meta: {
-      title: 'NORTHMINE Intelligence | Decisiones operacionales mineras',
-      description: 'NORTHMINE conecta producción, flota, carguío y riesgo para convertir señales operacionales dispersas en decisiones comprensibles y trazables.',
+      title: 'NORTHMINE | Operational Intelligence Layer for Mining',
+      description: 'NORTHMINE transforma datos provenientes de FMS y sistemas operacionales en analítica, pérdidas ocultas, predicciones y recomendaciones para apoyar decisiones mineras.',
     },
   },
   en: {
@@ -233,12 +385,13 @@ export const landingT: ModuleDict<LandingT> = {
       ariaCerrar: 'Close navigation',
     },
     hero: {
-      badge: 'Operational intelligence for mining',
-      title1: 'See the full operation.',
-      title2: 'Decide with context.',
-      lead: 'NORTHMINE is a mining Command Center that turns scattered data into prioritized, explainable and traceable decisions during the shift.',
-      ctaDemo: 'Request demo access',
-      ctaExplorar: 'Explore the platform',
+      badge: 'OPERATIONAL INTELLIGENCE LAYER FOR MINING',
+      title1: 'Turn your FMS data into',
+      title2: 'profitable operational decisions.',
+      lead: 'NORTHMINE does not replace your fleet management system. It interprets what Wenco, Modular, MineStar or Hexagon already record and turns it into prioritized, explainable and traceable decisions during the shift.',
+      techNote: "Compatible via configurable connectors with major industry FMS platforms. Availability depends on the client's architecture and permissions.",
+      ctaDemo: 'Request technical evaluation',
+      ctaExplorar: 'Explore operational demo',
     },
     definition: {
       kicker: 'What NORTHMINE is',
@@ -263,9 +416,14 @@ export const landingT: ModuleDict<LandingT> = {
       title: 'The mine has data. The decision is still fragmented.',
       body: 'The challenge is not to produce another report. It is to relate the shift condition, its cause and the available action before the recovery window closes.',
       items: [
-        { title: 'Fragmented information', description: 'Each area has correct data, but no shared operational view.' },
+        { group: 'Data and timing', title: 'Plenty of data, slow decisions', description: 'The FMS records every event of the shift, but relating cause, impact and action is still manual.' },
         { title: 'Gaps detected too late', description: 'By the time the deviation is understood, there is little time left to recover the shift.' },
-        { title: 'Unprioritized indicators', description: 'Many KPIs show what happened, but not what to tackle first.' },
+        { title: 'Late reporting', description: 'Executive analysis gets assembled hours or days after the decision it should have informed.' },
+        { group: 'Fragmentation', title: 'Fragmented information', description: 'Production, fleet, loading and maintenance produce separate reports nobody reconciles in time.' },
+        { title: 'Unwritten knowledge', description: "The supervisor's experience is never recorded or available for the next shift." },
+        { title: 'Single-system dependency', description: 'When everything lives only in the FMS, the mine loses the economic reading of what the FMS was never designed to explain.' },
+        { group: 'Economic priority', title: 'Unprioritized indicators', description: 'Dozens of KPIs show what happened, but not what to tackle first.' },
+        { title: 'Hidden losses', description: 'Degraded cycles, waiting time and micro-stops are rarely quantified in real economic impact.' },
       ],
       answerKicker: 'The NORTHMINE answer',
       answerTitle: 'From multiple sources to one common operational reading.',
@@ -275,14 +433,84 @@ export const landingT: ModuleDict<LandingT> = {
         { before: 'Flat alerts', after: 'Prioritized risk' },
         { before: 'Informal decisions', after: 'Traceable action and outcome' },
       ],
+      impact: "The result is not a lack of data: it's a lack of time to turn it into a decision before the opportunity disappears.",
+    },
+    fmsComplement: {
+      kicker: "We don't replace your FMS",
+      title: 'Your FMS captures what happens. NORTHMINE explains what to do next.',
+      body: 'Wenco, Modular, MineStar and Hexagon are built to record and control the operation in real time: equipment position, cycles, assignments, alarms. NORTHMINE connects to that data to add the layer the FMS was not designed to deliver: why the deviation happened, what it costs and which decision to prioritize.',
+      highlight: 'The FMS records and controls the operation. NORTHMINE interprets, relates and turns that data into decisions.',
+    },
+    architecture: {
+      kicker: 'How it integrates',
+      title: 'From the physical operation to the decision, in five layers.',
+      stages: [
+        { label: 'Mining operation', sublabel: 'Loading, hauling, processes and maintenance in the pit.' },
+        { label: 'FMS and source systems', sublabel: 'Wenco, Modular, MineStar, Hexagon, SQL and operational spreadsheets.' },
+        { label: 'Read-only connectors', sublabel: 'Configurable reads, without writing to or modifying the source systems.' },
+        { label: 'NORTHMINE', sublabel: 'Interprets signals, relates causes and prioritizes economic risk.' },
+        { label: 'Operational decision', sublabel: 'An explainable, auditable recommendation executed by the shift team.' },
+      ],
+      note: "Integration compatible via configurable connectors. Availability and scope depend on each site's architecture and permissions.",
+    },
+    comparison: {
+      kicker: 'Complementary, not competing',
+      title: 'What your FMS does. What NORTHMINE adds.',
+      fmsLabel: 'FMS (Wenco, Modular, MineStar, Hexagon)',
+      fmsItems: [
+        'Records position and status of every unit in real time',
+        'Controls loading and hauling assignments',
+        'Executes the shift operational dispatch',
+        'Generates event-based alarms',
+        'Stores the raw operational history',
+        'Operates as a mission-critical control system',
+      ],
+      northmineLabel: 'NORTHMINE',
+      northmineItems: [
+        'Relates production, fleet, risk and plan signals',
+        'Explains the probable cause of a gap',
+        'Prioritizes which decision to evaluate first by economic impact',
+        'Translates operational events into estimated loss',
+        'Leaves the decision and its outcome traceable',
+        'Supports the shift team without autonomously executing critical actions',
+      ],
+      closing: 'FMS = operational execution. NORTHMINE = intelligence to decide.',
+    },
+    intelligenceLevels: {
+      kicker: 'Three levels of intelligence',
+      title: 'From what happened in the shift to what it costs the operation.',
+      levels: [
+        { name: 'Operational', items: ["Equipment and face status in the current shift", "Gaps against the day's plan", 'Alerts prioritized by risk'] },
+        { name: 'Analytical', items: ['Recurring causes of cycle loss', 'Comparison across shifts, shovels and faces', 'Patterns that precede a breakdown'] },
+        { name: 'Economic', items: ['Estimated cost of each gap', "Projected impact on the month's close", 'Decision prioritization by expected return'] },
+      ],
+      closing: 'Each level builds on the previous one: without a reliable operational reading there is no useful analysis, and without analysis there is no defensible economic estimate.',
     },
     flow: {
       kicker: 'How it works',
       title: 'From scattered signal to traceable decision.',
       steps: [
-        { title: 'Connect signals', description: 'Production, fleet, loading and risk are integrated from their operational sources, with no intermediate spreadsheets.' },
-        { title: 'Interpret the operation', description: 'NORTHMINE orders the signals into status, gap and required pace to close the shift.' },
-        { title: 'Recommend and audit decisions', description: 'Every recommendation is recorded alongside the action taken and its later outcome.' },
+        { title: 'Connect', description: 'NORTHMINE integrates with your FMS and source systems through configurable read-only connectors, without intervening in the operation.' },
+        { title: 'Validate', description: 'Signals are checked against the plan and quality rules before becoming an operational reading.' },
+        { title: 'Interpret', description: 'NORTHMINE orders the signals into status, gap, probable cause and associated risk.' },
+        { title: 'Recommend', description: 'The system estimates the economic impact and prioritizes which decision to evaluate first.' },
+        { title: 'Decide', description: 'The shift team reviews the recommendation, decides and executes with human supervision.' },
+      ],
+      closing: 'NORTHMINE recommends; people decide. No critical action is executed autonomously.',
+    },
+    decisionCases: {
+      kicker: 'Decision cases',
+      title: 'Questions NORTHMINE helps answer every shift.',
+      cases: [
+        "Which face is putting the daily plan at risk?",
+        'Which haul truck is concentrating the most cycle loss this week?',
+        'Which recurring breakdown is costing the most availability?',
+        'Which shovel is performing below its expected capacity?',
+        'Where is the hidden loss that no report shows?',
+        "Which decision from the last shift went undocumented?",
+        'Which operational risk should be prioritized today?',
+        'What does the current gap cost in economic terms?',
+        'Which action has the highest expected return before the shift closes?',
       ],
     },
     benefits: {
@@ -305,23 +533,42 @@ export const landingT: ModuleDict<LandingT> = {
       toolbar: 'DEMO CAPTURE · SYNTHETIC DATA',
       alt: 'Capture of the NORTHMINE Decision Cockpit showing the executive shift reading with synthetic demonstration data',
     },
+    responsibleAI: {
+      kicker: 'Responsible AI',
+      title: 'Recommends with context. The shift team decides.',
+      points: [
+        { label: 'Human supervision', detail: 'No recommendation is automatically executed on equipment or the operational plan.' },
+        { label: 'Explainability', detail: 'Every recommendation shows the signal, the estimated cause and the calculation behind it.' },
+        { label: 'Traceability', detail: 'Condition, decision, owner and outcome are recorded and auditable.' },
+        { label: 'Defined scope', detail: 'NORTHMINE supports the operational decision; it does not replace professional judgment or safety-critical systems.' },
+      ],
+    },
     security: {
-      kicker: 'Security and transparency',
+      kicker: 'Secure integration',
       title: 'Controlled access, without mixing environments.',
       points: [
+        { label: 'Read-only connectors', detail: "The integration reads FMS data without writing to or modifying its configuration." },
+        { label: 'Decoupled architecture', detail: "NORTHMINE runs in a separate environment; an integration failure does not affect the FMS or the operation." },
         { label: 'Demo environment', detail: 'Separate from the real product, with no access to operational databases.' },
         { label: 'Synthetic data', detail: 'Representative values, identified on every demo screen.' },
         { label: 'Authentication', detail: 'Individual access, reviewed before being enabled.' },
-        { label: 'Administrative control', detail: 'Roles and permissions managed from the admin panel.' },
+        { label: 'Administrative control (RBAC)', detail: 'Roles and permissions managed from the admin panel.' },
         { label: 'Persistence', detail: 'Requests stored separately from operational data.' },
         { label: 'Privacy', detail: 'Data handling documented and available for review.' },
       ],
+      disclaimer: "Availability and scope of each connector depend on the client site's architecture, version and permissions.",
+    },
+    demoBadges: {
+      title: 'Explore the public demo with synthetic data.',
+      body: 'The demo environment uses clearly identified, representative data and never connects to a real operational database.',
+      badges: ['Synthetic data', 'No access to real systems', 'Reviewed individual access', 'Isolated environment', 'Updated per release'],
     },
     cta: {
-      title: 'See NORTHMINE operating with context.',
-      lead: 'Request access to the demo environment and explore the Cockpit, the equipment and the 3D Operational Map.',
-      ctaDemo: 'Request access',
-      ctaAcceso: 'Go to demo',
+      title: 'Turn your FMS data into operational advantage.',
+      lead: 'Request a technical evaluation or explore the demo environment with synthetic data.',
+      ctaDemo: 'Request technical evaluation',
+      ctaAcceso: 'Enter the demo',
+      microcopy: 'Response within 48 business hours. No cost, no commitment.',
     },
     footer: {
       tagline: 'Operational intelligence for open-pit mining.',
@@ -333,8 +580,8 @@ export const landingT: ModuleDict<LandingT> = {
       aria: 'Footer links',
     },
     meta: {
-      title: 'NORTHMINE Intelligence | Mining operational decisions',
-      description: 'NORTHMINE connects production, fleet, loading and risk to turn scattered operational signals into understandable, traceable decisions.',
+      title: 'NORTHMINE | Operational Intelligence Layer for Mining',
+      description: 'NORTHMINE turns data from FMS and operational systems into analytics, hidden-loss detection, predictions and recommendations that support mining decisions.',
     },
   },
   de: {

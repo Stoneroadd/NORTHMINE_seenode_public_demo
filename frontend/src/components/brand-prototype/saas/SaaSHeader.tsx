@@ -15,7 +15,7 @@ export function SaaSHeader() {
     { label: t.header.nav.plataforma, href: '#hero' },
     { label: t.header.nav.propuesta, href: '#propuesta' },
     { label: t.header.nav.problema, href: '#problema' },
-    { label: t.header.nav.diferencia, href: '#diferenciadores' },
+    { label: t.header.nav.diferencia, href: '#diferencia' },
     { label: t.header.nav.seguridad, href: '#seguridad' },
     { label: t.header.nav.origen, href: '/origen' },
     { label: t.header.nav.demo, href: '#cta' },
@@ -38,6 +38,15 @@ export function SaaSHeader() {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
+  }, [open])
+
+  useEffect(() => {
+    if (!open) return undefined
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = previousOverflow
+    }
   }, [open])
 
   return (

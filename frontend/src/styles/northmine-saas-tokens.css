@@ -16,7 +16,7 @@
   --ns-border-strong: rgba(255, 255, 255, 0.14);
   --ns-text: #f2f3ef;
   --ns-text-secondary: #a7aca5;
-  --ns-text-muted: #6f756f;
+  --ns-text-muted: #7a807a; /* was #6f756f — that measured ~4.25:1 on --ns-black, just under WCAG AA's 4.5:1 for the mono-label kickers used sitewide */
 
   /* Brand */
   --ns-copper: #c87941;

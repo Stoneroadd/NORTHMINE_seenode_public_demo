@@ -1,14 +1,17 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
-import { modules, moduleFilters } from './moduleData'
+import { modules, moduleFilters, type Module } from './moduleData'
 import { useSaveData } from '../../../hooks/useSaveData'
 import { useModuleGalleryReveal } from '../../../lib/animation/effects'
+import { ModuleLightbox } from './ModuleLightbox'
 
 export function ModuleGallery() {
   const [filter, setFilter] = useState<(typeof moduleFilters)[number]>('Todos')
+  const [activeModule, setActiveModule] = useState<Module | null>(null)
   const reduceMotion = useReducedMotion()
   const saveData = useSaveData()
   const scope = useModuleGalleryReveal<HTMLElement>()
+  const lastTriggerRef = useRef<HTMLButtonElement | null>(null)
 
   const visible = useMemo(
     () => (filter === 'Todos' ? modules : modules.filter((m) => m.category === filter)),
@@ -59,7 +62,15 @@ export function ModuleGallery() {
                 <p className="mono-label ns-gallery__card-category">{module.category}</p>
                 <h3 className="ns-gallery__card-title">{module.name}</h3>
                 <p className="ns-gallery__card-description">{module.description}</p>
-                <div className="ns-gallery__card-frame">
+                <button
+                  type="button"
+                  className="ns-gallery__card-frame"
+                  onClick={(event) => {
+                    lastTriggerRef.current = event.currentTarget
+                    setActiveModule(module)
+                  }}
+                  aria-label={`Ampliar captura: ${module.name}`}
+                >
                   <img
                     src={saveData ? module.imageMobile : module.image}
                     srcSet={saveData ? undefined : `${module.imageMobile} 600w, ${module.image} 1200w`}
@@ -70,12 +81,14 @@ export function ModuleGallery() {
                     loading="lazy"
                   />
                   <span className="ns-gallery__card-plate mono-label">DEMO</span>
-                </div>
+                </button>
               </motion.article>
             ))}
           </AnimatePresence>
         </div>
       </div>
+
+      <ModuleLightbox module={activeModule} onClose={() => setActiveModule(null)} returnFocusRef={lastTriggerRef} />
     </section>
   )
 }

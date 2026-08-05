@@ -5,6 +5,7 @@ import { landingT } from '../../../i18n/modules/landing'
 export function DecisionFlow() {
   const t = useModuleT(landingT)
   const steps = t.flow.steps
+  const closing = t.flow.closing ?? landingT.es.flow.closing
   const scope = useDecisionFlowTimeline<HTMLElement>()
 
   return (
@@ -29,6 +30,8 @@ export function DecisionFlow() {
             </li>
           ))}
         </ol>
+
+        {closing && <p className="ns-flow__closing">{closing}</p>}
       </div>
     </section>
   )

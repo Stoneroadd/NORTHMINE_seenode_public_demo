@@ -22,6 +22,8 @@ export function SecurityTransparency() {
             </div>
           ))}
         </dl>
+
+        {t.security.disclaimer && <p className="ns-security__disclaimer">{t.security.disclaimer}</p>}
       </div>
     </section>
   )
