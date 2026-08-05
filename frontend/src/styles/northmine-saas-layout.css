@@ -1498,7 +1498,7 @@
 }
 
 .ns-evidence__head h2 {
-  max-width: 16ch;
+  max-width: 26ch;
 }
 
 .ns-evidence .ns-stage {
@@ -1553,13 +1553,17 @@
   background: var(--ns-carbon);
 }
 
+/*
+ * Every element in this section shares one centered axis and a narrow
+ * reading column (~8-10 words/line) instead of a full-width paragraph -
+ * a single editorial block, not a headline sitting above unrelated text.
+ * text-align:center only reads as deliberate here because the column is
+ * narrow enough that lines break at similar lengths; the old fix (just
+ * left-aligning the body) treated the symptom, not the composition.
+ */
 .ns-fms__inner {
-  max-width: 760px;
+  max-width: 640px;
   margin-inline: auto;
-}
-
-.ns-fms__inner > .mono-label,
-.ns-fms__title {
   text-align: center;
 }
 
@@ -1567,32 +1571,30 @@
   font-size: clamp(28px, 3.6vw, 42px);
   font-weight: 600;
   line-height: 1.16;
-  margin: 12px 0 22px;
+  margin: 12px 0 26px;
   text-wrap: balance;
 }
 
-/* Kicker + title read as the section's headline and stay centered like
-   the other short section intros (ArchitectureDiagram, IntelligenceLevels);
-   the longer body copy and highlight below are left-aligned since a
-   multi-line centered paragraph reads as ragged, not deliberate. */
 .ns-fms__body {
-  text-align: left;
   color: var(--ns-text-secondary);
   font-size: 16px;
   line-height: 1.65;
-  max-width: 62ch;
-  margin: 0 0 32px;
+  max-width: 46ch;
+  margin: 0 auto 32px;
+  text-wrap: balance;
 }
 
 .ns-fms__highlight {
-  text-align: left;
   font-size: clamp(18px, 2.2vw, 24px);
   font-weight: 600;
   line-height: 1.4;
   color: var(--ns-text);
-  padding: 24px 28px;
+  max-width: 42ch;
+  margin-inline: auto;
+  padding: 24px 0;
   border-top: 1px solid var(--ns-border-strong);
   border-bottom: 1px solid var(--ns-border-strong);
+  text-wrap: balance;
 }
 
 /* ---------------------------------------------------------------- *

@@ -64,7 +64,15 @@
   color: var(--ns-black);
 }
 
-.nm-saas h1, .nm-saas h2, .nm-saas h3, .nm-saas p, .nm-saas ul, .nm-saas ol, .nm-saas dl {
+/*
+ * :where() keeps this reset's specificity at the bare tag (0,0,1) instead of
+ * the (0,1,1) a plain ".nm-saas h2" selector would carry — a single-class
+ * component rule like ".ns-arch__note { margin: 0 auto }" was silently
+ * losing to this reset's margin:0 and never actually centering, across at
+ * least four sections. Do not remove :where() here without re-auditing
+ * every margin:auto / margin-inline:auto rule on a p/h1-h3/ul/ol/dl tag.
+ */
+:where(.nm-saas) h1, :where(.nm-saas) h2, :where(.nm-saas) h3, :where(.nm-saas) p, :where(.nm-saas) ul, :where(.nm-saas) ol, :where(.nm-saas) dl {
   margin: 0;
 }
 
