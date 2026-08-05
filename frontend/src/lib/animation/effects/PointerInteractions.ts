@@ -78,9 +78,17 @@ export function usePointerInteractions<T extends HTMLElement>() {
     const root = scope.current
     if (!root) return
 
-    const mm = gsap.matchMedia()
+    // Plain matchMedia checks, not gsap.matchMedia(): gsap.matchMedia()
+    // wraps its callback in a gsap.context() for auto-revert, and that
+    // context's revert-tracking doesn't support quickTo-driven scale /
+    // rotateX / rotateY (warns "not eligible for reset" and silently
+    // no-ops the tween). x/y are unaffected, which is why buttons partly
+    // worked before this was found. Plain checks avoid that context.
+    const supportsFineHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches
+    const prefersMotion = window.matchMedia('(prefers-reduced-motion: no-preference)').matches
+    if (!supportsFineHover || !prefersMotion) return
 
-    mm.add('(hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference)', () => {
+    {
       // ---- Magnetic buttons ----
       // GSAP owns `transform` on these once quickTo touches it (inline
       // style beats the stylesheet's :hover/:active rules), so press
@@ -159,13 +167,16 @@ export function usePointerInteractions<T extends HTMLElement>() {
       const settleTimer = window.setTimeout(markDirty, 1200)
 
       // ---- Tilt cards ----
+      // Plain gsap.to() here, not quickTo: quickTo's cached setter for
+      // rotateX/rotateY silently no-ops ("not eligible for reset") on a
+      // target that another gsap.context() already tracks transform
+      // properties on (ProductStageReveal's entrance tween) — a one-off
+      // tween per move with overwrite:'auto' composes with it correctly.
       let tiltCard: HTMLElement | null = null
-      let tiltMotion: { rx: (v: number) => void; ry: (v: number) => void } | null = null
       const releaseTilt = () => {
-        tiltMotion?.rx(0)
-        tiltMotion?.ry(0)
+        if (!tiltCard) return
+        gsap.to(tiltCard, { rotateX: 0, rotateY: 0, duration: 0.4, ease: 'power3', overwrite: 'auto' })
         tiltCard = null
-        tiltMotion = null
       }
       // .ns-stage__frame plays a one-shot CSS entrance animation
       // (fill-mode: both) that sets `transform: translateY(0)` on finish.
@@ -231,19 +242,18 @@ export function usePointerInteractions<T extends HTMLElement>() {
           // tilt cards
           const cardTarget = target?.closest?.('.ns-gallery__card-frame, .ns-stage__frame') as HTMLElement | null
           if (cardTarget) {
-            if (tiltCard !== cardTarget) {
-              releaseTilt()
-              tiltCard = cardTarget
-              tiltMotion = {
-                rx: gsap.quickTo(cardTarget, 'rotateX', { duration: 0.4, ease: 'power3' }),
-                ry: gsap.quickTo(cardTarget, 'rotateY', { duration: 0.4, ease: 'power3' }),
-              }
-            }
+            if (tiltCard !== cardTarget) releaseTilt()
+            tiltCard = cardTarget
             const rect = cardTarget.getBoundingClientRect()
             const px = (event.clientX - rect.left) / rect.width - 0.5
             const py = (event.clientY - rect.top) / rect.height - 0.5
-            tiltMotion!.ry(px * CARD_TILT_DEG)
-            tiltMotion!.rx(-py * CARD_TILT_DEG)
+            gsap.to(cardTarget, {
+              rotateY: px * CARD_TILT_DEG,
+              rotateX: -py * CARD_TILT_DEG,
+              duration: 0.4,
+              ease: 'power3',
+              overwrite: 'auto',
+            })
           } else if (tiltCard) {
             releaseTilt()
           }
@@ -277,7 +287,7 @@ export function usePointerInteractions<T extends HTMLElement>() {
         window.clearTimeout(settleTimer)
         window.clearTimeout(animationClearTimer)
       }
-    })
+    }
   }, { scope })
 
   return scope
