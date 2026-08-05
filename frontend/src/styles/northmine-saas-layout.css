@@ -1961,7 +1961,7 @@
 .ns-flow-overview {
   padding-block: clamp(88px, 10vw, 138px);
   border-top: 1px solid var(--ns-border);
-  background: var(--ns-surface);
+  background: rgba(21, 24, 22, 0.55);
 }
 
 .ns-flow-overview__head {
