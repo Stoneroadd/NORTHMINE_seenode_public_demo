@@ -6,10 +6,30 @@
   padding-inline: clamp(20px, 5vw, 64px);
 }
 
+/* Mobile menu: keep every item reachable on short phone viewports. */
+.nm-saas .ns-header__mobile-nav {
+  max-height: calc(100svh - 64px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
 /* ---------------------------------------------------------------- *
  * ≤ 1024px — tablet
  * ---------------------------------------------------------------- */
 @media (max-width: 1024px) {
+  .nm-saas .ns-header__nav {
+    display: none;
+  }
+
+  .nm-saas .ns-header__inner .ns-header__login {
+    display: none;
+  }
+
+  .nm-saas .ns-header__menu-button {
+    display: inline-flex;
+  }
+
   .nm-saas .ns-definition__grid,
   .nm-saas .ns-problem__layout {
     grid-template-columns: 1fr;
@@ -28,9 +48,18 @@
     grid-row: auto;
   }
 
-  .nm-saas .ns-security__inner {
+  .nm-saas .ns-security__inner,
+  .nm-saas .ns-rai__inner {
     grid-template-columns: 1fr;
     gap: 24px;
+  }
+
+  .nm-saas .ns-levels__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .nm-saas .ns-cases__list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .nm-saas .ns-footer__inner {
@@ -55,18 +84,6 @@
  * ≤ 860px — nav collapses to the mobile menu
  * ---------------------------------------------------------------- */
 @media (max-width: 860px) {
-  .nm-saas .ns-header__nav {
-    display: none;
-  }
-
-  .nm-saas .ns-header__inner .ns-header__login {
-    display: none;
-  }
-
-  .nm-saas .ns-header__menu-button {
-    display: inline-flex;
-  }
-
   .nm-saas .ns-reading__indicators {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -81,17 +98,22 @@
   }
 
   .nm-saas .ns-header__logo {
-    width: 200px;
+    width: 176px;
   }
 
   .nm-saas .ns-header__inner {
     padding-block: 10px;
   }
 
+  .nm-saas .ns-btn--sm {
+    min-height: 44px;
+  }
+
   .nm-saas .ns-hero {
-    min-height: min(860px, calc(100svh - 64px));
-    align-items: end;
-    padding-block: 96px 58px;
+    min-height: 100vh;
+    min-height: 100svh;
+    align-items: flex-end;
+    padding-block: clamp(76px, 14vh, 110px) clamp(44px, 7vh, 58px);
   }
 
   .nm-saas .ns-hero__title {
@@ -159,7 +181,8 @@
   }
 
   .nm-saas .ns-mine-band {
-    min-height: 740px;
+    min-height: 560px;
+    min-height: min(640px, 92svh);
     margin-top: 48px;
   }
 
@@ -203,8 +226,38 @@
   .nm-saas .ns-benefits,
   .nm-saas .ns-flow,
   .nm-saas .ns-security,
-  .nm-saas .ns-cta {
+  .nm-saas .ns-cta,
+  .nm-saas .ns-fms,
+  .nm-saas .ns-arch,
+  .nm-saas .ns-comparison,
+  .nm-saas .ns-levels,
+  .nm-saas .ns-cases,
+  .nm-saas .ns-rai {
     padding-block: 64px;
+  }
+
+  .nm-saas .ns-comparison__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .nm-saas .ns-cases__list {
+    grid-template-columns: 1fr;
+  }
+
+  .nm-saas .ns-fms__highlight {
+    padding-inline: 0;
+  }
+
+  .nm-saas .ns-hero__glimpse {
+    margin: 32px auto 44px;
+  }
+
+  .nm-saas .ns-hero__tech-note {
+    margin-top: -20px;
+  }
+
+  .nm-saas .ns-demo-badges__list {
+    gap: 6px;
   }
 
   .nm-saas .ns-reading__indicators {
@@ -277,11 +330,61 @@
  * ≤ 480px — small phones
  * ---------------------------------------------------------------- */
 @media (max-width: 480px) {
+  .nm-saas .ns-header__logo {
+    width: 140px;
+  }
+
+  .nm-saas .ns-footer__logo {
+    width: 150px;
+  }
+
+  .nm-saas .ns-definition__system ol {
+    grid-template-columns: 1fr;
+  }
+
+  .nm-saas .ns-stage__frame {
+    width: 480px;
+  }
+
   .nm-saas .ns-reading__indicators {
     grid-template-columns: 1fr;
   }
 
   .nm-saas .ns-trust__ticker span {
     font-size: 12px;
+  }
+
+  .nm-saas .ns-hero__badge {
+    font-size: 12px;
+    padding-inline: 12px;
+  }
+
+  .nm-saas .ns-flow__steps li {
+    grid-template-columns: 40px 1fr;
+    gap: 12px;
+  }
+
+  .nm-saas .ns-arch__stage {
+    grid-template-columns: 40px 1fr;
+    gap: 14px;
+  }
+
+  .nm-saas .ns-levels__grid {
+    border-left: none;
+  }
+}
+
+/* Safe areas for notched devices (requires viewport-fit=cover) */
+@supports (padding-top: env(safe-area-inset-top)) {
+  .nm-saas .ns-header__inner {
+    padding-top: max(14px, env(safe-area-inset-top));
+  }
+
+  .nm-saas .ns-header__mobile-nav {
+    padding-bottom: max(20px, calc(env(safe-area-inset-bottom) + 12px));
+  }
+
+  .nm-saas .ns-footer {
+    padding-bottom: max(40px, env(safe-area-inset-bottom));
   }
 }
