@@ -127,6 +127,7 @@ export interface LandingT {
     navPrivacidad: string
     navSolicitar: string
     navAcceso: string
+    ctaDemo: string
     status: string
     aria: string
   }
@@ -358,6 +359,7 @@ export const landingT: ModuleDict<LandingT> = {
       navPrivacidad: 'Privacidad',
       navSolicitar: 'Solicitar acceso',
       navAcceso: 'Acceso al demo',
+      ctaDemo: 'Solicitar demo',
       status: 'Demo con datos sintéticos',
       aria: 'Enlaces del pie',
     },
@@ -579,6 +581,7 @@ export const landingT: ModuleDict<LandingT> = {
       navPrivacidad: 'Privacy',
       navSolicitar: 'Request access',
       navAcceso: 'Demo access',
+      ctaDemo: 'Request demo',
       status: 'Demo with synthetic data',
       aria: 'Footer links',
     },
@@ -705,6 +708,7 @@ export const landingT: ModuleDict<LandingT> = {
       navPrivacidad: 'Datenschutz',
       navSolicitar: 'Zugang anfordern',
       navAcceso: 'Demo-Zugang',
+      ctaDemo: 'Demo anfragen',
       status: 'Demo mit synthetischen Daten',
       aria: 'Fußzeilen-Links',
     },
@@ -831,6 +835,7 @@ export const landingT: ModuleDict<LandingT> = {
       navPrivacidad: '隐私',
       navSolicitar: '申请访问',
       navAcceso: '演示访问',
+      ctaDemo: '申请演示',
       status: '使用合成数据的演示',
       aria: '页脚链接',
     },
@@ -957,6 +962,7 @@ export const landingT: ModuleDict<LandingT> = {
       navPrivacidad: 'الخصوصية',
       navSolicitar: 'طلب الوصول',
       navAcceso: 'الوصول للعرض',
+      ctaDemo: 'طلب العرض',
       status: 'عرض ببيانات اصطناعية',
       aria: 'روابط التذييل',
     },
@@ -1083,6 +1089,7 @@ export const landingT: ModuleDict<LandingT> = {
       navPrivacidad: 'Конфиденциальность',
       navSolicitar: 'Запросить доступ',
       navAcceso: 'Доступ к демо',
+      ctaDemo: 'Запросить демо',
       status: 'Демо с синтетическими данными',
       aria: 'Ссылки подвала',
     },

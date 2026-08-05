@@ -22,6 +22,9 @@ export function SaaSFooter() {
         </nav>
 
         <div className="ns-footer__meta">
+          <a className="ns-btn ns-btn--primary" href="/solicitar-demo">
+            {t.footer.ctaDemo}
+          </a>
           <small>© {year} NORTHMINE Intelligence</small>
         </div>
       </div>
