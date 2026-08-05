@@ -50,7 +50,20 @@ export function SaaSHero() {
             {t.hero.ctaExplorar}
           </a>
         </div>
+
+        {t.hero.techNote && <p className="ns-hero__tech-note">{t.hero.techNote}</p>}
       </div>
+
+      <figure className="ns-hero__glimpse" data-hero-glimpse aria-hidden="true">
+        <img
+          src="/assets/landing/prototype/product/cockpit-operational-demo-capture-900.webp"
+          alt=""
+          width={900}
+          height={517}
+          loading="lazy"
+        />
+        <figcaption className="mono-label">{t.stage.toolbar}</figcaption>
+      </figure>
     </section>
   )
 }
