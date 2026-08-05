@@ -5,11 +5,14 @@ import { landingT, landingFallback } from '../../../i18n/modules/landing'
 export function ResponsibleAI() {
   const t = useModuleT(landingT)
   const responsibleAI = landingFallback(t, 'responsibleAI')
+  // Calmer than the default: less travel, slower settle, points arrive
+  // almost together — this section states policy boundaries, it shouldn't
+  // feel energetic.
   const scope = useSectionReveal<HTMLElement>({
     targets: '[data-rai-reveal]',
-    distance: 16,
-    stagger: 0.07,
-    duration: 0.5,
+    distance: 10,
+    stagger: 0.05,
+    duration: 0.75,
   })
 
   return (

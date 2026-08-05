@@ -5,11 +5,14 @@ import { landingT, landingFallback } from '../../../i18n/modules/landing'
 export function IntelligenceLevels() {
   const t = useModuleT(landingT)
   const levels = landingFallback(t, 'intelligenceLevels')
+  // Slower, more pronounced stagger than the default section reveal: each
+  // level should read as building on the one before it ("cada nivel se
+  // apoya en el anterior"), not arriving together.
   const scope = useSectionReveal<HTMLElement>({
     targets: '[data-levels-reveal]',
-    distance: 18,
-    stagger: 0.08,
-    duration: 0.55,
+    distance: 26,
+    stagger: 0.16,
+    duration: 0.6,
   })
 
   return (
