@@ -40,6 +40,15 @@ export function SaaSHeader() {
     return () => window.removeEventListener('keydown', onKey)
   }, [open])
 
+  useEffect(() => {
+    if (!open) return undefined
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = previousOverflow
+    }
+  }, [open])
+
   return (
     <header className={`ns-header${scrolled ? ' is-scrolled' : ''}`}>
       <a className="ns-header__skip" href="#ns-contenido">
