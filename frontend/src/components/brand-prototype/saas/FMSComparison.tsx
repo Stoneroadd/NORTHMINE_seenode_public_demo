@@ -13,7 +13,7 @@ export function FMSComparison() {
   })
 
   return (
-    <section ref={scope} className="ns-comparison" aria-labelledby="ns-comparison-title">
+    <section ref={scope} className="ns-comparison" id="diferencia" aria-labelledby="ns-comparison-title">
       <div className="ns-saas__shell">
         <div className="ns-comparison__head" data-comparison-reveal>
           <p className="mono-label">{comparison.kicker}</p>
