@@ -26,7 +26,7 @@ export function OperationalFlowOverview() {
             src="/assets/landing/saas/operational-flow-overview.png"
             alt={overview.imageAlt}
             width={1672}
-            height={941}
+            height={846}
             loading="lazy"
           />
         </figure>
