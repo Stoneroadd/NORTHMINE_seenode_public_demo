@@ -11,10 +11,7 @@ export function SaaSFooter() {
       <div className="ns-saas__shell ns-footer__inner">
         <div className="ns-footer__brand">
           <NorthmineLogo className="ns-footer__logo" variant="horizontal" loading="lazy" />
-          <div>
-            <span>{t.footer.tagline}</span>
-            {t.footer.address && <address className="ns-footer__address">{t.footer.address}</address>}
-          </div>
+          {t.footer.address && <address className="ns-footer__address">{t.footer.address}</address>}
         </div>
 
         <nav aria-label={t.footer.aria}>
@@ -25,7 +22,6 @@ export function SaaSFooter() {
         </nav>
 
         <div className="ns-footer__meta">
-          <span className="mono-label">{t.footer.status}</span>
           <small>© {year} NORTHMINE Intelligence</small>
         </div>
       </div>
