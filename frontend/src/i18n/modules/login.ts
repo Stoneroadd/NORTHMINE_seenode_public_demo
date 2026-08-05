@@ -68,4 +68,26 @@ export const loginT: ModuleDict<LoginT> = {
     mine_canvas_aria_label: 'Open-pit mine with polygonal benches, haul routes and moving equipment',
     wireframe_aria_label: 'Technical wireframe blueprint of an open-pit mine',
   },
+  de: {
+    err_campos_vacios: 'Bitte Benutzername und Passwort eingeben.',
+    err_api_no_disponible: 'API nicht verfügbar. Prüfen Sie, dass NORTHMINE gestartet ist.',
+    err_credenciales_invalidas: 'Ungültige Anmeldedaten.',
+    err_demasiados_intentos: 'Zu viele Versuche. Bitte warten Sie, bevor Sie sich erneut anmelden.',
+    err_auth_no_disponible: 'Authentifizierung für diese Umgebung nicht verfügbar.',
+    err_servicio_generico: 'Der Dienst konnte die Anmeldung nicht verarbeiten.',
+
+    visual_aria_label: 'Reale Tagebaudesign (DXF) in Rotation, dekorative Ansicht',
+    hud_diseno_mina_real: 'REALES MINENDESIGN',
+    hud_dxf_vista_3d: 'DXF · 3D-ANSICHT',
+
+    acceso_titulo: 'Sicherer operativer Zugriff',
+    placeholder_usuario: 'Benutzer',
+    placeholder_password: 'Passwort',
+
+    status_produccion: 'Produktion',
+    status_demo_local: 'Lokale Demo',
+
+    mine_canvas_aria_label: 'Tagebaumine mit polygonalen Bermen, Förderwegen und beweglichen Geräten',
+    wireframe_aria_label: 'Technischer Wireframe-Plan einer Tagebaumine',
+  },
 }

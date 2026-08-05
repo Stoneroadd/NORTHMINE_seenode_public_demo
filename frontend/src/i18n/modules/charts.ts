@@ -65,6 +65,13 @@ const STATUS_LABEL_EN: Record<string, string> = {
   'SIN ACTIVIDAD': 'NO ACTIVITY',
 }
 
+const STATUS_LABEL_DE: Record<string, string> = {
+  ACTIVO: 'AKTIV',
+  DEMORA: 'VERZÖGERUNG',
+  MANTENCION: 'WARTUNG',
+  'SIN ACTIVIDAD': 'KEINE AKTIVITÄT',
+}
+
 export const chartsT: ModuleDict<ChartsT> = {
   es: {
     notAvailable: 'N/D',
@@ -143,5 +150,44 @@ export const chartsT: ModuleDict<ChartsT> = {
     worstHourPoint: 'Worst hour',
     performanceTooltip: (value) => `Performance: <strong>${value}</strong>`,
     trucksServedTooltip: (value) => `Trucks served: <strong>${value}</strong>`,
+  },
+  de: {
+    notAvailable: 'N/V',
+    statusLabel: (code) => STATUS_LABEL_DE[code] ?? code,
+    fleetCenterLabel: 'Flotte',
+    tonsPerHourSeries: 'Tonnen/h',
+    accumulatedSeries: 'Akkumuliert',
+    tonnageSeries: 'Tonnen',
+    cumulativeProductionKicker: 'Akkumulierte Produktion',
+    realVsPlanTitle: 'Tatsächlich vs. Tagesplan',
+    realObservedTitle: 'Tatsächlich beobachtet',
+    last14DaysTag: 'Letzte 14 Tage',
+    noPlanConfiguredTag: 'Kein Plan konfiguriert',
+    planSeries: 'Plan',
+    realSeries: 'Ist',
+    realObservedSeries: 'Ist beobachtet',
+    currentShiftKicker: 'Aktuelle Schicht',
+    hourlyProductionTitle: 'Stündliche Produktion',
+    liveTag: 'Live',
+    liveBadge: 'LIVE',
+    syncingData: 'Daten werden synchronisiert...',
+    couldNotLoadChart: 'Das Diagramm konnte nicht geladen werden',
+    noDataToDisplay: 'Keine Daten zum Anzeigen',
+    equipmentEventsUnit: 'Geräte/Ereignisse',
+    complianceLabel: 'Erfüllung',
+    complianceTooltip: (pct) => `Erfüllung: <strong>${pct}%</strong>`,
+    currentTooltip: (value) => `Aktuell: <strong>${value}</strong>`,
+    targetTooltip: (value) => `Ziel: <strong>${value}</strong>`,
+    gapTooltip: (value) => `Abweichung: <strong>${value}</strong>`,
+    metricLabel: (metric) => ({ toneladas: 'Tonnen', ciclos: 'Zyklen', demoras: 'Verzögerungen' } as Record<string, string>)[metric] ?? metric,
+    tonnageTooltip: (value) => `Tonnen: <strong>${value}</strong>`,
+    cyclesTooltip: (value) => `Zyklen: <strong>${value}</strong>`,
+    delaysTooltip: (value) => `Verzögerungen: <strong>${value}</strong>`,
+    targetDifferenceTooltip: (value) => `Zielabweichung: <strong>${value}</strong>`,
+    hourlyTargetSeries: 'Stundenziel',
+    bestHourPoint: 'Beste Stunde',
+    worstHourPoint: 'Schlechteste Stunde',
+    performanceTooltip: (value) => `Leistung: <strong>${value}</strong>`,
+    trucksServedTooltip: (value) => `Bediente Lkw: <strong>${value}</strong>`,
   },
 }

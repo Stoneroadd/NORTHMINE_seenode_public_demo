@@ -33,4 +33,14 @@ export const statusT: ModuleDict<StatusT> = {
     apiConnected: 'API connected',
     apiUnreachable: 'API not responding',
   },
+  de: {
+    systemStatusAria: 'Systemstatus',
+    production: 'Produktion',
+    local: 'Lokal',
+    dbConnected: 'DB verbunden',
+    dbDisconnected: 'DB nicht verbunden',
+    checkingApi: 'API wird geprüft',
+    apiConnected: 'API verbunden',
+    apiUnreachable: 'API antwortet nicht',
+  },
 }

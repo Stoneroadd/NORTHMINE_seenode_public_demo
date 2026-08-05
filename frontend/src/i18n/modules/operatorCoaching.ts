@@ -61,4 +61,25 @@ export const operatorCoachingT: ModuleDict<OperatorCoachingT> = {
     fortaleza_debilidad: (fuerteLabel, fuerteValor, debilLabel, debilValor) =>
       `Strength: ${fuerteLabel} (${fuerteValor}). Priority improvement area: ${debilLabel} (${debilValor}).`,
   },
+  de: {
+    component_productividad: 'Produktivität',
+    component_disponibilidad: 'Verfügbarkeit',
+    component_utilizacion: 'Auslastung',
+    component_control_demoras: 'Verzögerungskontrolle',
+    component_seguridad: 'Sicherheit',
+    score_vs_flota: (direccion, actual, promedio, deltaSufijo) =>
+      `Globaler Score ${direccion} dem Flottendurchschnitt (${actual} vs. ${promedio}${deltaSufijo}`,
+    sobre: 'über',
+    bajo: 'unter',
+    en_linea_con: 'im Einklang mit',
+    delta_pct_sufijo: (pct) => `, ${pct})`,
+    productividad_vs_flota: (pct) => ` · Produktivität ${pct} vs. Flotte`,
+    tendencia_al_alza: (antes, despues, delta, turnos) =>
+      `Aufwärtstrend: Der Score stieg im Zeitraum von ${antes} auf ${despues} (${delta} Punkte) über ${turnos} gemessene Schichten.`,
+    tendencia_a_la_baja: (antes, despues, delta, turnos) =>
+      `Abwärtstrend: Der Score fiel im Zeitraum von ${antes} auf ${despues} (${delta} Punkte) über ${turnos} gemessene Schichten.`,
+    tendencia_estable: (turnos) => `Stabiler Score im Zeitraum (${turnos} gemessene Schichten, Abweichung unter 2 Punkten).`,
+    fortaleza_debilidad: (fuerteLabel, fuerteValor, debilLabel, debilValor) =>
+      `Stärke: ${fuerteLabel} (${fuerteValor}). Prioritärer Verbesserungsbereich: ${debilLabel} (${debilValor}).`,
+  },
 }

@@ -11,4 +11,7 @@ export const layoutT: ModuleDict<LayoutT> = {
   en: {
     cerrar_navegacion: 'Close navigation',
   },
+  de: {
+    cerrar_navegacion: 'Navigation schließen',
+  },
 }

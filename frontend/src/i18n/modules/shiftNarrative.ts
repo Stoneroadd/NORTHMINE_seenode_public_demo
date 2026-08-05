@@ -68,4 +68,27 @@ export const shiftNarrativeT: ModuleDict<ShiftNarrativeT> = {
     sin_causa_evidente: 'There is no single clear cause in the available data (no anomalies or below-average units stand out); check face conditions, weather or fleet availability.',
     sobre_meta_mensaje: 'Shift above target: keep the current pace and watch for cycle anomalies in the remaining hours.',
   },
+  de: {
+    estado_sobre_meta: 'ueber dem Ziel',
+    estado_cerca_meta: 'nahe am Ziel',
+    estado_brecha_moderada: 'unter dem Ziel, mit moderater Luecke',
+    estado_brecha_importante: 'mit einer erheblichen Luecke gegenueber dem Ziel',
+    parrafo1: (p) =>
+      `Die ${p.shiftLabel.toLowerCase()} vom ${p.fecha} ist ${p.horas}h ${p.minutos}m im Gange, `
+      + `mit ${p.toneladas} bewegt gegenueber einem Ziel von ${p.meta} (${p.cumplimiento}%). `
+      + `Die Schicht liegt ${p.estado}`,
+    brecha_sufijo: (toneladas) => `, mit einer Luecke von ${toneladas}.`,
+    lidera_turno: (caexId, toneladas, ciclos) => `${caexId} fuehrt die Schicht mit ${toneladas} in ${ciclos} Zyklen an`,
+    caex_bajo_promedio: (n) => `${n} ${n === 1 ? 'CAEX arbeitet' : 'CAEX arbeiten'} unter 80% des Flottendurchschnitts`,
+    sin_actividad: (n) => `${n} ohne kuerzliche Aktivitaet`,
+    posible_averia: (n) => `${n} mit moeglicher Stoerung`,
+    anomalias_criticas: (n) => `${n} ${n === 1 ? 'kritische Zyklusanomalie' : 'kritische Zyklusanomalien'} aktiv`,
+    lo_destacado: (parts) => `Hervorzuheben: ${parts}.`,
+    causa_criticas: (n) => `die ${n} kritischen Zyklusanomalien (Geraete laenger als ueblich stillstehend)`,
+    causa_bajo_promedio: (n) => `die ${n} unterdurchschnittlichen Geraete`,
+    causa_posible_averia: (n) => `${n} Geraete mit moeglicher Stoerung`,
+    brecha_explicada: (causas) => `Die Luecke ist teilweise durch ${causas} erklaerbar. Diese Geraete zuerst pruefen, bevor zusaetzliche Ressourcen eingesetzt werden.`,
+    sin_causa_evidente: 'In den verfuegbaren Daten gibt es keine eindeutige Ursache (keine Anomalien oder auffaellige unterdurchschnittliche Geraete); Bedingungen an der Abbaufront, Wetter oder Flottenverfuegbarkeit pruefen.',
+    sobre_meta_mensaje: 'Schicht ueber dem Ziel: aktuelles Tempo beibehalten und ueberwachen, dass in den verbleibenden Stunden keine Zyklusanomalien auftreten.',
+  },
 }

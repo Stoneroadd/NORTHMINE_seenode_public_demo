@@ -86,4 +86,32 @@ export const auditLogT: ModuleDict<AuditLogT> = {
 
     mostrando_de_eventos: (shown, total) => `Showing ${shown} of ${total} events`,
   },
+  de: {
+    acceso_restringido: 'Eingeschränkter Zugriff',
+    acceso_restringido_desc: 'Nur Administratoren können das Prüfprotokoll einsehen.',
+
+    eyebrow: 'Sicherheit',
+    titulo: '🔒 Prüfprotokoll',
+    btn_exportar_csv: 'CSV exportieren',
+    privacy_notice: 'Netzwerkidentitäten werden geschützt und in dieser Demo-Umgebung nicht angezeigt.',
+
+    label_usuario: 'Benutzer',
+    label_endpoint: 'Endpunkt',
+    label_desde: 'Von (ISO)',
+    placeholder_usuario: 'admin…',
+    placeholder_endpoint: '/api/…',
+    placeholder_desde: '2026-05-31T00:00:00Z',
+
+    col_timestamp: 'ZEITSTEMPEL',
+    col_usuario: 'BENUTZER',
+    col_metodo: 'METHODE',
+    col_endpoint: 'ENDPUNKT',
+    col_status: 'STATUS',
+    col_ms: 'MS',
+
+    cargando: 'Wird geladen…',
+    error_cargar: 'Fehler beim Laden des Protokolls.',
+
+    mostrando_de_eventos: (shown, total) => `Zeige ${shown} von ${total} Ereignissen`,
+  },
 }

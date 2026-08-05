@@ -26,4 +26,12 @@ export const commonT: ModuleDict<CommonT> = {
     loadingStateLabel: 'Loading operational data...',
     retryAction: 'Retry',
   },
+  de: {
+    emptyStateTitle: 'Keine Daten verfügbar',
+    emptyStateDetail: 'Keine Einträge für den ausgewählten Filter.',
+    errorStateTitle: 'Das Modul konnte nicht geladen werden',
+    errorStateDetail: 'Prüfen Sie, dass die FastAPI-API verfügbar ist.',
+    loadingStateLabel: 'Betriebsdaten werden geladen...',
+    retryAction: 'Erneut versuchen',
+  },
 }

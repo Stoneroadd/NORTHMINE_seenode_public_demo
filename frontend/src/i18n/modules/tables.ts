@@ -36,4 +36,15 @@ export const tablesT: ModuleDict<TablesT> = {
     colFeaturedCaex: 'Featured CAEX',
     colDominantDestination: 'Dominant destination',
   },
+  de: {
+    notAvailable: 'N/V',
+    mineOperation: 'Minenbetrieb',
+    executiveSummaryByFront: 'Managementübersicht nach Front',
+    top5Units: 'Top 5 Geräte',
+    colLoadingUnit: 'Ladegerät',
+    colTonnage: 'Tonnen',
+    colCycles: 'Zyklen',
+    colFeaturedCaex: 'Hervorgehobener CAEX',
+    colDominantDestination: 'Dominantes Ziel',
+  },
 }

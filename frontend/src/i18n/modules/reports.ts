@@ -132,4 +132,47 @@ export const reportsT: ModuleDict<ReportsT> = {
     principales_alertas: 'Main alerts',
     recomendaciones: 'Recommendations',
   },
+  de: {
+    filtro_actual: 'Aktuell',
+    filtro_dia: 'Tagschicht',
+    filtro_noche: 'Nachtschicht',
+    filtro_todos: 'Alle',
+
+    loading_reporte: 'Verbinde Executive-Bericht mit NORTHMINE...',
+    error_con_mensaje: (msg) => `Der Bericht /api/reports/shift konnte nicht geladen werden: ${msg}`,
+    error_generico: 'Der Bericht /api/reports/shift konnte nicht geladen werden.',
+    error_sufijo: ' Demo wird nicht ohne expliziten Backend-Modus verwendet.',
+
+    fuente_cache_real: 'ECHTER CACHE',
+    fuente_modo_demo: 'DEMO-MODUS',
+    fuente_datos_reales: 'ECHTE DATEN',
+    sin_registro: 'Kein Eintrag',
+
+    eyebrow: 'Berichte',
+    titulo: 'Executive-Zusammenfassung der Schicht',
+    descripcion: 'Bericht verbunden mit dem NORTHMINE-System mit Zielerreichung, Abweichung, Top-Geräten, Alerts und Empfehlungen.',
+
+    btn_actualizar_aria: 'Bericht aktualisieren',
+    btn_actualizar: 'Aktualisieren',
+
+    filtros_titulo: 'Berichtsfilter',
+    estado_conexion_aria: 'Verbindungsstatus des Berichts',
+    label_fuente: 'Quelle',
+    label_sistema: 'System',
+    label_ultimo_registro: 'Letzter Eintrag',
+    label_generado: 'Generiert',
+
+    eyebrow_reporte_ejecutivo: 'Executive-Bericht',
+    turno_fecha: (turno, fecha) => `Schicht ${turno} - ${fecha}`,
+    equipo_lider_carguio_titulo: 'Führender Bagger',
+    equipo_lider_carguio_subtitulo: 'PALA 1 / hohe Ladeleistung',
+    caex_destacado_titulo: 'Hervorgehobene CAEX',
+    caex_destacado_subtitulo: 'Lkw mit dem höchsten Beitrag der Schicht',
+    kpi_toneladas: 'Tonnen',
+    kpi_meta: 'Ziel',
+    kpi_brecha: 'Abweichung',
+    kpi_top_carguio: 'Führender Bagger',
+    principales_alertas: 'Wichtigste Alerts',
+    recomendaciones: 'Empfehlungen',
+  },
 }

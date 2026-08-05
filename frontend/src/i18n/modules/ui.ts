@@ -23,4 +23,10 @@ export const uiT: ModuleDict<UiT> = {
     live: 'live',
     loading: 'Loading...',
   },
+  de: {
+    sessionExpiringIn: (minutes, seconds) => `⚠ AUS SICHERHEITSGRÜNDEN LÄUFT IHRE SITZUNG IN ${minutes}:${seconds} AB`,
+    continueSession: 'SITZUNG FORTSETZEN',
+    live: 'live',
+    loading: 'Wird geladen...',
+  },
 }

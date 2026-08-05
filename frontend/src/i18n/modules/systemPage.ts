@@ -104,4 +104,38 @@ export const systemPageT: ModuleDict<SystemPageT> = {
     ultimos_errores_titulo: 'Latest errors',
     sin_errores: 'No recent errors recorded.',
   },
+  de: {
+    eyebrow: 'System',
+    titulo: 'Technischer Status NORTHMINE',
+
+    metric_backend: 'Backend',
+    metric_version: 'Version',
+    metric_base_datos: 'Datenbank',
+    metric_usuarios: 'Benutzer',
+    metric_entorno: 'Umgebung',
+    metric_cpu_proceso: 'Prozess-CPU',
+    metric_memoria: 'Speicher',
+
+    verificando: 'wird geprüft',
+    no_disponible: 'nicht verfügbar',
+
+    conectividad_titulo: 'Konnektivität',
+    conectividad_api: 'API',
+    conectividad_api_protegida: 'Geschützter Kanal',
+    conectividad_estado: 'Status',
+    conectividad_produccion_lista: 'Produktion bereit',
+    conectividad_si: 'ja',
+    conectividad_no: 'nein',
+    conectividad_frontend_esperado: 'Erwartetes Frontend',
+    conectividad_local: 'lokal',
+
+    seguridad_titulo: 'Sicherheit',
+    seguridad_sesiones_activas: 'Aktive Sitzungen',
+    seguridad_intentos_fallidos: 'Fehlgeschlagene Anmeldungen in der letzten Stunde',
+    seguridad_ips_bloqueadas: 'Netzwerksperren',
+    seguridad_audit_log: 'Prüfprotokoll',
+
+    ultimos_errores_titulo: 'Letzte Fehler',
+    sin_errores: 'Keine kürzlichen Fehler erfasst.',
+  },
 }

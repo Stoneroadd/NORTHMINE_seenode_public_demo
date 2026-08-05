@@ -247,4 +247,84 @@ export const adminUsersT: ModuleDict<AdminUsersT> = {
     btn_guardando: 'Saving...',
     btn_guardar: 'Save',
   },
+  de: {
+    role_label: (role) => roleLabelBase(role, 'BETRACHTER'),
+
+    sin_registro: 'Keine Aufzeichnung',
+    operacion_no_disponible: 'Vorgang nicht verfügbar.',
+
+    err_username_requerido: 'Benutzername erforderlich, mindestens 3 Zeichen.',
+    err_nombre_requerido: 'Name erforderlich.',
+    err_email_invalido: 'Ungültige E-Mail.',
+    err_password_debil: 'Passwort erfordert mindestens 10 Zeichen und 3 Zeichentypen.',
+    err_rol_requerido: 'Rolle erforderlich.',
+
+    notice_usuario_creado: 'Benutzer erstellt.',
+    notice_usuario_actualizado: 'Benutzer aktualisiert.',
+    notice_rol_actualizado: 'Rolle aktualisiert.',
+    notice_estado_actualizado: 'Status aktualisiert.',
+    notice_password_reseteada: 'Passwort zurückgesetzt.',
+
+    confirm_cambiar_rol: (username, roleLabel) => `Rolle von ${username} auf ${roleLabel} ändern?`,
+    confirm_activar: (username) => `Benutzer ${username} aktivieren?`,
+    confirm_desactivar: (username) => `Benutzer ${username} deaktivieren?`,
+
+    acceso_restringido: 'Eingeschränkter Zugriff',
+    acceso_restringido_titulo: 'Benutzer',
+    acceso_restringido_desc: 'Modul nur für die Rolle Administrator verfügbar.',
+
+    eyebrow: 'Administration',
+    titulo: 'Benutzer und Rollen',
+    btn_actualizar: 'Aktualisieren',
+    btn_crear_usuario: 'Benutzer erstellen',
+
+    stat_total: 'Benutzer gesamt',
+    stat_activos: 'Aktiv',
+    stat_admins_activos: 'Aktive ADMINs',
+    stat_demo: 'Demo',
+
+    cargando_usuarios: 'Benutzer werden geladen...',
+    error_cargar_usuarios: 'Benutzer konnten nicht geladen werden.',
+    sin_usuarios: 'Keine Benutzer registriert.',
+
+    col_usuario: 'Benutzer',
+    col_nombre: 'Name',
+    col_email: 'E-Mail',
+    col_rol: 'Rolle',
+    col_estado: 'Status',
+    col_tipo: 'Typ',
+    col_ultimo_login: 'Letzte Anmeldung',
+    col_creado: 'Erstellt',
+    col_acciones: 'Aktionen',
+
+    sin_email: 'Keine E-Mail',
+    pill_activo: 'AKTIV',
+    pill_inactivo: 'INAKTIV',
+    pill_demo: 'DEMO',
+    pill_real: 'REAL',
+
+    btn_editar: 'Bearbeiten',
+    btn_reset: 'Zurücksetzen',
+    btn_activar: 'Aktivieren',
+    btn_desactivar: 'Deaktivieren',
+
+    panel_titulo_nuevo: 'Neuer Benutzer',
+    panel_titulo_editar: 'Benutzer bearbeiten',
+    panel_titulo_password: 'Passwort zurücksetzen',
+    panel_usuario_fallback: 'Benutzer',
+    btn_cerrar: 'Schließen',
+
+    field_username: 'Benutzername',
+    field_nombre_completo: 'Vollständiger Name',
+    field_email: 'E-Mail',
+    placeholder_email: 'benutzer@firma.de',
+    field_rol: 'Rolle',
+    field_faena: 'Standort',
+    field_empresa: 'Unternehmen',
+    field_nueva_password: 'Neues Passwort',
+    field_usuario_activo: 'Aktiver Benutzer',
+
+    btn_guardando: 'Wird gespeichert...',
+    btn_guardar: 'Speichern',
+  },
 }
