@@ -179,10 +179,14 @@
 }
 
 .ns-header__logo {
+  /* Same bug as the footer logo (see its fix): the source asset is a near-
+     square lockup (1536x1024), so width:552px/height:auto rendered a
+     ~123px-tall image and bloated the whole sticky header to ~173px.
+     Size by height instead so the header stays a normal navbar height. */
   display: block;
-  width: 552px;
+  width: auto;
+  height: 40px;
   max-width: 100%;
-  height: auto;
   object-fit: contain;
   object-position: left center;
 }
@@ -270,21 +274,47 @@
   justify-content: center;
   gap: 5px;
   cursor: pointer;
+  transition: border-color var(--ns-t-micro) var(--ns-ease), background-color var(--ns-t-micro) var(--ns-ease);
+}
+
+.ns-header__menu-button:active {
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .ns-header__menu-button span {
   width: 16px;
   height: 1.5px;
   background: var(--ns-text);
+  transition: transform 220ms var(--ns-ease), opacity 220ms var(--ns-ease), width 220ms var(--ns-ease);
 }
 
+/* Hamburger morphs into a close mark instead of just vanishing under the
+   panel - a small, expected signal that the trigger and the drawer are the
+   same control. */
+.ns-header__menu-button[aria-expanded='true'] span:first-child {
+  transform: translateY(3.25px) rotate(45deg);
+}
+
+.ns-header__menu-button[aria-expanded='true'] span:last-child {
+  transform: translateY(-3.25px) rotate(-45deg);
+}
+
+/* Fixed, blurred full-height panel instead of an inline dropdown - reads as
+   a drawer over the page rather than the header just growing taller. */
 .ns-header__mobile-nav {
   display: none;
+  position: fixed;
+  inset: 0;
+  top: 72px;
+  z-index: 60;
   flex-direction: column;
   gap: 4px;
-  padding: 12px clamp(20px, 5vw, 64px) 20px;
+  padding: 16px clamp(20px, 5vw, 64px) 20px;
   border-top: 1px solid var(--ns-border);
-  background: rgba(7, 8, 7, 0.96);
+  background: rgba(7, 8, 7, 0.88);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  overscroll-behavior: contain;
 }
 
 .ns-header__mobile-nav.is-open {
@@ -294,14 +324,22 @@
 .ns-header__mobile-nav a {
   text-decoration: none;
   color: var(--ns-text-secondary);
-  padding: 12px 4px;
-  min-height: 44px;
+  padding: 14px 4px;
+  min-height: 48px;
   display: flex;
   align-items: center;
+  font-size: 17px;
+  border-bottom: 1px solid var(--ns-border);
+  transition: color var(--ns-t-micro) var(--ns-ease), transform var(--ns-t-micro) var(--ns-ease);
+}
+
+.ns-header__mobile-nav a:active {
+  color: var(--ns-copper);
+  transform: translateX(6px);
 }
 
 .ns-header__mobile-nav .ns-btn {
-  margin-top: 8px;
+  margin-top: 12px;
   justify-content: center;
 }
 

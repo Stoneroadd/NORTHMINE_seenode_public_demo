@@ -6,9 +6,10 @@
   padding-inline: clamp(20px, 5vw, 64px);
 }
 
-/* Mobile menu: keep every item reachable on short phone viewports. */
+/* Mobile menu: now a fixed full-height panel (see layout.css) - this just
+   gives it its own independent scroll for short phones with many nav
+   items, instead of the panel overflowing the viewport. */
 .nm-saas .ns-header__mobile-nav {
-  max-height: calc(100svh - 64px);
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
@@ -72,7 +73,7 @@
   }
 
   .nm-saas .ns-header__logo {
-    width: 240px;
+    height: 36px;
   }
 
   .nm-saas .ns-footer__logo {
@@ -98,11 +99,11 @@
   }
 
   .nm-saas .ns-header__logo {
-    width: 176px;
+    height: 32px;
   }
 
   .nm-saas .ns-header__inner {
-    padding-block: 10px;
+    padding-block: 12px;
   }
 
   .nm-saas .ns-btn--sm {
@@ -117,7 +118,15 @@
   }
 
   .nm-saas .ns-hero__title {
-    font-size: clamp(1.9rem, 9vw, 2.75rem);
+    font-size: clamp(1.9rem, 8vw, 2.6rem);
+  }
+
+  /* The desktop title is deliberately split into two chunks with a hard
+     break; at narrow widths that break plus the chunks' own natural wrap
+     produced a 5-line staircase. Let text-wrap:balance choose the break
+     points across the full sentence instead. */
+  .nm-saas .ns-hero__title-break {
+    display: none;
   }
 
   .nm-saas .ns-definition__copy h2,
@@ -220,20 +229,29 @@
     gap: 24px;
   }
 
+  /*
+   * Two-tier mobile spacing scale instead of one flat value everywhere:
+   * statement/breathing sections get more room (72px) than dense grid/list
+   * sections (56px), so scrolling through has some rhythm - tight, generous,
+   * tight - rather than every section feeling identical.
+   */
   .nm-saas .ns-reading,
   .nm-saas .ns-metrics,
   .nm-saas .ns-gallery,
   .nm-saas .ns-benefits,
   .nm-saas .ns-flow,
-  .nm-saas .ns-security,
-  .nm-saas .ns-cta,
   .nm-saas .ns-fms,
+  .nm-saas .ns-cta {
+    padding-block: 72px;
+  }
+
+  .nm-saas .ns-security,
   .nm-saas .ns-arch,
   .nm-saas .ns-comparison,
   .nm-saas .ns-levels,
   .nm-saas .ns-cases,
   .nm-saas .ns-rai {
-    padding-block: 64px;
+    padding-block: 56px;
   }
 
   .nm-saas .ns-comparison__grid {
@@ -331,7 +349,7 @@
  * ---------------------------------------------------------------- */
 @media (max-width: 480px) {
   .nm-saas .ns-header__logo {
-    width: 140px;
+    height: 28px;
   }
 
   .nm-saas .ns-footer__logo {
