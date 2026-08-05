@@ -7,7 +7,6 @@ import './styles/northmine-tokens.css'
 import './styles/tailwind.css'
 import { PublicRouter } from './PublicRouter'
 import { DocumentLanguageSync } from './components/common/DocumentLanguageSync'
-import { IntroSplash } from './components/common/IntroSplash'
 import { FAST_PUBLIC_DEMO } from './demo/fastDemo'
 import { NorthmineLogo } from './components/brand/NorthmineLogo'
 
@@ -127,7 +126,6 @@ ReactDOM.createRoot(rootElement).render(
       <QueryClientProvider client={queryClient}>
         <DocumentLanguageSync />
         <PublicRouter />
-        <IntroSplash />
       </QueryClientProvider>
     </RootErrorBoundary>
   </React.StrictMode>,

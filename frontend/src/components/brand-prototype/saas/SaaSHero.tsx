@@ -32,7 +32,7 @@ export function SaaSHero() {
           {t.hero.badge}
         </p>
 
-        <h1 id="ns-hero-title" className="ns-hero__title" data-hero-title>
+        <h1 id="ns-hero-title" className="ns-hero__title" data-hero-title data-magnetic-text>
           {t.hero.title1}
           <br />
           {t.hero.title2}

@@ -10,6 +10,7 @@ import { DecisionFlow } from './DecisionFlow'
 import { SecurityTransparency } from './SecurityTransparency'
 import { DemoCTA } from './DemoCTA'
 import { SaaSFooter } from './SaaSFooter'
+import { usePointerInteractions } from '../../../lib/animation/effects'
 import { useModuleT } from '../../../i18n/useModuleT'
 import { landingT } from '../../../i18n/modules/landing'
 import '../../../styles/northmine-saas-tokens.css'
@@ -26,9 +27,10 @@ import '../../../styles/northmine-saas-responsive.css'
  */
 export function SaaSPrototypePage() {
   const t = useModuleT(landingT)
+  const scope = usePointerInteractions<HTMLDivElement>()
 
   return (
-    <div className="nm-saas">
+    <div className="nm-saas" ref={scope}>
       <ScrollProgress />
       <SaaSHeader />
       <main id="ns-contenido">
