@@ -32,9 +32,14 @@ function PublicRouteFallback() {
       placeItems: 'center',
       background: '#0b0d0e',
       color: '#f2f3ef',
-      fontFamily: '"IBM Plex Mono", monospace',
+      fontFamily: '"IBM Plex Sans", Segoe UI, Arial, sans-serif',
     }}>
-      NORTHMINE
+      <div style={{ textAlign: 'center', padding: '12px 18px', maxWidth: 420 }}>
+        <div className="nm-splash-spinner" role="status" aria-label="Cargando" />
+        <div style={{ marginTop: 18, color: '#a9b0ad', fontSize: 13, letterSpacing: '0.05em' }}>
+          Preparando control operacional<span className="nm-splash-dots" />
+        </div>
+      </div>
     </main>
   )
 }
