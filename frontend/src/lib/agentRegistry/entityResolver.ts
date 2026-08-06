@@ -1,20 +1,25 @@
 import { getEquipmentLabel } from '../../data/equipmentAssets'
+import { agentEquipmentCatalog } from './equipmentCatalog'
 import { agentWidgetRegistry } from './registry'
 import type { AgentEntityDescriptor, EntityResolutionResult } from './types'
 
 /**
  * Resuelve referencias en lenguaje natural ("Pala 03", "CAEX 104") a IDs
  * reales - el modelo NUNCA decide el ID interno, solo propone texto libre
- * que pasa por aca. El catalogo es el roster REAL y en vivo expuesto por
- * fleet-status-table (no una lista inventada): busca por id, modelo o la
- * etiqueta amigable de data/equipmentAssets.ts.
+ * que pasa por aca.
  *
- * Limitacion conocida: si el usuario nunca visito Flota en la sesion
- * actual, el registro esta vacio y todo resuelve 'not_found' - no hay
- * catalogo independiente de la navegacion todavia (requeriria un endpoint
- * de roster dedicado, fuera de alcance de esta etapa).
+ * Fuente primaria (Etapa 3): agentEquipmentCatalog, cargado independiente
+ * de la navegacion (ver equipmentCatalog.ts, dispara load() al montar
+ * AgentPresence). Si por algun motivo no cargo (error de red, todavia en
+ * 'loading') se usa como respaldo el snapshot en vivo de fleet-status-table
+ * - el registry de Flota ENRIQUECE, no es la unica fuente, tal como pide
+ * el brief de Etapa 3.
  */
 export function resolveEquipmentAlias(query: string): EntityResolutionResult {
+  const catalogResult = agentEquipmentCatalog.resolve(query)
+  if (catalogResult.status !== 'not_found') return catalogResult
+
+  // Respaldo: registry en vivo (por si el catalogo aun no cargo o fallo).
   const normalized = query.trim().toUpperCase()
   if (!normalized) return { status: 'not_found', candidates: [] }
 

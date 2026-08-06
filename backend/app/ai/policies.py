@@ -20,6 +20,7 @@ READ_ONLY_TOOLS: frozenset[str] = frozenset(
         "get_fleet_status",
         "get_alerts",
         "get_data_quality_status",
+        "get_loading_performance",
     }
 )
 

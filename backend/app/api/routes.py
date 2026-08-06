@@ -5,6 +5,7 @@ from typing import Annotated
 from fastapi import APIRouter, BackgroundTasks, Cookie, Depends, File, HTTPException, Query, Request, Response, UploadFile, status
 from fastapi.responses import FileResponse, JSONResponse
 
+from app.ai.investigation_router import router as ai_investigations_router
 from app.ai.router import router as ai_copilot_router
 from app.api.operational import router as operational_router
 from app.core.audit import (
@@ -109,6 +110,7 @@ from app.services.filtering import (
 router = APIRouter(prefix=get_settings().api_prefix)
 router.include_router(operational_router)
 router.include_router(ai_copilot_router)
+router.include_router(ai_investigations_router)
 
 
 def _filters(request: Request) -> dict[str, str]:

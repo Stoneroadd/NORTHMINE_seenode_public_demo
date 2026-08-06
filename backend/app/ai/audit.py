@@ -70,3 +70,55 @@ def record_feedback(*, usuario: str, ip: str, message_id: str, rating: str) -> N
         status_code=200,
         detalle={"message_id": message_id, "rating": rating},
     )
+
+
+def record_investigation(
+    *,
+    usuario: str,
+    ip: str,
+    investigation_id: str,
+    investigation_type: str,
+    status: str,
+    confidence: str,
+) -> None:
+    log_event(
+        usuario=usuario,
+        ip=ip,
+        accion="ai_copilot_investigation",
+        resultado="ok" if status == "completed" else status,
+        metodo="POST",
+        endpoint="/api/ai-copilot/investigations",
+        status_code=200,
+        detalle={
+            "investigation_id": investigation_id,
+            "type": investigation_type,
+            "status": status,
+            "confidence": confidence,
+        },
+    )
+
+
+def record_investigation_ui_step(
+    *,
+    usuario: str,
+    ip: str,
+    investigation_id: str,
+    step_id: str,
+    status: str,
+    context_updated: bool,
+) -> None:
+    log_event(
+        usuario=usuario,
+        ip=ip,
+        accion="ai_copilot_investigation_ui_step",
+        resultado=status,
+        metodo="POST",
+        endpoint=f"/api/ai-copilot/investigations/{investigation_id}/ui-steps/{step_id}/report",
+        status_code=200,
+        detalle={
+            "investigation_id": investigation_id,
+            "step_id": step_id,
+            "status": status,
+            "context_updated": context_updated,
+        },
+    )

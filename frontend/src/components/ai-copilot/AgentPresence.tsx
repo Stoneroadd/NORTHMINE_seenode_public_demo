@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Sparkles } from 'lucide-react'
 import { useAppStore } from '../../store'
 import { AgentWorkspace } from './AgentWorkspace'
 import { buildAgentApplicationContext } from '../../lib/agentRegistry/context'
 import { NORTHMINE_MODULES } from '../../lib/agentRegistry/modules'
+import { agentEquipmentCatalog } from '../../lib/agentRegistry/equipmentCatalog'
 import type { CopilotContext } from '../../lib/aiCopilot'
 import '../../styles/ai-copilot.css'
 import '../../lib/agentRegistry/devBridge'
@@ -56,6 +57,13 @@ export function AgentPresence() {
   useAppStore((state) => state.activeSection)
   useAppStore((state) => state.filtro)
   const [open, setOpen] = useState(false)
+
+  // Etapa 3, prerrequisito: el catalogo de equipos se carga una vez apenas
+  // hay sesion, independiente de si el usuario visita /flota alguna vez -
+  // asi el resolver de alias funciona desde el primer minuto.
+  useEffect(() => {
+    if (usuario) void agentEquipmentCatalog.load()
+  }, [usuario])
 
   if (!usuario || !CHAT_ROLES.has(usuario.rol)) return null
 

@@ -1,6 +1,7 @@
 import { enqueueAgentAction } from '../../components/ai-copilot/agentActionExecutor'
 import { agentEntityNavigator } from './entityNavigator'
 import { resolveEquipmentAlias } from './entityResolver'
+import { agentEquipmentCatalog } from './equipmentCatalog'
 import { buildOperationalInvestigationSnapshot } from './investigationSnapshot'
 import { agentWidgetRegistry } from './registry'
 import { buildAgentApplicationContext } from './context'
@@ -23,5 +24,6 @@ if (import.meta.env.DEV) {
     buildOperationalInvestigationSnapshot,
     agentWidgetRegistry,
     buildAgentApplicationContext,
+    agentEquipmentCatalog,
   }
 }

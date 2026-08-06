@@ -8,6 +8,7 @@ import { AIComposer } from './AIComposer'
 import { AgentLiveTranscript } from './AgentLiveTranscript'
 import { AgentVoiceControls } from './AgentVoiceControls'
 import { AgentActionOverlay } from './AgentActionOverlay'
+import { AgentInvestigationPanel } from './AgentInvestigationPanel'
 import { useVoiceSession } from './useVoiceSession'
 import { enqueueAgentAction } from './agentActionExecutor'
 import type { AgentActionResult } from '../../lib/agentRegistry/types'
@@ -34,6 +35,7 @@ function newId(): string {
  * pero el chat de texto sigue siempre disponible como respaldo.
  */
 export function AgentWorkspace({ open, onClose, context, role, canApprove }: Props) {
+  const [panelMode, setPanelMode] = useState<'chat' | 'investigate'>('chat')
   const [turns, setTurns] = useState<ChatTurn[]>([])
   const [sending, setSending] = useState(false)
   const [status, setStatus] = useState<CopilotStatus | null>(null)
@@ -185,26 +187,50 @@ export function AgentWorkspace({ open, onClose, context, role, canApprove }: Pro
           </div>
         )}
 
-        <AgentLiveTranscript listening={voice.listening} interimText={voice.interimTranscript} audioLevel={voice.audioLevel} />
-        {voice.micError && <p className="ai-agent-mic-error">Microfono: {voice.micError}</p>}
+        <nav className="ai-copilot-mode-tabs" role="tablist" aria-label="Modo del agente">
+          <button type="button" role="tab" aria-selected={panelMode === 'chat'} className={panelMode === 'chat' ? 'is-active' : ''} onClick={() => setPanelMode('chat')}>
+            Chat
+          </button>
+          <button type="button" role="tab" aria-selected={panelMode === 'investigate'} className={panelMode === 'investigate' ? 'is-active' : ''} onClick={() => setPanelMode('investigate')}>
+            Investigar
+          </button>
+        </nav>
 
-        <div className="ai-copilot-body">
-          <AIConversation turns={turns} canApprove={canApprove} />
-        </div>
+        {panelMode === 'chat' && (
+          <>
+            <AgentLiveTranscript listening={voice.listening} interimText={voice.interimTranscript} audioLevel={voice.audioLevel} />
+            {voice.micError && <p className="ai-agent-mic-error">Microfono: {voice.micError}</p>}
 
-        <AgentActionOverlay actions={executedActions} />
+            <div className="ai-copilot-body">
+              <AIConversation turns={turns} canApprove={canApprove} />
+            </div>
 
-        <AgentVoiceControls
-          supported={voice.supported}
-          listening={voice.listening}
-          speaking={voice.speaking}
-          voiceOutputEnabled={voiceOutputEnabled}
-          onToggleListening={() => (voice.listening ? voice.stopListening() : voice.startListening())}
-          onStopSpeaking={voice.stopSpeaking}
-          onToggleVoiceOutput={() => setVoiceOutputEnabled((value) => !value)}
-        />
+            <AgentActionOverlay actions={executedActions} />
 
-        <AIComposer disabled={sending || degraded} onSend={handleTextSend} />
+            <AgentVoiceControls
+              supported={voice.supported}
+              listening={voice.listening}
+              speaking={voice.speaking}
+              voiceOutputEnabled={voiceOutputEnabled}
+              onToggleListening={() => (voice.listening ? voice.stopListening() : voice.startListening())}
+              onStopSpeaking={voice.stopSpeaking}
+              onToggleVoiceOutput={() => setVoiceOutputEnabled((value) => !value)}
+            />
+
+            <AIComposer disabled={sending || degraded} onSend={handleTextSend} />
+          </>
+        )}
+
+        {panelMode === 'investigate' && (
+          <div className="ai-copilot-body">
+            <AgentInvestigationPanel
+              context={context}
+              onMilestone={(text) => {
+                if (voiceOutputEnabled) voice.speak(text)
+              }}
+            />
+          </div>
+        )}
 
         <footer className="ai-copilot-disclaimer">
           NORTHMINE AI entrega analisis y recomendaciones basadas en los datos disponibles.

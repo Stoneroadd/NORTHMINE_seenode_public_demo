@@ -11,6 +11,7 @@ from fastapi.staticfiles import StaticFiles
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
+from app.ai.investigation_repository import init_investigation_db
 from app.ai.repository import init_ai_copilot_db
 from app.api.routes import router
 from app.api.operator_ranking import router as operator_ranking_router
@@ -94,6 +95,7 @@ def startup() -> None:
     init_mfa_table()
     init_user_repository()
     init_ai_copilot_db()
+    init_investigation_db()
     demo_access_repository = get_demo_access_repository()
     try:
         demo_access_repository.init_schema()
