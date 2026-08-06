@@ -11,7 +11,8 @@
     "start": "node server.mjs",
     "test:visual": "playwright test",
     "test:visual:update": "playwright test --update-snapshots",
-    "test:responsive": "playwright test --config=playwright.responsive.config.ts"
+    "test:responsive": "playwright test --config=playwright.responsive.config.ts",
+    "test:unit": "vitest run"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",
@@ -56,6 +57,7 @@
     "tailwind-merge": "^3.6.0",
     "tailwindcss": "^4.3.3",
     "typescript": "^5.4.5",
-    "vite": "^8.1.5"
+    "vite": "^8.1.5",
+    "vitest": "^4.1.10"
   }
 }

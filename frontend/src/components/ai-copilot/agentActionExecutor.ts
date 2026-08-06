@@ -200,7 +200,7 @@ async function executeOne(actionId: string, action: CopilotUIAction): Promise<Ag
 
       const verb = wantsOpen ? 'Abriendo' : 'Seleccionando'
       if (result.status === 'completed') {
-        return { actionId, status: 'completed', label: `${verb} ${action.entity_type} ${entityId}` }
+        return { actionId, status: 'completed', label: `${verb} ${action.entity_type} ${entityId}`, resolvedEntityId: entityId }
       }
       if (result.status === 'unsupported') {
         return fail('rejected', result.message ?? `No hay soporte para ${action.entity_type} todavia.`)

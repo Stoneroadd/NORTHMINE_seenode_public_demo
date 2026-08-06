@@ -186,4 +186,8 @@ export interface AgentActionResult {
   status: AgentActionExecutionStatus
   label: string
   error?: string
+  /** ID real resuelto (p.ej. tras resolver un alias como "Pala 03" -> "EX-01")
+   * para select_entity/open_entity - permite que el llamador (Etapa 4:
+   * runtimeController) reporte el ID concreto de vuelta al backend. */
+  resolvedEntityId?: string
 }

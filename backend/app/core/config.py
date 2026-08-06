@@ -142,6 +142,22 @@ class Settings:
     redis_url: str
     deployment_workers: int
     local_auto_sync_enabled: bool
+    # Voz ElevenLabs (Etapa 4) - la API key NUNCA sale del backend (seccion 3
+    # del brief): ni VITE_*, ni logs, ni errores HTTP, ni tests/fixtures.
+    elevenlabs_enabled: bool
+    elevenlabs_api_key: str
+    elevenlabs_voice_id: str
+    elevenlabs_model_id: str
+    elevenlabs_output_format: str
+    elevenlabs_timeout_seconds: float
+    elevenlabs_stability: float
+    elevenlabs_similarity_boost: float
+    elevenlabs_speed: float
+    agent_runtime_db_path: str
+
+    @property
+    def elevenlabs_available(self) -> bool:
+        return self.elevenlabs_enabled and bool(self.elevenlabs_api_key.strip())
 
     @property
     def is_production(self) -> bool:
@@ -369,4 +385,17 @@ def get_settings() -> Settings:
             "NORTHMINE_LOCAL_AUTO_SYNC_ENABLED",
             "false" if environment == "production" else "true",
         ).strip().lower() == "true",
+        elevenlabs_enabled=os.getenv("ELEVENLABS_ENABLED", "false").strip().lower() == "true",
+        elevenlabs_api_key=os.getenv("ELEVENLABS_API_KEY", "").strip(),
+        elevenlabs_voice_id=os.getenv("ELEVENLABS_VOICE_ID", "L4N9j1wT9BMWxuC0QVid").strip(),
+        elevenlabs_model_id=os.getenv("ELEVENLABS_MODEL_ID", "eleven_flash_v2_5").strip(),
+        elevenlabs_output_format=os.getenv("ELEVENLABS_OUTPUT_FORMAT", "mp3_44100_128").strip(),
+        elevenlabs_timeout_seconds=float(os.getenv("ELEVENLABS_TIMEOUT_SECONDS", "20")),
+        elevenlabs_stability=float(os.getenv("ELEVENLABS_STABILITY", "0.55")),
+        elevenlabs_similarity_boost=float(os.getenv("ELEVENLABS_SIMILARITY_BOOST", "0.82")),
+        elevenlabs_speed=float(os.getenv("ELEVENLABS_SPEED", "0.96")),
+        agent_runtime_db_path=os.getenv(
+            "NORTHMINE_AGENT_RUNTIME_DB",
+            str(root_dir / "northmine_agent_runtime.db"),
+        ),
     )

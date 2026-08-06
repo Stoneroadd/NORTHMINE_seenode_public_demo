@@ -13,6 +13,7 @@ from slowapi.errors import RateLimitExceeded
 
 from app.ai.investigation_repository import init_investigation_db
 from app.ai.repository import init_ai_copilot_db
+from app.ai.runtime.persistence import init_runtime_db
 from app.api.routes import router
 from app.api.operator_ranking import router as operator_ranking_router
 from app.api.demo_access import router as demo_access_router
@@ -96,6 +97,7 @@ def startup() -> None:
     init_user_repository()
     init_ai_copilot_db()
     init_investigation_db()
+    init_runtime_db()
     demo_access_repository = get_demo_access_repository()
     try:
         demo_access_repository.init_schema()

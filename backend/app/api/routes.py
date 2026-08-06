@@ -7,6 +7,8 @@ from fastapi.responses import FileResponse, JSONResponse
 
 from app.ai.investigation_router import router as ai_investigations_router
 from app.ai.router import router as ai_copilot_router
+from app.ai.runtime.ws_router import router as ai_agent_ws_router
+from app.ai.voice.router import router as ai_agent_voice_router
 from app.api.operational import router as operational_router
 from app.core.audit import (
     blacklist_token,
@@ -111,6 +113,8 @@ router = APIRouter(prefix=get_settings().api_prefix)
 router.include_router(operational_router)
 router.include_router(ai_copilot_router)
 router.include_router(ai_investigations_router)
+router.include_router(ai_agent_voice_router)
+router.include_router(ai_agent_ws_router)
 
 
 def _filters(request: Request) -> dict[str, str]:

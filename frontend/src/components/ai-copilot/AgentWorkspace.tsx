@@ -1,18 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
-import { AlertTriangle, X } from 'lucide-react'
-import { copilotApi, streamCopilotChat } from '../../lib/aiCopilot'
-import type { CopilotContext, CopilotStatus, CopilotStreamEvent } from '../../lib/aiCopilot'
-import { AIContextBar } from './AIContextBar'
-import { AIConversation } from './AIConversation'
-import { AIComposer } from './AIComposer'
-import { AgentLiveTranscript } from './AgentLiveTranscript'
-import { AgentVoiceControls } from './AgentVoiceControls'
+import {
+  AlertTriangle, Check, ChevronDown, ChevronUp, Loader2, Mic, MicOff,
+  Pause, Play, Send, ShieldAlert, Square, Volume2, VolumeX, X,
+} from 'lucide-react'
+import { agentSessionClient } from '../../lib/agentRuntime/AgentSessionClient'
+import { useAgentRuntimeStore } from '../../lib/agentRuntime/runtimeStore'
+import { BrowserSpeechInput } from '../../lib/agentVoice/BrowserSpeechInput'
+import { speechOutputRouter } from '../../lib/agentVoice/SpeechOutputRouter'
+import type { VoiceOutputProviderName } from '../../lib/agentVoice/types'
+import type { CopilotContext } from '../../lib/aiCopilot'
 import { AgentActionOverlay } from './AgentActionOverlay'
-import { AgentInvestigationPanel } from './AgentInvestigationPanel'
-import { useVoiceSession } from './useVoiceSession'
-import { enqueueAgentAction } from './agentActionExecutor'
-import type { AgentActionResult } from '../../lib/agentRegistry/types'
-import type { ChatTurn } from './types'
 
 interface Props {
   open: boolean
@@ -22,215 +19,331 @@ interface Props {
   canApprove: boolean
 }
 
-function newId(): string {
-  return `t-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+const STATE_LABELS: Record<string, string> = {
+  idle: 'Disponible', listening: 'Escuchando', planning: 'Planificando', executing: 'Investigando',
+  verifying: 'Validando', speaking: 'Hablando', paused: 'Pausado', interrupted: 'Interrumpido',
+  cancelled: 'Disponible', failed: 'Requiere atención',
+}
+
+const VOICE_LABELS: Record<VoiceOutputProviderName, string> = {
+  elevenlabs: 'Voz NORTHMINE', browser: 'Voz local de respaldo', text_only: 'Solo texto',
+}
+
+const QUICK_COMMANDS = [
+  'Investiga por qué bajó producción',
+  'Revisa el tiempo de ciclo',
+  'Dame el resumen del turno',
+]
+
+const STEP_STATUS_LABELS: Record<string, string> = {
+  pending: 'Pendiente', running: 'En curso', completed: 'Completado', failed: 'Fallido',
+  skipped: 'Omitido', cancelled: 'Cancelado', rejected: 'Rechazado',
 }
 
 /**
- * Panel principal del NORTHMINE Operational Intelligence Agent: conversacion
- * (texto + voz), estado en vivo (escuchando/analizando/hablando/actuando),
- * plan/evidencia/herramientas de cada respuesta, y ejecucion de acciones
- * semanticas de UI. Se abre desde AgentPresence (el orbe); no es la unica
- * forma de interaccion (la voz funciona en el mismo panel via microfono),
- * pero el chat de texto sigue siempre disponible como respaldo.
+ * NORTHMINE Operational Intelligence Agent - superficie de observabilidad,
+ * evidencia, auditoria y control del Agent Runtime (Etapa 4). No es un
+ * chat: el usuario escribe o dice una instruccion (el Command Router
+ * determinista la interpreta), y aca se ve el plan, el progreso, los
+ * hallazgos en vivo, las hipotesis y el resultado - la transcripcion queda
+ * como bitacora secundaria, colapsada por defecto. El Agent Runtime sigue
+ * trabajando aunque este panel este cerrado (AgentPresence posee la
+ * conexion WS; este componente solo se suscribe a su estado).
  */
-export function AgentWorkspace({ open, onClose, context, role, canApprove }: Props) {
-  const [panelMode, setPanelMode] = useState<'chat' | 'investigate'>('chat')
-  const [turns, setTurns] = useState<ChatTurn[]>([])
-  const [sending, setSending] = useState(false)
-  const [status, setStatus] = useState<CopilotStatus | null>(null)
-  const [voiceOutputEnabled, setVoiceOutputEnabled] = useState(true)
-  const [executedActions, setExecutedActions] = useState<AgentActionResult[]>([])
-  const conversationIdRef = useRef<string | null>(null)
-  const abortRef = useRef<AbortController | null>(null)
-  const contextRef = useRef(context)
-  contextRef.current = context
-  const viaVoiceRef = useRef(false)
+export function AgentWorkspace({ open, onClose, context, role: _role, canApprove: _canApprove }: Props) {
+  const runtime = useAgentRuntimeStore()
+  const [inputText, setInputText] = useState('')
+  const [muted, setMuted] = useState(false)
+  const [transcriptOpen, setTranscriptOpen] = useState(false)
+  const [evidenceOpen, setEvidenceOpen] = useState(false)
+  const [listening, setListening] = useState(false)
+  const [micError, setMicError] = useState<string | null>(null)
+  const [voiceProvider, setVoiceProvider] = useState<VoiceOutputProviderName | null>(null)
+  const speechInputRef = useRef<BrowserSpeechInput | null>(null)
+  const bodyRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
-    if (!open) return
-    let cancelled = false
-    copilotApi
-      .status()
-      .then((result) => {
-        if (!cancelled) setStatus(result)
-      })
-      .catch(() => {
-        if (!cancelled) setStatus(null)
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [open])
-
-  useEffect(() => {
-    return () => abortRef.current?.abort()
+    speechInputRef.current = new BrowserSpeechInput()
+    speechOutputRouter.onProviderChanged(setVoiceProvider)
   }, [])
 
-  const updateTurn = (id: string, updater: (turn: ChatTurn) => ChatTurn) => {
-    setTurns((current) => current.map((turn) => (turn.id === id ? updater(turn) : turn)))
-  }
-
-  const handleSend = async (message: string) => {
-    if (sending) return
-    setSending(true)
-    const userTurn: ChatTurn = { id: newId(), role: 'user', text: message }
-    const assistantId = newId()
-    const assistantTurn: ChatTurn = { id: assistantId, role: 'assistant', status: 'streaming', phase: 'analyzing_intent', toolExecutions: [], text: '' }
-    setTurns((current) => [...current, userTurn, assistantTurn])
-    setExecutedActions([])
-
-    const controller = new AbortController()
-    abortRef.current = controller
-
-    try {
-      await streamCopilotChat(
-        { conversation_id: conversationIdRef.current, message, context: contextRef.current },
-        {
-          signal: controller.signal,
-          onEvent: (event: CopilotStreamEvent) => {
-            if (event.type === 'status') {
-              updateTurn(assistantId, (turn) => (turn.role === 'assistant' && turn.status === 'streaming' ? { ...turn, phase: event.phase } : turn))
-            } else if (event.type === 'tool_execution') {
-              updateTurn(assistantId, (turn) =>
-                turn.role === 'assistant' && turn.status === 'streaming'
-                  ? { ...turn, toolExecutions: [...turn.toolExecutions, { name: event.name, args: {}, status: event.status as 'ok' | 'error' | 'denied', duration_ms: event.duration_ms, summary: event.summary }] }
-                  : turn,
-              )
-            } else if (event.type === 'agent.action.proposed') {
-              enqueueAgentAction(event.action, (result) => {
-                setExecutedActions((list) => [...list, result].slice(-4))
-              })
-            } else if (event.type === 'token') {
-              updateTurn(assistantId, (turn) => (turn.role === 'assistant' && turn.status === 'streaming' ? { ...turn, text: turn.text + event.text } : turn))
-            } else if (event.type === 'final') {
-              conversationIdRef.current = event.response.conversation_id
-              updateTurn(assistantId, () => ({ id: assistantId, role: 'assistant', status: 'done', response: event.response }))
-              if (viaVoiceRef.current && voiceOutputEnabled && !event.response.degraded) {
-                voice.speak(event.response.message)
-              }
-            }
-          },
-        },
-      )
-    } catch (error) {
-      updateTurn(assistantId, () => ({
-        id: assistantId,
-        role: 'assistant',
-        status: 'error',
-        error: error instanceof Error ? error.message : 'No se pudo obtener respuesta del agente.',
-      }))
-    } finally {
-      setSending(false)
-      viaVoiceRef.current = false
-    }
-  }
-
-  const handleTextSend = (message: string) => {
-    viaVoiceRef.current = false
-    void handleSend(message)
-  }
-
-  const handleVoiceFinal = (message: string) => {
-    viaVoiceRef.current = true
-    void handleSend(message)
-  }
-
-  const voice = useVoiceSession(handleVoiceFinal)
-
-  useEffect(() => {
-    if (!open) {
-      voice.stopListening()
-      voice.stopSpeaking()
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open])
-
   useEffect(() => {
     if (!open) return
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.ctrlKey && event.code === 'Space') {
-        event.preventDefault()
-        if (voice.listening) voice.stopListening()
-        else voice.startListening()
-      }
+    // El contexto de aplicacion (seccion/turno/fecha) viaja al Runtime en
+    // cada apertura del panel para que el Command Router y los pasos de UI
+    // tengan la mejor foto disponible del estado actual de NORTHMINE.
+    agentSessionClient.send('context.update', { context })
+  }, [open, context])
+
+  function sendCommand(text: string, viaVoice: boolean) {
+    const trimmed = text.trim()
+    if (!trimmed) return
+    useAgentRuntimeStore.getState().addUserTranscript(trimmed)
+    agentSessionClient.send(viaVoice ? 'user.speech.final' : 'user.text', { text: trimmed })
+    setInputText('')
+  }
+
+  function toggleMic() {
+    const input = speechInputRef.current
+    if (!input?.isSupported()) {
+      setMicError('Reconocimiento de voz no disponible en este navegador.')
+      return
     }
-    window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
-  }, [open, voice])
+    if (listening) {
+      void input.stop()
+      setListening(false)
+      return
+    }
+    setMicError(null)
+    input.onFinal((text) => {
+      setListening(false)
+      sendCommand(text, true)
+    })
+    void input.start()
+    setListening(true)
+  }
+
+  function toggleMute() {
+    const next = !muted
+    setMuted(next)
+    speechOutputRouter.setMuted(next)
+  }
+
+  function bargeIn() {
+    speechOutputRouter.stop()
+    agentSessionClient.send('agent.interrupt', {})
+  }
 
   if (!open) return null
 
-  const degraded = status ? !status.available : false
-  const agentPhase = voice.listening ? 'listening' : voice.speaking ? 'speaking' : sending ? 'analyzing' : 'idle'
+  const plan = runtime.plan
+  const toolSteps = plan?.steps.filter((s) => s.kind === 'tool') ?? []
+  const uiSteps = plan?.steps.filter((s) => s.kind === 'ui_action') ?? []
+  const completedSteps = toolSteps.filter((s) => s.status === 'completed').length
+  const isBusy = ['planning', 'executing', 'verifying'].includes(runtime.state)
+  const isPaused = runtime.state === 'paused'
+  const isSpeaking = runtime.state === 'speaking'
+  const conclusion = runtime.conclusion
 
   return (
     <div className="ai-copilot-overlay" role="dialog" aria-modal="true" aria-label="NORTHMINE AI — Operational Intelligence Agent">
       <div className="ai-copilot-backdrop" onClick={onClose} />
-      <aside className={`ai-copilot-panel is-${agentPhase}`}>
+      <aside className={`ai-copilot-panel is-${runtime.state}`}>
         <header className="ai-copilot-header">
           <div>
-            <span className="ai-copilot-eyebrow">NORTHMINE Operational Intelligence Agent</span>
-            <h2>NORTHMINE AI</h2>
+            <span className="ai-copilot-eyebrow">NORTHMINE OPERATIONAL INTELLIGENCE AGENT</span>
+            <h2>{STATE_LABELS[runtime.state] ?? runtime.state}</h2>
           </div>
           <button type="button" className="ai-copilot-close" onClick={onClose} aria-label="Cerrar">
             <X size={18} />
           </button>
         </header>
 
-        <AIContextBar section={context.section} mine={context.mine} shift={context.shift} selectedDate={context.selected_date} role={role} />
+        <div className="ai-rt-status-bar">
+          <span className={`ai-rt-connection is-${runtime.connectionStatus}`}>
+            {runtime.connectionStatus === 'connected' ? 'Conectado' : runtime.connectionStatus === 'reconnecting' ? 'Reconectando…' : runtime.connectionStatus === 'connecting' ? 'Conectando…' : 'Desconectado'}
+          </span>
+          {voiceProvider && !muted && <span className="ai-rt-voice-badge">{VOICE_LABELS[voiceProvider]}</span>}
+          {muted && <span className="ai-rt-voice-badge is-muted">Audio silenciado</span>}
+        </div>
 
-        {degraded && (
-          <div className="ai-copilot-degraded-banner">
-            <AlertTriangle size={14} />
-            <span>{status?.message ?? 'El agente no esta disponible temporalmente.'}</span>
-          </div>
-        )}
+        <div className="ai-copilot-body" ref={bodyRef}>
+          {runtime.lastError && (
+            <p className="ai-inv-warning"><AlertTriangle size={12} /> {runtime.lastError}</p>
+          )}
 
-        <nav className="ai-copilot-mode-tabs" role="tablist" aria-label="Modo del agente">
-          <button type="button" role="tab" aria-selected={panelMode === 'chat'} className={panelMode === 'chat' ? 'is-active' : ''} onClick={() => setPanelMode('chat')}>
-            Chat
-          </button>
-          <button type="button" role="tab" aria-selected={panelMode === 'investigate'} className={panelMode === 'investigate' ? 'is-active' : ''} onClick={() => setPanelMode('investigate')}>
-            Investigar
-          </button>
-        </nav>
-
-        {panelMode === 'chat' && (
-          <>
-            <AgentLiveTranscript listening={voice.listening} interimText={voice.interimTranscript} audioLevel={voice.audioLevel} />
-            {voice.micError && <p className="ai-agent-mic-error">Microfono: {voice.micError}</p>}
-
-            <div className="ai-copilot-body">
-              <AIConversation turns={turns} canApprove={canApprove} />
+          {!plan && (
+            <div className="ai-rt-empty">
+              <p className="ai-inv-intro">
+                Escribe o di lo que necesitas investigar. El agente construye un plan auditable, consulta
+                herramientas de solo lectura y explica lo que encuentra a medida que avanza.
+              </p>
+              <div className="ai-copilot-quick-actions">
+                {QUICK_COMMANDS.map((cmd) => (
+                  <button key={cmd} type="button" onClick={() => sendCommand(cmd, false)}>{cmd}</button>
+                ))}
+              </div>
             </div>
+          )}
 
-            <AgentActionOverlay actions={executedActions} />
+          {plan && (
+            <div className="ai-inv-plan">
+              <header>
+                <strong>{plan.goal}</strong>
+                <span className="ai-copilot-badge">{completedSteps}/{toolSteps.length} pasos</span>
+              </header>
+              {runtime.currentActivityLabel && isBusy && (
+                <p className="ai-rt-activity"><Loader2 size={13} className="ai-copilot-spin" /> {runtime.currentActivityLabel}</p>
+              )}
+              <ul className="ai-inv-step-list">
+                {toolSteps.map((step) => (
+                  <li key={step.step_id} className={`ai-inv-step is-${step.status}`}>
+                    {step.status === 'completed' ? <Check size={13} /> : step.status === 'running' ? <Loader2 size={13} className="ai-copilot-spin" /> : step.status === 'failed' ? <X size={13} /> : <span className="ai-inv-step-dot" />}
+                    <span className="ai-inv-step-desc">{step.description}</span>
+                    <span className="ai-inv-step-meta">{STEP_STATUS_LABELS[step.status] ?? step.status}{step.duration_ms != null ? ` · ${step.duration_ms}ms` : ''}</span>
+                  </li>
+                ))}
+              </ul>
+              {uiSteps.length > 0 && (
+                <p className="ai-inv-ui-steps-note">+ {uiSteps.length} acciones de visibilidad en UI.</p>
+              )}
+              {runtime.pendingUiAction?.requirement === 'required' && (
+                <p className="ai-rt-activity"><Loader2 size={13} className="ai-copilot-spin" /> Esperando confirmación de interfaz…</p>
+              )}
+            </div>
+          )}
 
-            <AgentVoiceControls
-              supported={voice.supported}
-              listening={voice.listening}
-              speaking={voice.speaking}
-              voiceOutputEnabled={voiceOutputEnabled}
-              onToggleListening={() => (voice.listening ? voice.stopListening() : voice.startListening())}
-              onStopSpeaking={voice.stopSpeaking}
-              onToggleVoiceOutput={() => setVoiceOutputEnabled((value) => !value)}
-            />
+          {runtime.findings.length > 0 && (
+            <div className="ai-rt-findings">
+              <p className="ai-copilot-block-title">Hallazgos</p>
+              <ul>
+                {runtime.findings.map((f) => (
+                  <li key={f.finding_id} className={`ai-rt-finding is-${f.severity}`}>{f.summary}</li>
+                ))}
+              </ul>
+            </div>
+          )}
 
-            <AIComposer disabled={sending || degraded} onSend={handleTextSend} />
-          </>
-        )}
+          {plan && (
+            <div className="ai-inv-evidence-toggle">
+              <button type="button" onClick={() => setEvidenceOpen((v) => !v)}>
+                {evidenceOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                Ver evidencia
+              </button>
+            </div>
+          )}
+          {evidenceOpen && runtime.lastResult && (
+            <ul className="ai-copilot-evidence-list">
+              {((runtime.lastResult.evidence as any[]) ?? []).map((item) => (
+                <li key={item.evidence_id}>
+                  <span className="ai-copilot-evidence-source">{item.capability_id}</span>
+                  <span className={`ai-copilot-badge ai-copilot-badge--freshness is-${item.freshness_status}`}>{item.freshness_status}</span>
+                  <span className="ai-copilot-badge">calidad {item.quality_status}</span>
+                </li>
+              ))}
+            </ul>
+          )}
 
-        {panelMode === 'investigate' && (
-          <div className="ai-copilot-body">
-            <AgentInvestigationPanel
-              context={context}
-              onMilestone={(text) => {
-                if (voiceOutputEnabled) voice.speak(text)
+          {runtime.hypotheses.length > 0 && (
+            <div className="ai-inv-hypotheses">
+              <p className="ai-copilot-block-title">Hipótesis operacionales</p>
+              {(['probable', 'possible', 'unsupported', 'insufficient_data'] as const).map((status) => {
+                const items = runtime.hypotheses.filter((h) => h.status === status)
+                if (!items.length) return null
+                const label = { probable: 'Probables', possible: 'Posibles', unsupported: 'Descartadas', insufficient_data: 'Datos insuficientes' }[status]
+                return (
+                  <div key={status} className="ai-inv-hypothesis-group">
+                    <span className="ai-inv-hypothesis-group-label">{label}</span>
+                    <ul>
+                      {items.map((h) => (
+                        <li key={h.hypothesis_id}>{h.label}{h.score != null && <span className="ai-inv-hypothesis-score">{Math.round(h.score * 100)}%</span>}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )
+              })}
+              <p className="ai-inv-hypothesis-caption">Puntaje heurístico interno, no es una probabilidad estadística.</p>
+            </div>
+          )}
+
+          {conclusion && (
+            <div className="ai-inv-conclusion">
+              <p className="ai-copilot-block-title">Resultado</p>
+              <p className="ai-inv-summary">{conclusion.summary}</p>
+              {conclusion.probable_causes.length > 0 && (
+                <div className="ai-copilot-block">
+                  <span className="ai-copilot-block-title">Causas probables</span>
+                  <ul>{conclusion.probable_causes.map((c, i) => <li key={i}>{c}</li>)}</ul>
+                </div>
+              )}
+              {conclusion.recommendations.length > 0 && (
+                <div className="ai-copilot-block">
+                  <span className="ai-copilot-block-title">Recomendaciones</span>
+                  <ul>{conclusion.recommendations.map((c, i) => <li key={i}>{c}</li>)}</ul>
+                </div>
+              )}
+              {conclusion.limitations.length > 0 && (
+                <div className="ai-copilot-block ai-copilot-block--limitations">
+                  <span className="ai-copilot-block-title">Limitaciones</span>
+                  <ul>{conclusion.limitations.map((c, i) => <li key={i}>{c}</li>)}</ul>
+                </div>
+              )}
+              <p className="ai-inv-approval"><ShieldAlert size={13} /> Requiere validación humana antes de tomar acción operacional.</p>
+            </div>
+          )}
+
+          <div className="ai-rt-transcript-toggle">
+            <button type="button" onClick={() => setTranscriptOpen((v) => !v)}>
+              {transcriptOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+              Transcripción ({runtime.transcript.length})
+            </button>
+          </div>
+          {transcriptOpen && (
+            <ul className="ai-rt-transcript-list">
+              {runtime.transcript.map((entry) => (
+                <li key={entry.id} className={`is-${entry.role}`}>{entry.text}</li>
+              ))}
+            </ul>
+          )}
+
+          <AgentActionOverlay actions={runtime.uiActionResults} />
+        </div>
+
+        <div className="ai-rt-controls">
+          {isSpeaking && (
+            <button type="button" className="ai-agent-interrupt-button" onClick={bargeIn}>
+              <Square size={12} /> Interrumpir
+            </button>
+          )}
+          {isBusy && !isPaused && (
+            <button type="button" className="ai-inv-secondary" onClick={() => agentSessionClient.send('agent.pause', {})}>
+              <Pause size={13} /> Pausar
+            </button>
+          )}
+          {isPaused && (
+            <button type="button" className="ai-inv-secondary" onClick={() => agentSessionClient.send('agent.resume', {})}>
+              <Play size={13} /> Continuar
+            </button>
+          )}
+          {(isBusy || isPaused) && (
+            <button type="button" className="ai-inv-secondary" onClick={() => agentSessionClient.send('agent.cancel', {})}>
+              <X size={13} /> Cancelar
+            </button>
+          )}
+        </div>
+
+        <form
+          className="ai-copilot-composer"
+          onSubmit={(e) => {
+            e.preventDefault()
+            sendCommand(inputText, false)
+          }}
+        >
+          {micError && <p className="ai-agent-mic-error">{micError}</p>}
+          <div className="ai-copilot-composer-input">
+            <button type="button" className={`ai-agent-mic-button${listening ? ' is-listening' : ''}`} onClick={toggleMic} aria-label={listening ? 'Detener escucha' : 'Hablar'}>
+              {listening ? <MicOff size={16} /> : <Mic size={16} />}
+            </button>
+            <textarea
+              value={inputText}
+              onChange={(e) => setInputText(e.target.value)}
+              placeholder="Investiga, pausa, cancela, o pide un resumen…"
+              rows={1}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault()
+                  sendCommand(inputText, false)
+                }
               }}
             />
+            <button type="button" className="ai-agent-mute-button" onClick={toggleMute} aria-label={muted ? 'Activar voz' : 'Silenciar voz'}>
+              {muted ? <VolumeX size={16} /> : <Volume2 size={16} />}
+            </button>
+            <button type="submit" disabled={!inputText.trim()} aria-label="Enviar">
+              <Send size={16} />
+            </button>
           </div>
-        )}
+        </form>
 
         <footer className="ai-copilot-disclaimer">
           NORTHMINE AI entrega analisis y recomendaciones basadas en los datos disponibles.

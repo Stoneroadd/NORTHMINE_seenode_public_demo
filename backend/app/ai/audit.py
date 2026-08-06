@@ -122,3 +122,72 @@ def record_investigation_ui_step(
             "context_updated": context_updated,
         },
     )
+
+
+# ── Etapa 4: Agent Runtime (sesion, eventos, ack, interrupcion, voz) ───────
+# Nunca se registra la API key, el JWT, cookies ni headers de autorizacion
+# (seccion 26 del brief) - estas funciones solo reciben identificadores,
+# duraciones y metadatos, nunca secretos ni el body crudo de una request.
+
+def record_session_event(
+    *, usuario: str, ip: str, session_id: str, event: str, status: str | None = None,
+) -> None:
+    log_event(
+        usuario=usuario, ip=ip, accion="agent_runtime_session", resultado=status,
+        metodo="WS", endpoint="/api/ai-agent/ws",
+        detalle={"session_id": session_id, "event": event},
+    )
+
+
+def record_command(
+    *, usuario: str, ip: str, session_id: str, command_type: str, confidence: str,
+) -> None:
+    log_event(
+        usuario=usuario, ip=ip, accion="agent_runtime_command", resultado="ok",
+        metodo="WS", endpoint="/api/ai-agent/ws",
+        detalle={"session_id": session_id, "command_type": command_type, "confidence": confidence},
+    )
+
+
+def record_ui_action_ack(
+    *, usuario: str, ip: str, session_id: str, action_id: str, status: str, requirement: str,
+) -> None:
+    log_event(
+        usuario=usuario, ip=ip, accion="agent_runtime_ui_ack", resultado=status,
+        metodo="WS", endpoint="/api/ai-agent/ws",
+        detalle={"session_id": session_id, "action_id": action_id, "status": status, "requirement": requirement},
+    )
+
+
+def record_interruption(
+    *, usuario: str, ip: str, session_id: str, kind: str, investigation_id: str | None, plan_modified: bool,
+) -> None:
+    log_event(
+        usuario=usuario, ip=ip, accion="agent_runtime_interruption", resultado=kind,
+        metodo="WS", endpoint="/api/ai-agent/ws",
+        detalle={"session_id": session_id, "investigation_id": investigation_id, "plan_modified": plan_modified},
+    )
+
+
+def record_speech_request(
+    *, usuario: str, ip: str, segment_id: str, priority: str, text_length: int, text_preview: str, provider: str,
+) -> None:
+    log_event(
+        usuario=usuario, ip=ip, accion="agent_runtime_speech", resultado="requested",
+        metodo="POST", endpoint="/api/ai-agent/speech",
+        detalle={
+            "segment_id": segment_id, "priority": priority, "text_length": text_length,
+            "text_preview": text_preview, "provider": provider,
+        },
+    )
+
+
+def record_speech_playback_result(
+    *, usuario: str, ip: str, session_id: str, segment_id: str, result: str, latency_ms: int | None,
+) -> None:
+    log_event(
+        usuario=usuario, ip=ip, accion="agent_runtime_speech_playback", resultado=result,
+        metodo="WS", endpoint="/api/ai-agent/ws",
+        duracion_ms=latency_ms or 0,
+        detalle={"session_id": session_id, "segment_id": segment_id},
+    )
