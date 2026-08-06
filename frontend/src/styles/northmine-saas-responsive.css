@@ -140,6 +140,7 @@
   }
 
   .nm-saas .ns-hero__backdrop-image {
+    object-fit: cover;
     object-position: 64% center;
   }
 
