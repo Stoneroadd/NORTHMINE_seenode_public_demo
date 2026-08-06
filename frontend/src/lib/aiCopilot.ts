@@ -57,9 +57,17 @@ export interface ClearFilterUIAction {
   filter_id?: 'shift' | 'start_date' | 'end_date' | 'equipo' | null
 }
 
+export type CopilotEntityType = 'equipment' | 'loading_unit' | 'alert' | 'report' | 'task' | 'operator' | 'breakdown'
+
 export interface SelectEntityUIAction {
   action: 'select_entity'
-  entity_type: 'equipment' | 'loader' | 'alert'
+  entity_type: CopilotEntityType
+  entity_id: string
+}
+
+export interface OpenEntityUIAction {
+  action: 'open_entity'
+  entity_type: CopilotEntityType
   entity_id: string
 }
 
@@ -73,6 +81,7 @@ export type CopilotUIAction =
   | SetFilterUIAction
   | ClearFilterUIAction
   | SelectEntityUIAction
+  | OpenEntityUIAction
   | FocusWidgetUIAction
 
 export interface CopilotEvidence {

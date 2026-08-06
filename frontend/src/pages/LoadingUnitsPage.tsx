@@ -1,4 +1,4 @@
-﻿import { useState } from 'react'
+﻿import { useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Download, Factory, Gauge, Route, Timer } from 'lucide-react'
 import { motion, useReducedMotion } from 'framer-motion'
@@ -10,6 +10,7 @@ import { getLoadingUnitDistanceCycle, getLoadingUnitHourly, getLoadingUnitRankin
 import { useModuleT } from '../i18n/useModuleT'
 import { loadingUnitsT } from '../i18n/modules/loadingUnits'
 import { useAnimatedNumber } from '../hooks/useAnimatedNumber'
+import { useAgentWidget } from '../lib/agentRegistry/useAgentWidget'
 
 function tons(value: number) {
   return `${Math.round(value).toLocaleString('es-CL')} t`
@@ -105,6 +106,30 @@ export function LoadingUnitsPage() {
       return { ranking, hourly, distance, routes }
     },
     refetchInterval: 60000,
+  })
+
+  const loadingDataRef = useRef(query.data)
+  loadingDataRef.current = query.data
+  useAgentWidget({
+    id: 'loading-rate-chart',
+    moduleId: 'carguio',
+    type: 'table',
+    label: 'Tasa de carguío por pala',
+    description: 'Toneladas, ciclos y rendimiento (t/h) de cada unidad de carguio del turno.',
+    supportedActions: ['focus_widget', 'explain_widget'],
+    getSnapshot: () => {
+      const items = loadingDataRef.current?.ranking.items ?? []
+      return {
+        widgetId: 'loading-rate-chart',
+        type: 'table',
+        label: 'Tasa de carguío por pala',
+        updatedAt: new Date().toISOString(),
+        rowCount: items.length,
+        totalToneladas: loadingDataRef.current?.ranking.total_toneladas ?? 0,
+        rendimientoPromedioTph: loadingDataRef.current?.ranking.rendimiento_promedio_tph ?? 0,
+        rows: items.map((item) => ({ id: item.carguio_id, toneladas: item.toneladas, rendimientoTph: item.rendimiento_tph, estado: item.estado })),
+      }
+    },
   })
 
   if (query.isLoading) return <LoadingState label={t.loading_label} />

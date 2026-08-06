@@ -20,6 +20,7 @@ from app.ai.schemas import (
     Evidence,
     FocusWidgetAction,
     NavigateAction,
+    OpenEntityAction,
     SelectEntityAction,
     SetFilterAction,
     TaskDraft,
@@ -88,13 +89,19 @@ EMIT_RESPONSE_TOOL: dict[str, Any] = {
                     "properties": {
                         "action": {
                             "type": "string",
-                            "enum": ["navigate", "set_filter", "clear_filter", "select_entity", "focus_widget"],
+                            "enum": ["navigate", "set_filter", "clear_filter", "select_entity", "open_entity", "focus_widget"],
                         },
                         "route": {"type": "string", "description": "Para 'navigate': seccion o ruta, ej. 'produccion' o '/produccion'."},
                         "filter_id": {"type": "string", "enum": ["shift", "start_date", "end_date", "equipo"]},
                         "value": {"type": "string", "description": "Para 'set_filter'."},
-                        "entity_type": {"type": "string", "enum": ["equipment", "loader", "alert"]},
-                        "entity_id": {"type": "string"},
+                        "entity_type": {
+                            "type": "string",
+                            "enum": ["equipment", "loading_unit", "alert", "report", "task", "operator", "breakdown"],
+                        },
+                        "entity_id": {
+                            "type": "string",
+                            "description": "ID real de la entidad (no un alias en lenguaje natural como 'Pala 03' - eso lo resuelve el frontend antes de ejecutar).",
+                        },
                         "widget_id": {"type": "string"},
                     },
                     "required": ["action"],
@@ -211,6 +218,16 @@ def _maybe_build_chart(message: str, tool_outputs: list[tuple[str, dict[str, Any
 
 _VALID_SHIFT_VALUES = {"DIA", "NOCHE", "TODOS", "AMBOS", "ACTUAL"}
 _DATE_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+_ENTITY_ID_PATTERN = re.compile(r"^[A-Za-z0-9_\-]{1,40}$")
+
+
+def _is_valid_entity_id(entity_id: str) -> bool:
+    """Seccion 11: 'Entity ID o formato' se valida en el backend. El
+    resolver de alias (frontend) ya convierte texto libre a un ID real
+    antes de llegar aca - esto solo rechaza formato imposible/inyeccion,
+    no confirma que la entidad EXISTA (eso lo hace el modulo real que la
+    abre, contra su propio dataset)."""
+    return bool(_ENTITY_ID_PATTERN.match(entity_id.strip()))
 
 
 def _is_valid_filter_value(filter_id: Any, value: str) -> bool:
@@ -259,7 +276,15 @@ def _validate_ui_actions(raw_actions: Any, role: str) -> list[Any]:
             elif action_name == "clear_filter":
                 validated.append(ClearFilterAction(filter_id=item.get("filter_id")))
             elif action_name == "select_entity":
-                validated.append(SelectEntityAction(entity_type=item.get("entity_type"), entity_id=str(item.get("entity_id") or "")))
+                entity_id = str(item.get("entity_id") or "")
+                if not _is_valid_entity_id(entity_id):
+                    continue
+                validated.append(SelectEntityAction(entity_type=item.get("entity_type"), entity_id=entity_id))
+            elif action_name == "open_entity":
+                entity_id = str(item.get("entity_id") or "")
+                if not _is_valid_entity_id(entity_id):
+                    continue
+                validated.append(OpenEntityAction(entity_type=item.get("entity_type"), entity_id=entity_id))
             elif action_name == "focus_widget":
                 widget_id = str(item.get("widget_id") or "")
                 if not navigation.is_widget_known(widget_id):

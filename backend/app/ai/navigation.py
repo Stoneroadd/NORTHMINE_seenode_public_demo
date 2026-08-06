@@ -83,6 +83,18 @@ KNOWN_WIDGET_IDS: frozenset[str] = frozenset(
         "alerts-priority-list",
         # Reportes.
         "reportes-turno-actual",
+        # Turno (Etapa 2.5).
+        "shift-summary",
+        # Rendimiento.
+        "performance-summary", "performance-by-equipment",
+        # Carguio.
+        "loading-rate-chart",
+        # Averias.
+        "breakdown-summary", "breakdown-active-list",
+        # Comparativa.
+        "comparison-variance",
+        # Operator Ranking.
+        "operator-ranking-table",
     }
 )
 

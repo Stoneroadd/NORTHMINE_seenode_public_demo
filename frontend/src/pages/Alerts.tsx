@@ -28,6 +28,7 @@ import type { DestinationDistribution, LowCaexAlert, OperationalAlertsResponse, 
 import { useModuleT } from '../i18n/useModuleT'
 import { alertsT, type AlertsT } from '../i18n/modules/alerts'
 import { useAgentWidget } from '../lib/agentRegistry/useAgentWidget'
+import { useAgentEntityHandler } from '../lib/agentRegistry/useAgentEntityHandler'
 
 const filters = ['TODAS', 'CRITICA', 'ALTA', 'MEDIA', 'BAJA'] as const
 
@@ -464,6 +465,15 @@ export function Alerts() {
         topPriority: top ? { id: top.id, titulo: getAlertTitle(top, t), severidad: normalizeSeverity(top) } : null,
       }
     },
+  })
+
+  // Entity Navigation Service: mientras el usuario esta en Alertas, abrir un
+  // equipo (p.ej. "el equipo relacionado con esta alerta") no requiere
+  // navegar a Flota - este mismo EquipmentDetailDrawer ya sirve para eso.
+  useAgentEntityHandler('equipment', {
+    select: (entityId) => setSelectedEquipmentId(entityId),
+    open: (entityId) => setSelectedEquipmentId(entityId),
+    isOpen: (entityId) => selectedEquipmentId === entityId,
   })
 
   if (query.isLoading) return <LoadingState label="Cargando alertas operacionales..." />

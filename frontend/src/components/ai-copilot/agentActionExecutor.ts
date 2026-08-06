@@ -3,6 +3,8 @@ import type { SectionId } from '../layout/Sidebar'
 import { useAppStore, type TurnoId } from '../../store'
 import { moduleForRoute, NORTHMINE_MODULES } from '../../lib/agentRegistry/modules'
 import { agentWidgetRegistry } from '../../lib/agentRegistry/registry'
+import { agentEntityNavigator } from '../../lib/agentRegistry/entityNavigator'
+import { resolveEquipmentAlias } from '../../lib/agentRegistry/entityResolver'
 import type { AgentActionExecutionStatus, AgentActionResult } from '../../lib/agentRegistry/types'
 import type { CopilotUIAction } from '../../lib/aiCopilot'
 
@@ -157,17 +159,53 @@ async function executeOne(actionId: string, action: CopilotUIAction): Promise<Ag
       return { actionId, status: 'completed', label: `Limpiando filtro ${action.filter_id}` }
     }
 
-    case 'select_entity': {
-      const store = useAppStore.getState()
-      store.setFiltro({ equipo: action.entity_id })
-      const targetSection: SectionId = action.entity_type === 'alert' ? 'alertas' : 'flota'
-      navigateToPath(sectionPaths[targetSection])
-      const confirmed = await waitFor(
-        () => useAppStore.getState().filtro.equipo === action.entity_id && window.location.pathname === sectionPaths[targetSection],
-      )
-      return confirmed
-        ? { actionId, status: 'completed', label: `Abriendo ${action.entity_type} ${action.entity_id}` }
-        : fail('failed', `No se pudo confirmar la apertura de ${action.entity_id}`)
+    case 'select_entity':
+    case 'open_entity': {
+      const wantsOpen = action.action === 'open_entity'
+
+      // Resolucion de alias (seccion 8): solo existe catalogo real para
+      // 'equipment' hoy (fleet-status-table). El modelo nunca elige el ID
+      // interno - si hay mas de una coincidencia, no se resuelve en
+      // silencio.
+      let entityId = action.entity_id
+      if (action.entity_type === 'equipment') {
+        const resolution = resolveEquipmentAlias(action.entity_id)
+        if (resolution.status === 'ambiguous') {
+          const options = resolution.candidates.map((c) => c.label).join(', ')
+          return fail('failed', `"${action.entity_id}" es ambiguo: podria ser ${options}. Se necesita precisar cual.`)
+        }
+        if (resolution.status === 'resolved') {
+          entityId = resolution.candidates[0].entityId
+        }
+        // 'not_found': puede que ya sea un ID real (no un alias) - se deja
+        // pasar tal cual y que el handler del modulo confirme o no.
+      }
+
+      // Si nadie tiene handler para este tipo de entidad todavia, el unico
+      // fallback conocido es navegar a Flota para equipment (su handler se
+      // registra al montar). Para el resto de tipos sin handler, es
+      // 'unsupported' honesto - no se finge una navegacion que no abre nada.
+      if (!agentEntityNavigator.hasHandler(action.entity_type)) {
+        if (action.entity_type !== 'equipment') {
+          return fail('rejected', `"${action.entity_type}" no tiene un detalle real disponible todavia.`)
+        }
+        navigateToPath(sectionPaths.flota)
+        const registered = await waitFor(() => agentEntityNavigator.hasHandler('equipment'), 1500)
+        if (!registered) return fail('failed', `No pude confirmar que Flota cargara a tiempo para abrir ${entityId}.`)
+      }
+
+      const result = wantsOpen
+        ? await agentEntityNavigator.openEntity(action.entity_type, entityId)
+        : await agentEntityNavigator.selectEntity(action.entity_type, entityId)
+
+      const verb = wantsOpen ? 'Abriendo' : 'Seleccionando'
+      if (result.status === 'completed') {
+        return { actionId, status: 'completed', label: `${verb} ${action.entity_type} ${entityId}` }
+      }
+      if (result.status === 'unsupported') {
+        return fail('rejected', result.message ?? `No hay soporte para ${action.entity_type} todavia.`)
+      }
+      return fail('failed', result.message ?? `No se pudo ${wantsOpen ? 'abrir' : 'seleccionar'} ${entityId}`)
     }
 
     case 'focus_widget': {

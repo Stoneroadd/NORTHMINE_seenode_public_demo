@@ -27,6 +27,8 @@ import type { OperatorRankingItem } from '../types/operatorRanking'
 import { axisLabel, formatNumber, premiumPalette, tooltipBase, useChartPaletteKey } from '../components/charts/premium/chartTheme'
 import { useModuleT } from '../i18n/useModuleT'
 import { operatorRankingT, type OperatorRankingT } from '../i18n/modules/operatorRanking'
+import { useAgentWidget } from '../lib/agentRegistry/useAgentWidget'
+import { useAgentEntityHandler } from '../lib/agentRegistry/useAgentEntityHandler'
 import { formatTons } from '../lib/format'
 
 function formatHours(value: number) {
@@ -422,6 +424,36 @@ export function OperatorRanking() {
     const operator = items.find((item) => item.operator_id === operatorId)
     if (operator) setSelectedOperator(operator)
   }
+
+  // Instrumentacion (Etapa 2.5): solo metricas operacionales autorizadas -
+  // nunca se construye ni se expone una evaluacion laboral/psicologica/
+  // disciplinaria a partir de esto (restriccion explicita del brief).
+  useAgentWidget({
+    id: 'operator-ranking-table',
+    moduleId: 'operatorRanking',
+    type: 'table',
+    label: 'Ranking de operadores',
+    description: 'Score operacional (productividad/disponibilidad/utilizacion/demoras/seguridad) por operador, solo metricas autorizadas.',
+    supportedActions: ['focus_widget', 'explain_widget'],
+    getSnapshot: () => ({
+      widgetId: 'operator-ranking-table',
+      type: 'table',
+      label: 'Ranking de operadores',
+      updatedAt: new Date().toISOString(),
+      dataMode: dataMode ?? null,
+      rowCount: items.length,
+      rows: items.slice(0, 20).map((item) => ({
+        operatorId: item.operator_id,
+        rank: item.rank,
+        scoreGlobal: item.score_global,
+      })),
+    }),
+  })
+  useAgentEntityHandler('operator', {
+    select: (entityId) => selectById(entityId),
+    open: (entityId) => selectById(entityId),
+    isOpen: (entityId) => selectedOperator?.operator_id === entityId,
+  })
 
   if (rankingQuery.isLoading) return <LoadingState label={t.cargando_ranking} />
   if (rankingQuery.isError || !rankingQuery.data) return <ErrorState detail={t.error_cargar_ranking} onRetry={() => rankingQuery.refetch()} />

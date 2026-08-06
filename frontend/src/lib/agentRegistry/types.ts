@@ -82,9 +82,55 @@ export interface AgentWidgetManifest {
   focus?: () => void
 }
 
+// ── Entidades navegables (Etapa 2.5) ─────────────────────────────────────
+
+export type AgentEntityType = 'equipment' | 'loading_unit' | 'alert' | 'report' | 'task' | 'operator' | 'breakdown'
+export type AgentEntityAction = 'select' | 'open' | 'focus' | 'compare' | 'explain'
+
 export interface AgentEntityManifest {
-  type: 'equipment' | 'loader' | 'alert'
+  type: AgentEntityType
   label: string
+}
+
+export interface AgentEntityDescriptor {
+  entityType: AgentEntityType
+  entityId: string
+  label: string
+  moduleId: AgentModuleId
+  supportedActions: AgentEntityAction[]
+}
+
+export type AgentEntityActionStatus = 'completed' | 'not_found' | 'not_authorized' | 'unsupported' | 'failed' | 'cancelled'
+
+export interface AgentEntityActionResult {
+  status: AgentEntityActionStatus
+  entityType: AgentEntityType
+  entityId: string
+  moduleId?: AgentModuleId
+  message?: string
+  contextUpdated: boolean
+}
+
+export interface AgentEntityHandler {
+  select?: (entityId: string) => Promise<void> | void
+  open?: (entityId: string) => Promise<void> | void
+  /** Verifica sincronamente si la entidad quedo realmente abierta/seleccionada (para no marcar 'completed' sin confirmar). */
+  isOpen?: (entityId: string) => boolean
+}
+
+export type AgentDataFreshnessStatus = 'current' | 'stale' | 'unknown'
+export type AgentDataQualityStatus = 'high' | 'medium' | 'low' | 'unknown'
+
+export interface AgentDataMetadata {
+  source?: string
+  updatedAt?: string
+  freshnessStatus: AgentDataFreshnessStatus
+  qualityStatus: AgentDataQualityStatus
+}
+
+export interface EntityResolutionResult {
+  status: 'resolved' | 'ambiguous' | 'not_found'
+  candidates: AgentEntityDescriptor[]
 }
 
 export interface AgentModuleManifest {

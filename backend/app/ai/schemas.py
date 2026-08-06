@@ -166,9 +166,18 @@ class ClearFilterAction(BaseModel):
     filter_id: Literal["shift", "start_date", "end_date", "equipo"] | None = None
 
 
+AgentEntityType = Literal["equipment", "loading_unit", "alert", "report", "task", "operator", "breakdown"]
+
+
 class SelectEntityAction(BaseModel):
     action: Literal["select_entity"] = "select_entity"
-    entity_type: Literal["equipment", "loader", "alert"]
+    entity_type: AgentEntityType
+    entity_id: str = Field(max_length=40)
+
+
+class OpenEntityAction(BaseModel):
+    action: Literal["open_entity"] = "open_entity"
+    entity_type: AgentEntityType
     entity_id: str = Field(max_length=40)
 
 
@@ -177,7 +186,9 @@ class FocusWidgetAction(BaseModel):
     widget_id: str = Field(max_length=80)
 
 
-UIAction = NavigateAction | SetFilterAction | ClearFilterAction | SelectEntityAction | FocusWidgetAction
+UIAction = (
+    NavigateAction | SetFilterAction | ClearFilterAction | SelectEntityAction | OpenEntityAction | FocusWidgetAction
+)
 
 # Riesgo de cada accion (seccion 18 del brief) - unica fuente de verdad,
 # consumida por policies.py y expuesta al frontend para que el overlay
@@ -188,6 +199,7 @@ UI_ACTION_RISK: dict[str, str] = {
     "set_filter": "CONFIGURE_VIEW",
     "clear_filter": "CONFIGURE_VIEW",
     "select_entity": "CONFIGURE_VIEW",
+    "open_entity": "CONFIGURE_VIEW",
 }
 
 

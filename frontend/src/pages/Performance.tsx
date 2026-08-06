@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import ReactECharts from 'echarts-for-react'
 import type { EChartsOption } from 'echarts'
@@ -19,6 +19,8 @@ import {
 } from '../components/charts/premium/chartTheme'
 import type { LoaderPerformance, PerformanceSummary } from '../lib/api'
 import { formatHourLabel } from '../lib/time/operationalHour'
+import { useAgentWidget } from '../lib/agentRegistry/useAgentWidget'
+import { useAgentEntityHandler } from '../lib/agentRegistry/useAgentEntityHandler'
 
 type PeriodKey = '7d' | '14d' | 'month' | 'custom'
 
@@ -268,6 +270,55 @@ export function Performance() {
   const curveOption = useMemo(() => query.data ? buildAverageCurveOption(query.data) : undefined, [query.data, themeId])
   const heatmapOption = useMemo(() => query.data ? buildHeatmapOption(query.data) : undefined, [query.data, themeId])
   const loaderOption = useMemo(() => query.data ? buildLoaderOption(query.data.loader_performance) : undefined, [query.data, themeId])
+
+  const performanceDataRef = useRef(query.data)
+  performanceDataRef.current = query.data
+  useAgentWidget({
+    id: 'performance-summary',
+    moduleId: 'rendimiento',
+    type: 'kpi',
+    label: 'Resumen de rendimiento',
+    description: 'Produccion del periodo, mejor/peor dia y concentracion de horas peak.',
+    supportedActions: ['explain_widget'],
+    getSnapshot: () => {
+      const current = performanceDataRef.current
+      return {
+        widgetId: 'performance-summary',
+        type: 'kpi',
+        label: 'Resumen de rendimiento',
+        updatedAt: new Date().toISOString(),
+        periodo: current ? { desde: current.desde, hasta: current.hasta } : null,
+        totalPeriodo: current?.kpis.total_periodo ?? 0,
+        promedioDia: current?.kpis.promedio_dia ?? 0,
+        mejorDia: current?.kpis.mejor_dia ?? null,
+        peorDia: current?.kpis.peor_dia ?? null,
+        topConcentrationPct: current?.top_concentration_pct ?? null,
+        value: current?.kpis.total_periodo ?? 0,
+        unit: 't',
+      }
+    },
+  })
+  useAgentWidget({
+    id: 'performance-by-equipment',
+    moduleId: 'rendimiento',
+    type: 'table',
+    label: 'Rendimiento por unidad de carguío',
+    description: 'Tasa de carguio por pala/cargador en el periodo seleccionado.',
+    supportedActions: ['focus_widget', 'explain_widget'],
+    getSnapshot: () => ({
+      widgetId: 'performance-by-equipment',
+      type: 'table',
+      label: 'Rendimiento por unidad de carguío',
+      updatedAt: new Date().toISOString(),
+      rowCount: performanceDataRef.current?.loader_performance.length ?? 0,
+      rows: (performanceDataRef.current?.loader_performance ?? []).map((row) => ({ id: row.carguio_id, modelo: row.modelo })),
+    }),
+  })
+  useAgentEntityHandler('equipment', {
+    select: (entityId) => setSelectedEquipmentId(entityId),
+    open: (entityId) => setSelectedEquipmentId(entityId),
+    isOpen: (entityId) => selectedEquipmentId === entityId,
+  })
 
   if (query.isLoading) return <LoadingState label="Cargando rendimiento operacional..." />
   if (query.isError || !query.data) return <ErrorState detail="No se pudo cargar /api/performance/summary." onRetry={() => query.refetch()} />

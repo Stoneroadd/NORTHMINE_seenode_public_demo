@@ -40,7 +40,7 @@ export const NORTHMINE_MODULES: Record<string, AgentModuleManifest> = {
     agentAccess: 'read_only',
     minRoles: 'any',
     filters: [SHIFT_FILTER, ...DATE_FILTERS],
-    entities: [{ type: 'equipment', label: 'CAEX' }, { type: 'loader', label: 'Pala' }],
+    entities: [{ type: 'equipment', label: 'CAEX' }, { type: 'loading_unit', label: 'Pala' }],
     supportedActions: ['navigate', 'set_filter', 'clear_filter', 'focus_widget', 'explain_widget'],
     instrumented: true,
   },
@@ -79,9 +79,9 @@ export const NORTHMINE_MODULES: Record<string, AgentModuleManifest> = {
     agentAccess: 'read_only',
     minRoles: 'any',
     filters: [SHIFT_FILTER],
-    entities: [{ type: 'equipment', label: 'CAEX' }, { type: 'loader', label: 'Pala' }],
-    supportedActions: ['navigate', 'set_filter', 'clear_filter', 'select_entity'],
-    instrumented: false,
+    entities: [{ type: 'equipment', label: 'CAEX' }, { type: 'loading_unit', label: 'Pala' }],
+    supportedActions: ['navigate', 'set_filter', 'clear_filter', 'select_entity', 'focus_widget'],
+    instrumented: true,
   },
   produccion: {
     id: 'produccion',
@@ -92,7 +92,7 @@ export const NORTHMINE_MODULES: Record<string, AgentModuleManifest> = {
     agentAccess: 'read_only',
     minRoles: 'any',
     filters: [SHIFT_FILTER, ...DATE_FILTERS, EQUIPMENT_FILTER],
-    entities: [{ type: 'equipment', label: 'CAEX' }, { type: 'loader', label: 'Pala' }],
+    entities: [{ type: 'equipment', label: 'CAEX' }, { type: 'loading_unit', label: 'Pala' }],
     supportedActions: ['navigate', 'set_filter', 'clear_filter', 'select_entity', 'focus_widget', 'explain_widget'],
     instrumented: true,
   },
@@ -105,9 +105,9 @@ export const NORTHMINE_MODULES: Record<string, AgentModuleManifest> = {
     agentAccess: 'read_only',
     minRoles: 'any',
     filters: [SHIFT_FILTER, ...DATE_FILTERS],
-    entities: [],
-    supportedActions: ['navigate', 'set_filter', 'clear_filter'],
-    instrumented: false,
+    entities: [{ type: 'equipment', label: 'CAEX / Pala' }],
+    supportedActions: ['navigate', 'set_filter', 'clear_filter', 'select_entity', 'open_entity', 'focus_widget'],
+    instrumented: true,
   },
   flota: {
     id: 'flota',
@@ -131,9 +131,13 @@ export const NORTHMINE_MODULES: Record<string, AgentModuleManifest> = {
     agentAccess: 'read_only',
     minRoles: 'any',
     filters: [SHIFT_FILTER, EQUIPMENT_FILTER],
-    entities: [{ type: 'loader', label: 'Pala' }],
-    supportedActions: ['navigate', 'set_filter', 'clear_filter', 'select_entity'],
-    instrumented: false,
+    entities: [{ type: 'loading_unit', label: 'Pala' }],
+    // "equipo" tambien filtra unidades de carguio (una sola dimension
+    // global de equipo en el store, ver FiltroGlobal) - no existe un
+    // filter_id 'loading_unit' separado todavia, adaptacion deliberada a
+    // la arquitectura real en vez de forzar un contrato que no existe.
+    supportedActions: ['navigate', 'set_filter', 'clear_filter', 'select_entity', 'focus_widget'],
+    instrumented: true,
   },
   averias: {
     id: 'averias',
@@ -145,8 +149,10 @@ export const NORTHMINE_MODULES: Record<string, AgentModuleManifest> = {
     minRoles: 'any',
     filters: [...DATE_FILTERS, EQUIPMENT_FILTER],
     entities: [{ type: 'equipment', label: 'Equipo' }],
-    supportedActions: ['navigate', 'set_filter', 'clear_filter', 'select_entity'],
-    instrumented: false,
+    // open_entity aca abre por tipo 'breakdown' (expandedId de la fila de
+    // averia), no 'equipment' - Averias no registra handler de equipment.
+    supportedActions: ['navigate', 'set_filter', 'clear_filter', 'select_entity', 'open_entity', 'focus_widget'],
+    instrumented: true,
   },
   analisis: {
     id: 'analisis',
@@ -253,9 +259,13 @@ export const NORTHMINE_MODULES: Record<string, AgentModuleManifest> = {
     agentAccess: 'read_only',
     minRoles: 'any',
     filters: [...DATE_FILTERS],
-    entities: [],
-    supportedActions: ['navigate', 'set_filter', 'clear_filter'],
-    instrumented: false,
+    entities: [{ type: 'equipment', label: 'Equipo' }],
+    // Sin filter_id propio para "periodo A" / "periodo B" todavia (Compare.tsx
+    // maneja 4 fechas via CompareParams, no las 2 de FiltroGlobal) - se puede
+    // navegar, enfocar y leer el snapshot, pero no fijar los rangos via
+    // set_filter en esta etapa. Documentado como limitacion, no simulado.
+    supportedActions: ['navigate', 'select_entity', 'open_entity', 'focus_widget'],
+    instrumented: true,
   },
   operatorRanking: {
     id: 'operatorRanking',
@@ -266,9 +276,9 @@ export const NORTHMINE_MODULES: Record<string, AgentModuleManifest> = {
     agentAccess: 'read_only',
     minRoles: ['admin', 'supervisor'],
     filters: [],
-    entities: [],
-    supportedActions: ['navigate'],
-    instrumented: false,
+    entities: [{ type: 'operator', label: 'Operador' }],
+    supportedActions: ['navigate', 'select_entity', 'open_entity', 'focus_widget'],
+    instrumented: true,
   },
   adminSistema: {
     id: 'adminSistema',

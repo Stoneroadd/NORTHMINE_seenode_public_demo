@@ -261,6 +261,46 @@ def test_validate_ui_actions_caps_at_five_actions():
     assert len(validated) == 5
 
 
+# ── open_entity y allowlist ampliada (Etapa 2.5) ─────────────────────────────
+
+def test_open_entity_accepts_valid_id_and_known_entity_type():
+    validated = _validate_ui_actions(
+        [{"action": "open_entity", "entity_type": "equipment", "entity_id": "CAEX-104"}], role="operador"
+    )
+    assert len(validated) == 1
+    assert validated[0].action == "open_entity"
+    assert validated[0].entity_id == "CAEX-104"
+
+
+def test_open_entity_rejects_malformed_id_defense_in_depth():
+    # El resolver de alias vive en el frontend (registry en vivo); esto es
+    # la ultima linea de defensa contra un ID con formato imposible o con
+    # intento de inyeccion, sin importar de donde vino.
+    proposed = [
+        {"action": "open_entity", "entity_type": "equipment", "entity_id": "CAEX-104; DROP TABLE"},
+        {"action": "open_entity", "entity_type": "equipment", "entity_id": ""},
+        {"action": "open_entity", "entity_type": "equipment", "entity_id": "a" * 41},
+    ]
+    assert _validate_ui_actions(proposed, role="operador") == []
+
+
+def test_open_entity_accepts_all_new_entity_types():
+    for entity_type in ("equipment", "loading_unit", "alert", "report", "task", "operator", "breakdown"):
+        validated = _validate_ui_actions(
+            [{"action": "open_entity", "entity_type": entity_type, "entity_id": "ID-1"}], role="operador"
+        )
+        assert len(validated) == 1, f"entity_type {entity_type} deberia validar"
+
+
+def test_newly_instrumented_widgets_are_in_the_backend_allowlist():
+    for widget_id in (
+        "shift-summary", "performance-summary", "performance-by-equipment",
+        "loading-rate-chart", "breakdown-summary", "breakdown-active-list",
+        "comparison-variance", "operator-ranking-table",
+    ):
+        assert navigation.is_widget_known(widget_id), f"{widget_id} deberia estar en KNOWN_WIDGET_IDS"
+
+
 def test_get_alerts_tool_returns_deterministic_shape(monkeypatch):
     from app.ai import tools as tools_module
 

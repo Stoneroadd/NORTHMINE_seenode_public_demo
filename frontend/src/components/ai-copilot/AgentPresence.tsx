@@ -6,6 +6,7 @@ import { buildAgentApplicationContext } from '../../lib/agentRegistry/context'
 import { NORTHMINE_MODULES } from '../../lib/agentRegistry/modules'
 import type { CopilotContext } from '../../lib/aiCopilot'
 import '../../styles/ai-copilot.css'
+import '../../lib/agentRegistry/devBridge'
 
 const APPROVAL_ROLES = new Set(['admin', 'supervisor', 'operador'])
 const CHAT_ROLES = new Set(['admin', 'supervisor', 'operador', 'viewer'])
