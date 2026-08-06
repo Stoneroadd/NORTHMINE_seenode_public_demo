@@ -13,6 +13,7 @@ import { useIdleTimeout } from './hooks/useIdleTimeout'
 import { useModuleT } from './i18n/useModuleT'
 import { appT, type AppT } from './i18n/modules/app'
 import { FAST_PUBLIC_DEMO } from './demo/fastDemo'
+import { AgentPresence } from './components/ai-copilot/AgentPresence'
 
 const loadPrediction  = () => import('./pages/Prediction')
 const loadSimulator   = () => import('./pages/Simulator')
@@ -103,6 +104,17 @@ function schedulePreload(callback: () => void) {
 
 function wrap(node: React.ReactNode, key: string) {
   return <div key={key} className="page-content">{node}</div>
+}
+
+/** Sincroniza la seccion activa del sidebar al store, para que el AI Copilot
+ * (montado fuera de AppShell) sepa en que modulo esta el usuario sin
+ * acoplarse directamente a Sidebar/AppShell. */
+function ActiveSectionSync({ section, children }: { section: SectionId; children: ReactNode }) {
+  const setActiveSection = useAppStore((state) => state.setActiveSection)
+  useEffect(() => {
+    setActiveSection(section)
+  }, [section, setActiveSection])
+  return <>{children}</>
 }
 
 function renderSection(section: SectionId, session: AuthSession, t: AppT) {
@@ -383,8 +395,11 @@ export default function App() {
       <IdleTimeoutBanner />
       <SettingsPanel open={settingsOpen} onClose={() => setSettingsOpen(false)} />
       <AppShell session={session} onLogout={handleLogout}>
-        {(section: SectionId) => renderSection(section, session, t)}
+        {(section: SectionId) => (
+          <ActiveSectionSync section={section}>{renderSection(section, session, t)}</ActiveSectionSync>
+        )}
       </AppShell>
+      <AgentPresence />
     </>
   )
 }

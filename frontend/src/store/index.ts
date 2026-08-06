@@ -108,6 +108,12 @@ interface AppStore {
   setIdleExpired: (v: boolean) => void
   lastActivity: number
   setLastActivity: (t: number) => void
+
+  // Seccion activa del sidebar - estado transitorio (no persiste), lo lee el
+  // AI Copilot para saber en que modulo esta el usuario sin acoplarse a
+  // AppShell/Sidebar directamente.
+  activeSection: string | null
+  setActiveSection: (s: string | null) => void
 }
 
 const hoy = new Date().toISOString().split('T')[0]
@@ -197,6 +203,10 @@ export const useAppStore = create<AppStore>()(
       setIdleExpired: (v) => set({ idleExpired: v }),
       lastActivity: Date.now(),
       setLastActivity: (t) => set({ lastActivity: t }),
+
+      // Seccion activa (transitoria, no persiste - ver partialize abajo)
+      activeSection: null,
+      setActiveSection: (s) => set({ activeSection: s }),
     }),
     {
       name: 'northmine-store',

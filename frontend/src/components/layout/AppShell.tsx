@@ -17,7 +17,11 @@ interface Props {
   children: (section: SectionId) => ReactNode
 }
 
-const sectionPaths: Record<SectionId, string> = {
+// Exportado para que el AI Agent (AgentActionExecutor) pueda navegar
+// reusando el mismo mapa seccion->ruta, sin duplicarlo ni acoplarse al
+// estado interno de AppShell (navega via pushState + popstate, igual que
+// handleSelectSection de mas abajo).
+export const sectionPaths: Record<SectionId, string> = {
   cockpit: '/cockpit',
   operationalMap3d: '/operational-map-3d',
   dashboard: '/resumen',
