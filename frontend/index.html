@@ -21,15 +21,34 @@
     <style>
       * { box-sizing: border-box; margin: 0; padding: 0; }
       body { background: #080a0a; }
+      .nm-splash-spinner {
+        width: 46px;
+        height: 46px;
+        border-radius: 50%;
+        border: 3px solid rgba(238, 238, 232, 0.12);
+        border-top-color: #b8733f;
+        animation: nm-splash-spin 0.9s linear infinite;
+      }
+      @keyframes nm-splash-spin { to { transform: rotate(360deg); } }
+      .nm-splash-dots::after {
+        content: '';
+        animation: nm-splash-dots 1.2s steps(4, end) infinite;
+      }
+      @keyframes nm-splash-dots {
+        0% { content: ''; }
+        25% { content: '.'; }
+        50% { content: '..'; }
+        75% { content: '...'; }
+      }
     </style>
     <script data-goatcounter="https://northmine.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
   </head>
   <body>
     <div id="root">
       <div style="min-height:100vh;display:grid;place-items:center;background:#080a0a;color:#eeeee8;font-family:'IBM Plex Sans',Segoe UI,Arial,sans-serif;">
-        <div style="border-left:1px solid #b8733f;padding:12px 18px;max-width:420px;">
-          <img src="/assets/brand/northmine-logo-master.png" alt="NORTHMINE Intelligence Hub" width="150" height="100" style="display:block;width:150px;height:auto;margin-bottom:8px;"/>
-          <div style="margin-top:5px;color:#a9b0ad;font-size:13px;">Preparando control operacional...</div>
+        <div style="text-align:center;padding:12px 18px;max-width:420px;">
+          <div class="nm-splash-spinner" role="status" aria-label="Cargando"></div>
+          <div style="margin-top:18px;color:#a9b0ad;font-size:13px;letter-spacing:0.05em;">Preparando control operacional<span class="nm-splash-dots"></span></div>
         </div>
       </div>
     </div>
