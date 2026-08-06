@@ -41,6 +41,7 @@ export interface ChartsT {
   tonnageTooltip: (value: string) => string
   cyclesTooltip: (value: string) => string
   delaysTooltip: (value: string) => string
+  shareOfMaxTooltip: (pct: string) => string
   // PremiumLineAreaChart
   targetDifferenceTooltip: (value: string) => string
   hourlyTargetSeries: string
@@ -105,6 +106,7 @@ export const chartsT: ModuleDict<ChartsT> = {
     tonnageTooltip: (value) => `Toneladas: <strong>${value}</strong>`,
     cyclesTooltip: (value) => `Ciclos: <strong>${value}</strong>`,
     delaysTooltip: (value) => `Demoras: <strong>${value}</strong>`,
+    shareOfMaxTooltip: (pct) => `${pct}% del máximo de la jornada`,
     targetDifferenceTooltip: (value) => `Diferencia meta: <strong>${value}</strong>`,
     hourlyTargetSeries: 'Meta horaria',
     bestHourPoint: 'Mejor hora',
@@ -144,6 +146,7 @@ export const chartsT: ModuleDict<ChartsT> = {
     tonnageTooltip: (value) => `Tonnage: <strong>${value}</strong>`,
     cyclesTooltip: (value) => `Cycles: <strong>${value}</strong>`,
     delaysTooltip: (value) => `Delays: <strong>${value}</strong>`,
+    shareOfMaxTooltip: (pct) => `${pct}% of the shift maximum`,
     targetDifferenceTooltip: (value) => `Target difference: <strong>${value}</strong>`,
     hourlyTargetSeries: 'Hourly target',
     bestHourPoint: 'Best hour',
@@ -183,6 +186,7 @@ export const chartsT: ModuleDict<ChartsT> = {
     tonnageTooltip: (value) => `Tonnen: <strong>${value}</strong>`,
     cyclesTooltip: (value) => `Zyklen: <strong>${value}</strong>`,
     delaysTooltip: (value) => `Verzögerungen: <strong>${value}</strong>`,
+    shareOfMaxTooltip: (pct) => `${pct}% des Schichtmaximums`,
     targetDifferenceTooltip: (value) => `Zielabweichung: <strong>${value}</strong>`,
     hourlyTargetSeries: 'Stundenziel',
     bestHourPoint: 'Beste Stunde',
