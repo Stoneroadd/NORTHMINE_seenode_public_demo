@@ -1,43 +1,73 @@
 import { sectionPaths } from '../layout/AppShell'
 import type { SectionId } from '../layout/Sidebar'
 import { useAppStore, type TurnoId } from '../../store'
+import { moduleForRoute, NORTHMINE_MODULES } from '../../lib/agentRegistry/modules'
+import { agentWidgetRegistry } from '../../lib/agentRegistry/registry'
+import type { AgentActionExecutionStatus, AgentActionResult } from '../../lib/agentRegistry/types'
 import type { CopilotUIAction } from '../../lib/aiCopilot'
 
-export interface ExecutedAction {
-  action: CopilotUIAction
-  label: string
-  applied: boolean
+/**
+ * Ejecutor de acciones semanticas con maquina de estados (seccion 9-10 del
+ * brief): received -> validated -> executing -> completed|rejected|failed,
+ * en una cola secuencial por sesion (una accion a la vez, deduplicada por
+ * actionId) que solo reporta 'completed' despues de confirmar el cambio
+ * real - nunca antes.
+ */
+
+const SECTION_LABELS: Record<string, string> = Object.fromEntries(
+  Object.values(NORTHMINE_MODULES).map((module) => [module.id, module.label]),
+)
+
+let actionCounter = 0
+function nextActionId(): string {
+  actionCounter += 1
+  return `action-${Date.now()}-${actionCounter}`
 }
 
-const SECTION_LABELS: Partial<Record<SectionId, string>> = {
-  cockpit: 'Decision Cockpit',
-  dashboard: 'Resumen',
-  turno: 'Turno Actual',
-  produccion: 'Producción',
-  rendimiento: 'Rendimiento',
-  flota: 'Flota',
-  carguio: 'Carguío',
-  averias: 'Averías',
-  analisis: 'Análisis Experto',
-  aerea: 'Vista Aérea',
-  alertas: 'Alertas',
-  reportes: 'Reportes',
-  admin: 'Admin',
-  operationalMap3d: 'Mapa Operacional 3D',
+const seenActionIds = new Set<string>()
+const queue: Array<{ id: string; action: CopilotUIAction; onResult: (result: AgentActionResult) => void }> = []
+let processing = false
+
+export function enqueueAgentAction(action: CopilotUIAction, onResult: (result: AgentActionResult) => void): void {
+  const id = nextActionId()
+  queue.push({ id, action, onResult })
+  void drainQueue()
+}
+
+async function drainQueue(): Promise<void> {
+  if (processing) return
+  processing = true
+  while (queue.length > 0) {
+    const item = queue.shift()!
+    if (seenActionIds.has(item.id)) continue
+    seenActionIds.add(item.id)
+    const result = await executeOne(item.id, item.action)
+    item.onResult(result)
+  }
+  processing = false
 }
 
 function isSectionId(value: string): value is SectionId {
   return value in sectionPaths
 }
 
-function navigateToSection(section: SectionId): boolean {
-  const path = sectionPaths[section]
-  if (!path) return false
+function waitFor(check: () => boolean, timeoutMs = 500, intervalMs = 30): Promise<boolean> {
+  return new Promise((resolve) => {
+    const start = Date.now()
+    const tick = () => {
+      if (check()) return resolve(true)
+      if (Date.now() - start >= timeoutMs) return resolve(false)
+      window.setTimeout(tick, intervalMs)
+    }
+    tick()
+  })
+}
+
+function navigateToPath(path: string): void {
   if (window.location.pathname !== path) {
     window.history.pushState(null, '', path)
     window.dispatchEvent(new PopStateEvent('popstate'))
   }
-  return true
 }
 
 function normalizeShift(value: string): TurnoId | null {
@@ -52,68 +82,113 @@ function isIsoDate(value: string): boolean {
   return /^\d{4}-\d{2}-\d{2}$/.test(value.trim())
 }
 
-/**
- * Aplica una CopilotUIAction ya validada por el backend (navigation.py /
- * policies.py) contra el store y el router reales - nunca coordenadas de
- * mouse. Cada llamada devuelve si realmente se aplico, para que el overlay
- * de "Estado actuando" nunca afirme algo que no paso.
- */
-export function applyAgentAction(action: CopilotUIAction): ExecutedAction {
-  const store = useAppStore.getState()
+async function executeOne(actionId: string, action: CopilotUIAction): Promise<AgentActionResult> {
+  const fail = (status: AgentActionExecutionStatus, label: string, error?: string): AgentActionResult => ({
+    actionId,
+    status,
+    label,
+    error,
+  })
 
   switch (action.action) {
     case 'navigate': {
-      if (!isSectionId(action.route)) return { action, label: `Sección desconocida: ${action.route}`, applied: false }
-      const applied = navigateToSection(action.route)
-      return { action, label: `Abriendo ${SECTION_LABELS[action.route] ?? action.route}`, applied }
+      if (!isSectionId(action.route)) {
+        const module = moduleForRoute(action.route.startsWith('/') ? action.route : `/${action.route}`)
+        if (!module) return fail('rejected', `Ruta desconocida: ${action.route}`)
+        if (module.agentAccess === 'unavailable') return fail('rejected', `${module.label} no esta disponible para el agente`)
+        navigateToPath(module.route)
+        const confirmed = await waitFor(() => window.location.pathname === module.route)
+        return confirmed
+          ? { actionId, status: 'completed', label: `Abriendo ${module.label}` }
+          : fail('failed', `No se pudo confirmar la apertura de ${module.label}`)
+      }
+      const module = NORTHMINE_MODULES[action.route]
+      if (!module || module.agentAccess === 'unavailable') {
+        return fail('rejected', `Sección no disponible: ${action.route}`)
+      }
+      const targetPath = sectionPaths[action.route]
+      navigateToPath(targetPath)
+      const confirmed = await waitFor(() => window.location.pathname === targetPath)
+      return confirmed
+        ? { actionId, status: 'completed', label: `Abriendo ${SECTION_LABELS[action.route] ?? action.route}` }
+        : fail('failed', `No se pudo confirmar la apertura de ${SECTION_LABELS[action.route] ?? action.route}`)
     }
 
     case 'set_filter': {
+      const store = useAppStore.getState()
       if (action.filter_id === 'shift') {
         const shift = normalizeShift(action.value)
-        if (!shift) return { action, label: `Turno no reconocido: ${action.value}`, applied: false }
+        if (!shift) return fail('rejected', `Turno no reconocido: ${action.value}`)
         store.setFiltro({ turno: shift })
-        return { action, label: `Aplicando turno ${shift}`, applied: true }
+        const confirmed = await waitFor(() => useAppStore.getState().filtro.turno === shift)
+        return confirmed
+          ? { actionId, status: 'completed', label: `Aplicando turno ${shift}` }
+          : fail('failed', 'No se pudo confirmar el filtro de turno')
       }
       if (action.filter_id === 'start_date' || action.filter_id === 'end_date') {
-        if (!isIsoDate(action.value)) return { action, label: 'Fecha invalida', applied: false }
-        store.setFiltro(action.filter_id === 'start_date' ? { fechaDesde: action.value } : { fechaHasta: action.value })
-        return { action, label: `Ajustando ${action.filter_id === 'start_date' ? 'fecha desde' : 'fecha hasta'} a ${action.value}`, applied: true }
+        if (!isIsoDate(action.value)) return fail('rejected', 'Fecha inválida')
+        const patch = action.filter_id === 'start_date' ? { fechaDesde: action.value } : { fechaHasta: action.value }
+        store.setFiltro(patch)
+        const confirmed = await waitFor(() =>
+          action.filter_id === 'start_date'
+            ? useAppStore.getState().filtro.fechaDesde === action.value
+            : useAppStore.getState().filtro.fechaHasta === action.value,
+        )
+        return confirmed
+          ? { actionId, status: 'completed', label: `Ajustando ${action.filter_id === 'start_date' ? 'fecha desde' : 'fecha hasta'} a ${action.value}` }
+          : fail('failed', 'No se pudo confirmar el filtro de fecha')
       }
-      // equipo
       store.setFiltro({ equipo: action.value })
-      return { action, label: `Filtrando por equipo ${action.value}`, applied: true }
+      const confirmed = await waitFor(() => useAppStore.getState().filtro.equipo === action.value)
+      return confirmed
+        ? { actionId, status: 'completed', label: `Filtrando por equipo ${action.value}` }
+        : fail('failed', 'No se pudo confirmar el filtro de equipo')
     }
 
     case 'clear_filter': {
+      const store = useAppStore.getState()
       if (!action.filter_id) {
         store.resetFiltro()
-        return { action, label: 'Limpiando filtros', applied: true }
+        return { actionId, status: 'completed', label: 'Limpiando filtros' }
       }
       if (action.filter_id === 'shift') store.setFiltro({ turno: 'AMBOS' })
       else if (action.filter_id === 'equipo') store.setFiltro({ equipo: undefined })
-      else return { action, label: 'No se puede limpiar ese filtro individualmente', applied: false }
-      return { action, label: `Limpiando filtro ${action.filter_id}`, applied: true }
+      else return fail('rejected', 'No se puede limpiar ese filtro individualmente')
+      return { actionId, status: 'completed', label: `Limpiando filtro ${action.filter_id}` }
     }
 
     case 'select_entity': {
+      const store = useAppStore.getState()
       store.setFiltro({ equipo: action.entity_id })
       const targetSection: SectionId = action.entity_type === 'alert' ? 'alertas' : 'flota'
-      navigateToSection(targetSection)
-      return { action, label: `Abriendo ${action.entity_type} ${action.entity_id}`, applied: true }
+      navigateToPath(sectionPaths[targetSection])
+      const confirmed = await waitFor(
+        () => useAppStore.getState().filtro.equipo === action.entity_id && window.location.pathname === sectionPaths[targetSection],
+      )
+      return confirmed
+        ? { actionId, status: 'completed', label: `Abriendo ${action.entity_type} ${action.entity_id}` }
+        : fail('failed', `No se pudo confirmar la apertura de ${action.entity_id}`)
     }
 
     case 'focus_widget': {
+      const widget = agentWidgetRegistry.get(action.widget_id)
       const element =
-        document.getElementById(action.widget_id) ?? document.querySelector(`[data-widget-id="${action.widget_id}"]`)
-      if (!element) return { action, label: `No se encontro el panel ${action.widget_id}`, applied: false }
-      element.scrollIntoView({ behavior: 'smooth', block: 'center' })
-      element.classList.add('ai-agent-highlight')
-      window.setTimeout(() => element.classList.remove('ai-agent-highlight'), 1600)
-      return { action, label: `Enfocando ${action.widget_id}`, applied: true }
+        document.getElementById(action.widget_id) ?? document.querySelector(`[data-agent-widget-id="${action.widget_id}"]`)
+      if (!widget && !element) {
+        return fail('rejected', `No pude encontrar el panel ${action.widget_id} porque no esta disponible en esta vista.`)
+      }
+      agentWidgetRegistry.setFocusedWidget(action.widget_id)
+      if (widget?.focus) {
+        widget.focus()
+      } else if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        element.classList.add('ai-agent-highlight')
+        window.setTimeout(() => element.classList.remove('ai-agent-highlight'), 1600)
+      }
+      return { actionId, status: 'completed', label: `Enfocando ${widget?.label ?? action.widget_id}` }
     }
 
     default:
-      return { action, label: 'Acción no reconocida', applied: false }
+      return fail('rejected', 'Acción no reconocida')
   }
 }

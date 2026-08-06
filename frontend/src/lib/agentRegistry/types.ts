@@ -1,0 +1,143 @@
+import type { SectionId } from '../../components/layout/Sidebar'
+
+/**
+ * Tipos del Agent UI Registry (Etapa 2). Espejo deliberado y acotado del
+ * contrato pedido en el brief, adaptado a como NORTHMINE realmente esta
+ * construido:
+ *
+ * - No hay filtros por-widget con closures propias: existe UN store global
+ *   (useAppStore.filtro: turno/fechaDesde/fechaHasta/equipo) que todas las
+ *   paginas comparten. Por eso AgentFilterManifest es declarativo (id/label/
+ *   tipo/valores permitidos) y la aplicacion real vive en un solo lugar
+ *   (agentActionExecutor.ts), no en una funcion `apply` por filtro - pedirle
+ *   codigo al modelo o a cada widget para esto seria una abstraccion sin
+ *   uso real en esta base de codigo.
+ * - Las rutas NO viven en un unico objeto: AppShell.sectionPaths cubre las
+ *   14 secciones del sidebar; otras 8 rutas reales (/prediccion, /simulador,
+ *   /comparativa, /operator-ranking, /admin/*) se resuelven por chequeo
+ *   directo de pathname en App.tsx::renderSection, fuera del switch de
+ *   SectionId. modules.ts documenta explicitamente esa costura.
+ */
+
+export type AgentModuleId =
+  | SectionId
+  | 'prediccion'
+  | 'simulador'
+  | 'comparativa'
+  | 'operatorRanking'
+  | 'adminSistema'
+  | 'adminUsers'
+  | 'adminDemoAccess'
+  | 'adminAuditoria'
+
+export type AgentModuleCategory =
+  | 'operacional'
+  | 'analitico'
+  | 'predictivo'
+  | 'geoespacial'
+  | 'administrativo'
+
+export type AgentModuleAgentAccess =
+  | 'read_only'
+  | 'requires_approval'
+  | 'unavailable'
+
+export type AgentFilterId = 'shift' | 'start_date' | 'end_date' | 'equipo'
+
+export type AgentFilterType =
+  | 'date' | 'date-range' | 'shift' | 'equipment' | 'equipment-type'
+  | 'loading-unit' | 'origin' | 'destination' | 'severity' | 'status' | 'custom'
+
+export interface AgentFilterManifest {
+  id: AgentFilterId
+  label: string
+  type: AgentFilterType
+  allowedValues?: readonly string[]
+}
+
+export type AgentWidgetType =
+  | 'kpi' | 'chart' | 'table' | 'map' | 'canvas' | 'filter' | 'alert-list' | 'form' | 'panel'
+
+export type AgentActionType =
+  | 'navigate' | 'open_section' | 'set_filter' | 'clear_filter'
+  | 'select_entity' | 'open_entity' | 'focus_widget' | 'explain_widget' | 'reset_view'
+
+export interface AgentWidgetSnapshot {
+  widgetId: string
+  type: AgentWidgetType
+  label: string
+  updatedAt: string
+  [key: string]: unknown
+}
+
+export interface AgentWidgetManifest {
+  id: string
+  moduleId: AgentModuleId
+  sectionId?: string
+  type: AgentWidgetType
+  label: string
+  description: string
+  supportedActions: AgentActionType[]
+  getSnapshot?: () => AgentWidgetSnapshot
+  focus?: () => void
+}
+
+export interface AgentEntityManifest {
+  type: 'equipment' | 'loader' | 'alert'
+  label: string
+}
+
+export interface AgentModuleManifest {
+  id: AgentModuleId
+  route: string
+  label: string
+  description: string
+  category: AgentModuleCategory
+  agentAccess: AgentModuleAgentAccess
+  minRoles: string[] | 'any'
+  filters: AgentFilterManifest[]
+  entities: AgentEntityManifest[]
+  supportedActions: AgentActionType[]
+  instrumented: boolean
+}
+
+// ── Contexto y ejecucion ──────────────────────────────────────────────────
+
+export interface AgentSelectedEntity {
+  type: 'equipment' | 'loader' | 'alert'
+  id: string
+}
+
+export interface AgentVisibleKpi {
+  widgetId: string
+  label: string
+  value: number | string
+  unit?: string
+  status?: 'ok' | 'warning' | 'critical'
+}
+
+export interface AgentApplicationContext {
+  route: string
+  moduleId: AgentModuleId | null
+  companyId?: string
+  siteId?: string
+  shift: string | null
+  dateRange: { from: string; to: string } | null
+  activeFilters: Partial<Record<AgentFilterId, unknown>>
+  selectedEntities: AgentSelectedEntity[]
+  focusedWidgetId: string | null
+  visibleWidgetIds: string[]
+  visibleKpis: AgentVisibleKpi[]
+  userRole: string
+  updatedAt: string
+}
+
+export type AgentActionExecutionStatus =
+  | 'received' | 'validated' | 'executing' | 'completed' | 'rejected' | 'failed' | 'cancelled'
+
+export interface AgentActionResult {
+  actionId: string
+  status: AgentActionExecutionStatus
+  label: string
+  error?: string
+}

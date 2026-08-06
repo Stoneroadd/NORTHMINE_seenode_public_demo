@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 import time
 import uuid
 from datetime import datetime
@@ -208,6 +209,23 @@ def _maybe_build_chart(message: str, tool_outputs: list[tuple[str, dict[str, Any
     return []
 
 
+_VALID_SHIFT_VALUES = {"DIA", "NOCHE", "TODOS", "AMBOS", "ACTUAL"}
+_DATE_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+
+
+def _is_valid_filter_value(filter_id: Any, value: str) -> bool:
+    """Seccion 15: 'Valor valido' se valida en el backend, no solo en el
+    frontend - defensa en profundidad, el frontend hace su propia
+    normalizacion/validacion tambien antes de aplicar el filtro."""
+    if filter_id == "shift":
+        return value.strip().upper() in _VALID_SHIFT_VALUES
+    if filter_id in ("start_date", "end_date"):
+        return bool(_DATE_PATTERN.match(value.strip()))
+    if filter_id == "equipo":
+        return 0 < len(value.strip()) <= 40
+    return False
+
+
 def _validate_ui_actions(raw_actions: Any, role: str) -> list[Any]:
     """Filtra las acciones que el modelo propuso contra navigation.py/policies.py.
 
@@ -233,13 +251,20 @@ def _validate_ui_actions(raw_actions: Any, role: str) -> list[Any]:
                     continue
                 validated.append(NavigateAction(route=route))
             elif action_name == "set_filter":
-                validated.append(SetFilterAction(filter_id=item.get("filter_id"), value=str(item.get("value") or "")))
+                filter_id = item.get("filter_id")
+                value = str(item.get("value") or "")
+                if not _is_valid_filter_value(filter_id, value):
+                    continue
+                validated.append(SetFilterAction(filter_id=filter_id, value=value))
             elif action_name == "clear_filter":
                 validated.append(ClearFilterAction(filter_id=item.get("filter_id")))
             elif action_name == "select_entity":
                 validated.append(SelectEntityAction(entity_type=item.get("entity_type"), entity_id=str(item.get("entity_id") or "")))
             elif action_name == "focus_widget":
-                validated.append(FocusWidgetAction(widget_id=str(item.get("widget_id") or "")))
+                widget_id = str(item.get("widget_id") or "")
+                if not navigation.is_widget_known(widget_id):
+                    continue
+                validated.append(FocusWidgetAction(widget_id=widget_id))
         except ValidationError:
             continue
     return validated

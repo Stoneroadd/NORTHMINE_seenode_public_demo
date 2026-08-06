@@ -657,12 +657,17 @@
   color: var(--nm-muted);
 }
 
-.ai-agent-action-overlay li.is-applied {
+.ai-agent-action-overlay li.is-completed {
   color: var(--nm-green);
 }
 
-.ai-agent-action-overlay li.is-skipped {
-  color: var(--nm-muted);
+.ai-agent-action-overlay li.is-executing {
+  color: var(--nm-cyan);
+}
+
+.ai-agent-action-overlay li.is-rejected,
+.ai-agent-action-overlay li.is-failed {
+  color: var(--nm-red);
   text-decoration: line-through;
 }
 

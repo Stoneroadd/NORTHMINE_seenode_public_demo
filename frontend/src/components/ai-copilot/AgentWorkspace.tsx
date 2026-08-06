@@ -9,7 +9,8 @@ import { AgentLiveTranscript } from './AgentLiveTranscript'
 import { AgentVoiceControls } from './AgentVoiceControls'
 import { AgentActionOverlay } from './AgentActionOverlay'
 import { useVoiceSession } from './useVoiceSession'
-import { applyAgentAction, type ExecutedAction } from './agentActionExecutor'
+import { enqueueAgentAction } from './agentActionExecutor'
+import type { AgentActionResult } from '../../lib/agentRegistry/types'
 import type { ChatTurn } from './types'
 
 interface Props {
@@ -37,7 +38,7 @@ export function AgentWorkspace({ open, onClose, context, role, canApprove }: Pro
   const [sending, setSending] = useState(false)
   const [status, setStatus] = useState<CopilotStatus | null>(null)
   const [voiceOutputEnabled, setVoiceOutputEnabled] = useState(true)
-  const [executedActions, setExecutedActions] = useState<ExecutedAction[]>([])
+  const [executedActions, setExecutedActions] = useState<AgentActionResult[]>([])
   const conversationIdRef = useRef<string | null>(null)
   const abortRef = useRef<AbortController | null>(null)
   const contextRef = useRef(context)
@@ -95,8 +96,9 @@ export function AgentWorkspace({ open, onClose, context, role, canApprove }: Pro
                   : turn,
               )
             } else if (event.type === 'agent.action.proposed') {
-              const executed = applyAgentAction(event.action)
-              setExecutedActions((list) => [...list, executed].slice(-4))
+              enqueueAgentAction(event.action, (result) => {
+                setExecutedActions((list) => [...list, result].slice(-4))
+              })
             } else if (event.type === 'token') {
               updateTurn(assistantId, (turn) => (turn.role === 'assistant' && turn.status === 'streaming' ? { ...turn, text: turn.text + event.text } : turn))
             } else if (event.type === 'final') {

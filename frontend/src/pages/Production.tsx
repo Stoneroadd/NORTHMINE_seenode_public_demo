@@ -1,3 +1,4 @@
+import { useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Activity, AlertTriangle, CheckCircle2, Clock3, RefreshCcw, Target, TrendingUp } from 'lucide-react'
 import { ApiError } from '../lib/api'
@@ -11,6 +12,8 @@ import { useAppStore } from '../store'
 import { useModuleT } from '../i18n/useModuleT'
 import { productionT, type ProductionT } from '../i18n/modules/production'
 import { formatHourLabel } from '../lib/time/operationalHour'
+import { useAgentWidget } from '../lib/agentRegistry/useAgentWidget'
+import type { AgentWidgetSnapshot } from '../lib/agentRegistry/types'
 
 function tons(value: number) {
   return `${Math.round(value).toLocaleString('es-CL')} t`
@@ -62,6 +65,67 @@ export function Production() {
     queryFn: () => getProductionShift('ACTUAL'),
     enabled: Boolean(token),
     refetchInterval: 60000,
+  })
+
+  // Instrumentacion del Agent UI Registry (Etapa 2): las hooks deben
+  // llamarse antes de cualquier return temprano (loading/error), por eso
+  // van aca arriba con un ref que siempre apunta al ultimo `query.data`
+  // disponible - el snapshot nunca se queda con datos obsoletos ni rompe
+  // las reglas de hooks de React.
+  const dataRef = useRef(query.data)
+  dataRef.current = query.data
+
+  const hourlyChartSnapshot = (): AgentWidgetSnapshot => {
+    const rows = dataRef.current?.produccion_acumulada ?? []
+    const values = rows.map((row) => row.toneladas)
+    return {
+      widgetId: 'production-hourly-chart',
+      type: 'chart',
+      label: t.chart_toneladas_hora_title,
+      updatedAt: new Date().toISOString(),
+      series: [{
+        name: t.chart_toneladas_hora_title,
+        unit: 't',
+        summary: values.length
+          ? { latest: values[values.length - 1], average: Math.round(values.reduce((a, b) => a + b, 0) / values.length), minimum: Math.min(...values), maximum: Math.max(...values) }
+          : null,
+      }],
+    }
+  }
+
+  const complianceSnapshot = (): AgentWidgetSnapshot => {
+    const current = dataRef.current
+    const hasTargetNow = current ? current.meta_configurada !== false && current.meta_turno > 0 : false
+    return {
+      widgetId: 'production-plan-compliance',
+      type: 'kpi',
+      label: t.kpi_cumplimiento,
+      value: hasTargetNow && current ? Number(current.cumplimiento_pct.toFixed(1)) : 0,
+      unit: '%',
+      target: 100,
+      status: !hasTargetNow ? undefined : (current!.cumplimiento_pct >= 100 ? 'ok' : current!.cumplimiento_pct >= 90 ? 'warning' : 'critical'),
+      updatedAt: new Date().toISOString(),
+    }
+  }
+
+  const hourlyChartWidget = useAgentWidget({
+    id: 'production-hourly-chart',
+    moduleId: 'produccion',
+    type: 'chart',
+    label: t.chart_toneladas_hora_title,
+    description: 'Toneladas producidas por hora del turno actual, acumulado y meta.',
+    supportedActions: ['focus_widget', 'explain_widget'],
+    getSnapshot: hourlyChartSnapshot,
+  })
+
+  useAgentWidget({
+    id: 'production-plan-compliance',
+    moduleId: 'produccion',
+    type: 'kpi',
+    label: t.kpi_cumplimiento,
+    description: 'Cumplimiento de plan del turno actual contra la meta configurada.',
+    supportedActions: ['explain_widget'],
+    getSnapshot: complianceSnapshot,
   })
 
   if (!token) {
@@ -229,7 +293,7 @@ export function Production() {
       </section>
 
       {hasProductionRows && <section className="chart-grid">
-        <div className="panel">
+        <div className="panel" ref={hourlyChartWidget.ref}>
           <div className="panel-header">
             <div>
               <span className="panel-kicker">{t.chart_toneladas_hora_kicker}</span>
