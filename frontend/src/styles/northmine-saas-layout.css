@@ -185,7 +185,7 @@
      Size by height instead so the header stays a normal navbar height. */
   display: block;
   width: auto;
-  height: 48px;
+  height: 72px;
   max-width: 100%;
   object-fit: contain;
   object-position: left center;
@@ -1170,7 +1170,7 @@
   display: block;
   align-self: flex-start;
   width: auto;
-  height: 76px;
+  height: 114px;
   max-width: 100%;
   object-fit: contain;
   object-position: left center;
