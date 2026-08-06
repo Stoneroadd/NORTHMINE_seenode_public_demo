@@ -68,6 +68,7 @@ export function SaaSHeader() {
           <NorthmineLogo
             className="ns-header__logo"
             variant="horizontal"
+            src="/assets/brand/northmine-logo-minimal-landing.webp"
             alt="NORTHMINE Intelligence Hub"
           />
         </a>
