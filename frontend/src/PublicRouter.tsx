@@ -1,5 +1,4 @@
 import { lazy, Suspense, useEffect } from 'react'
-import { LoadingScene } from './components/brand/LoadingScene'
 import { OperationalFontLoader } from './components/landing/OperationalFontLoader'
 import { PublicPageMeta } from './components/landing/PublicPageMeta'
 import { useModuleT } from './i18n/useModuleT'
@@ -26,7 +25,18 @@ const OriginPage = lazy(() => (
 ))
 
 function PublicRouteFallback() {
-  return <LoadingScene />
+  return (
+    <main style={{
+      minHeight: '100vh',
+      display: 'grid',
+      placeItems: 'center',
+      background: '#0b0d0e',
+      color: '#f2f3ef',
+      fontFamily: '"IBM Plex Mono", monospace',
+    }}>
+      NORTHMINE
+    </main>
+  )
 }
 
 function RedirectToCockpit() {
