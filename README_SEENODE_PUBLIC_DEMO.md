@@ -43,6 +43,26 @@ para que use el mismo dominio.
 - Usar secretos largos y distintos para `SECRET_KEY`, `REFRESH_SECRET_KEY` y `PASSWORD_SALT`.
 - Considerar acceso privado o autenticacion adicional si el demo se comparte con clientes especificos.
 
+## Base de datos para solicitudes de demo
+
+Las solicitudes del formulario `/solicitar-demo` (evaluacion tecnica / pedir demo) se
+guardan en la tabla `demo_access_requests` y se revisan en `/admin/demo-access` con
+usuario `admin`. El backend crea la tabla automaticamente al iniciar.
+
+En seenode el servicio web exige un almacen durable (`NORTHMINE_DEMO_ACCESS_REQUIRE_DURABLE=true`),
+asi que sin base configurada el formulario responde 503 y no guarda nada. Para habilitarlo:
+
+1. En el dashboard de seenode: **Databases** -> **Create** -> **PostgreSQL** (el tier mas bajo basta).
+2. Copiar el connection string de la base creada.
+3. En el Web Service -> pestaña **Environment**, agregar:
+   - `DATABASE_URL` = el connection string del paso 2.
+   - `NORTHMINE_DEMO_ACCESS_FINGERPRINT_KEY` = clave estable de 64 caracteres
+     (minimo 32) para el deduplicado de solicitudes. Generar con
+     `python -c "import secrets; print(secrets.token_hex(32))"`.
+4. Redeploy y probar: enviar el formulario y revisar `/admin/demo-access` (admin/admin).
+
+Referencia de variables en `backend/.env.seenode.example`.
+
 ## Generar secretos
 
 Usar estos comandos locales y copiar cada salida a Seenode:
