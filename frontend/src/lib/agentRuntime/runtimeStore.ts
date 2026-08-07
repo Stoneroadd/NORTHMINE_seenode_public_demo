@@ -10,6 +10,16 @@ import type {
   VerificationResult,
 } from '../agentInvestigations'
 import type { AgentActionResult } from '../agentRegistry/types'
+import type {
+  AgentWatch,
+  MemoryRecalledPayload,
+  ProactiveAgentEvent,
+  QuietMode,
+  ReportDraft,
+  ShiftHandoverDraft,
+  TaskDraft,
+  WorkProductReadyPayload,
+} from '../agentWorkProducts'
 
 /**
  * Estado del Agent Runtime reflejado para React (Etapa 4, seccion 8 del
@@ -67,6 +77,16 @@ interface AgentRuntimeStore {
   currentActivityLabel: string | null
   uiActionResults: AgentActionResult[]
 
+  // Etapa 6: memoria, proactividad, work products - seccion 28/30 del brief.
+  memoryRecall: MemoryRecalledPayload | null
+  quietMode: QuietMode
+  watches: AgentWatch[]
+  proactiveEvents: ProactiveAgentEvent[]
+  reports: ReportDraft[]
+  handovers: ShiftHandoverDraft[]
+  tasks: TaskDraft[]
+  lastWorkProduct: WorkProductReadyPayload | null
+
   setConnectionStatus: (status: ConnectionStatus) => void
   addUserTranscript: (text: string) => void
   recordUiActionResult: (result: AgentActionResult) => void
@@ -102,6 +122,15 @@ export const useAgentRuntimeStore = create<AgentRuntimeStore>((set, get) => ({
   lastError: null,
   currentActivityLabel: null,
   uiActionResults: [],
+
+  memoryRecall: null,
+  quietMode: 'normal',
+  watches: [],
+  proactiveEvents: [],
+  reports: [],
+  handovers: [],
+  tasks: [],
+  lastWorkProduct: null,
 
   setConnectionStatus: (status) => set({ connectionStatus: status }),
 
@@ -224,6 +253,57 @@ export const useAgentRuntimeStore = create<AgentRuntimeStore>((set, get) => ({
       case 'agent.error':
         set({ lastError: payload.message ?? 'Error del agente.' })
         return
+
+      // ── Etapa 6: memoria, proactividad, work products ──────────────────
+      case 'memory.recalled':
+        set({ memoryRecall: payload as MemoryRecalledPayload })
+        return
+
+      case 'watch.created':
+        set((s) => ({ watches: [payload.watch as AgentWatch, ...s.watches].slice(0, 20) }))
+        return
+
+      case 'watch.cancelled':
+        set((s) => ({
+          watches: s.watches.map((w) => (w.watch_id === (payload.watch as AgentWatch).watch_id ? (payload.watch as AgentWatch) : w)),
+        }))
+        return
+
+      case 'watch.triggered':
+        set((s) => ({
+          watches: s.watches.map((w) => (w.watch_id === payload.watchId ? { ...w, status: 'triggered' as const } : w)),
+        }))
+        return
+
+      case 'proactive.event_emitted':
+        set((s) => ({ proactiveEvents: [payload.event as ProactiveAgentEvent, ...s.proactiveEvents].slice(0, 20) }))
+        return
+
+      case 'quiet_mode.changed':
+        set({ quietMode: payload.mode as QuietMode })
+        return
+
+      case 'work_product.ready': {
+        const wp = payload as WorkProductReadyPayload
+        set((s) => {
+          const next: Partial<AgentRuntimeStore> = { lastWorkProduct: wp }
+          if (wp.productType === 'report' && wp.report) {
+            next.reports = [wp.report, ...s.reports.filter((r) => r.report_id !== wp.report!.report_id)].slice(0, 20)
+          }
+          if (wp.productType === 'handover' && wp.handover) {
+            next.handovers = [wp.handover, ...s.handovers.filter((h) => h.handover_id !== wp.handover!.handover_id)].slice(0, 10)
+          }
+          if (wp.productType === 'task' && wp.task) {
+            next.tasks = [wp.task, ...s.tasks.filter((t) => t.task_id !== wp.task!.task_id)].slice(0, 30)
+          }
+          if (wp.productType === 'pending_work_summary') {
+            if (wp.tasks) next.tasks = wp.tasks
+            if (wp.watches) next.watches = wp.watches
+          }
+          return next
+        })
+        return
+      }
 
       default:
         return

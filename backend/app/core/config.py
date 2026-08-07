@@ -184,6 +184,26 @@ class Settings:
     perception_max_viewport_captures_per_minute: int
     perception_max_widget_captures_per_minute: int
     perception_max_capture_dimension_px: int
+    # Memoria + proactividad (Etapa 6) - reusa agent_runtime_db_path, sin
+    # base de datos nueva (seccion 2 del brief: "no dupliques persistencia
+    # que ya exista"). Limites de rendimiento (seccion 39) y presupuesto de
+    # iniciativa (seccion 10) configurables, nunca hardcodeados en el codigo.
+    agent_working_memory_window_hours: float
+    agent_episode_retention_days: int
+    agent_max_working_memory_items: int
+    agent_max_episode_retrieval: int
+    agent_max_context_items: int
+    agent_memory_summary_threshold: int
+    agent_proactive_events_per_hour: int
+    agent_watch_limit_per_user: int
+    agent_watch_default_ttl_hours: float
+    agent_report_generation_timeout_seconds: float
+    agent_initiative_cooldown_seconds: int
+    agent_initiative_duplicate_suppression_seconds: int
+    agent_initiative_minimum_severity: str
+    agent_initiative_voice_minimum_severity: str
+    agent_event_monitor_interval_seconds: float
+    agent_event_monitor_enabled: bool
 
     @property
     def elevenlabs_available(self) -> bool:
@@ -438,4 +458,20 @@ def get_settings() -> Settings:
         perception_max_viewport_captures_per_minute=int(os.getenv("NORTHMINE_PERCEPTION_MAX_VIEWPORT_CAPTURES_PER_MINUTE", "4")),
         perception_max_widget_captures_per_minute=int(os.getenv("NORTHMINE_PERCEPTION_MAX_WIDGET_CAPTURES_PER_MINUTE", "10")),
         perception_max_capture_dimension_px=int(os.getenv("NORTHMINE_PERCEPTION_MAX_CAPTURE_DIMENSION_PX", "1600")),
+        agent_working_memory_window_hours=float(os.getenv("NORTHMINE_AGENT_WORKING_MEMORY_WINDOW_HOURS", "12")),
+        agent_episode_retention_days=int(os.getenv("NORTHMINE_AGENT_EPISODE_RETENTION_DAYS", "90")),
+        agent_max_working_memory_items=int(os.getenv("NORTHMINE_AGENT_MAX_WORKING_MEMORY_ITEMS", "200")),
+        agent_max_episode_retrieval=int(os.getenv("NORTHMINE_AGENT_MAX_EPISODE_RETRIEVAL", "20")),
+        agent_max_context_items=int(os.getenv("NORTHMINE_AGENT_MAX_CONTEXT_ITEMS", "12")),
+        agent_memory_summary_threshold=int(os.getenv("NORTHMINE_AGENT_MEMORY_SUMMARY_THRESHOLD", "8")),
+        agent_proactive_events_per_hour=int(os.getenv("NORTHMINE_AGENT_PROACTIVE_EVENTS_PER_HOUR", "6")),
+        agent_watch_limit_per_user=int(os.getenv("NORTHMINE_AGENT_WATCH_LIMIT_PER_USER", "20")),
+        agent_watch_default_ttl_hours=float(os.getenv("NORTHMINE_AGENT_WATCH_DEFAULT_TTL_HOURS", "12")),
+        agent_report_generation_timeout_seconds=float(os.getenv("NORTHMINE_AGENT_REPORT_GENERATION_TIMEOUT_SECONDS", "20")),
+        agent_initiative_cooldown_seconds=int(os.getenv("NORTHMINE_AGENT_INITIATIVE_COOLDOWN_SECONDS", "600")),
+        agent_initiative_duplicate_suppression_seconds=int(os.getenv("NORTHMINE_AGENT_INITIATIVE_DUPLICATE_SUPPRESSION_SECONDS", "300")),
+        agent_initiative_minimum_severity=os.getenv("NORTHMINE_AGENT_INITIATIVE_MINIMUM_SEVERITY", "warning").strip().lower(),
+        agent_initiative_voice_minimum_severity=os.getenv("NORTHMINE_AGENT_INITIATIVE_VOICE_MINIMUM_SEVERITY", "high").strip().lower(),
+        agent_event_monitor_interval_seconds=float(os.getenv("NORTHMINE_AGENT_EVENT_MONITOR_INTERVAL_SECONDS", "60")),
+        agent_event_monitor_enabled=os.getenv("NORTHMINE_AGENT_EVENT_MONITOR_ENABLED", "true").strip().lower() == "true",
     )

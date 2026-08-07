@@ -29,6 +29,12 @@ from app.ai.runtime.session_manager import LiveSession
 from app.ai.runtime.state_machine import AgentRuntimeState
 from app.ai.runtime.ui_actions import UIActionAcknowledgement, register_wait, wait_for_ack
 from app.ai.tools import TOOL_REGISTRY
+# Etapa 6: memoria, proactividad, work products
+from app.ai.memory import episodic_memory, retrieval as memory_retrieval, working_memory
+from app.ai.memory.models import new_working_memory_entity_id
+from app.ai.proactivity import subscriptions
+from app.ai.work_products import handover as handover_module, reports as reports_module, tasks as tasks_module, versions as versions_module
+from app.ai.work_products.models import ReportScope
 
 logger = logging.getLogger("northmine.ai.runtime")
 
@@ -84,7 +90,7 @@ async def dispatch_command(live: LiveSession, user: dict, command: AgentCommand,
             "text": "La evidencia de la investigacion activa esta disponible en el workspace.",
         })
     elif command.type == AgentCommandType.GENERATE_REPORT:
-        await request_presentation_navigate(live, command.model_copy(update={"target_module": "reportes"}), correlation_id)
+        await handle_generate_report(live, user, command, correlation_id, ip)
     elif command.type == AgentCommandType.SCREEN_CONTEXT:
         await handle_screen_context(live, correlation_id)
     elif command.type == AgentCommandType.EXPLAIN_WIDGET:
@@ -95,6 +101,26 @@ async def dispatch_command(live: LiveSession, user: dict, command: AgentCommand,
         await handle_analyze_visually(live, command, correlation_id, target_type="viewport")
     elif command.type == AgentCommandType.FOCUS_VISIBLE_ENTITY:
         await handle_focus_visible_entity(live, command, correlation_id)
+    elif command.type == AgentCommandType.RECALL_OPERATIONAL_CONTEXT:
+        await handle_recall_operational_context(live, user, command, correlation_id, ip)
+    elif command.type == AgentCommandType.COMPARE_WITH_MEMORY:
+        await handle_compare_with_memory(live, user, command, correlation_id, ip)
+    elif command.type == AgentCommandType.REOPEN_INVESTIGATION:
+        await handle_reopen_investigation(live, user, command, correlation_id, ip)
+    elif command.type == AgentCommandType.CREATE_WATCH:
+        await handle_create_watch(live, user, command, correlation_id, ip)
+    elif command.type == AgentCommandType.CANCEL_WATCH:
+        await handle_cancel_watch(live, user, command, correlation_id, ip)
+    elif command.type == AgentCommandType.SET_QUIET_MODE:
+        await handle_set_quiet_mode(live, command, correlation_id)
+    elif command.type == AgentCommandType.GENERATE_HANDOVER:
+        await handle_generate_handover(live, user, correlation_id, ip)
+    elif command.type == AgentCommandType.MODIFY_REPORT:
+        await handle_modify_report(live, user, command, correlation_id, ip)
+    elif command.type == AgentCommandType.CREATE_TASK_DRAFT:
+        await handle_create_task_draft(live, user, command, correlation_id, ip)
+    elif command.type == AgentCommandType.SHOW_PENDING_WORK:
+        await handle_show_pending_work(live, correlation_id)
     else:
         await emit(live, "agent.error", correlation_id=correlation_id, payload={
             "message": "Esta capacidad todavia no esta disponible en la version actual del agente.",
@@ -120,6 +146,9 @@ async def start_investigation(live: LiveSession, user: dict, command: AgentComma
     scope = InvestigationScope(equipment_ids=[command.equipment_query] if command.equipment_query else [])
     plan = planner.build_plan(command.investigation_type, scope, live.session.role)
     live.session = live.session.model_copy(update={"active_investigation_id": plan.investigation_id})
+    live.memory.record_investigation_started(investigation_id=plan.investigation_id, goal=plan.goal, investigation_type=plan.type.value)
+    if command.equipment_query:
+        live.memory.record_entity(entity_id=new_working_memory_entity_id("equipment", command.equipment_query), label=command.equipment_query, entity_type="equipment")
 
     await emit(
         live, "agent.plan.created", correlation_id=correlation_id, investigation_id=plan.investigation_id,
@@ -236,6 +265,29 @@ async def _run_investigation(live: LiveSession, user: dict, plan: InvestigationP
         usuario=usuario, ip=ip, session_id=live.session.session_id,
         command_type="investigation_completed", confidence="rule",
     )
+
+    # Etapa 6: memoria de sesion + episodica + working memory - una
+    # investigacion terminada es un episodio (seccion 3.3), y si tenia un
+    # equipo especifico como foco, ese equipo pasa a seguimiento operacional
+    # (seccion 3.2) con el resultado como 'current_issue'.
+    live.memory.record_investigation_completed(investigation_id=plan.investigation_id, summary=conclusion.summary)
+    episodic_memory.record_investigation_episode(
+        investigation_id=plan.investigation_id, investigation_type=plan.type.value, goal=plan.goal,
+        company_id=live.session.company_id, site_id=live.session.site_id,
+        entity_ids=plan.scope.equipment_ids, evidence_ids=[e.evidence_id for e in evidence],
+        outcome=conclusion.summary, created_by=usuario,
+    )
+    focus_entity = live.focus_override or (plan.scope.equipment_ids[0] if plan.scope.equipment_ids else None)
+    if focus_entity:
+        has_deviation = bool(conclusion.probable_causes) or any(h.status == "probable" for h in hyps)
+        working_memory.track_entity(
+            entity=focus_entity, entity_type="equipment", company_id=live.session.company_id, site_id=live.session.site_id,
+            shift=plan.scope.shift, current_issue=conclusion.summary,
+            metric_value=1.0 if has_deviation else 0.0, metric_label="investigation_deviation_flag",
+            metric_direction="higher_is_worse", investigation_id=plan.investigation_id, created_by=usuario,
+        )
+        if not has_deviation:
+            working_memory.resolve_entity(new_working_memory_entity_id("equipment", focus_entity))
 
     await _set_state(live, AgentRuntimeState.SPEAKING, correlation_id=correlation_id)
     await _speak(live, correlation_id, text=conclusion.summary, priority="result", segment_id=f"seg-{uuid.uuid4().hex[:10]}")
@@ -362,6 +414,14 @@ async def _speak(live: LiveSession, correlation_id: str, *, text: str, priority:
         live, "agent.speech.segment", correlation_id=correlation_id,
         payload={"segmentId": segment_id, "text": text, "priority": priority, "sequence": live.next_sequence, "interruptible": True},
     )
+
+
+async def speak_now(live: LiveSession, correlation_id: str, *, text: str, priority: str, segment_id: str) -> None:
+    """Envoltorio publico de `_speak` (Etapa 6): permite que codigo fuera de
+    este modulo (notification_manager.py, disparado por un scheduler en vez
+    de un mensaje WS entrante) hable sobre una sesion viva sin duplicar la
+    logica de emision de eventos."""
+    await _speak(live, correlation_id, text=text, priority=priority, segment_id=segment_id)
 
 
 # ── Pausa / reanudacion / cancelacion / interrupcion ───────────────────
@@ -583,3 +643,359 @@ async def handle_visual_observation_reported(live: LiveSession, user: dict, payl
         payload={"observation": observation.model_dump(mode="json"), "conflict": conflict.model_dump(mode="json") if conflict else None},
     )
     await _speak(live, correlation_id, text=" ".join(summary_parts)[:260], priority="finding", segment_id=f"seg-{uuid.uuid4().hex[:10]}")
+
+
+# ── Etapa 6: memoria, continuidad, proactividad, work products ────────────
+
+def _resolve_reference_entity(live: LiveSession, command: AgentCommand) -> tuple[str, str] | None:
+    """Resuelve a que entidad se refiere el usuario (seccion 6 del brief):
+    prioridad = entidad explicita en el comando > ultima entidad de memoria
+    de sesion. Nunca adivina si no hay ninguna de las dos - mejor preguntar
+    que asumir mal."""
+    if command.equipment_query:
+        return "equipment", command.equipment_query
+    if live.memory.last_entity_id and live.memory.last_entity_label:
+        return live.memory.last_entity_type or "equipment", live.memory.last_entity_label
+    return None
+
+
+async def handle_recall_operational_context(live: LiveSession, user: dict, command: AgentCommand, correlation_id: str, ip: str) -> None:
+    """'¿Sigue ocurriendo lo de la Pala 03?' (seccion 6): se resuelve
+    PRIMERO por memoria estructurada (working memory + episodica), nunca
+    recurriendo de entrada a un LLM."""
+    usuario = str(user.get("sub") or "anon")
+    reference = _resolve_reference_entity(live, command)
+    if reference is None:
+        await emit(live, "agent.error", correlation_id=correlation_id, payload={
+            "message": "No identifiqué a qué equipo o situación te refieres. Especifica un equipo (por ejemplo, Pala 03).",
+            "recoverable": True,
+        })
+        return
+    entity_type, entity = reference
+
+    retriever = memory_retrieval.MemoryRetriever(company_id=live.session.company_id, site_id=live.session.site_id)
+    result = retriever.recall_entity(entity_type, entity)
+    runtime_audit.record_memory_retrieved(usuario=usuario, ip=ip, session_id=live.session.session_id, query_entity=entity, found=result.found)
+
+    await emit(live, "memory.recalled", correlation_id=correlation_id, payload={
+        "queryEntity": entity, "items": [i.model_dump(mode="json") for i in result.items()],
+    })
+    text = result.as_spoken_summary()
+    if result.working_memory_entity and result.working_memory_entity.status in ("ongoing", "worsening", "new"):
+        text += " Puedo reabrir la investigación si quieres revisarlo de nuevo."
+    await emit(live, "agent.text.delta", correlation_id=correlation_id, payload={"text": text})
+    await _speak(live, correlation_id, text=text[:260], priority="status", segment_id=f"seg-{uuid.uuid4().hex[:10]}")
+
+
+async def handle_compare_with_memory(live: LiveSession, user: dict, command: AgentCommand, correlation_id: str, ip: str) -> None:
+    """'Compáralo con lo anterior' / '¿qué cambió desde que lo revisamos?'
+    (seccion 6): compara el ULTIMO valor conocido (working memory) contra el
+    estado actual - nunca inventa un numero para el 'antes' si no hay
+    registro."""
+    usuario = str(user.get("sub") or "anon")
+    reference = _resolve_reference_entity(live, command)
+    if reference is None:
+        await emit(live, "agent.error", correlation_id=correlation_id, payload={
+            "message": "No identifiqué con qué comparar. Especifica un equipo o situación primero.", "recoverable": True,
+        })
+        return
+    entity_type, entity = reference
+    entity_id = new_working_memory_entity_id(entity_type, entity)
+    previous = working_memory.get_entity(entity_id)
+
+    if not previous or previous.last_metric_value is None:
+        text = f"No tengo un valor anterior registrado para {entity} con el que comparar."
+        await emit(live, "agent.text.delta", correlation_id=correlation_id, payload={"text": text})
+        await _speak(live, correlation_id, text=text, priority="status", segment_id=f"seg-{uuid.uuid4().hex[:10]}")
+        return
+
+    runtime_audit.record_memory_retrieved(usuario=usuario, ip=ip, session_id=live.session.session_id, query_entity=entity, found=True)
+    text = (
+        f"La última vez que revisé {entity} ({previous.last_verified_at}), {previous.current_issue} "
+        f"Estado actual: {previous.status}."
+    )
+    await emit(live, "memory.recalled", correlation_id=correlation_id, payload={
+        "queryEntity": entity, "items": [i.model_dump(mode="json") for i in retrieval_items(previous)],
+    })
+    await _speak(live, correlation_id, text=text[:260], priority="status", segment_id=f"seg-{uuid.uuid4().hex[:10]}")
+
+
+def retrieval_items(entity):
+    from app.ai.memory.retrieval import MemoryRecallItem
+    return [MemoryRecallItem(
+        kind="working_memory", ref_id=entity.entity_id, label=f"{entity.entity}: {entity.current_issue}",
+        status=entity.status, occurred_at=entity.last_verified_at, source="working_memory",
+        related_investigation_ids=entity.related_investigation_ids,
+    )]
+
+
+async def handle_reopen_investigation(live: LiveSession, user: dict, command: AgentCommand, correlation_id: str, ip: str) -> None:
+    """'Reabre esa investigación' (seccion 6): resuelve la investigacion
+    referida via memoria de sesion (ultima investigacion) o memoria de
+    trabajo (related_investigation_ids de la entidad mencionada), y arranca
+    una nueva investigacion del MISMO tipo con el MISMO foco - no reabre el
+    resultado viejo (esta cerrado), genera una nueva pasada actualizada."""
+    investigation_type_value = live.memory.last_investigation_type
+    equipment_query = command.equipment_query or live.memory.last_entity_label
+
+    if not investigation_type_value and equipment_query:
+        entity_id = new_working_memory_entity_id("equipment", equipment_query)
+        entity = working_memory.get_entity(entity_id)
+        if entity and entity.related_investigation_ids:
+            from app.ai.investigation_repository import get_investigation
+            row = get_investigation(entity.related_investigation_ids[-1])
+            if row:
+                investigation_type_value = row.get("type")
+
+    if not investigation_type_value:
+        await emit(live, "agent.error", correlation_id=correlation_id, payload={
+            "message": "No identifiqué qué investigación reabrir. Especifica el equipo o pide la investigación de nuevo.",
+            "recoverable": True,
+        })
+        return
+
+    from app.ai.investigation_schemas import InvestigationType
+    try:
+        investigation_type = InvestigationType(investigation_type_value)
+    except ValueError:
+        await emit(live, "agent.error", correlation_id=correlation_id, payload={
+            "message": "No pude identificar el tipo de la investigación anterior.", "recoverable": True,
+        })
+        return
+
+    synthetic_command = AgentCommand(
+        type=AgentCommandType.START_INVESTIGATION, raw_text=command.raw_text,
+        investigation_type=investigation_type, equipment_query=equipment_query,
+    )
+    await emit(live, "agent.text.delta", correlation_id=correlation_id, payload={"text": "Reabriendo la investigación con datos actuales..."})
+    await start_investigation(live, user, synthetic_command, correlation_id, ip)
+
+
+async def handle_create_watch(live: LiveSession, user: dict, command: AgentCommand, correlation_id: str, ip: str) -> None:
+    """'Avísame si vuelve a empeorar' (seccion 12): crea un AgentWatch
+    concreto sobre la ultima entidad referenciada, con baseline tomado de la
+    working memory (o de la investigacion recien terminada) - nunca un
+    watch generico sin entidad ni metrica."""
+    usuario = str(user.get("sub") or "anon")
+    reference = _resolve_reference_entity(live, command)
+    if reference is None:
+        await emit(live, "agent.error", correlation_id=correlation_id, payload={
+            "message": "No identifiqué qué debo vigilar. Investiga un equipo primero o especifica cuál.", "recoverable": True,
+        })
+        return
+    entity_type, entity = reference
+    entity_id = new_working_memory_entity_id(entity_type, entity)
+    baseline = working_memory.get_entity(entity_id)
+
+    try:
+        watch = subscriptions.create_watch(
+            user_id=usuario, company_id=live.session.company_id, site_id=live.session.site_id,
+            entity_ids=[entity], entity_label=entity, metric=(baseline.last_metric_label if baseline else "variacion_pct"),
+            condition="above", threshold=(baseline.last_metric_value if baseline else None),
+            baseline_reference=baseline.entity_id if baseline else None,
+            source_investigation_id=(baseline.related_investigation_ids[-1] if baseline and baseline.related_investigation_ids else None),
+        )
+    except subscriptions.WatchLimitExceeded:
+        await emit(live, "agent.error", correlation_id=correlation_id, payload={
+            "message": "Alcanzaste el límite de seguimientos activos. Cancela alguno antes de crear otro.", "recoverable": True,
+        })
+        return
+
+    live.memory.record_entity(entity_id=entity_id, label=entity, entity_type=entity_type)
+    runtime_audit.record_watch_created(usuario=usuario, ip=ip, watch_id=watch.watch_id, entity_ids=[entity], metric=watch.metric)
+    await emit(live, "watch.created", correlation_id=correlation_id, payload={"watch": watch.model_dump(mode="json")})
+    text = f"Voy a avisarte si {entity} vuelve a empeorar. Puedes cancelar este seguimiento cuando quieras."
+    await emit(live, "agent.text.delta", correlation_id=correlation_id, payload={"text": text})
+    await _speak(live, correlation_id, text=text, priority="status", segment_id=f"seg-{uuid.uuid4().hex[:10]}")
+
+
+async def handle_cancel_watch(live: LiveSession, user: dict, command: AgentCommand, correlation_id: str, ip: str) -> None:
+    usuario = str(user.get("sub") or "anon")
+    entity = command.equipment_query or live.memory.last_entity_label
+    watch = subscriptions.cancel_watch_by_entity(usuario, entity) if entity else None
+    if not watch:
+        active = subscriptions.list_active_for_user(usuario)
+        if len(active) == 1:
+            watch = subscriptions.cancel_watch(active[0].watch_id, usuario)
+    if not watch:
+        await emit(live, "agent.error", correlation_id=correlation_id, payload={
+            "message": "No encontré un seguimiento activo para cancelar con esa referencia.", "recoverable": True,
+        })
+        return
+    runtime_audit.record_watch_cancelled(usuario=usuario, ip=ip, watch_id=watch.watch_id)
+    await emit(live, "watch.cancelled", correlation_id=correlation_id, payload={"watch": watch.model_dump(mode="json")})
+    text = f"Cancelé el seguimiento de {watch.entity_label or ', '.join(watch.entity_ids)}."
+    await emit(live, "agent.text.delta", correlation_id=correlation_id, payload={"text": text})
+    await _speak(live, correlation_id, text=text, priority="status", segment_id=f"seg-{uuid.uuid4().hex[:10]}")
+
+
+async def handle_set_quiet_mode(live: LiveSession, command: AgentCommand, correlation_id: str) -> None:
+    """Seccion 16: normal/visual_only/quiet/critical_only, resuelto
+    deterministicamente por el Command Router - aca solo se aplica y se
+    confirma. Si trae duracion, se agenda un revert automatico a 'normal'."""
+    mode = command.quiet_mode or "normal"
+    live.quiet_mode = mode
+    await emit(live, "quiet_mode.changed", correlation_id=correlation_id, payload={"mode": mode, "durationMinutes": command.quiet_duration_minutes})
+
+    labels = {"normal": "modo normal", "visual_only": "solo visual, sin voz", "quiet": "silencio", "critical_only": "solo avisos críticos"}
+    text = f"Listo, {labels.get(mode, mode)} activado."
+    if command.quiet_duration_minutes:
+        text += f" Vuelvo a modo normal en {command.quiet_duration_minutes} minutos."
+        asyncio.create_task(_revert_quiet_mode_after(live, command.quiet_duration_minutes * 60))
+    await emit(live, "agent.text.delta", correlation_id=correlation_id, payload={"text": text})
+    if mode != "quiet":
+        await _speak(live, correlation_id, text=text, priority="status", segment_id=f"seg-{uuid.uuid4().hex[:10]}")
+
+
+async def _revert_quiet_mode_after(live: LiveSession, seconds: float) -> None:
+    await asyncio.sleep(seconds)
+    live.quiet_mode = "normal"
+
+
+async def handle_generate_report(live: LiveSession, user: dict, command: AgentCommand, correlation_id: str, ip: str) -> None:
+    """'Genera un informe de esta investigación' (seccion 17-21): si hay una
+    investigacion activa o reciente, INVESTIGATION_REPORT sobre ella; si no,
+    SHIFT_REPORT del estado actual. El informe queda como Work Product
+    persistente, nunca solo como texto de chat (seccion 18)."""
+    usuario = str(user.get("sub") or "anon")
+    investigation_id = live.memory.active_investigation_id or live.memory.last_investigation_id
+    report_type = "INVESTIGATION_REPORT" if investigation_id else "SHIFT_REPORT"
+
+    await emit(live, "agent.text.delta", correlation_id=correlation_id, payload={"text": "Generando el informe con la evidencia disponible..."})
+    scope = ReportScope(shift=live.perception.shift, audience="supervisor")
+    report = reports_module.build_report(
+        report_type=report_type, scope=scope, generated_by=usuario,
+        company_id=live.session.company_id, site_id=live.session.site_id, investigation_id=investigation_id,
+    )
+    from app.ai.work_products import persistence as work_products_persistence
+    work_products_persistence.save_report_version(report)
+    live.memory.record_report(report_id=report.report_id)
+    runtime_audit.record_report_generated(usuario=usuario, ip=ip, report_id=report.report_id, report_type=report_type)
+
+    await emit(live, "work_product.ready", correlation_id=correlation_id, payload={
+        "productType": "report", "id": report.report_id, "report": report.model_dump(mode="json"),
+    })
+    text = f"Informe {report_type.replace('_', ' ').lower()} preparado como borrador, pendiente de tu validación."
+    await _speak(live, correlation_id, text=text, priority="result", segment_id=f"seg-{uuid.uuid4().hex[:10]}")
+
+
+async def handle_generate_handover(live: LiveSession, user: dict, correlation_id: str, ip: str) -> None:
+    """'Prepárame el cambio de turno' (seccion 22-23): recopila fuentes
+    reales, genera el borrador, lo abre como Work Product, y dice SOLO un
+    resumen corto - nunca lee el informe completo (seccion 23)."""
+    usuario = str(user.get("sub") or "anon")
+    await emit(live, "agent.text.delta", correlation_id=correlation_id, payload={"text": "Preparando el cambio de turno con la información disponible..."})
+
+    handover = handover_module.build_handover(
+        generated_by=usuario, company_id=live.session.company_id, site_id=live.session.site_id, shift=live.perception.shift,
+    )
+    live.memory.record_handover(handover_id=handover.handover_id)
+    runtime_audit.record_handover_generated(usuario=usuario, ip=ip, handover_id=handover.handover_id)
+
+    pending_count = len([p for p in handover.pending_for_next_shift if "Sin pendientes" not in p])
+    await emit(live, "work_product.ready", correlation_id=correlation_id, payload={
+        "productType": "handover", "id": handover.handover_id, "handover": handover.model_dump(mode="json"),
+    })
+    text = f"Borrador de cambio de turno preparado."
+    text += f" Hay {pending_count} pendiente(s) que requieren revisión." if pending_count else " No quedan pendientes registrados."
+    await _speak(live, correlation_id, text=text, priority="result", segment_id=f"seg-{uuid.uuid4().hex[:10]}")
+
+
+async def handle_modify_report(live: LiveSession, user: dict, command: AgentCommand, correlation_id: str, ip: str) -> None:
+    """Edicion por voz de un informe (seccion 24): cada modificacion crea
+    una NUEVA version con diff auditable - nunca sobrescribe. Solo aplica
+    modificaciones que puede interpretar deterministicamente; para el resto,
+    reconoce el pedido pero no fabrica un cambio que no puede verificar."""
+    usuario = str(user.get("sub") or "anon")
+    report_id = live.memory.last_report_id
+    if not report_id:
+        await emit(live, "agent.error", correlation_id=correlation_id, payload={
+            "message": "No hay un informe activo para modificar. Genera un informe primero.", "recoverable": True,
+        })
+        return
+    report = versions_module.get_version(report_id)
+    if not report:
+        await emit(live, "agent.error", correlation_id=correlation_id, payload={"message": "No encontré ese informe.", "recoverable": True})
+        return
+
+    text_lower = (command.report_modification or "").lower()
+    applied = False
+    new_sections = None
+
+    if "ejecutivo" in text_lower:
+        new_scope = report.scope.model_copy(update={"audience": "executive"})
+        rebuilt = reports_module.build_report(
+            report_type=report.report_type, scope=new_scope, generated_by=report.generated_by,
+            company_id=report.company_id, site_id=report.site_id, investigation_ids=report.investigation_ids and report.investigation_ids[0] or None,
+            title=report.title,
+        )
+        new_sections = rebuilt.sections
+        applied = True
+    elif "elimina" in text_lower and "recomendaci" in text_lower:
+        new_sections = [
+            s.model_copy(update={"content": "Sección eliminada a pedido del usuario."}) if s.title == "Recomendaciones" else s
+            for s in report.sections
+        ]
+        applied = True
+
+    updated = versions_module.apply_modification(
+        report, modification_summary=command.report_modification or command.raw_text, modified_by=usuario, new_sections=new_sections,
+    )
+    runtime_audit.record_report_modified(usuario=usuario, ip=ip, report_id=report_id, version=updated.version, modification_preview=command.raw_text)
+    await emit(live, "work_product.ready", correlation_id=correlation_id, payload={
+        "productType": "report", "id": updated.report_id, "report": updated.model_dump(mode="json"),
+    })
+    text = f"Informe actualizado a la versión {updated.version}." if applied else (
+        f"Registré el cambio pedido en el historial del informe (versión {updated.version}), pero no pude aplicarlo automáticamente - revísalo en el panel."
+    )
+    await _speak(live, correlation_id, text=text, priority="status", segment_id=f"seg-{uuid.uuid4().hex[:10]}")
+
+
+async def handle_create_task_draft(live: LiveSession, user: dict, command: AgentCommand, correlation_id: str, ip: str) -> None:
+    """'Crea una tarea para revisar esto' (seccion 25-26): el borrador queda
+    trazado a la investigacion/hallazgos activos si existen - nunca se
+    aprueba, asigna ni cierra automaticamente."""
+    usuario = str(user.get("sub") or "anon")
+    reference = _resolve_reference_entity(live, command)
+    entity_ids = [reference[1]] if reference else []
+    investigation_id = live.memory.active_investigation_id or live.memory.last_investigation_id
+
+    task = tasks_module.create_task_draft(
+        title=(command.task_description or command.raw_text)[:120],
+        description=command.task_description or command.raw_text,
+        reason=live.memory.active_investigation_summary or "Solicitado directamente por el usuario.",
+        entity_ids=entity_ids, investigation_id=investigation_id, created_by=usuario,
+        company_id=live.session.company_id, site_id=live.session.site_id,
+    )
+    runtime_audit.record_task_draft_created(usuario=usuario, ip=ip, task_id=task.task_id, investigation_id=investigation_id)
+    await emit(live, "work_product.ready", correlation_id=correlation_id, payload={"productType": "task", "id": task.task_id, "task": task.model_dump(mode="json")})
+    text = "Tarea creada como borrador, pendiente de tu aprobación."
+    await emit(live, "agent.text.delta", correlation_id=correlation_id, payload={"text": text})
+    await _speak(live, correlation_id, text=text, priority="status", segment_id=f"seg-{uuid.uuid4().hex[:10]}")
+
+
+async def handle_show_pending_work(live: LiveSession, correlation_id: str) -> None:
+    """'¿Qué tengo pendiente?' (seccion 25 y 28): tareas abiertas + watches
+    activos, sin repetir lo mismo si ya se pidio hace poco (InitiativeBudget
+    aplica solo a proactividad NO solicitada - esto es a pedido explicito,
+    siempre responde)."""
+    company_id, site_id = live.session.company_id, live.session.site_id
+    pending_tasks = tasks_module.list_pending(company_id=company_id, site_id=site_id)
+    active_watches = subscriptions.list_active_for_user(live.session.user_id)
+
+    await emit(live, "work_product.ready", correlation_id=correlation_id, payload={
+        "productType": "pending_work_summary",
+        "tasks": [t.model_dump(mode="json") for t in pending_tasks],
+        "watches": [w.model_dump(mode="json") for w in active_watches],
+    })
+    if not pending_tasks and not active_watches:
+        text = "No tienes tareas ni seguimientos pendientes."
+    else:
+        parts = []
+        if pending_tasks:
+            parts.append(f"{len(pending_tasks)} tarea(s) pendiente(s)")
+        if active_watches:
+            parts.append(f"{len(active_watches)} seguimiento(s) activo(s)")
+        text = " y ".join(parts) + "."
+    await emit(live, "agent.text.delta", correlation_id=correlation_id, payload={"text": text})
+    await _speak(live, correlation_id, text=text, priority="status", segment_id=f"seg-{uuid.uuid4().hex[:10]}")

@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import {
-  AlertTriangle, Camera, Check, ChevronDown, ChevronUp, Eye, ExternalLink, Loader2, Mic, MicOff,
-  Pause, Play, RefreshCw, Send, ShieldAlert, Square, Volume2, VolumeX, X,
+  AlertTriangle, Bell, Brain, Camera, Check, CheckCircle2, ChevronDown, ChevronUp, ClipboardList, Eye, ExternalLink,
+  FileText, Loader2, Mic, MicOff, Pause, Play, RefreshCw, Send, ShieldAlert, Square, ThumbsDown, ThumbsUp, Volume2, VolumeX,
+  Watch, X,
 } from 'lucide-react'
 import { agentSessionClient } from '../../lib/agentRuntime/AgentSessionClient'
 import { useAgentRuntimeStore } from '../../lib/agentRuntime/runtimeStore'
@@ -15,6 +16,8 @@ import { performCaptureAndAnalyze } from '../../lib/agentPerception/perceptionMa
 import { buildSemanticPerceptionSnapshot } from '../../lib/agentPerception/semanticPerception'
 import { agentWidgetRegistry } from '../../lib/agentRegistry/registry'
 import type { SemanticPerceptionSnapshot } from '../../lib/agentPerception/types'
+import { workProductsApi } from '../../lib/agentWorkProducts'
+import type { MemorySummary, ReportDraft, ShiftHandoverDraft, TaskDraft } from '../../lib/agentWorkProducts'
 
 interface Props {
   open: boolean
@@ -47,6 +50,20 @@ const STEP_STATUS_LABELS: Record<string, string> = {
 
 const CONFIDENCE_LABELS: Record<string, string> = { high: 'alta', medium: 'media', low: 'baja' }
 
+const ENTITY_STATUS_LABELS: Record<string, string> = {
+  new: 'nuevo', ongoing: 'en curso', worsening: 'empeorando', improving: 'mejorando', resolved: 'resuelto',
+}
+
+const WORK_PRODUCT_STATUS_LABELS: Record<string, string> = {
+  draft: 'Borrador', review: 'En revisión', approved: 'Aprobado', rejected: 'Rechazado',
+  pending_approval: 'Pendiente de aprobación', in_progress: 'En curso', completed: 'Completado', cancelled: 'Cancelado',
+}
+
+const REPORT_TYPE_LABELS: Record<string, string> = {
+  SHIFT_REPORT: 'Informe de turno', INVESTIGATION_REPORT: 'Informe de investigación', PRODUCTION_REPORT: 'Informe de producción',
+  FLEET_REPORT: 'Informe de flota', BREAKDOWN_REPORT: 'Informe de averías', EXECUTIVE_SUMMARY: 'Resumen ejecutivo',
+}
+
 function relativeFreshness(iso: string): { label: string; status: 'current' | 'stale' | 'unknown' } {
   const ageMs = Date.now() - new Date(iso).getTime()
   if (Number.isNaN(ageMs)) return { label: 'desconocida', status: 'unknown' }
@@ -73,7 +90,7 @@ function focusedWidgetLabel(snapshot: SemanticPerceptionSnapshot | null): string
  * trabajando aunque este panel este cerrado (AgentPresence posee la
  * conexion WS; este componente solo se suscribe a su estado).
  */
-export function AgentWorkspace({ open, onClose, context, role: _role, canApprove: _canApprove }: Props) {
+export function AgentWorkspace({ open, onClose, context, role: _role, canApprove }: Props) {
   const runtime = useAgentRuntimeStore()
   const [inputText, setInputText] = useState('')
   const [muted, setMuted] = useState(false)
@@ -89,6 +106,12 @@ export function AgentWorkspace({ open, onClose, context, role: _role, canApprove
   const [showCapture, setShowCapture] = useState(false)
   const [showPerceptionEvidence, setShowPerceptionEvidence] = useState(false)
   const perception = usePerceptionStore()
+
+  const [memorySummary, setMemorySummary] = useState<MemorySummary | null>(null)
+  const [memoryOpen, setMemoryOpen] = useState(false)
+  const [workOpen, setWorkOpen] = useState(false)
+  const [openReportId, setOpenReportId] = useState<string | null>(null)
+  const [pendingActionId, setPendingActionId] = useState<string | null>(null)
 
   useEffect(() => {
     speechInputRef.current = new BrowserSpeechInput()
@@ -112,6 +135,98 @@ export function AgentWorkspace({ open, onClose, context, role: _role, canApprove
     // tengan la mejor foto disponible del estado actual de NORTHMINE.
     agentSessionClient.send('context.update', { context })
   }, [open, context])
+
+  useEffect(() => {
+    if (!open) return
+    // Etapa 6: al abrir el panel, se trae lo que ya existia ANTES de esta
+    // sesion (informes/tareas/seguimientos pendientes de otras sesiones) -
+    // los eventos WS solo cubren lo que se crea mientras el panel esta
+    // conectado, no el historial previo.
+    workProductsApi.memorySummary().then(setMemorySummary).catch(() => setMemorySummary(null))
+    Promise.all([
+      workProductsApi.listReports(),
+      workProductsApi.listHandovers(),
+      workProductsApi.listTasks(true),
+      workProductsApi.listWatches(),
+    ]).then(([reports, handovers, tasks, watches]) => {
+      useAgentRuntimeStore.setState((s) => ({
+        reports: [...reports, ...s.reports.filter((r) => !reports.some((x) => x.report_id === r.report_id))],
+        handovers: [...handovers, ...s.handovers.filter((h) => !handovers.some((x) => x.handover_id === h.handover_id))],
+        tasks: [...tasks, ...s.tasks.filter((t) => !tasks.some((x) => x.task_id === t.task_id))],
+        watches: [...watches, ...s.watches.filter((w) => !watches.some((x) => x.watch_id === w.watch_id))],
+      }))
+    }).catch(() => {})
+  }, [open])
+
+  async function approveReport(reportId: string) {
+    setPendingActionId(reportId)
+    try {
+      const updated = await workProductsApi.approveReport(reportId)
+      useAgentRuntimeStore.setState((s) => ({ reports: s.reports.map((r) => (r.report_id === reportId ? updated : r)) }))
+    } finally {
+      setPendingActionId(null)
+    }
+  }
+
+  async function rejectReport(reportId: string) {
+    setPendingActionId(reportId)
+    try {
+      const updated = await workProductsApi.rejectReport(reportId)
+      useAgentRuntimeStore.setState((s) => ({ reports: s.reports.map((r) => (r.report_id === reportId ? updated : r)) }))
+    } finally {
+      setPendingActionId(null)
+    }
+  }
+
+  async function approveHandover(handoverId: string) {
+    setPendingActionId(handoverId)
+    try {
+      const updated = await workProductsApi.approveHandover(handoverId)
+      useAgentRuntimeStore.setState((s) => ({ handovers: s.handovers.map((h) => (h.handover_id === handoverId ? updated : h)) }))
+    } finally {
+      setPendingActionId(null)
+    }
+  }
+
+  async function rejectHandover(handoverId: string) {
+    setPendingActionId(handoverId)
+    try {
+      const updated = await workProductsApi.rejectHandover(handoverId)
+      useAgentRuntimeStore.setState((s) => ({ handovers: s.handovers.map((h) => (h.handover_id === handoverId ? updated : h)) }))
+    } finally {
+      setPendingActionId(null)
+    }
+  }
+
+  async function approveTask(taskId: string) {
+    setPendingActionId(taskId)
+    try {
+      const updated = await workProductsApi.approveTask(taskId)
+      useAgentRuntimeStore.setState((s) => ({ tasks: s.tasks.map((t) => (t.task_id === taskId ? updated : t)) }))
+    } finally {
+      setPendingActionId(null)
+    }
+  }
+
+  async function rejectTask(taskId: string) {
+    setPendingActionId(taskId)
+    try {
+      const updated = await workProductsApi.rejectTask(taskId)
+      useAgentRuntimeStore.setState((s) => ({ tasks: s.tasks.map((t) => (t.task_id === taskId ? updated : t)) }))
+    } finally {
+      setPendingActionId(null)
+    }
+  }
+
+  async function cancelWatch(watchId: string) {
+    setPendingActionId(watchId)
+    try {
+      const updated = await workProductsApi.cancelWatch(watchId)
+      useAgentRuntimeStore.setState((s) => ({ watches: s.watches.map((w) => (w.watch_id === watchId ? updated : w)) }))
+    } finally {
+      setPendingActionId(null)
+    }
+  }
 
   function sendCommand(text: string, viaVoice: boolean) {
     const trimmed = text.trim()
@@ -417,6 +532,179 @@ export function AgentWorkspace({ open, onClose, context, role: _role, canApprove
               )}
             </div>
           </div>
+
+          <div className="ai-memory-section">
+            <button type="button" className="ai-copilot-block-title ai-section-toggle" onClick={() => setMemoryOpen((v) => !v)}>
+              {memoryOpen ? <ChevronUp size={12} /> : <ChevronDown size={12} />} <Brain size={11} /> Memoria
+            </button>
+            {memoryOpen && (
+              <div className="ai-memory-body">
+                {runtime.memoryRecall && (
+                  <div className="ai-memory-recall">
+                    <span className="ai-copilot-block-title">Última consulta: {runtime.memoryRecall.queryEntity ?? '—'}</span>
+                    <ul>
+                      {runtime.memoryRecall.items.map((item) => (
+                        <li key={item.ref_id}>
+                          <span>{item.label}</span>
+                          <span className="ai-copilot-badge">{item.status}</span>
+                          <span className="ai-memory-item-date">{item.occurred_at}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                <div className="ai-memory-block">
+                  <span className="ai-copilot-block-title">Investigaciones recientes</span>
+                  {memorySummary?.recent_investigations.length ? (
+                    <ul>
+                      {memorySummary.recent_investigations.map((ep) => (
+                        <li key={ep.episode_id}>
+                          <strong>{ep.title}</strong>
+                          <span className="ai-memory-item-date">{ep.outcome ?? 'sin resultado registrado'}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : <p className="ai-perception-empty">Sin investigaciones recientes registradas.</p>}
+                </div>
+
+                <div className="ai-memory-block">
+                  <span className="ai-copilot-block-title">Equipos en seguimiento</span>
+                  {memorySummary?.active_entities.length ? (
+                    <ul>
+                      {memorySummary.active_entities.map((entity) => (
+                        <li key={entity.entity_id}>
+                          <strong>{entity.entity}</strong> {entity.current_issue}
+                          <span className={`ai-copilot-badge is-${entity.status}`}>{ENTITY_STATUS_LABELS[entity.status] ?? entity.status}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : <p className="ai-perception-empty">Sin equipos en seguimiento activo.</p>}
+                </div>
+
+                {runtime.proactiveEvents.length > 0 && (
+                  <div className="ai-memory-block">
+                    <span className="ai-copilot-block-title">Eventos relacionados</span>
+                    <ul>
+                      {runtime.proactiveEvents.slice(0, 5).map((ev) => (
+                        <li key={ev.proactive_event_id}>
+                          <span className={`ai-copilot-badge is-${ev.severity}`}>{ev.severity}</span> {ev.title}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                <p className="ai-memory-counts">
+                  {runtime.reports.length} informe(s) · {runtime.tasks.length} tarea(s) · {runtime.watches.filter((w) => w.status === 'active').length} seguimiento(s) activo(s)
+                </p>
+              </div>
+            )}
+          </div>
+
+          <div className="ai-work-section">
+            <button type="button" className="ai-copilot-block-title ai-section-toggle" onClick={() => setWorkOpen((v) => !v)}>
+              {workOpen ? <ChevronUp size={12} /> : <ChevronDown size={12} />} <ClipboardList size={11} /> Trabajo
+            </button>
+            {workOpen && (
+              <div className="ai-work-body">
+                <div className="ai-work-block">
+                  <span className="ai-copilot-block-title"><FileText size={11} /> Informes</span>
+                  {runtime.reports.length ? runtime.reports.map((report: ReportDraft) => (
+                    <div key={report.report_id} className="ai-work-item">
+                      <div className="ai-work-item-header">
+                        <button type="button" className="ai-work-item-title" onClick={() => setOpenReportId((id) => (id === report.report_id ? null : report.report_id))}>
+                          {REPORT_TYPE_LABELS[report.report_type] ?? report.report_type} · v{report.version}
+                        </button>
+                        <span className={`ai-copilot-badge is-${report.status}`}>{WORK_PRODUCT_STATUS_LABELS[report.status] ?? report.status}</span>
+                      </div>
+                      <p className="ai-work-item-meta">{report.generated_by} · {report.generated_at} · {report.scope.audience}</p>
+                      {openReportId === report.report_id && (
+                        <div className="ai-work-item-detail">
+                          {report.sections.map((s) => (
+                            <div key={s.section_id} className="ai-work-report-section">
+                              <strong>{s.title}</strong>
+                              <p>{s.content}</p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      {canApprove && report.status === 'draft' && (
+                        <div className="ai-work-item-actions">
+                          <button type="button" disabled={pendingActionId === report.report_id} onClick={() => approveReport(report.report_id)}><ThumbsUp size={12} /> Aprobar</button>
+                          <button type="button" disabled={pendingActionId === report.report_id} onClick={() => rejectReport(report.report_id)}><ThumbsDown size={12} /> Rechazar</button>
+                        </div>
+                      )}
+                    </div>
+                  )) : <p className="ai-perception-empty">Sin informes generados en esta sesión.</p>}
+                </div>
+
+                <div className="ai-work-block">
+                  <span className="ai-copilot-block-title"><FileText size={11} /> Cambios de turno</span>
+                  {runtime.handovers.length ? runtime.handovers.map((handover: ShiftHandoverDraft) => (
+                    <div key={handover.handover_id} className="ai-work-item">
+                      <div className="ai-work-item-header">
+                        <span className="ai-work-item-title">{handover.title}</span>
+                        <span className={`ai-copilot-badge is-${handover.status}`}>{WORK_PRODUCT_STATUS_LABELS[handover.status] ?? handover.status}</span>
+                      </div>
+                      <p className="ai-work-item-meta">{handover.generated_by} · {handover.generated_at}</p>
+                      <p className="ai-work-item-meta">{handover.pending_for_next_shift.length} pendiente(s) para el próximo turno</p>
+                      {canApprove && handover.status === 'draft' && (
+                        <div className="ai-work-item-actions">
+                          <button type="button" disabled={pendingActionId === handover.handover_id} onClick={() => approveHandover(handover.handover_id)}><ThumbsUp size={12} /> Aprobar</button>
+                          <button type="button" disabled={pendingActionId === handover.handover_id} onClick={() => rejectHandover(handover.handover_id)}><ThumbsDown size={12} /> Rechazar</button>
+                        </div>
+                      )}
+                    </div>
+                  )) : <p className="ai-perception-empty">Sin cambios de turno generados en esta sesión.</p>}
+                </div>
+
+                <div className="ai-work-block">
+                  <span className="ai-copilot-block-title"><CheckCircle2 size={11} /> Tareas</span>
+                  {runtime.tasks.length ? runtime.tasks.map((task: TaskDraft) => (
+                    <div key={task.task_id} className="ai-work-item">
+                      <div className="ai-work-item-header">
+                        <span className="ai-work-item-title">{task.title}</span>
+                        <span className={`ai-copilot-badge is-${task.status}`}>{WORK_PRODUCT_STATUS_LABELS[task.status] ?? task.status}</span>
+                      </div>
+                      <p className="ai-work-item-meta">{task.reason}</p>
+                      {canApprove && task.status === 'pending_approval' && (
+                        <div className="ai-work-item-actions">
+                          <button type="button" disabled={pendingActionId === task.task_id} onClick={() => approveTask(task.task_id)}><ThumbsUp size={12} /> Aprobar</button>
+                          <button type="button" disabled={pendingActionId === task.task_id} onClick={() => rejectTask(task.task_id)}><ThumbsDown size={12} /> Rechazar</button>
+                        </div>
+                      )}
+                    </div>
+                  )) : <p className="ai-perception-empty">Sin tareas pendientes.</p>}
+                </div>
+
+                <div className="ai-work-block">
+                  <span className="ai-copilot-block-title"><Watch size={11} /> Seguimientos</span>
+                  {runtime.watches.length ? runtime.watches.map((watch) => (
+                    <div key={watch.watch_id} className="ai-work-item">
+                      <div className="ai-work-item-header">
+                        <span className="ai-work-item-title">{watch.entity_label ?? watch.entity_ids.join(', ')}</span>
+                        <span className={`ai-copilot-badge is-${watch.status}`}>{watch.status}</span>
+                      </div>
+                      <p className="ai-work-item-meta">{watch.metric} {watch.condition} {watch.threshold ?? '—'} · expira {watch.expires_at ?? 'sin vencimiento'}</p>
+                      {watch.status === 'active' && (
+                        <div className="ai-work-item-actions">
+                          <button type="button" disabled={pendingActionId === watch.watch_id} onClick={() => cancelWatch(watch.watch_id)}><X size={12} /> Cancelar</button>
+                        </div>
+                      )}
+                    </div>
+                  )) : <p className="ai-perception-empty">Sin seguimientos activos.</p>}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {runtime.proactiveEvents[0] && (
+            <div className="ai-proactive-banner">
+              <Bell size={13} />
+              <span>{runtime.proactiveEvents[0].summary}</span>
+            </div>
+          )}
 
           <div className="ai-rt-transcript-toggle">
             <button type="button" onClick={() => setTranscriptOpen((v) => !v)}>

@@ -33,6 +33,9 @@ export type ServerEventType =
   | 'agent.error'
   // Etapa 5: percepcion
   | 'perception.capture_requested' | 'perception.snapshot_updated' | 'perception.conflict_detected'
+  // Etapa 6: memoria, proactividad, work products
+  | 'memory.recalled' | 'watch.created' | 'watch.cancelled' | 'watch.triggered'
+  | 'proactive.event_emitted' | 'quiet_mode.changed' | 'work_product.ready'
 
 export interface AgentEvent<TPayload = Record<string, unknown>> {
   protocol_version: string

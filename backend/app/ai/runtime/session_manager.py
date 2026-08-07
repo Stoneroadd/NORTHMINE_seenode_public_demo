@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 
 from pydantic import BaseModel
 
+from app.ai.memory.session_memory import SessionMemory
 from app.ai.perception_schemas import SemanticPerceptionState
 from app.ai.runtime.state_machine import AgentRuntimeState, AgentStateMachine
 
@@ -56,6 +57,7 @@ class LiveSession:
         "session", "state_machine", "lock", "websocket", "last_seen", "next_sequence",
         "outbox", "seen_client_event_ids", "current_investigation_task", "pending_ui_acks",
         "pause_event", "cancel_event", "interrupt_event", "focus_override", "perception",
+        "memory", "quiet_mode",
     )
 
     def __init__(self, session: AgentSession):
@@ -77,6 +79,11 @@ class LiveSession:
         # actualizado via parches incrementales `context.update` - nunca se
         # reconstruye completo en cada mensaje.
         self.perception = SemanticPerceptionState()
+        # Etapa 6: memoria de sesion (seccion 3.1) y modo de proactividad
+        # (seccion 16) - ambos viven en proceso, se pierden al cerrar la
+        # sesion (nunca se persisten como tales).
+        self.memory = SessionMemory()
+        self.quiet_mode: str = "normal"
 
     def already_seen(self, event_id: str) -> bool:
         return event_id in self.seen_client_event_ids
@@ -146,6 +153,16 @@ class AgentSessionManager:
     async def sessions_for_user(self, user_id: str) -> list[LiveSession]:
         async with self._lock:
             return [s for s in self._sessions.values() if s.session.user_id == user_id]
+
+    async def sessions_for_scope(self, company_id: str | None, site_id: str | None) -> list[LiveSession]:
+        """Etapa 6: entrega de eventos proactivos no ligados a un watch de
+        usuario especifico (p.ej. un trigger de faena) - todas las sesiones
+        vivas de ese company/site, no solo la que disparo el evento."""
+        async with self._lock:
+            return [
+                s for s in self._sessions.values()
+                if s.session.company_id == company_id and s.session.site_id == site_id
+            ]
 
     def count(self) -> int:
         return len(self._sessions)

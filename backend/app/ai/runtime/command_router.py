@@ -40,6 +40,17 @@ class AgentCommandType(str, Enum):
     ANALYZE_WIDGET_VISUALLY = "analyze_widget_visually"
     ANALYZE_CURRENT_VIEW = "analyze_current_view"
     FOCUS_VISIBLE_ENTITY = "focus_visible_entity"
+    # Etapa 6: memoria, proactividad, informes/tareas (seccion 6 y 31 del brief)
+    RECALL_OPERATIONAL_CONTEXT = "recall_operational_context"
+    COMPARE_WITH_MEMORY = "compare_with_memory"
+    REOPEN_INVESTIGATION = "reopen_investigation"
+    CREATE_WATCH = "create_watch"
+    CANCEL_WATCH = "cancel_watch"
+    SET_QUIET_MODE = "set_quiet_mode"
+    GENERATE_HANDOVER = "generate_handover"
+    MODIFY_REPORT = "modify_report"
+    CREATE_TASK_DRAFT = "create_task_draft"
+    SHOW_PENDING_WORK = "show_pending_work"
     UNKNOWN = "unknown"
 
 
@@ -51,6 +62,11 @@ class AgentCommand(BaseModel):
     equipment_query: str | None = None
     widget_reference: str | None = None
     confidence: Literal["rule", "llm", "unknown"] = "rule"
+    # Etapa 6
+    quiet_mode: str | None = None
+    quiet_duration_minutes: int | None = None
+    report_modification: str | None = None
+    task_description: str | None = None
 
 
 LLMClassifier = Callable[[str], "AgentCommand | None"]
@@ -115,6 +131,19 @@ def _extract_widget_reference(normalized: str) -> str | None:
     return None
 
 
+_DURATION_PATTERN = re.compile(r"(\d+|un|una|dos|tres|cuatro|cinco)\s*(hora|minuto)s?")
+_SPELLED_NUMBERS = {"un": 1, "una": 1, "dos": 2, "tres": 3, "cuatro": 4, "cinco": 5}
+
+
+def _extract_quiet_duration_minutes(normalized: str) -> int | None:
+    match = _DURATION_PATTERN.search(normalized)
+    if not match:
+        return None
+    raw_amount, unit = match.group(1), match.group(2)
+    amount = _SPELLED_NUMBERS.get(raw_amount, 0) if not raw_amount.isdigit() else int(raw_amount)
+    return amount * 60 if unit == "hora" else amount
+
+
 def classify(
     text: str,
     *,
@@ -126,9 +155,17 @@ def classify(
     # ── Comandos criticos: SIEMPRE reglas, nunca LLM ──────────────────────
     if _has(normalized, r"\bpausa\b", r"\bpausar\b", r"\ben pausa\b"):
         return AgentCommand(type=AgentCommandType.PAUSE, raw_text=text)
-    if _has(normalized, r"\bcontin[uú]a\b", r"\breanuda\b", r"\bresume\b", r"\bsigue\b"):
+    # "sigue" a secas retoma la investigacion pausada; "sigue pasando/
+    # ocurriendo/asi" es una PREGUNTA de continuidad (Etapa 6, seccion 6),
+    # no una orden de reanudar - el lookahead negativo evita esa colision.
+    if _has(normalized, r"\bcontin[uú]a\b", r"\breanuda\b", r"\bresume\b", r"\bsigue\b(?!\s+(pasando|ocurriendo|as[ií]))"):
         return AgentCommand(type=AgentCommandType.RESUME, raw_text=text)
-    if _has(normalized, r"\bcancela\b", r"\bcancelar\b", r"\baborta\b"):
+    # "cancela ese seguimiento/vigilancia" es CANCEL_WATCH (Etapa 6), no un
+    # cancel de investigacion - mismo patron de exclusion que 'sigue' arriba.
+    if _has(
+        normalized, r"\bcancela\b(?!\s+(?:el |ese |esa )?(?:seguimiento|vigilancia))",
+        r"\bcancelar\b(?!\s+(?:el |ese |esa )?(?:seguimiento|vigilancia))", r"\baborta\b",
+    ):
         return AgentCommand(type=AgentCommandType.CANCEL, raw_text=text)
     if _has(normalized, r"\bdet[eé]n(?:te|ganse)?\b", r"^\balto\b", r"\bstop\b", r"\bespera\b"):
         return AgentCommand(type=AgentCommandType.INTERRUPT, raw_text=text)
@@ -141,6 +178,64 @@ def classify(
             type=AgentCommandType.MODIFY_INVESTIGATION, raw_text=text,
             equipment_query=_extract_equipment_query(normalized),
         )
+
+    # ── Continuidad conversacional (Etapa 6, seccion 6) - se resuelve por
+    # memoria estructurada, nunca recurre de entrada al LLM ─────────────────
+    if _has(
+        normalized, r"\bsigue (?:pasando|ocurriendo|as[ií])\b", r"\by[aá]? tuvimos (?:este|esta) (?:problema|situaci[oó]n)\b",
+        r"\bqu[eé] pas[oó] (?:antes|la [uú]ltima vez) con\b", r"\bviene (?:pasando|ocurriendo|bajando|perdiendo)\b",
+        r"\bviene desde antes\b",
+    ):
+        return AgentCommand(type=AgentCommandType.RECALL_OPERATIONAL_CONTEXT, raw_text=text, equipment_query=_extract_equipment_query(normalized))
+
+    if _has(normalized, r"\bcomp[aá]ralo con lo anterior\b", r"\bqu[eé] cambi[oó] desde\b", r"\bcompara(?:lo)? con (?:la [uú]ltima vez|lo anterior|antes)\b"):
+        return AgentCommand(type=AgentCommandType.COMPARE_WITH_MEMORY, raw_text=text, equipment_query=_extract_equipment_query(normalized))
+
+    if _has(normalized, r"\breabr(?:e|ir)\b.*\binvestigaci[oó]n\b", r"\breabre\b.*\b(?:eso|esa|ese)\b"):
+        return AgentCommand(type=AgentCommandType.REOPEN_INVESTIGATION, raw_text=text, equipment_query=_extract_equipment_query(normalized))
+
+    # ── Proactividad: modo silencioso y watches (Etapa 6, secciones 12/16).
+    # Modo silencioso SIEMPRE antes que CREATE_WATCH: 'solo avisame si es
+    # critico' contiene literalmente 'avisame si', que si no fuera por este
+    # orden clasificaria como CREATE_WATCH en vez de SET_QUIET_MODE ─────────
+    if _has(
+        normalized, r"\bsilencio\b", r"\bmodo silencioso\b", r"\bsolo av[ií]same si es cr[ií]tico\b",
+        r"\bno hables,? solo mu[eé]stralo\b", r"\bmodo normal\b", r"\bsolo (?:visual|mu[eé]stralo)\b",
+    ):
+        if _has(normalized, r"\bsolo av[ií]same si es cr[ií]tico\b"):
+            mode = "critical_only"
+        elif _has(normalized, r"\bmodo normal\b"):
+            mode = "normal"
+        elif _has(normalized, r"\bno hables,? solo mu[eé]stralo\b", r"\bsolo (?:visual|mu[eé]stralo)\b"):
+            mode = "visual_only"
+        else:
+            mode = "quiet"
+        return AgentCommand(
+            type=AgentCommandType.SET_QUIET_MODE, raw_text=text, quiet_mode=mode,
+            quiet_duration_minutes=_extract_quiet_duration_minutes(normalized),
+        )
+
+    if _has(normalized, r"\bcancela (?:el |ese |esa )?(?:seguimiento|vigilancia)\b", r"\bdeja de vigilar\b"):
+        return AgentCommand(type=AgentCommandType.CANCEL_WATCH, raw_text=text, equipment_query=_extract_equipment_query(normalized))
+
+    if _has(normalized, r"\bav[ií]same si\b", r"\bavisa(?:me)? cuando\b", r"\bhaz(?:me)? seguimiento\b"):
+        return AgentCommand(type=AgentCommandType.CREATE_WATCH, raw_text=text, equipment_query=_extract_equipment_query(normalized))
+
+    # ── Work products: informes, handover, tareas (Etapa 6, secciones 22-25) ─
+    if _has(normalized, r"\b(?:prep[aá]ra(?:me)?|genera(?:r)?)\b.*\bcambio de turno\b", r"\bhandover\b"):
+        return AgentCommand(type=AgentCommandType.GENERATE_HANDOVER, raw_text=text)
+
+    if _has(
+        normalized, r"\bhazlo m[aá]s ejecutivo\b", r"\bagrega\b.*\b(?:aver[ií]a|gr[aá]fico|secci[oó]n|recomendaci[oó]n)\b",
+        r"\belimina\b.*\b(?:recomendaci[oó]n|secci[oó]n)\b", r"\bdestaca\b", r"\bcambia el periodo\b",
+    ):
+        return AgentCommand(type=AgentCommandType.MODIFY_REPORT, raw_text=text, report_modification=text.strip())
+
+    if _has(normalized, r"\bcrea(?:r)? (?:una |un )?(?:tarea|pendiente)\b"):
+        return AgentCommand(type=AgentCommandType.CREATE_TASK_DRAFT, raw_text=text, task_description=text.strip())
+
+    if _has(normalized, r"\bqu[eé] (?:tengo|hay) pendiente\b", r"\bmu[eé]strame las tareas\b", r"\btareas pendientes\b", r"\bseguimientos activos\b"):
+        return AgentCommand(type=AgentCommandType.SHOW_PENDING_WORK, raw_text=text)
 
     # ── Percepcion (Etapa 5, seccion 24) - siempre reglas primero, el
     # VisionProvider solo entra cuando la ejecucion real lo requiere ────────

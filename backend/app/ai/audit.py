@@ -230,3 +230,119 @@ def record_speech_playback_result(
         duracion_ms=latency_ms or 0,
         detalle={"session_id": session_id, "segment_id": segment_id},
     )
+
+
+# ── Etapa 6: memoria, proactividad, work products ──────────────────────────
+# Nunca se registra el contenido completo de una investigacion/informe, solo
+# identificadores y metadatos (seccion 40 del brief: 'no registrar secretos').
+
+def record_memory_created(*, usuario: str, ip: str, kind: str, ref_id: str, entity: str | None = None) -> None:
+    log_event(
+        usuario=usuario, ip=ip, accion="agent_memory_created", resultado="ok",
+        metodo="WS", endpoint="/api/ai-agent/ws",
+        detalle={"kind": kind, "ref_id": ref_id, "entity": entity},
+    )
+
+
+def record_memory_retrieved(*, usuario: str, ip: str, session_id: str, query_entity: str | None, found: bool) -> None:
+    log_event(
+        usuario=usuario, ip=ip, accion="agent_memory_retrieved", resultado="found" if found else "not_found",
+        metodo="WS", endpoint="/api/ai-agent/ws",
+        detalle={"session_id": session_id, "query_entity": query_entity},
+    )
+
+
+def record_watch_created(*, usuario: str, ip: str, watch_id: str, entity_ids: list[str], metric: str) -> None:
+    log_event(
+        usuario=usuario, ip=ip, accion="agent_watch_created", resultado="ok",
+        metodo="WS", endpoint="/api/ai-agent/ws",
+        detalle={"watch_id": watch_id, "entity_ids": entity_ids, "metric": metric},
+    )
+
+
+def record_watch_triggered(*, usuario: str, ip: str, watch_id: str, proactive_event_id: str) -> None:
+    log_event(
+        usuario=usuario, ip=ip, accion="agent_watch_triggered", resultado="triggered",
+        metodo="WS", endpoint="/api/ai-agent/ws",
+        detalle={"watch_id": watch_id, "proactive_event_id": proactive_event_id},
+    )
+
+
+def record_watch_cancelled(*, usuario: str, ip: str, watch_id: str) -> None:
+    log_event(
+        usuario=usuario, ip=ip, accion="agent_watch_cancelled", resultado="cancelled",
+        metodo="POST", endpoint=f"/api/ai-agent/work-products/watches/{watch_id}/cancel",
+        detalle={"watch_id": watch_id},
+    )
+
+
+def record_proactive_event_emitted(*, usuario: str | None, ip: str, proactive_event_id: str, event_type: str, severity: str) -> None:
+    log_event(
+        usuario=usuario or "system", ip=ip, accion="agent_proactive_event_emitted", resultado=severity,
+        metodo="WS", endpoint="/api/ai-agent/ws",
+        detalle={"proactive_event_id": proactive_event_id, "event_type": event_type},
+    )
+
+
+def record_proactive_event_dismissed(*, usuario: str, ip: str, proactive_event_id: str, status: str) -> None:
+    log_event(
+        usuario=usuario, ip=ip, accion="agent_proactive_event_dismissed", resultado=status,
+        metodo="POST", endpoint=f"/api/ai-agent/work-products/proactive-events/{proactive_event_id}",
+        detalle={"proactive_event_id": proactive_event_id, "status": status},
+    )
+
+
+def record_report_generated(*, usuario: str, ip: str, report_id: str, report_type: str) -> None:
+    log_event(
+        usuario=usuario, ip=ip, accion="agent_report_generated", resultado="ok",
+        metodo="WS", endpoint="/api/ai-agent/ws",
+        detalle={"report_id": report_id, "report_type": report_type},
+    )
+
+
+def record_report_modified(*, usuario: str, ip: str, report_id: str, version: int, modification_preview: str) -> None:
+    log_event(
+        usuario=usuario, ip=ip, accion="agent_report_modified", resultado="ok",
+        metodo="WS", endpoint="/api/ai-agent/ws",
+        detalle={"report_id": report_id, "version": version, "modification_preview": modification_preview[:200]},
+    )
+
+
+def record_report_decision(*, usuario: str, ip: str, report_id: str, decision: str) -> None:
+    log_event(
+        usuario=usuario, ip=ip, accion="agent_report_decision", resultado=decision,
+        metodo="POST", endpoint=f"/api/ai-agent/work-products/reports/{report_id}/{decision}",
+        detalle={"report_id": report_id, "decision": decision},
+    )
+
+
+def record_handover_generated(*, usuario: str, ip: str, handover_id: str) -> None:
+    log_event(
+        usuario=usuario, ip=ip, accion="agent_handover_generated", resultado="ok",
+        metodo="WS", endpoint="/api/ai-agent/ws",
+        detalle={"handover_id": handover_id},
+    )
+
+
+def record_handover_decision(*, usuario: str, ip: str, handover_id: str, decision: str) -> None:
+    log_event(
+        usuario=usuario, ip=ip, accion="agent_handover_decision", resultado=decision,
+        metodo="POST", endpoint=f"/api/ai-agent/work-products/handovers/{handover_id}/{decision}",
+        detalle={"handover_id": handover_id, "decision": decision},
+    )
+
+
+def record_task_draft_created(*, usuario: str, ip: str, task_id: str, investigation_id: str | None) -> None:
+    log_event(
+        usuario=usuario, ip=ip, accion="agent_task_draft_created", resultado="ok",
+        metodo="WS", endpoint="/api/ai-agent/ws",
+        detalle={"task_id": task_id, "investigation_id": investigation_id},
+    )
+
+
+def record_task_draft_decision(*, usuario: str, ip: str, task_id: str, decision: str) -> None:
+    log_event(
+        usuario=usuario, ip=ip, accion="agent_task_draft_decision", resultado=decision,
+        metodo="POST", endpoint=f"/api/ai-agent/work-products/tasks/{task_id}/{decision}",
+        detalle={"task_id": task_id, "decision": decision},
+    )

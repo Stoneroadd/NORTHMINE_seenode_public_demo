@@ -58,6 +58,92 @@
   animation: ai-agent-pulse 1.4s ease-in-out infinite;
 }
 
+/* Etapa 6, seccion 14: pulso proactivo - discreto, en la esquina OPUESTA a
+ * la insignia de percepcion para que ambas puedan coexistir sin superponerse. */
+.ai-agent-orb-proactive-badge {
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: var(--nm-amber);
+  color: #1a1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--bg-elevated);
+  animation: ai-agent-pulse 1.4s ease-in-out infinite;
+}
+
+.ai-agent-orb-proactive-badge.is-critical {
+  background: var(--nm-red);
+  color: #200404;
+}
+
+.ai-proactive-card {
+  position: fixed;
+  right: 20px;
+  bottom: 78px;
+  z-index: 849;
+  max-width: 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--nm-amber) 35%, var(--nm-border));
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow-card);
+}
+
+.ai-proactive-card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--nm-text);
+}
+
+.ai-proactive-card-header svg {
+  flex-shrink: 0;
+  color: var(--nm-amber);
+  margin-top: 1px;
+}
+
+.ai-proactive-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ai-proactive-card-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--nm-border);
+  background: transparent;
+  color: var(--nm-text);
+  cursor: pointer;
+}
+
+.ai-proactive-card-dismiss {
+  margin-left: auto;
+  padding: 4px !important;
+}
+
+@media (max-width: 640px) {
+  .ai-proactive-card {
+    right: 14px;
+    left: 14px;
+    max-width: none;
+    bottom: 72px;
+  }
+}
+
 .ai-agent-orb-ring {
   position: absolute;
   inset: -6px;
@@ -1265,6 +1351,196 @@
   font-size: 11px;
   cursor: pointer;
   padding: 0;
+}
+
+/* ---------------------------------------------------------------- *
+ * Etapa 6: memoria, trabajo (informes/handover/tareas/seguimientos),
+ * banner proactivo
+ * ---------------------------------------------------------------- */
+.ai-memory-section,
+.ai-work-section {
+  border-top: 1px solid var(--nm-border);
+  padding-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ai-section-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  width: fit-content;
+}
+
+.ai-memory-body,
+.ai-work-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ai-memory-block,
+.ai-work-block {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ai-memory-block ul,
+.ai-memory-recall ul {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ai-memory-block li,
+.ai-memory-recall li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--nm-text);
+  border-left: 2px solid var(--nm-border);
+  padding-left: 8px;
+}
+
+.ai-memory-item-date {
+  color: var(--nm-muted);
+  font-size: 10px;
+}
+
+.ai-memory-recall {
+  border: 1px dashed var(--nm-border);
+  border-radius: 8px;
+  padding: 8px;
+}
+
+.ai-memory-counts {
+  margin: 0;
+  font-size: 10px;
+  color: var(--nm-muted);
+  border-top: 1px dashed var(--nm-border);
+  padding-top: 6px;
+}
+
+.ai-copilot-badge.is-new,
+.ai-copilot-badge.is-ongoing { color: var(--nm-cyan); border-color: color-mix(in srgb, var(--nm-cyan) 40%, transparent); }
+.ai-copilot-badge.is-worsening,
+.ai-copilot-badge.is-critical,
+.ai-copilot-badge.is-rejected { color: var(--nm-red); border-color: color-mix(in srgb, var(--nm-red) 40%, transparent); }
+.ai-copilot-badge.is-improving,
+.ai-copilot-badge.is-resolved,
+.ai-copilot-badge.is-approved,
+.ai-copilot-badge.is-completed,
+.ai-copilot-badge.is-active { color: var(--nm-green); border-color: color-mix(in srgb, var(--nm-green) 40%, transparent); }
+.ai-copilot-badge.is-warning,
+.ai-copilot-badge.is-high,
+.ai-copilot-badge.is-draft,
+.ai-copilot-badge.is-pending_approval,
+.ai-copilot-badge.is-triggered { color: var(--nm-amber); border-color: color-mix(in srgb, var(--nm-amber) 40%, transparent); }
+.ai-copilot-badge.is-cancelled,
+.ai-copilot-badge.is-expired { color: var(--nm-muted); }
+
+.ai-work-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border-radius: 8px;
+  border: 1px solid var(--nm-border);
+  padding: 8px;
+}
+
+.ai-work-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.ai-work-item-title {
+  background: transparent;
+  border: none;
+  color: var(--nm-text);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+}
+
+.ai-work-item-meta {
+  margin: 0;
+  font-size: 10px;
+  color: var(--nm-muted);
+}
+
+.ai-work-item-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+  padding-top: 6px;
+  border-top: 1px dashed var(--nm-border);
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.ai-work-report-section strong {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--nm-cyan);
+}
+
+.ai-work-report-section p {
+  margin: 2px 0 0;
+  font-size: 11px;
+  color: var(--nm-text);
+  white-space: pre-wrap;
+}
+
+.ai-work-item-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.ai-work-item-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--nm-border);
+  background: transparent;
+  color: var(--nm-text);
+  cursor: pointer;
+}
+
+.ai-work-item-actions button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.ai-proactive-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--nm-amber);
+  border: 1px solid color-mix(in srgb, var(--nm-amber) 40%, transparent);
+  border-radius: 8px;
+  padding: 8px 10px;
 }
 
 .ai-rt-transcript-list {

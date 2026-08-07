@@ -47,6 +47,12 @@ CLIENT_EVENT_TYPES: frozenset[str] = frozenset(
     }
 )
 
+# Etapa 6: memoria, proactividad, work products (seccion 13 y 31 del brief)
+# No hay eventos cliente->servidor nuevos: la creacion de watches/informes/
+# handover/tareas viaja por user.text (Command Router), y aprobar/rechazar/
+# versionar un work product es una accion de gobernanza que vive en un
+# endpoint REST dedicado (work_products/router.py), no en el WS conversacional.
+
 # ── Servidor -> cliente ───────────────────────────────────────────────────
 SERVER_EVENT_TYPES: frozenset[str] = frozenset(
     {
@@ -78,6 +84,14 @@ SERVER_EVENT_TYPES: frozenset[str] = frozenset(
         "perception.capture_requested",
         "perception.snapshot_updated",
         "perception.conflict_detected",
+        # Etapa 6: memoria, proactividad, work products
+        "memory.recalled",
+        "watch.created",
+        "watch.cancelled",
+        "watch.triggered",
+        "proactive.event_emitted",
+        "quiet_mode.changed",
+        "work_product.ready",
     }
 )
 

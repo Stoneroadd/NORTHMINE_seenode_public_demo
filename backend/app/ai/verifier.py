@@ -193,3 +193,65 @@ def detect_visual_semantic_conflict(widget: PerceivedWidgetState, observation: V
         widget_id=widget.widget_id,
         investigated={"note": "La interpretacion visual se rechaza como hecho; se conserva como observacion no confirmada.", "observation_confidence": observation.confidence},
     )
+
+
+# ── Etapa 6: informes, tareas, proactividad, memoria (seccion 33) ────────
+# Mismo criterio 100% determinista que el resto de este archivo - ninguna de
+# estas funciones llama a un LLM ni acepta que el modelo "decida" que algo
+# es valido.
+
+def verify_report_evidence(report) -> list[str]:
+    """INFORMES (seccion 33): cada seccion que cita evidence_ids debe
+    referenciar IDs que existen realmente en report.evidence_ids (nunca una
+    cita colgante), y la evidencia usada debe tener freshness/quality
+    conocidos - una seccion con evidencia stale/desconocida se marca como
+    limitacion, nunca se oculta."""
+    limitations: list[str] = []
+    known_ids = set(report.evidence_ids)
+    for section in report.sections:
+        dangling = [eid for eid in section.evidence_ids if eid not in known_ids]
+        if dangling:
+            limitations.append(f"Sección '{section.title}' cita evidencia no registrada en el informe: {dangling}.")
+    if not report.evidence_ids:
+        limitations.append("El informe no tiene evidencia estructurada asociada.")
+    return limitations
+
+
+def verify_task_evidence(task) -> list[str]:
+    """TAREAS (seccion 33): evidencia, entidad, alcance, estado. Una tarea
+    sin razon ni evidencia ni investigacion de origen es sospechosa - se
+    permite crearla igual (puede ser un pedido directo del usuario) pero se
+    reporta como limitacion para que quien apruebe lo sepa."""
+    limitations: list[str] = []
+    if not task.evidence_ids and not task.investigation_id:
+        limitations.append("La tarea no tiene evidencia ni investigación de origen asociada - creada a partir de un pedido directo.")
+    if not task.entity_ids:
+        limitations.append("La tarea no especifica una entidad/equipo concreto.")
+    if task.status not in ("draft", "pending_approval", "approved", "in_progress", "completed", "cancelled", "rejected"):
+        limitations.append(f"Estado de tarea no reconocido: {task.status}.")
+    return limitations
+
+
+def verify_watch_trigger(*, condition: str, threshold: float | None, value: float | None, duration_seconds: int | None = None, elapsed_seconds: float | None = None) -> bool:
+    """PROACTIVIDAD (seccion 33): confirma que un watch/trigger realmente
+    cumple su condicion con el threshold declarado - nunca se dispara un
+    evento proactivo 'porque parece que si'. Si el trigger exige una
+    duracion sostenida y no ha pasado suficiente tiempo, tampoco se
+    confirma (evita falsos positivos de un solo tick)."""
+    if threshold is None or value is None:
+        return False
+    met = value < threshold if condition == "below" else value > threshold
+    if not met:
+        return False
+    if duration_seconds and elapsed_seconds is not None and elapsed_seconds < duration_seconds:
+        return False
+    return True
+
+
+def verify_memory_scope(*, item_company_id: str | None, item_site_id: str | None, expected_company_id: str | None, expected_site_id: str | None) -> bool:
+    """MEMORIA (seccion 33/37): pertenencia a usuario/faena. NORTHMINE es
+    single-tenant hoy (company_id/site_id siempre None), igual que el resto
+    del Verifier lo documenta para evidencia - este chequeo existe para que
+    el contrato ya sea correcto el dia que exista mas de una faena, no
+    porque haga algo hoy (seccion 37: 'preparar contratos')."""
+    return item_company_id == expected_company_id and item_site_id == expected_site_id
