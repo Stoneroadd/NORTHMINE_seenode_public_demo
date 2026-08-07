@@ -1152,7 +1152,8 @@
 }
 
 .ai-rt-connection.is-reconnecting,
-.ai-rt-connection.is-connecting {
+.ai-rt-connection.is-connecting,
+.ai-rt-connection.is-authenticating {
   color: var(--nm-amber);
   border-color: color-mix(in srgb, var(--nm-amber) 40%, transparent);
 }

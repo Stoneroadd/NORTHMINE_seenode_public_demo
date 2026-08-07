@@ -5,6 +5,7 @@ import { agentEquipmentCatalog } from './equipmentCatalog'
 import { buildOperationalInvestigationSnapshot } from './investigationSnapshot'
 import { agentWidgetRegistry } from './registry'
 import { buildAgentApplicationContext } from './context'
+import { agentSessionClient } from '../agentRuntime/AgentSessionClient'
 
 /**
  * Puente de depuracion SOLO para desarrollo (import.meta.env.DEV) - permite
@@ -25,5 +26,8 @@ if (import.meta.env.DEV) {
     agentWidgetRegistry,
     buildAgentApplicationContext,
     agentEquipmentCatalog,
+    // Etapa 6.1, seccion 12: diagnostico de conexion del Agent Runtime -
+    // nunca expone el token, solo metadatos de estado (ver getDiagnostics).
+    agentRuntimeDiagnostics: () => agentSessionClient.getDiagnostics(),
   }
 }

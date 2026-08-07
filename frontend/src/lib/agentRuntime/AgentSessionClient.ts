@@ -24,7 +24,28 @@ const STORAGE_KEY = 'northmine-agent-session'
 type EventHandler = (event: AgentEvent) => void
 type StatusHandler = (status: ConnectionStatus) => void
 
-export type ConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'reconnecting'
+/** Etapa 6.1, seccion 6-7 del brief: 'connected' significa 'el servidor
+ * confirmo la sesion' (session.ready recibido), NUNCA solo 'el socket
+ * abrio' - un socket que abre pero cuyo servidor nunca contesta debe
+ * mostrarse como 'authenticating', no como 'Conectando…' indefinido ni
+ * como 'connected' antes de tiempo. */
+export type ConnectionStatus = 'disconnected' | 'connecting' | 'authenticating' | 'connected' | 'reconnecting'
+
+/** Etapa 6.1, seccion 12 del brief: diagnostico de desarrollo sanitizado -
+ * nunca incluye el token ni ningun dato de sesion, solo metadatos de
+ * conexion para poder distinguir "el socket nunca abrio" de "abrio pero el
+ * servidor nunca contesto" de "el servidor lo cerro". Expuesto via
+ * devBridge (solo import.meta.env.DEV), nunca como UI permanente. */
+export interface ConnectionDiagnostics {
+  status: ConnectionStatus
+  wsUrl: string | null
+  lastOpenAt: string | null
+  lastCloseCode: number | null
+  lastCloseReason: string | null
+  lastCloseWasClean: boolean | null
+  lastErrorAt: string | null
+  retryCount: number
+}
 
 interface StoredSession {
   sessionId: string
@@ -61,9 +82,23 @@ class AgentSessionClient {
   private reconnectAttempt = 0
   private outboundQueue: Record<string, unknown>[] = []
   private manuallyClosed = false
+  private diagnostics: ConnectionDiagnostics = {
+    status: 'disconnected', wsUrl: null, lastOpenAt: null, lastCloseCode: null,
+    lastCloseReason: null, lastCloseWasClean: null, lastErrorAt: null, retryCount: 0,
+  }
+
+  getDiagnostics(): ConnectionDiagnostics {
+    return { ...this.diagnostics }
+  }
 
   connect(token: string): void {
-    if (this.ws && this.token === token && (this.status === 'connected' || this.status === 'connecting')) return
+    // 'authenticating' cuenta como "ya intentando" igual que 'connected'/
+    // 'connecting' (seccion 9 del brief): sin esto, un remount de
+    // StrictMode que llama connect() de nuevo con el MISMO token mientras
+    // el socket ya abrio pero espera session.ready crearia un SEGUNDO
+    // WebSocket - exactamente el tipo de bug de singleton duplicado que ya
+    // aparecio en Etapa 5.
+    if (this.ws && this.token === token && (this.status === 'connected' || this.status === 'connecting' || this.status === 'authenticating')) return
     this.token = token
     this.manuallyClosed = false
     this._open()
@@ -116,12 +151,19 @@ class AgentSessionClient {
       params.set('since_sequence', String(this.stored.lastSequence))
     }
     const url = `${WS_BASE_URL}/api/ai-agent/ws?${params.toString()}`
+    // Nunca se guarda el query string real (contiene el token) en
+    // diagnostics - solo el origen+path, para que sea seguro mostrar/loguear.
+    this.diagnostics.wsUrl = `${WS_BASE_URL}/api/ai-agent/ws`
     const ws = new WebSocket(url)
     this.ws = ws
 
     ws.onopen = () => {
       this.reconnectAttempt = 0
-      this._setStatus('connected')
+      this.diagnostics.lastOpenAt = new Date().toISOString()
+      // El socket abrio, pero la sesion NO esta lista todavia - eso solo lo
+      // confirma el servidor emitiendo session.ready (ver onmessage abajo).
+      // Mostrar 'connected' aca seria mentir si el servidor nunca contesta.
+      this._setStatus('authenticating')
       this._flushQueue()
       this._startHeartbeat()
     }
@@ -139,6 +181,7 @@ class AgentSessionClient {
           this.stored = { sessionId, lastSequence: event.sequence }
           saveStored(this.stored)
         }
+        this._setStatus('connected')
       } else if (this.stored) {
         this.stored.lastSequence = Math.max(this.stored.lastSequence, event.sequence)
         saveStored(this.stored)
@@ -146,7 +189,10 @@ class AgentSessionClient {
       this.eventHandlers.forEach((handler) => handler(event))
     }
 
-    ws.onclose = () => {
+    ws.onclose = (ev) => {
+      this.diagnostics.lastCloseCode = ev.code
+      this.diagnostics.lastCloseReason = ev.reason || null
+      this.diagnostics.lastCloseWasClean = ev.wasClean
       this._clearHeartbeat()
       if (this.manuallyClosed) {
         this._setStatus('disconnected')
@@ -158,11 +204,13 @@ class AgentSessionClient {
     ws.onerror = () => {
       // onclose se dispara despues de onerror para sockets nativos - la
       // reconexion se maneja ahi, aca no hace falta duplicar logica.
+      this.diagnostics.lastErrorAt = new Date().toISOString()
     }
   }
 
   private _scheduleReconnect(): void {
     this._setStatus('reconnecting')
+    this.diagnostics.retryCount += 1
     const delay = Math.min(MAX_BACKOFF_MS, 500 * 2 ** this.reconnectAttempt)
     this.reconnectAttempt += 1
     this.reconnectTimer = window.setTimeout(() => this._open(), delay)
@@ -194,6 +242,7 @@ class AgentSessionClient {
 
   private _setStatus(status: ConnectionStatus): void {
     this.status = status
+    this.diagnostics.status = status
     this.statusHandlers.forEach((handler) => handler(status))
   }
 }

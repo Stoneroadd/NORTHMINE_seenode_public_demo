@@ -91,12 +91,20 @@ def _client_ip(websocket: WebSocket) -> str:
 
 @router.websocket("/ws")
 async def agent_ws(websocket: WebSocket) -> None:
+    # Etapa 6.1, seccion 5 del brief: logging sanitizado del handshake -
+    # nunca Authorization/Bearer/cookies/API keys/tokens, solo hasta donde
+    # llego la conexion. Pensado para diagnosticar "el frontend nunca ve
+    # session.ready" sin adivinar en que capa se corto (proxy/red/backend).
+    logger.info("WS connection received origin=%s", websocket.headers.get("origin"))
     user = await _authenticate(websocket)
     if not user:
+        logger.info("WS auth rejected reason=%s", "no_token" if not websocket.query_params.get("token") else "invalid_or_blacklisted")
         await websocket.close(code=4401, reason="Autenticacion requerida")
         return
+    logger.info("WS auth ok user=%s", user.get("sub"))
 
     await websocket.accept()
+    logger.info("WS accepted user=%s", user.get("sub"))
     ip = _client_ip(websocket)
     user_id = str(user.get("sub") or "anon")
     role = str(user.get("rol") or "")
@@ -111,6 +119,7 @@ async def agent_ws(websocket: WebSocket) -> None:
         resumed = live is not None
     if live is None:
         live = await session_manager.create(user_id=user_id, role=role, company_id=user.get("empresa"), site_id=user.get("faena"))
+    logger.info("WS session %s user=%s resumed=%s", live.session.session_id, user_id, resumed)
 
     # Si otra conexion (pestana vieja, reconexion previa que no cerro limpio)
     # ya esta adjunta a esta MISMA sesion, se cierra primero - solo un sender
@@ -143,6 +152,7 @@ async def agent_ws(websocket: WebSocket) -> None:
         deliver=False,
     )
     await websocket.send_text(ready_event.model_dump_json())
+    logger.info("WS session.ready sent session=%s", live.session.session_id)
 
     last_replayed_sequence = last_known_sequence
     if resumed and last_known_sequence:
@@ -224,8 +234,8 @@ async def agent_ws(websocket: WebSocket) -> None:
             live.remember(event.event_id)
 
             await _dispatch_client_event(live, user, event, ip)
-    except WebSocketDisconnect:
-        pass
+    except WebSocketDisconnect as exc:
+        logger.info("WS disconnected session=%s code=%s", live.session.session_id, exc.code)
     finally:
         sender_task.cancel()
         reaper_task.cancel()

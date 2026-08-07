@@ -305,7 +305,10 @@ export function AgentWorkspace({ open, onClose, context, role: _role, canApprove
 
         <div className="ai-rt-status-bar">
           <span className={`ai-rt-connection is-${runtime.connectionStatus}`}>
-            {runtime.connectionStatus === 'connected' ? 'Conectado' : runtime.connectionStatus === 'reconnecting' ? 'Reconectando…' : runtime.connectionStatus === 'connecting' ? 'Conectando…' : 'Desconectado'}
+            {runtime.connectionStatus === 'connected' ? 'Conectado'
+              : runtime.connectionStatus === 'authenticating' ? 'Autenticando…'
+              : runtime.connectionStatus === 'reconnecting' ? 'Reconectando…'
+              : runtime.connectionStatus === 'connecting' ? 'Conectando…' : 'Desconectado'}
           </span>
           {voiceProvider && !muted && <span className="ai-rt-voice-badge">{VOICE_LABELS[voiceProvider]}</span>}
           {muted && <span className="ai-rt-voice-badge is-muted">Audio silenciado</span>}
