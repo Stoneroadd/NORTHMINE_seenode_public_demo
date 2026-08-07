@@ -42,7 +42,14 @@ export function useAgentWidget(options: UseAgentWidgetOptions) {
 
   const ref = useCallback(
     (element: HTMLElement | null) => {
-      if (element) element.setAttribute('data-agent-widget-id', options.id)
+      if (element) {
+        element.setAttribute('data-agent-widget-id', options.id)
+        // Etapa 5: visibilidad real via IntersectionObserver (seccion 7) -
+        // registrar el nodo DOM real, no solo el manifest en memoria.
+        agentWidgetRegistry.observeElement(options.id, element)
+      } else {
+        agentWidgetRegistry.unobserveElement(options.id)
+      }
     },
     [options.id],
   )

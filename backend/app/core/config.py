@@ -174,10 +174,24 @@ class Settings:
     elevenlabs_similarity_boost: float
     elevenlabs_speed: float
     agent_runtime_db_path: str
+    # Percepcion visual (Etapa 5) - reusa el proveedor generativo YA
+    # configurado (Etapa 1: ai_enabled + anthropic_api_key), nunca una API
+    # key nueva. vision_enabled es un apagador explicito adicional (el
+    # usuario puede desactivar SOLO vision sin apagar el chat/investigacion).
+    vision_enabled: bool
+    vision_timeout_seconds: float
+    vision_max_image_bytes: int
+    perception_max_viewport_captures_per_minute: int
+    perception_max_widget_captures_per_minute: int
+    perception_max_capture_dimension_px: int
 
     @property
     def elevenlabs_available(self) -> bool:
         return self.elevenlabs_enabled and bool(self.elevenlabs_api_key.strip())
+
+    @property
+    def vision_available(self) -> bool:
+        return self.vision_enabled and self.ai_enabled and bool(self.anthropic_api_key.strip())
 
     @property
     def is_production(self) -> bool:
@@ -418,4 +432,10 @@ def get_settings() -> Settings:
             "NORTHMINE_AGENT_RUNTIME_DB",
             str(root_dir / "northmine_agent_runtime.db"),
         ),
+        vision_enabled=os.getenv("NORTHMINE_VISION_ENABLED", "true").strip().lower() == "true",
+        vision_timeout_seconds=float(os.getenv("NORTHMINE_VISION_TIMEOUT_SECONDS", "20")),
+        vision_max_image_bytes=int(os.getenv("NORTHMINE_VISION_MAX_IMAGE_BYTES", "3000000")),
+        perception_max_viewport_captures_per_minute=int(os.getenv("NORTHMINE_PERCEPTION_MAX_VIEWPORT_CAPTURES_PER_MINUTE", "4")),
+        perception_max_widget_captures_per_minute=int(os.getenv("NORTHMINE_PERCEPTION_MAX_WIDGET_CAPTURES_PER_MINUTE", "10")),
+        perception_max_capture_dimension_px=int(os.getenv("NORTHMINE_PERCEPTION_MAX_CAPTURE_DIMENSION_PX", "1600")),
     )

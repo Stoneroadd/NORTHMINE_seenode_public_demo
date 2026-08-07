@@ -145,6 +145,27 @@ CAPABILITY_REGISTRY: dict[str, CapabilityDefinition] = {
         read_only=True, required_role="viewer", timeout_seconds=3, module_id="comparativa",
         description="Navega a Comparativa contra el periodo anterior.",
     ),
+    # ── Percepcion (Etapa 5, seccion 23) - no forman parte de las 4
+    # plantillas cerradas de investigacion (investigation_types=()); se usan
+    # ad-hoc via Command Router (SCREEN_CONTEXT/EXPLAIN_WIDGET/
+    # ANALYZE_WIDGET_VISUALLY/ANALYZE_CURRENT_VIEW), nunca insertadas a la
+    # fuerza en un plan de los 4 tipos cerrados.
+    "get_current_screen_context": CapabilityDefinition(
+        id="get_current_screen_context", kind="backend_tool", investigation_types=(),
+        read_only=True, required_role="viewer", timeout_seconds=3,
+        description="Devuelve el estado semantico conocido de la sesion: modulo, filtros, entidad seleccionada, widgets visibles.",
+    ),
+    "capture_current_widget": CapabilityDefinition(
+        id="capture_current_widget", kind="ui_action", investigation_types=(),
+        read_only=True, required_role="viewer", timeout_seconds=10,
+        description="Captura visualmente (bajo demanda) el widget enfocado o el viewport, con redaccion de contenido privado.",
+    ),
+    "analyze_current_widget": CapabilityDefinition(
+        id="analyze_current_widget", kind="backend_tool", investigation_types=(),
+        read_only=True, required_role="viewer", timeout_seconds=20,
+        depends_on=("capture_current_widget",),
+        description="Analiza con VisionProvider una captura ya tomada del widget enfocado - nunca sustituye datos estructurados si ya existen.",
+    ),
 }
 
 

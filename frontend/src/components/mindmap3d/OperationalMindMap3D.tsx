@@ -21,6 +21,8 @@ import {
 } from './mindMapModel'
 import { useModuleT } from '../../i18n/useModuleT'
 import { mindmap3dT, type MindMap3dT } from '../../i18n/modules/mindmap3d'
+import { useAgentWidget } from '../../lib/agentRegistry/useAgentWidget'
+import type { SceneWidgetSnapshot } from '../../lib/agentPerception/sceneContracts'
 
 type SourceKey = Exclude<keyof MindMapSources, 'errors'>
 
@@ -295,6 +297,47 @@ export function OperationalMindMap3D() {
   }, [graph])
   const [alertTourIndex, setAlertTourIndex] = useState(0)
 
+  // Contrato semantico Etapa 5 (Mapa Operacional 3D): grafo de conocimiento
+  // operacional en Three.js, NO una escena georreferenciada de terreno/
+  // equipos - ver sceneContracts.ts. `nodesVisibleCount` replica el mismo
+  // filtro categoria/estado que usa la escena real, sin duplicar el layout.
+  const { ref: sceneWidgetRef } = useAgentWidget({
+    id: 'mindmap3d-scene',
+    moduleId: 'operationalMap3d',
+    type: 'canvas',
+    label: 'Mapa Operacional 3D',
+    description: 'Grafo de conocimiento operacional (modulos y metricas de NORTHMINE) en Three.js.',
+    supportedActions: ['navigate', 'focus_widget', 'explain_widget'],
+    getSnapshot: (): SceneWidgetSnapshot => {
+      const nodesVisibleCount = graph
+        ? graph.nodes.filter(node => visibleCategories.has(node.category) && visibleStatuses.has(node.status)).length
+        : 0
+      return {
+        widgetId: 'mindmap3d-scene',
+        type: 'canvas',
+        label: 'Mapa Operacional 3D',
+        updatedAt: graph?.generated_at ?? new Date().toISOString(),
+        viewMode,
+        quality,
+        paused,
+        selectedNodeId,
+        selectedNodeLabel: selectedNode?.label ?? null,
+        focusedNodeId,
+        nodesVisibleCount,
+        nodesTotalCount: graph?.nodes.length ?? 0,
+        alertCount: alertNodes.nodes.length,
+        alertsCritical: alertNodes.critical,
+        dataSource: graph?.data_source,
+        backendStatus: graph?.metadata.backend_status,
+        freshnessStatus: query.isError ? 'unknown' : 'current',
+        qualityStatus: graph ? 'high' : 'unknown',
+        semanticSummary: !graph
+          ? 'Mapa Operacional 3D: sin datos cargados todavia.'
+          : `Mapa Operacional 3D: modo ${viewMode}, ${nodesVisibleCount} de ${graph.nodes.length} nodos visibles${selectedNode ? `, nodo seleccionado "${selectedNode.label}" (${selectedNode.status})` : ', sin nodo seleccionado'}${alertNodes.nodes.length ? `, ${alertNodes.nodes.length} nodos en ${alertNodes.critical ? 'estado critico' : 'atencion'}` : ''}.`,
+      }
+    },
+  })
+
   const handleAlertTour = () => {
     if (!alertNodes.nodes.length) return
     const node = alertNodes.nodes[alertTourIndex % alertNodes.nodes.length]
@@ -399,7 +442,7 @@ export function OperationalMindMap3D() {
       )}
 
       <div className="nm-map-shell">
-        <div className="nm-map-main">
+        <div className="nm-map-main" ref={sceneWidgetRef}>
           <MindMapControls
             viewMode={viewMode}
             quality={quality}

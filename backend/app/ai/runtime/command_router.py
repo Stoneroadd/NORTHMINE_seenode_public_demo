@@ -34,6 +34,12 @@ class AgentCommandType(str, Enum):
     INTERRUPT = "interrupt"
     SHOW_EVIDENCE = "show_evidence"
     GENERATE_REPORT = "generate_report"
+    # Etapa 5: percepcion (seccion 24 del brief)
+    SCREEN_CONTEXT = "screen_context"
+    EXPLAIN_WIDGET = "explain_widget"
+    ANALYZE_WIDGET_VISUALLY = "analyze_widget_visually"
+    ANALYZE_CURRENT_VIEW = "analyze_current_view"
+    FOCUS_VISIBLE_ENTITY = "focus_visible_entity"
     UNKNOWN = "unknown"
 
 
@@ -43,6 +49,7 @@ class AgentCommand(BaseModel):
     investigation_type: InvestigationType | None = None
     target_module: str | None = None
     equipment_query: str | None = None
+    widget_reference: str | None = None
     confidence: Literal["rule", "llm", "unknown"] = "rule"
 
 
@@ -92,6 +99,22 @@ def _extract_equipment_query(text: str) -> str | None:
     return None
 
 
+_WIDGET_TYPE_WORDS = ("grafico", "gráfico", "tabla", "indicador", "kpi", "mapa")
+
+
+def _extract_widget_reference(normalized: str) -> str | None:
+    """Extrae la referencia natural a un widget ('este grafico', 'esa tabla')
+    para que focusResolution (frontend) o perception_state (backend) la
+    resuelvan por semantica - nunca por coordenadas (seccion 8 del brief)."""
+    for word in _WIDGET_TYPE_WORDS:
+        match = re.search(rf"\b(?:este|esta|ese|esa)\s+{word}\b", normalized)
+        if match:
+            return match.group(0)
+    if "lo que tengo abierto" in normalized or "que tengo abierto" in normalized:
+        return "lo que tengo abierto"
+    return None
+
+
 def classify(
     text: str,
     *,
@@ -119,14 +142,29 @@ def classify(
             equipment_query=_extract_equipment_query(normalized),
         )
 
+    # ── Percepcion (Etapa 5, seccion 24) - siempre reglas primero, el
+    # VisionProvider solo entra cuando la ejecucion real lo requiere ────────
+    if _has(normalized, r"\bqu[eé] estoy viendo\b", r"\bqu[eé] veo\b", r"\bd[oó]nde estoy\b", r"\ben qu[eé] (?:pantalla|m[oó]dulo|secci[oó]n) estoy\b"):
+        return AgentCommand(type=AgentCommandType.SCREEN_CONTEXT, raw_text=text)
+
+    if _has(normalized, r"\bqu[eé] ves raro\b", r"\banomal[ií]a\b") and not _has(normalized, r"\bpantalla\b", r"\bvista\b"):
+        return AgentCommand(type=AgentCommandType.ANALYZE_WIDGET_VISUALLY, raw_text=text, widget_reference=_extract_widget_reference(normalized))
+
+    if _has(normalized, r"\banaliza (?:esta |esa )?(?:pantalla|vista)\b", r"\bqu[eé] ves raro (?:en esta pantalla|aqu[ií])\b"):
+        return AgentCommand(type=AgentCommandType.ANALYZE_CURRENT_VIEW, raw_text=text)
+
+    if _has(normalized, r"\bexpl[ií]came (?:este|esta|ese|esa) (?:gr[aá]fico|indicador|kpi|tabla)\b", r"\bqu[eé] significa (?:este|ese) indicador\b"):
+        return AgentCommand(type=AgentCommandType.EXPLAIN_WIDGET, raw_text=text, widget_reference=_extract_widget_reference(normalized))
+
+    if _has(normalized, r"\bmu[eé]strame (?:ese|esa|el|la|d[oó]nde est[aá])\b.*\b(equipo|pala|caex|cami[oó]n)\b", r"\babre lo que est[aá] causando\b"):
+        return AgentCommand(type=AgentCommandType.FOCUS_VISIBLE_ENTITY, raw_text=text, equipment_query=_extract_equipment_query(normalized))
+
     # ── Generar informe ────────────────────────────────────────────────────
     if _has(normalized, r"\bgenera(?:r)? (?:un |el )?(?:informe|reporte)\b"):
         return AgentCommand(type=AgentCommandType.GENERATE_REPORT, raw_text=text)
 
     # ── Mostrar evidencia ──────────────────────────────────────────────────
-    if _has(normalized, r"\bmu[eé]strame\b", r"\bmuestra\b", r"\bver evidencia\b") and not _has(
-        normalized, r"\babre\b", r"\bnavega\b",
-    ):
+    if _has(normalized, r"\bver evidencia\b", r"\bmu[eé]strame la evidencia\b", r"\bmuestra la evidencia\b"):
         return AgentCommand(
             type=AgentCommandType.SHOW_EVIDENCE, raw_text=text, target_module=_extract_module(normalized),
         )

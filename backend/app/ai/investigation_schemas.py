@@ -79,7 +79,7 @@ class InvestigationPlan(BaseModel):
 
 # ── Evidencia normalizada (seccion 11) ───────────────────────────────────
 
-EvidenceSourceType = Literal["backend_tool", "ui_snapshot", "calculation", "document"]
+EvidenceSourceType = Literal["backend_tool", "ui_snapshot", "visual_observation", "calculation", "document"]
 FreshnessStatus = Literal["current", "stale", "unknown"]
 QualityStatus = Literal["high", "medium", "low", "unknown"]
 VerificationStatus = Literal["verified", "partial", "rejected", "insufficient_data", "pending"]

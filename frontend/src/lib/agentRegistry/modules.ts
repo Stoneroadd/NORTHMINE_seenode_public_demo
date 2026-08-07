@@ -54,8 +54,12 @@ export const NORTHMINE_MODULES: Record<string, AgentModuleManifest> = {
     minRoles: 'any',
     filters: [],
     entities: [],
-    supportedActions: ['navigate'],
-    instrumented: false,
+    // Etapa 5: instrumentado como grafo de conocimiento (nodo seleccionado/
+    // enfocado, modo de vista, alertas) - sigue sin ser una escena
+    // georreferenciada real, por eso no hay entidades tipo equipment aca
+    // (ver sceneContracts.ts).
+    supportedActions: ['navigate', 'focus_widget', 'explain_widget'],
+    instrumented: true,
   },
   dashboard: {
     id: 'dashboard',
@@ -177,9 +181,12 @@ export const NORTHMINE_MODULES: Record<string, AgentModuleManifest> = {
     minRoles: 'any',
     filters: [],
     entities: [],
-    // No hay contrato Leaflet todavia (seccion 13/20): solo navegacion.
-    supportedActions: ['navigate'],
-    instrumented: false,
+    // Etapa 5: el visor de ortomosaico esta instrumentado (widget tipo
+    // 'map', foco/explicacion/captura visual soportados) pero sigue sin ser
+    // un mapa Leaflet georreferenciado - no hay coordenadas de equipo en
+    // esta vista todavia (ver geoContracts.ts).
+    supportedActions: ['navigate', 'focus_widget', 'explain_widget'],
+    instrumented: true,
   },
   alertas: {
     id: 'alertas',

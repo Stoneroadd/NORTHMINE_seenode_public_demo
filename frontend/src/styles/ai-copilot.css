@@ -39,6 +39,25 @@
   color: var(--nm-amber);
 }
 
+/* Etapa 5: indicador discreto de percepcion visual activa (seccion 36) -
+   una insignia pequeña en la esquina del orbe, nunca reemplaza el icono
+   principal ni el texto de estado conversacional. */
+.ai-agent-orb-perception-badge {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: var(--nm-cyan);
+  color: #061014;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--bg-elevated);
+  animation: ai-agent-pulse 1.4s ease-in-out infinite;
+}
+
 .ai-agent-orb-ring {
   position: absolute;
   inset: -6px;
@@ -1114,6 +1133,126 @@
 
 .ai-rt-finding.is-critical {
   border-left-color: var(--nm-red);
+}
+
+/* ---------------------------------------------------------------- *
+ * Etapa 5: seccion Percepcion (AgentWorkspace)
+ * ---------------------------------------------------------------- */
+.ai-perception-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-top: 1px solid var(--nm-border);
+  padding-top: 10px;
+}
+
+.ai-perception-facts {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ai-perception-facts > div {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 11px;
+}
+
+.ai-perception-facts dt {
+  flex: 0 0 auto;
+  min-width: 96px;
+  color: var(--nm-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  font-size: 10px;
+}
+
+.ai-perception-facts dd {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--nm-text);
+  flex: 1;
+}
+
+.ai-perception-inline-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: transparent;
+  border: none;
+  color: var(--nm-cyan);
+  font-size: 10px;
+  cursor: pointer;
+  padding: 0;
+}
+
+.ai-perception-visual {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ai-perception-summary {
+  margin: 0;
+  font-size: 12px;
+  color: var(--nm-text);
+}
+
+.ai-perception-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ai-copilot-badge--confidence.is-high { color: var(--nm-green); border-color: color-mix(in srgb, var(--nm-green) 40%, transparent); }
+.ai-copilot-badge--confidence.is-medium { color: var(--nm-amber); border-color: color-mix(in srgb, var(--nm-amber) 40%, transparent); }
+.ai-copilot-badge--confidence.is-low { color: var(--nm-red); border-color: color-mix(in srgb, var(--nm-red) 40%, transparent); }
+
+.ai-perception-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.ai-perception-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: transparent;
+  border: none;
+  color: var(--nm-cyan);
+  font-size: 11px;
+  cursor: pointer;
+  padding: 0;
+}
+
+.ai-perception-actions button:disabled {
+  color: var(--nm-muted);
+  cursor: default;
+}
+
+.ai-perception-capture-preview {
+  max-width: 100%;
+  max-height: 220px;
+  object-fit: contain;
+  border-radius: 8px;
+  border: 1px solid var(--nm-border);
+}
+
+.ai-perception-evidence {
+  margin-top: 0;
+}
+
+.ai-perception-empty {
+  margin: 0;
+  font-size: 11px;
+  color: var(--nm-muted);
+  font-style: italic;
 }
 
 .ai-rt-transcript-toggle button {

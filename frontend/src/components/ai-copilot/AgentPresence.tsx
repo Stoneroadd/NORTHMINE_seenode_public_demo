@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { AlertTriangle, Loader2, Mic, Pause, Sparkles, Volume2 } from 'lucide-react'
+import { AlertTriangle, Eye, Loader2, Mic, Pause, Sparkles, Volume2 } from 'lucide-react'
 import { useAppStore } from '../../store'
 import { AgentWorkspace } from './AgentWorkspace'
 import { buildAgentApplicationContext } from '../../lib/agentRegistry/context'
@@ -8,6 +8,8 @@ import { agentEquipmentCatalog } from '../../lib/agentRegistry/equipmentCatalog'
 import { agentSessionClient } from '../../lib/agentRuntime/AgentSessionClient'
 import { initRuntimeController } from '../../lib/agentRuntime/runtimeController'
 import { useAgentRuntimeStore } from '../../lib/agentRuntime/runtimeStore'
+import { initPerceptionManager } from '../../lib/agentPerception/perceptionManager'
+import { usePerceptionStore } from '../../lib/agentPerception/perceptionStore'
 import type { CopilotContext } from '../../lib/aiCopilot'
 import '../../styles/ai-copilot.css'
 import '../../lib/agentRegistry/devBridge'
@@ -66,12 +68,16 @@ export function AgentPresence() {
     if (usuario) void agentEquipmentCatalog.load()
   }, [usuario])
 
+  const isCapturing = usePerceptionStore((s) => s.isCapturing)
+  const isAnalyzing = usePerceptionStore((s) => s.isAnalyzing)
+
   useEffect(() => {
     if (!usuario?.token) {
       agentSessionClient.disconnect()
       return
     }
     initRuntimeController()
+    initPerceptionManager()
     agentSessionClient.connect(usuario.token)
   }, [usuario?.token])
 
@@ -81,6 +87,10 @@ export function AgentPresence() {
   const Icon = STATE_ICON[runtimeState] ?? Sparkles
   const isActive = ['listening', 'planning', 'executing', 'verifying', 'speaking'].includes(runtimeState)
   const isDegraded = connectionStatus === 'disconnected' || connectionStatus === 'reconnecting'
+  // Seccion 36 del brief: indicador discreto y SEPARADO del estado
+  // conversacional - la percepcion visual (Nivel 3) puede ocurrir con el
+  // Runtime en 'idle', y nunca debe reescribir el texto/estado del orbe.
+  const perceptionLabel = isAnalyzing ? 'Analizando vista' : isCapturing ? 'Observando' : null
 
   return (
     <>
@@ -91,10 +101,15 @@ export function AgentPresence() {
         aria-label="NORTHMINE AI — Operational Intelligence Agent"
         aria-haspopup="dialog"
         aria-expanded={open}
-        title={`NORTHMINE AI — ${runtimeState}`}
+        title={perceptionLabel ? `NORTHMINE AI — ${perceptionLabel}` : `NORTHMINE AI — ${runtimeState}`}
       >
         <span className="ai-agent-orb-ring" aria-hidden="true" />
         <Icon size={18} className={runtimeState === 'planning' || runtimeState === 'executing' || runtimeState === 'verifying' ? 'ai-copilot-spin' : ''} />
+        {perceptionLabel && (
+          <span className="ai-agent-orb-perception-badge" aria-label={perceptionLabel} title={perceptionLabel}>
+            <Eye size={11} />
+          </span>
+        )}
       </button>
       <AgentWorkspace
         open={open}

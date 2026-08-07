@@ -41,6 +41,9 @@ CLIENT_EVENT_TYPES: frozenset[str] = frozenset(
         "speech.playback.completed",
         "speech.playback.failed",
         "speech.playback.interrupted",
+        # Etapa 5: percepcion
+        "perception.observation_reported",
+        "perception.capture_unavailable",
     }
 )
 
@@ -71,6 +74,10 @@ SERVER_EVENT_TYPES: frozenset[str] = frozenset(
         "investigation.failed",
         "investigation.cancelled",
         "agent.error",
+        # Etapa 5: percepcion
+        "perception.capture_requested",
+        "perception.snapshot_updated",
+        "perception.conflict_detected",
     }
 )
 

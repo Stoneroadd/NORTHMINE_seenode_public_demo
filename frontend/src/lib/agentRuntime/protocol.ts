@@ -14,6 +14,8 @@ export type ClientEventType =
   | 'ui_action.completed' | 'ui_action.failed' | 'ui_action.rejected' | 'ui_action.cancelled'
   | 'approval.confirmed' | 'approval.rejected'
   | 'speech.playback.started' | 'speech.playback.completed' | 'speech.playback.failed' | 'speech.playback.interrupted'
+  // Etapa 5: percepcion
+  | 'perception.observation_reported' | 'perception.capture_unavailable'
 
 export type ServerEventType =
   | 'session.ready'
@@ -29,6 +31,8 @@ export type ServerEventType =
   | 'agent.speech.segment' | 'agent.speech.stop'
   | 'investigation.completed' | 'investigation.failed' | 'investigation.cancelled'
   | 'agent.error'
+  // Etapa 5: percepcion
+  | 'perception.capture_requested' | 'perception.snapshot_updated' | 'perception.conflict_detected'
 
 export interface AgentEvent<TPayload = Record<string, unknown>> {
   protocol_version: string

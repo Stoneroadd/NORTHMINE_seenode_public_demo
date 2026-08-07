@@ -300,7 +300,24 @@ async def _dispatch_client_event(live: LiveSession, user: dict, event: AgentEven
         await _handle_speech_playback(live, user, event, ip)
         return
 
-    if event_type in ("session.start", "session.resume", "session.heartbeat", "context.update"):
+    if event_type == "context.update":
+        changes = payload.get("changes")
+        if isinstance(changes, dict):
+            runtime.handle_context_update(live, changes)
+        return
+
+    if event_type == "perception.observation_reported":
+        await runtime.handle_visual_observation_reported(live, user, payload, event.correlation_id, ip)
+        return
+
+    if event_type == "perception.capture_unavailable":
+        runtime_audit.record_command(
+            usuario=str(user.get("sub") or "anon"), ip=ip, session_id=live.session.session_id,
+            command_type="perception_capture_unavailable", confidence="rule",
+        )
+        return
+
+    if event_type in ("session.start", "session.resume", "session.heartbeat"):
         return  # manejados en el handshake / no requieren accion adicional
 
 

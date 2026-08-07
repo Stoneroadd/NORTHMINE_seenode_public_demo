@@ -85,6 +85,16 @@ async def dispatch_command(live: LiveSession, user: dict, command: AgentCommand,
         })
     elif command.type == AgentCommandType.GENERATE_REPORT:
         await request_presentation_navigate(live, command.model_copy(update={"target_module": "reportes"}), correlation_id)
+    elif command.type == AgentCommandType.SCREEN_CONTEXT:
+        await handle_screen_context(live, correlation_id)
+    elif command.type == AgentCommandType.EXPLAIN_WIDGET:
+        await handle_explain_widget(live, command, correlation_id)
+    elif command.type == AgentCommandType.ANALYZE_WIDGET_VISUALLY:
+        await handle_analyze_visually(live, command, correlation_id, target_type="widget")
+    elif command.type == AgentCommandType.ANALYZE_CURRENT_VIEW:
+        await handle_analyze_visually(live, command, correlation_id, target_type="viewport")
+    elif command.type == AgentCommandType.FOCUS_VISIBLE_ENTITY:
+        await handle_focus_visible_entity(live, command, correlation_id)
     else:
         await emit(live, "agent.error", correlation_id=correlation_id, payload={
             "message": "Esta capacidad todavia no esta disponible en la version actual del agente.",
@@ -440,3 +450,136 @@ async def handle_ui_action_ack(live: LiveSession, ack: UIActionAcknowledgement, 
             usuario=str(user.get("sub") or "anon"), ip=ip, session_id=live.session.session_id,
             action_id=ack.action_id, status=f"{ack.status}_unmatched", requirement="optional",
         )
+
+
+# ── Percepcion (Etapa 5) ─────────────────────────────────────────────────
+# Nivel 1 (semantic) siempre disponible sin tocar el DOM; Nivel 3 (visual)
+# solo se activa cuando el comando lo requiere explicitamente, y la captura
+# en si la hace el FRONTEND (el backend no tiene DOM) - aca solo se pide
+# (`perception.capture_requested`) y se recibe el resultado
+# (`perception.observation_reported`, manejado en ws_router.py).
+
+def _widget_summary_or_none(live: LiveSession) -> str | None:
+    widget = live.perception.focused_widget()
+    if widget:
+        return widget.semantic_summary
+    return None
+
+
+async def handle_screen_context(live: LiveSession, correlation_id: str) -> None:
+    state = live.perception
+    parts: list[str] = []
+    if state.module_id:
+        parts.append(f"Estoy viendo {state.module_id}")
+        if state.selected_entities:
+            entity = state.selected_entities[0]
+            parts[-1] += f" con {entity.get('id', '')} seleccionado"
+        parts[-1] += "."
+    else:
+        parts.append("Todavia no tengo contexto de que modulo estas viendo.")
+    focused = state.focused_widget()
+    if focused:
+        parts.append(f"El widget enfocado es {focused.label}: {focused.semantic_summary}")
+    await emit(live, "agent.text.delta", correlation_id=correlation_id, payload={"text": " ".join(parts)})
+    await _speak(live, correlation_id, text=" ".join(parts)[:220], priority="status", segment_id=f"seg-{uuid.uuid4().hex[:10]}")
+
+
+async def handle_explain_widget(live: LiveSession, command: AgentCommand, correlation_id: str) -> None:
+    """Seccion 18: semantica ANTES que vision - explicar un widget usa
+    SOLO el resumen semantico ya calculado, nunca dispara una captura."""
+    summary = _widget_summary_or_none(live)
+    if not summary:
+        await emit(live, "agent.error", correlation_id=correlation_id, payload={
+            "message": "No tengo un widget enfocado para explicar. Enfoca un grafico o indicador primero.", "recoverable": True,
+        })
+        return
+    await emit(live, "agent.text.delta", correlation_id=correlation_id, payload={"text": summary})
+    await _speak(live, correlation_id, text=summary[:220], priority="status", segment_id=f"seg-{uuid.uuid4().hex[:10]}")
+
+
+async def handle_analyze_visually(live: LiveSession, command: AgentCommand, correlation_id: str, *, target_type: str) -> None:
+    """Dispara Nivel 3 de percepcion (seccion 10-11): pide al frontend que
+    capture el widget enfocado (o el viewport completo si no hay foco /
+    se pidio explicitamente 'esta pantalla') y lo analice. No bloquea el
+    Runtime esperando el resultado - `perception.observation_reported`
+    llega de forma asincrona y se procesa en ws_router.py."""
+    widget = live.perception.focused_widget()
+    effective_target = target_type
+    if target_type == "widget" and widget is None:
+        effective_target = "viewport"
+
+    await emit(live, "agent.text.delta", correlation_id=correlation_id, payload={
+        "text": "Estoy revisando visualmente esa vista..." if effective_target == "viewport" else f"Estoy analizando visualmente {widget.label if widget else 'el widget enfocado'}...",
+    })
+    await emit(
+        live, "perception.capture_requested", correlation_id=correlation_id,
+        payload={"targetType": effective_target, "widgetId": widget.widget_id if widget else None},
+    )
+
+
+async def handle_focus_visible_entity(live: LiveSession, command: AgentCommand, correlation_id: str) -> None:
+    """'Muestrame ese equipo' fuera del contexto de una investigacion activa
+    - reusa el mismo mecanismo ui_action.requested que Etapa 3/4 ya usan
+    para resolver y seleccionar una entidad, sin necesitar un plan completo."""
+    if not command.equipment_query:
+        await emit(live, "agent.error", correlation_id=correlation_id, payload={
+            "message": "No identifique que equipo quieres ver. Especifica un ID (por ejemplo, Pala 03).", "recoverable": True,
+        })
+        return
+    action_id = f"action-{uuid.uuid4().hex[:12]}"
+    await emit(
+        live, "ui_action.requested", correlation_id=correlation_id,
+        payload={"actionId": action_id, "capabilityId": "select_equipment_entity", "requirement": "optional", "entityQuery": command.equipment_query},
+    )
+
+
+def handle_context_update(live: LiveSession, changes: dict[str, Any]) -> None:
+    """Aplica un parche incremental de contexto semantico (seccion 4). No
+    emite eventos - es puramente actualizacion de estado interno, consumido
+    por SCREEN_CONTEXT/EXPLAIN_WIDGET/ANALYZE_WIDGET_VISUALLY y por
+    get_current_screen_context."""
+    live.perception.apply_patch(changes)
+
+
+async def handle_visual_observation_reported(live: LiveSession, user: dict, payload: dict[str, Any], correlation_id: str, ip: str) -> None:
+    """Recibe la VisualObservation que el frontend ya obtuvo del endpoint
+    /api/ai-agent/vision/analyze (seccion 16). El Runtime NUNCA acepta la
+    interpretacion visual como hecho por si sola: la contrasta contra el
+    snapshot semantico del mismo widget (si existe) y, si hay contradiccion,
+    emite un hallazgo de conflicto en vez de fusionar silenciosamente
+    (seccion 26-27)."""
+    from app.ai.perception_schemas import VisualObservation
+
+    try:
+        observation = VisualObservation.model_validate(payload.get("observation") or payload)
+    except Exception:  # noqa: BLE001 - payload malformado del cliente, no debe tumbar la sesion
+        return
+
+    usuario = str(user.get("sub") or "anon")
+    widget = live.perception.resolve_widget(observation.widget_id)
+
+    runtime_audit.record_visual_observation(
+        usuario=usuario, ip=ip, session_id=live.session.session_id,
+        observation_id=observation.observation_id, capture_id=observation.capture_id,
+        confidence=observation.confidence, verification_status="visual_observation",
+    )
+
+    conflict = verifier.detect_visual_semantic_conflict(widget, observation) if widget else None
+    summary_parts = [f"Observación visual (no confirmada, confianza {observation.confidence}): {observation.summary}"]
+
+    if conflict:
+        runtime_audit.record_perception_conflict(
+            usuario=usuario, ip=ip, session_id=live.session.session_id,
+            conflict_id=conflict.conflict_id, widget_id=conflict.widget_id,
+        )
+        summary_parts.append(f"Los datos estructurados de '{widget.label}' no confirman esta lectura visual - se mantiene como observación no verificada.")
+        await emit(
+            live, "perception.conflict_detected", correlation_id=correlation_id,
+            payload={"conflict": conflict.model_dump(mode="json")},
+        )
+
+    await emit(
+        live, "perception.snapshot_updated", correlation_id=correlation_id,
+        payload={"observation": observation.model_dump(mode="json"), "conflict": conflict.model_dump(mode="json") if conflict else None},
+    )
+    await _speak(live, correlation_id, text=" ".join(summary_parts)[:260], priority="finding", segment_id=f"seg-{uuid.uuid4().hex[:10]}")

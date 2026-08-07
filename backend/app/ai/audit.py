@@ -182,6 +182,45 @@ def record_speech_request(
     )
 
 
+def record_perception_capture(
+    *, usuario: str, ip: str, capture_id: str, target_type: str, widget_id: str | None,
+    image_bytes: int, provider: str, duration_ms: int,
+) -> None:
+    log_event(
+        usuario=usuario, ip=ip, accion="agent_perception_capture", resultado="ok",
+        metodo="POST", endpoint="/api/ai-agent/vision/analyze",
+        duracion_ms=duration_ms,
+        detalle={
+            "capture_id": capture_id, "target_type": target_type, "widget_id": widget_id,
+            "image_bytes": image_bytes, "provider": provider,
+        },
+    )
+
+
+def record_visual_observation(
+    *, usuario: str, ip: str, session_id: str, observation_id: str, capture_id: str,
+    confidence: str, verification_status: str,
+) -> None:
+    log_event(
+        usuario=usuario, ip=ip, accion="agent_perception_observation", resultado=verification_status,
+        metodo="WS", endpoint="/api/ai-agent/ws",
+        detalle={
+            "session_id": session_id, "observation_id": observation_id, "capture_id": capture_id,
+            "confidence": confidence,
+        },
+    )
+
+
+def record_perception_conflict(
+    *, usuario: str, ip: str, session_id: str, conflict_id: str, widget_id: str | None,
+) -> None:
+    log_event(
+        usuario=usuario, ip=ip, accion="agent_perception_conflict", resultado="detected",
+        metodo="WS", endpoint="/api/ai-agent/ws",
+        detalle={"session_id": session_id, "conflict_id": conflict_id, "widget_id": widget_id},
+    )
+
+
 def record_speech_playback_result(
     *, usuario: str, ip: str, session_id: str, segment_id: str, result: str, latency_ms: int | None,
 ) -> None:

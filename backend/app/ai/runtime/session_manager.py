@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 
 from pydantic import BaseModel
 
+from app.ai.perception_schemas import SemanticPerceptionState
 from app.ai.runtime.state_machine import AgentRuntimeState, AgentStateMachine
 
 """Sesiones del Agent Runtime (Etapa 4, seccion 5 del brief).
@@ -54,7 +55,7 @@ class LiveSession:
     __slots__ = (
         "session", "state_machine", "lock", "websocket", "last_seen", "next_sequence",
         "outbox", "seen_client_event_ids", "current_investigation_task", "pending_ui_acks",
-        "pause_event", "cancel_event", "interrupt_event", "focus_override",
+        "pause_event", "cancel_event", "interrupt_event", "focus_override", "perception",
     )
 
     def __init__(self, session: AgentSession):
@@ -72,6 +73,10 @@ class LiveSession:
         self.cancel_event = asyncio.Event()
         self.interrupt_event = asyncio.Event()
         self.focus_override: str | None = None
+        # Etapa 5: ultimo estado semantico conocido (Nivel 1 de percepcion),
+        # actualizado via parches incrementales `context.update` - nunca se
+        # reconstruye completo en cada mensaje.
+        self.perception = SemanticPerceptionState()
 
     def already_seen(self, event_id: str) -> bool:
         return event_id in self.seen_client_event_ids

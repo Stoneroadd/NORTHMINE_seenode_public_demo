@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import {
-  AlertTriangle, Check, ChevronDown, ChevronUp, Loader2, Mic, MicOff,
-  Pause, Play, Send, ShieldAlert, Square, Volume2, VolumeX, X,
+  AlertTriangle, Camera, Check, ChevronDown, ChevronUp, Eye, ExternalLink, Loader2, Mic, MicOff,
+  Pause, Play, RefreshCw, Send, ShieldAlert, Square, Volume2, VolumeX, X,
 } from 'lucide-react'
 import { agentSessionClient } from '../../lib/agentRuntime/AgentSessionClient'
 import { useAgentRuntimeStore } from '../../lib/agentRuntime/runtimeStore'
@@ -10,6 +10,11 @@ import { speechOutputRouter } from '../../lib/agentVoice/SpeechOutputRouter'
 import type { VoiceOutputProviderName } from '../../lib/agentVoice/types'
 import type { CopilotContext } from '../../lib/aiCopilot'
 import { AgentActionOverlay } from './AgentActionOverlay'
+import { usePerceptionStore } from '../../lib/agentPerception/perceptionStore'
+import { performCaptureAndAnalyze } from '../../lib/agentPerception/perceptionManager'
+import { buildSemanticPerceptionSnapshot } from '../../lib/agentPerception/semanticPerception'
+import { agentWidgetRegistry } from '../../lib/agentRegistry/registry'
+import type { SemanticPerceptionSnapshot } from '../../lib/agentPerception/types'
 
 interface Props {
   open: boolean
@@ -40,6 +45,24 @@ const STEP_STATUS_LABELS: Record<string, string> = {
   skipped: 'Omitido', cancelled: 'Cancelado', rejected: 'Rechazado',
 }
 
+const CONFIDENCE_LABELS: Record<string, string> = { high: 'alta', medium: 'media', low: 'baja' }
+
+function relativeFreshness(iso: string): { label: string; status: 'current' | 'stale' | 'unknown' } {
+  const ageMs = Date.now() - new Date(iso).getTime()
+  if (Number.isNaN(ageMs)) return { label: 'desconocida', status: 'unknown' }
+  const ageSeconds = Math.round(ageMs / 1000)
+  if (ageSeconds < 60) return { label: `hace ${ageSeconds}s`, status: 'current' }
+  const ageMinutes = Math.round(ageSeconds / 60)
+  if (ageMinutes < 10) return { label: `hace ${ageMinutes} min`, status: 'current' }
+  return { label: `hace ${ageMinutes} min`, status: 'stale' }
+}
+
+function focusedWidgetLabel(snapshot: SemanticPerceptionSnapshot | null): string {
+  if (!snapshot?.focusedWidgetId) return 'Ninguno'
+  const widget = snapshot.visibleWidgets.find((w) => w.widgetId === snapshot.focusedWidgetId)
+  return widget?.label ?? snapshot.focusedWidgetId
+}
+
 /**
  * NORTHMINE Operational Intelligence Agent - superficie de observabilidad,
  * evidencia, auditoria y control del Agent Runtime (Etapa 4). No es un
@@ -62,10 +85,25 @@ export function AgentWorkspace({ open, onClose, context, role: _role, canApprove
   const speechInputRef = useRef<BrowserSpeechInput | null>(null)
   const bodyRef = useRef<HTMLDivElement | null>(null)
 
+  const [perceptionSnapshot, setPerceptionSnapshot] = useState<SemanticPerceptionSnapshot | null>(null)
+  const [showCapture, setShowCapture] = useState(false)
+  const [showPerceptionEvidence, setShowPerceptionEvidence] = useState(false)
+  const perception = usePerceptionStore()
+
   useEffect(() => {
     speechInputRef.current = new BrowserSpeechInput()
     speechOutputRouter.onProviderChanged(setVoiceProvider)
   }, [])
+
+  useEffect(() => {
+    if (!open) return
+    // Refresco local solo para pintar la seccion Percepcion mientras el
+    // panel esta abierto - el envio real al Runtime (context.update) lo
+    // hace perceptionManager de forma independiente de este componente.
+    setPerceptionSnapshot(buildSemanticPerceptionSnapshot())
+    const timer = window.setInterval(() => setPerceptionSnapshot(buildSemanticPerceptionSnapshot()), 800)
+    return () => window.clearInterval(timer)
+  }, [open])
 
   useEffect(() => {
     if (!open) return
@@ -112,6 +150,17 @@ export function AgentWorkspace({ open, onClose, context, role: _role, canApprove
   function bargeIn() {
     speechOutputRouter.stop()
     agentSessionClient.send('agent.interrupt', {})
+  }
+
+  function openFocusedWidget() {
+    const widgetId = perceptionSnapshot?.focusedWidgetId
+    if (!widgetId) return
+    agentWidgetRegistry.getElement(widgetId)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }
+
+  function analyzeAgain() {
+    const widgetId = perceptionSnapshot?.focusedWidgetId ?? undefined
+    void performCaptureAndAnalyze(widgetId ? 'widget' : 'viewport', widgetId)
   }
 
   if (!open) return null
@@ -271,6 +320,103 @@ export function AgentWorkspace({ open, onClose, context, role: _role, canApprove
               <p className="ai-inv-approval"><ShieldAlert size={13} /> Requiere validación humana antes de tomar acción operacional.</p>
             </div>
           )}
+
+          <div className="ai-perception-section">
+            <p className="ai-copilot-block-title"><Eye size={11} /> Percepción</p>
+
+            <dl className="ai-perception-facts">
+              <div>
+                <dt>Pantalla actual</dt>
+                <dd>{perceptionSnapshot?.moduleId ?? perceptionSnapshot?.route ?? '—'}</dd>
+              </div>
+              <div>
+                <dt>Widget enfocado</dt>
+                <dd>
+                  {focusedWidgetLabel(perceptionSnapshot)}
+                  {perceptionSnapshot?.focusedWidgetId && (
+                    <button type="button" className="ai-perception-inline-action" onClick={openFocusedWidget} aria-label="Abrir widget">
+                      <ExternalLink size={11} /> Abrir
+                    </button>
+                  )}
+                </dd>
+              </div>
+              <div>
+                <dt>Entidades visibles</dt>
+                <dd>{perceptionSnapshot?.selectedEntities.length ? perceptionSnapshot.selectedEntities.map((e) => e.id).join(', ') : 'Ninguna'}</dd>
+              </div>
+              <div>
+                <dt>Filtros</dt>
+                <dd>{Object.keys(perceptionSnapshot?.activeFilters ?? {}).length ? Object.entries(perceptionSnapshot!.activeFilters).map(([k, v]) => `${k}: ${v}`).join(' · ') : 'Sin filtros activos'}</dd>
+              </div>
+            </dl>
+
+            <div className="ai-perception-visual">
+              <p className="ai-copilot-block-title">Última percepción visual</p>
+              {perception.isCapturing || perception.isAnalyzing ? (
+                <p className="ai-copilot-thinking"><Loader2 size={13} className="ai-copilot-spin" /> {perception.isCapturing ? 'Capturando…' : 'Analizando…'}</p>
+              ) : perception.lastObservation ? (
+                <>
+                  <p className="ai-perception-summary">{perception.lastObservation.summary}</p>
+                  <div className="ai-perception-badges">
+                    <span className="ai-copilot-badge ai-copilot-badge--type">{perception.lastObservation.targetType === 'widget' ? 'Widget' : 'Vista completa'}</span>
+                    <span className={`ai-copilot-badge ai-copilot-badge--freshness is-${relativeFreshness(perception.lastObservation.createdAt).status}`}>
+                      {relativeFreshness(perception.lastObservation.createdAt).label}
+                    </span>
+                    <span className={`ai-copilot-badge ai-copilot-badge--confidence is-${perception.lastObservation.confidence}`}>
+                      confianza {CONFIDENCE_LABELS[perception.lastObservation.confidence] ?? perception.lastObservation.confidence}
+                    </span>
+                  </div>
+                  {perception.lastConflict && (
+                    <p className="ai-inv-warning"><AlertTriangle size={12} /> {perception.lastConflict.description}</p>
+                  )}
+                  <div className="ai-perception-actions">
+                    {perception.lastCaptureUrl && (
+                      <button type="button" onClick={() => setShowCapture((v) => !v)}>
+                        <Camera size={12} /> {showCapture ? 'Ocultar captura' : 'Ver captura'}
+                      </button>
+                    )}
+                    <button type="button" onClick={analyzeAgain} disabled={perception.isCapturing || perception.isAnalyzing}>
+                      <RefreshCw size={12} /> Analizar de nuevo
+                    </button>
+                    <button type="button" onClick={() => setShowPerceptionEvidence((v) => !v)}>
+                      {showPerceptionEvidence ? <ChevronUp size={12} /> : <ChevronDown size={12} />} Mostrar evidencia
+                    </button>
+                  </div>
+                  {showCapture && perception.lastCaptureUrl && (
+                    <img className="ai-perception-capture-preview" src={perception.lastCaptureUrl} alt="Última captura analizada" />
+                  )}
+                  {showPerceptionEvidence && (
+                    <div className="ai-copilot-evidence-list ai-perception-evidence">
+                      {perception.lastObservation.detectedElements.length > 0 && (
+                        <div><span className="ai-copilot-block-title">Elementos detectados</span><ul>{perception.lastObservation.detectedElements.map((el, i) => <li key={i}>{el}</li>)}</ul></div>
+                      )}
+                      {perception.lastObservation.possibleAnomalies.length > 0 && (
+                        <div><span className="ai-copilot-block-title">Posibles anomalías</span><ul>{perception.lastObservation.possibleAnomalies.map((a, i) => <li key={i}>{a}</li>)}</ul></div>
+                      )}
+                      {perception.lastObservation.uncertainty.length > 0 && (
+                        <div><span className="ai-copilot-block-title">Incertidumbre</span><ul>{perception.lastObservation.uncertainty.map((u, i) => <li key={i}>{u}</li>)}</ul></div>
+                      )}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="ai-perception-actions">
+                  <p className="ai-perception-empty">Sin percepción visual aún en esta sesión.</p>
+                  {perception.mode !== 'visual_disabled' && (
+                    <button type="button" onClick={analyzeAgain}>
+                      <Camera size={12} /> Analizar vista actual
+                    </button>
+                  )}
+                </div>
+              )}
+              {perception.lastCaptureError && (
+                <p className="ai-inv-warning"><AlertTriangle size={12} /> {perception.lastCaptureError.message}</p>
+              )}
+              {perception.mode === 'visual_disabled' && (
+                <p className="ai-perception-empty">Percepción visual desactivada por el usuario.</p>
+              )}
+            </div>
+          </div>
 
           <div className="ai-rt-transcript-toggle">
             <button type="button" onClick={() => setTranscriptOpen((v) => !v)}>
