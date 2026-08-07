@@ -13,7 +13,27 @@ except Exception:  # pragma: no cover - dotenv is optional at import time
     load_dotenv = None
 
 
-if load_dotenv:
+# Precedencia de configuracion (Etapa 4.1):
+#   1. Variables de entorno ya presentes en el proceso (una sesion de shell
+#      con $env:ELEVENLABS_API_KEY=..., un despliegue real, etc.) - SIEMPRE
+#      ganan: load_dotenv(..., override=False) nunca las pisa.
+#   2. Un archivo .env local (backend/.env o el que indique NORTHMINE_ENV) -
+#      solo rellena lo que el proceso no trae puesto. Es el mecanismo que
+#      esta arquitectura ya contempla para secretos de desarrollo (esta en
+#      .env.example y en .gitignore); no se inventa un .env.local nuevo.
+#   3. Los defaults de get_settings().
+#
+# testing es la UNICA excepcion: nunca debe leer un .env local. Antes, un
+# backend/.env de desarrollo (p.ej. con NORTHMINE_MODE=demo, o ahora con
+# ELEVENLABS_API_KEY real) se colaba en cualquier proceso con
+# ENVIRONMENT=testing porque este bloque corria sin mirar el entorno,
+# enmascarando fallos reales de tests y arriesgando una llamada real a un
+# proveedor externo (ElevenLabs) durante una corrida de tests. conftest.py
+# fija ENVIRONMENT=testing en os.environ ANTES de importar app.main, asi
+# que ya esta disponible aca.
+_environment_hint = os.getenv("ENVIRONMENT", "").strip().lower()
+
+if load_dotenv and _environment_hint != "testing":
     env_candidates = [
         os.getenv("NORTHMINE_ENV", ""),
         ".env",

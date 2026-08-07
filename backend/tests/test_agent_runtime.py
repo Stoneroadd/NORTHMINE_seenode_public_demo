@@ -262,6 +262,69 @@ def test_speech_endpoint_requires_authentication(client):
     assert resp.status_code == 401
 
 
+def test_speech_endpoint_never_returns_200_with_empty_audio_on_provider_failure(client, login_as_operador, monkeypatch):
+    # Regresion (Etapa 4.1): un proveedor habilitado que falla en el primer
+    # chunk (API key invalida, rate limit, etc.) antes devolvia 200 con
+    # cuerpo vacio, indistinguible de un audio realmente vacio. Ahora debe
+    # fallar con un status de error ANTES de comprometer el 200.
+    from app.ai.voice import router as voice_router
+    from app.ai.voice.protocols import TTSProviderError
+
+    monkeypatch.setenv("ELEVENLABS_ENABLED", "true")
+    monkeypatch.setenv("ELEVENLABS_API_KEY", "not-a-real-key-just-enough-to-pass-availability-check")
+    get_settings.cache_clear()
+
+    class _FailingProvider:
+        name = "elevenlabs"
+
+        async def stream(self, text):
+            raise TTSProviderError("simulated provider failure")
+            yield b""  # pragma: no cover - nunca se alcanza, hace de esto un generador
+
+    monkeypatch.setattr(voice_router, "get_provider", lambda settings: _FailingProvider())
+
+    try:
+        resp = client.post(
+            "/api/ai-agent/speech",
+            json={"segment_id": "seg-fail", "text": "hola", "priority": "status", "sequence": 1},
+            headers=auth_header(login_as_operador),
+        )
+        assert resp.status_code != 200
+        assert resp.status_code == 502
+        assert resp.content != b""
+    finally:
+        get_settings.cache_clear()
+
+
+def test_speech_endpoint_returns_valid_audio_bytes_when_provider_succeeds(client, login_as_operador, monkeypatch):
+    from app.ai.voice import router as voice_router
+
+    monkeypatch.setenv("ELEVENLABS_ENABLED", "true")
+    monkeypatch.setenv("ELEVENLABS_API_KEY", "not-a-real-key-just-enough-to-pass-availability-check")
+    get_settings.cache_clear()
+
+    class _SucceedingProvider:
+        name = "elevenlabs"
+
+        async def stream(self, text):
+            yield b"ID3fake-mp3-bytes-for-test"
+            yield b"more-audio-bytes"
+
+    monkeypatch.setattr(voice_router, "get_provider", lambda settings: _SucceedingProvider())
+
+    try:
+        resp = client.post(
+            "/api/ai-agent/speech",
+            json={"segment_id": "seg-ok", "text": "hola", "priority": "status", "sequence": 1},
+            headers=auth_header(login_as_operador),
+        )
+        assert resp.status_code == 200
+        assert resp.headers["content-type"].startswith("audio/mpeg")
+        assert resp.content == b"ID3fake-mp3-bytes-for-testmore-audio-bytes"
+    finally:
+        get_settings.cache_clear()
+
+
 def test_audit_functions_never_accept_a_secret_parameter():
     # Chequeo estructural: ninguna funcion de auditoria del Runtime declara
     # un parametro que pueda contener una API key/JWT/cookie/header cruda.
