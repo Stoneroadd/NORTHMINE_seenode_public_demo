@@ -499,3 +499,54 @@ def test_persisted_events_are_ordered_and_replayable(client, login_as_operador):
     sequences = [r["sequence"] for r in rows]
     assert sequences == sorted(sequences)
     assert len(set(r["event_id"] for r in rows)) == len(rows)
+
+
+def test_ws_speech_segments_are_stamped_with_the_turn_id_from_the_triggering_event(client, login_as_operador):
+    """Etapa 7, secciones 9/19/32-34: el turnId que el cliente manda en
+    user.text/user.speech.final debe aparecer en TODOS los agent.speech.segment
+    que ese turno genere, para que ConversationTurnManager pueda descartar
+    audio de un turno ya interrumpido sin que el servidor tenga su propio
+    concepto de "turno" duplicado."""
+    token = login_as_operador["access_token"]
+    with client.websocket_connect(f"/api/ai-agent/ws?token={token}") as ws:
+        ws.receive_json()
+        ws.send_json(_client_event("user.text", text="Dame el resumen del turno.", turnId="turn-abc123"))
+
+        segment_turn_ids = []
+        for _ in range(60):
+            e = ws.receive_json()
+            if e["event_type"] == "agent.speech.segment":
+                segment_turn_ids.append(e["payload"].get("turnId"))
+            if e["event_type"] == "investigation.completed":
+                break
+
+        assert segment_turn_ids, "se esperaba al menos un agent.speech.segment"
+        assert all(t == "turn-abc123" for t in segment_turn_ids)
+
+
+def test_ws_interrupt_stop_event_carries_the_turn_id_being_interrupted(client, login_as_operador):
+    token = login_as_operador["access_token"]
+    with client.websocket_connect(f"/api/ai-agent/ws?token={token}") as ws:
+        ws.receive_json()
+        ws.send_json(_client_event("user.text", text="Investiga por qué bajó producción.", turnId="turn-1"))
+
+        for _ in range(60):
+            e = ws.receive_json()
+            if e["event_type"] == "agent.state.changed" and e["payload"].get("state") == "executing":
+                break
+
+        ws.send_json(_client_event("agent.interrupt", turnId="turn-2"))
+        stop_event = None
+        for _ in range(10):
+            e = ws.receive_json()
+            if e["event_type"] == "agent.speech.stop":
+                stop_event = e
+                break
+
+        assert stop_event is not None, "se esperaba agent.speech.stop tras agent.interrupt"
+        assert stop_event["payload"]["reason"] == "interrupted"
+        # El turno interrumpido es el que estaba activo ANTES de que llegara
+        # agent.interrupt (turn-1), no el nuevo (turn-2): el turnId de
+        # agent.interrupt identifica el turno que EMPIEZA, todavia sin texto,
+        # y no debe pisar de que turno se esta cortando el audio.
+        assert stop_event["payload"]["turnId"] == "turn-1"

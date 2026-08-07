@@ -412,7 +412,15 @@ async def _emit_finding(live: LiveSession, finding: findings_module.Investigatio
 async def _speak(live: LiveSession, correlation_id: str, *, text: str, priority: str, segment_id: str) -> None:
     await emit(
         live, "agent.speech.segment", correlation_id=correlation_id,
-        payload={"segmentId": segment_id, "text": text, "priority": priority, "sequence": live.next_sequence, "interruptible": True},
+        payload={
+            "segmentId": segment_id, "text": text, "priority": priority, "sequence": live.next_sequence,
+            "interruptible": True,
+            # Etapa 7: turno dueño de este segmento - el cliente lo compara
+            # contra su turno activo y descarta el segmento si ya no
+            # corresponde (seccion 19: "un segmento de un turn anterior no
+            # puede reproducirse despues de que ese turn fue interrumpido").
+            "turnId": live.current_turn_id,
+        },
     )
 
 
@@ -445,7 +453,7 @@ async def resume_investigation(live: LiveSession, correlation_id: str) -> None:
 async def cancel_investigation(live: LiveSession, user: dict, correlation_id: str, ip: str) -> None:
     interruption.mark_cancel(live)
     interruption.mark_resume(live)  # libera un posible pause-wait para que el loop note el cancel
-    await emit(live, "agent.speech.stop", correlation_id=correlation_id, payload={"reason": "cancelled"})
+    await emit(live, "agent.speech.stop", correlation_id=correlation_id, payload={"reason": "cancelled", "turnId": live.current_turn_id})
     runtime_audit.record_interruption(
         usuario=str(user.get("sub") or "anon"), ip=ip, session_id=live.session.session_id,
         kind="cancel", investigation_id=live.session.active_investigation_id, plan_modified=False,
@@ -463,7 +471,7 @@ async def interrupt_agent(live: LiveSession, user: dict, command: AgentCommand, 
     investigacion si no es necesario, conserva evidencia, permite un nuevo
     foco (equipment_query) que se aplica a los pasos AUN NO ejecutados."""
     was_speaking = live.state_machine.state == AgentRuntimeState.SPEAKING
-    await emit(live, "agent.speech.stop", correlation_id=correlation_id, payload={"reason": "interrupted"})
+    await emit(live, "agent.speech.stop", correlation_id=correlation_id, payload={"reason": "interrupted", "turnId": live.current_turn_id})
 
     plan_modified = bool(command.equipment_query)
     if command.equipment_query:

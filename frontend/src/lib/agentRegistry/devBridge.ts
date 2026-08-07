@@ -6,6 +6,7 @@ import { buildOperationalInvestigationSnapshot } from './investigationSnapshot'
 import { agentWidgetRegistry } from './registry'
 import { buildAgentApplicationContext } from './context'
 import { agentSessionClient } from '../agentRuntime/AgentSessionClient'
+import { conversationTurnManager } from '../agentRealtime/ConversationTurnManager'
 
 /**
  * Puente de depuracion SOLO para desarrollo (import.meta.env.DEV) - permite
@@ -29,5 +30,19 @@ if (import.meta.env.DEV) {
     // Etapa 6.1, seccion 12: diagnostico de conexion del Agent Runtime -
     // nunca expone el token, solo metadatos de estado (ver getDiagnostics).
     agentRuntimeDiagnostics: () => agentSessionClient.getDiagnostics(),
+    // Etapa 7, secciones 43-44: latencias reales del turno activo (o del
+    // ultimo turno conocido) - nunca simula datos, solo lee lo que el
+    // propio ConversationTurnManager ya midio en vivo.
+    agentRealtimeDiagnostics: () => {
+      const turn = conversationTurnManager.getCurrentTurn()
+      return {
+        active: conversationTurnManager.isActive(),
+        supported: conversationTurnManager.isSupported(),
+        micPermission: conversationTurnManager.getMicPermission(),
+        inputLevel: conversationTurnManager.getInputLevel(),
+        currentTurn: turn,
+        metrics: turn ? conversationTurnManager.getMetrics(turn.turnId) : null,
+      }
+    },
   }
 }

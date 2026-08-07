@@ -1,5 +1,6 @@
 import { enqueueAgentAction } from '../../components/ai-copilot/agentActionExecutor'
 import { actionForCapability } from '../agentRegistry/capabilityActions'
+import { conversationTurnManager } from '../agentRealtime/ConversationTurnManager'
 import { speechOutputRouter } from '../agentVoice/SpeechOutputRouter'
 import type { AgentSpeechSegment } from '../agentVoice/types'
 import { agentSessionClient } from './AgentSessionClient'
@@ -43,6 +44,14 @@ function handleServerEvent(event: AgentEvent): void {
       return
     case 'agent.speech.segment': {
       const segment = event.payload as unknown as AgentSpeechSegment
+      const turnId = (event.payload as { turnId?: string | null }).turnId
+      // Etapa 7, seccion 33: un segmento cuyo turno ya fue interrumpido
+      // puede llegar tarde (el backend siguio generando texto un instante
+      // despues de que el cliente ya corto el audio localmente) - se
+      // descarta en vez de reproducir voz de un turno que el usuario ya
+      // dejo atras.
+      if (conversationTurnManager.isTurnStale(turnId)) return
+      conversationTurnManager.recordSpeechSegmentReceived(turnId)
       speechOutputRouter.enqueue(segment)
       return
     }

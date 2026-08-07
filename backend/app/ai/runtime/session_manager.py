@@ -57,7 +57,7 @@ class LiveSession:
         "session", "state_machine", "lock", "websocket", "last_seen", "next_sequence",
         "outbox", "seen_client_event_ids", "current_investigation_task", "pending_ui_acks",
         "pause_event", "cancel_event", "interrupt_event", "focus_override", "perception",
-        "memory", "quiet_mode",
+        "memory", "quiet_mode", "current_turn_id",
     )
 
     def __init__(self, session: AgentSession):
@@ -84,6 +84,14 @@ class LiveSession:
         # sesion (nunca se persisten como tales).
         self.memory = SessionMemory()
         self.quiet_mode: str = "normal"
+        # Etapa 7: identificador de turno conversacional (asignado por el
+        # cliente, nunca por el servidor - ver ConversationTurnManager en el
+        # frontend). Vive en memoria, no se persiste: sirve solo para que
+        # `_speak()` estampe a que turno pertenece cada segmento de voz, y
+        # asi el cliente pueda descartar audio de un turno ya interrumpido
+        # (secciones 19, 32-33 del brief) sin que el servidor necesite su
+        # propio concepto de "turno" duplicando el de investigation_id.
+        self.current_turn_id: str | None = None
 
     def already_seen(self, event_id: str) -> bool:
         return event_id in self.seen_client_event_ids

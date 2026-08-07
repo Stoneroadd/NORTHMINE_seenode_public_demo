@@ -6,11 +6,13 @@ import {
 } from 'lucide-react'
 import { agentSessionClient } from '../../lib/agentRuntime/AgentSessionClient'
 import { useAgentRuntimeStore } from '../../lib/agentRuntime/runtimeStore'
-import { BrowserSpeechInput } from '../../lib/agentVoice/BrowserSpeechInput'
+import { conversationTurnManager } from '../../lib/agentRealtime/ConversationTurnManager'
+import type { ConversationTurn } from '../../lib/agentRealtime/contracts'
 import { speechOutputRouter } from '../../lib/agentVoice/SpeechOutputRouter'
 import type { VoiceOutputProviderName } from '../../lib/agentVoice/types'
 import type { CopilotContext } from '../../lib/aiCopilot'
 import { AgentActionOverlay } from './AgentActionOverlay'
+import { AgentLiveTranscript } from './AgentLiveTranscript'
 import { usePerceptionStore } from '../../lib/agentPerception/perceptionStore'
 import { performCaptureAndAnalyze } from '../../lib/agentPerception/perceptionManager'
 import { buildSemanticPerceptionSnapshot } from '../../lib/agentPerception/semanticPerception'
@@ -99,8 +101,10 @@ export function AgentWorkspace({ open, onClose, context, role: _role, canApprove
   const [listening, setListening] = useState(false)
   const [micError, setMicError] = useState<string | null>(null)
   const [voiceProvider, setVoiceProvider] = useState<VoiceOutputProviderName | null>(null)
-  const speechInputRef = useRef<BrowserSpeechInput | null>(null)
+  const [currentTurn, setCurrentTurn] = useState<ConversationTurn | null>(null)
+  const [micLevel, setMicLevel] = useState(0)
   const bodyRef = useRef<HTMLDivElement | null>(null)
+  const transcribedTurnIdsRef = useRef<Set<string>>(new Set())
 
   const [perceptionSnapshot, setPerceptionSnapshot] = useState<SemanticPerceptionSnapshot | null>(null)
   const [showCapture, setShowCapture] = useState(false)
@@ -114,8 +118,34 @@ export function AgentWorkspace({ open, onClose, context, role: _role, canApprove
   const [pendingActionId, setPendingActionId] = useState<string | null>(null)
 
   useEffect(() => {
-    speechInputRef.current = new BrowserSpeechInput()
     speechOutputRouter.onProviderChanged(setVoiceProvider)
+  }, [])
+
+  useEffect(() => {
+    // Etapa 7: se suscribe una sola vez, independiente de si el panel esta
+    // abierto - conversationTurnManager es un singleton residente (mismo
+    // patron que agentSessionClient/speechOutputRouter), asi que un
+    // barge-in real detectado por VAD funciona aunque el usuario haya
+    // cerrado el workspace despues de activar el microfono.
+    const unsubTurn = conversationTurnManager.onTurn((turn) => {
+      setCurrentTurn(turn)
+      if (turn.finalText && !transcribedTurnIdsRef.current.has(turn.turnId)) {
+        // El turn manager ya mando user.speech.final por su cuenta (via
+        // ConversationTransport) - esto solo refleja lo dicho en la
+        // bitacora visible, no vuelve a enviarlo (evita duplicar el texto
+        // que dispara al Command Router).
+        transcribedTurnIdsRef.current.add(turn.turnId)
+        useAgentRuntimeStore.getState().addUserTranscript(turn.finalText)
+      }
+      if (turn.status === 'completed' || turn.status === 'cancelled' || turn.status === 'failed') {
+        setListening(conversationTurnManager.isActive())
+      }
+    })
+    const unsubLevel = conversationTurnManager.onInputLevel(setMicLevel)
+    return () => {
+      unsubTurn()
+      unsubLevel()
+    }
   }, [])
 
   useEffect(() => {
@@ -236,24 +266,31 @@ export function AgentWorkspace({ open, onClose, context, role: _role, canApprove
     setInputText('')
   }
 
-  function toggleMic() {
-    const input = speechInputRef.current
-    if (!input?.isSupported()) {
+  async function toggleMic() {
+    if (!conversationTurnManager.isSupported()) {
       setMicError('Reconocimiento de voz no disponible en este navegador.')
       return
     }
     if (listening) {
-      void input.stop()
+      conversationTurnManager.deactivate()
       setListening(false)
       return
     }
+    // Seccion 5 del brief: el microfono solo se activa por un gesto
+    // explicito del usuario - este handler SOLO corre desde el onClick del
+    // boton de abajo, nunca automaticamente.
     setMicError(null)
-    input.onFinal((text) => {
-      setListening(false)
-      sendCommand(text, true)
-    })
-    void input.start()
-    setListening(true)
+    try {
+      await conversationTurnManager.activate()
+      setListening(true)
+    } catch {
+      const permission = conversationTurnManager.getMicPermission()
+      setMicError(
+        permission === 'denied'
+          ? 'Permiso de microfono denegado. Actívalo desde los ajustes del navegador.'
+          : 'No se pudo acceder al micrófono.',
+      )
+    }
   }
 
   function toggleMute() {
@@ -748,6 +785,8 @@ export function AgentWorkspace({ open, onClose, context, role: _role, canApprove
             </button>
           )}
         </div>
+
+        <AgentLiveTranscript listening={listening} interimText={currentTurn?.partialText ?? ''} audioLevel={micLevel} />
 
         <form
           className="ai-copilot-composer"

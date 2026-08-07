@@ -8,6 +8,7 @@ import { agentEquipmentCatalog } from '../../lib/agentRegistry/equipmentCatalog'
 import { agentSessionClient } from '../../lib/agentRuntime/AgentSessionClient'
 import { initRuntimeController } from '../../lib/agentRuntime/runtimeController'
 import { useAgentRuntimeStore } from '../../lib/agentRuntime/runtimeStore'
+import { conversationTurnManager } from '../../lib/agentRealtime/ConversationTurnManager'
 import { initPerceptionManager } from '../../lib/agentPerception/perceptionManager'
 import { usePerceptionStore } from '../../lib/agentPerception/perceptionStore'
 import { workProductsApi } from '../../lib/agentWorkProducts'
@@ -74,6 +75,18 @@ export function AgentPresence() {
   const isCapturing = usePerceptionStore((s) => s.isCapturing)
   const isAnalyzing = usePerceptionStore((s) => s.isAnalyzing)
 
+  // Etapa 7, seccion 25: "user_speaking" es un estado LOCAL (el servidor
+  // todavia no sabe que el usuario esta hablando hasta que llega el
+  // transcript final) - toma precedencia visual sobre el estado del
+  // servidor mientras dura, sin reemplazarlo como fuente de verdad para
+  // nada mas.
+  const [userSpeaking, setUserSpeaking] = useState(false)
+  useEffect(() => {
+    return conversationTurnManager.onTurn((turn) => {
+      setUserSpeaking(turn.status === 'listening' || turn.status === 'transcribing')
+    })
+  }, [])
+
   useEffect(() => {
     if (!usuario?.token) {
       agentSessionClient.disconnect()
@@ -87,13 +100,14 @@ export function AgentPresence() {
   if (!usuario || !CHAT_ROLES.has(usuario.rol)) return null
 
   const context = buildCopilotContext(usuario.faena)
-  const Icon = STATE_ICON[runtimeState] ?? Sparkles
-  const isActive = ['listening', 'planning', 'executing', 'verifying', 'speaking'].includes(runtimeState)
+  const Icon = userSpeaking ? Mic : STATE_ICON[runtimeState] ?? Sparkles
+  const isActive = userSpeaking || ['listening', 'planning', 'executing', 'verifying', 'speaking'].includes(runtimeState)
   const isDegraded = connectionStatus === 'disconnected' || connectionStatus === 'reconnecting'
   // Seccion 36 del brief: indicador discreto y SEPARADO del estado
   // conversacional - la percepcion visual (Nivel 3) puede ocurrir con el
   // Runtime en 'idle', y nunca debe reescribir el texto/estado del orbe.
   const perceptionLabel = isAnalyzing ? 'Analizando vista' : isCapturing ? 'Observando' : null
+  const presenceLabel = userSpeaking ? 'Escuchando' : runtimeState
 
   // Etapa 6, seccion 14: pulso discreto + mensaje corto - NUNCA abre el
   // workspace automaticamente, solo pulsa el orbe y muestra una tarjeta
@@ -145,10 +159,10 @@ export function AgentPresence() {
         aria-label="NORTHMINE AI — Operational Intelligence Agent"
         aria-haspopup="dialog"
         aria-expanded={open}
-        title={perceptionLabel ? `NORTHMINE AI — ${perceptionLabel}` : `NORTHMINE AI — ${runtimeState}`}
+        title={perceptionLabel ? `NORTHMINE AI — ${perceptionLabel}` : `NORTHMINE AI — ${presenceLabel}`}
       >
         <span className="ai-agent-orb-ring" aria-hidden="true" />
-        <Icon size={18} className={runtimeState === 'planning' || runtimeState === 'executing' || runtimeState === 'verifying' ? 'ai-copilot-spin' : ''} />
+        <Icon size={18} className={!userSpeaking && (runtimeState === 'planning' || runtimeState === 'executing' || runtimeState === 'verifying') ? 'ai-copilot-spin' : ''} />
         {perceptionLabel && (
           <span className="ai-agent-orb-perception-badge" aria-label={perceptionLabel} title={perceptionLabel}>
             <Eye size={11} />

@@ -257,6 +257,20 @@ async def _dispatch_client_event(live: LiveSession, user: dict, event: AgentEven
     event_type = event.event_type
     payload = event.payload
 
+    # Etapa 7, secciones 9/32-34: turn_id lo asigna el cliente
+    # (ConversationTurnManager). Solo eventos de CONTENIDO de una nueva
+    # elocucion (texto/voz del usuario) cambian de dueño el turno activo -
+    # deliberadamente NO se toma el turnId de agent.interrupt aca: ese
+    # turnId identifica el turno NUEVO que arranca (todavia sin texto), y si
+    # se aplicara antes de emitir agent.speech.stop, el evento de "se
+    # detuvo" terminaria describiendo el turno equivocado (el que recien
+    # empieza, no el que se esta cortando). interrupt_agent() lee el turno
+    # viejo de live.current_turn_id ANTES de que nada lo pise.
+    if event_type in ("user.text", "user.speech.partial", "user.speech.final"):
+        turn_id = payload.get("turnId")
+        if isinstance(turn_id, str) and turn_id:
+            live.current_turn_id = turn_id
+
     if event_type in ("user.text", "user.speech.final"):
         text = str(payload.get("text", "")).strip()
         if text:
