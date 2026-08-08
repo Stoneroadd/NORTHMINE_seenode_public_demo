@@ -4,6 +4,7 @@ type NorthmineLogoVariant = 'full' | 'horizontal' | 'symbol'
 
 interface NorthmineLogoProps extends Omit<ImgHTMLAttributes<HTMLImageElement>, 'src'> {
   variant?: NorthmineLogoVariant
+  src?: string
 }
 
 const logoAssets: Record<NorthmineLogoVariant, { src: string; width: number; height: number }> = {
@@ -30,6 +31,7 @@ export function NorthmineLogo({
   className,
   width,
   height,
+  src,
   decoding = 'async',
   ...props
 }: NorthmineLogoProps) {
@@ -39,7 +41,7 @@ export function NorthmineLogo({
     <img
       {...props}
       className={className}
-      src={asset.src}
+      src={src ?? asset.src}
       alt={alt}
       width={width ?? asset.width}
       height={height ?? asset.height}

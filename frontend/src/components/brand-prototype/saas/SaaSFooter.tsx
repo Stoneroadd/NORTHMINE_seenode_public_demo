@@ -10,7 +10,7 @@ export function SaaSFooter() {
     <footer className="ns-footer">
       <div className="ns-saas__shell ns-footer__inner">
         <div className="ns-footer__brand">
-          <NorthmineLogo className="ns-footer__logo" variant="horizontal" loading="lazy" />
+          <NorthmineLogo className="ns-footer__logo" variant="horizontal" src="/assets/brand/northmine-logo-minimal-landing.webp" loading="lazy" />
           {t.footer.address && <address className="ns-footer__address">{t.footer.address}</address>}
         </div>
 
