@@ -59,11 +59,21 @@ function installAptPythonTooling() {
   return tryRun("apt-get", ["install", "-y", "python3-pip", "python3-venv"]).status === 0;
 }
 
+const UVICORN_WITH_WEBSOCKETS_CHECK =
+  "import uvicorn, uvicorn.protocols.websockets.auto as a; assert a.AutoWebSocketsProtocol is not None";
+
 function ensureUvicorn(python) {
-  if (commandOk(python, ["-c", "import uvicorn"])) return;
+  // `import uvicorn` solo confirma que el paquete uvicorn existe - NO que
+  // tenga soporte de WebSocket (requiere `websockets` o `wsproto` aparte).
+  // Un entorno con uvicorn ya presente pero sin esas librerias pasaba este
+  // chequeo y nunca reinstalaba requirements.seenode.txt, dejando
+  // /api/ai-agent/ws devolviendo 404 en produccion aunque el deploy
+  // reportara "successful". El chequeo real tiene que confirmar que
+  // uvicorn puede resolver una implementacion de WebSocket concreta.
+  if (commandOk(python, ["-c", UVICORN_WITH_WEBSOCKETS_CHECK])) return;
 
   const requirementsFile = process.env.NORTHMINE_REQUIREMENTS_FILE || "backend/requirements.seenode.txt";
-  console.warn(`uvicorn no esta instalado; instalando ${requirementsFile} antes de iniciar.`);
+  console.warn(`uvicorn sin soporte de WebSocket (o no instalado); instalando ${requirementsFile} antes de iniciar.`);
   if (!commandOk(python, ["-m", "pip", "--version"])) {
     const ensurePip = tryRun(python, ["-m", "ensurepip", "--upgrade"]);
     if (ensurePip.status !== 0 && !installAptPythonTooling()) {
@@ -78,7 +88,7 @@ function ensureUvicorn(python) {
   const install = spawnSync(commandName(python), pipArgs, {
     stdio: "inherit",
   });
-  if (install.status === 0 && commandOk(python, ["-c", "import uvicorn"])) return;
+  if (install.status === 0 && commandOk(python, ["-c", UVICORN_WITH_WEBSOCKETS_CHECK])) return;
 
   run(python, ["-m", "pip", "install", "--break-system-packages", "-r", requirementsFile]);
 }
