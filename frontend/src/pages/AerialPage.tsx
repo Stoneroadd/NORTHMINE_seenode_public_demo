@@ -10,6 +10,8 @@ import { getAerialFiles, getAerialMailStatus, getAerialPreviewUrl, getAerialStat
 import { FAST_DEMO_AERIAL, FAST_PUBLIC_DEMO } from '../demo/fastDemo'
 import { useModuleT } from '../i18n/useModuleT'
 import { aerialT } from '../i18n/modules/aerial'
+import { useAgentWidget } from '../lib/agentRegistry/useAgentWidget'
+import type { MapWidgetSnapshot } from '../lib/agentPerception/geoContracts'
 
 function mb(value: number) {
   return `${value.toLocaleString('es-CL', { maximumFractionDigits: 2 })} MB`
@@ -27,7 +29,7 @@ function OrthomosaicViewer({ fileName }: { fileName: string }) {
   const [zoom, setZoom] = useState(1)
   const [dragging, setDragging] = useState(false)
   const zoomRef = useRef(1)
-  const containerRef = useRef<HTMLDivElement>(null)
+  const containerRef = useRef<HTMLDivElement | null>(null)
   const dragRef = useRef<{ x: number; y: number; left: number; top: number } | null>(null)
   const pendingScrollRef = useRef<{ left: number; top: number } | null>(null)
 
@@ -48,6 +50,39 @@ function OrthomosaicViewer({ fileName }: { fileName: string }) {
       if (url) URL.revokeObjectURL(url)
     }
   }, [previewQuery.data])
+
+  // Contrato semantico Etapa 5 (Vista Aerea): este widget es un visor de
+  // imagen (zoom/pan sobre el JPEG generado del ortomosaico), NO un mapa
+  // Leaflet georreferenciado - `geo` va null a proposito (ver geoContracts.ts).
+  // No hay coordenadas de equipo que exponer todavia en esta vista.
+  const { ref: widgetRef } = useAgentWidget({
+    id: 'aerial-orthomosaic-viewer',
+    moduleId: 'aerea',
+    type: 'map',
+    label: 'Visor de ortomosaico',
+    description: 'Imagen orthomosaico del rajo con zoom/pan bajo demanda.',
+    supportedActions: ['navigate', 'focus_widget', 'explain_widget'],
+    getSnapshot: (): MapWidgetSnapshot => {
+      const loaded = Boolean(previewQuery.data)
+      const zoomPercent = Math.round(zoomRef.current * 100)
+      return {
+        widgetId: 'aerial-orthomosaic-viewer',
+        type: 'map',
+        label: 'Visor de ortomosaico',
+        updatedAt: new Date().toISOString(),
+        geo: null,
+        activeFileName: fileName,
+        imageZoomPercent: zoomPercent,
+        freshnessStatus: previewQuery.isError ? 'unknown' : 'current',
+        qualityStatus: loaded ? 'high' : 'unknown',
+        semanticSummary: previewQuery.isLoading
+          ? `Visor de ortomosaico: generando vista previa de ${fileName}.`
+          : previewQuery.isError
+            ? `Visor de ortomosaico: no se pudo cargar la vista previa de ${fileName}.`
+            : `Visor de ortomosaico: mostrando ${fileName} al ${zoomPercent}% de zoom.`,
+      }
+    },
+  })
 
   // Zoom manteniendo fijo el punto bajo el cursor: se recalcula el scroll del
   // contenedor en proporcion al cambio de escala.
@@ -155,7 +190,10 @@ function OrthomosaicViewer({ fileName }: { fileName: string }) {
       )}
       {previewQuery.data && (
         <div
-          ref={containerRef}
+          ref={(node) => {
+            containerRef.current = node
+            widgetRef(node)
+          }}
           onMouseDown={startDrag}
           onDoubleClick={handleDoubleClick}
           style={{

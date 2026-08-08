@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { ClipboardList, RefreshCcw } from 'lucide-react'
 import { getShiftReport } from '../services/reportsService'
 import { ModuleHeader } from '../components/common/ModuleHeader'
@@ -11,6 +11,7 @@ import { AnalysisFilterBar } from '../components/filters/AnalysisFilterBar'
 import { useAnalysisFilters } from '../hooks/useAnalysisFilters'
 import { useModuleT } from '../i18n/useModuleT'
 import { reportsT } from '../i18n/modules/reports'
+import { useAgentWidget } from '../lib/agentRegistry/useAgentWidget'
 
 export function Reports() {
   const t = useModuleT(reportsT)
@@ -33,6 +34,30 @@ export function Reports() {
     queryKey: ['shift-report', turno, reportFilters],
     queryFn: () => getShiftReport(turno, reportFilters),
     refetchInterval: 60000,
+  })
+
+  const reportDataRef = useRef(query.data)
+  reportDataRef.current = query.data
+  const reportStatusWidget = useAgentWidget({
+    id: 'reportes-turno-actual',
+    moduleId: 'reportes',
+    type: 'panel',
+    label: 'Informe de turno',
+    description: 'Estado, fuente y generacion del informe de turno actual.',
+    supportedActions: ['focus_widget', 'explain_widget'],
+    getSnapshot: () => {
+      const current = reportDataRef.current
+      return {
+        widgetId: 'reportes-turno-actual',
+        type: 'panel',
+        label: 'Informe de turno',
+        updatedAt: new Date().toISOString(),
+        turno,
+        fuente: current?.data_source ?? current?.source ?? null,
+        generadoEn: current?.generado_en ?? null,
+        warnings: current?.warnings ?? [],
+      }
+    },
   })
 
   if (query.isLoading) return <LoadingState label={t.loading_reporte} />
@@ -78,7 +103,7 @@ export function Reports() {
           loading={query.isFetching}
           {...analysisFilters}
         />
-        <section className="report-kpis" aria-label={t.estado_conexion_aria}>
+        <section className="report-kpis" aria-label={t.estado_conexion_aria} ref={reportStatusWidget.ref}>
           <span><small>{t.label_fuente}</small><strong>{dataSource}</strong></span>
           <span><small>{t.label_sistema}</small><strong>{query.data.source_system ?? query.data.source}</strong></span>
           <span><small>{t.label_ultimo_registro}</small><strong>{lastRecord}</strong></span>

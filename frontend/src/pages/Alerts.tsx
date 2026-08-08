@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import ReactECharts from 'echarts-for-react'
 import type { EChartsOption } from 'echarts'
@@ -27,6 +27,8 @@ import { axisLabel, formatNumber, formatTons, premiumPalette, tooltipBase, useCh
 import type { DestinationDistribution, LowCaexAlert, OperationalAlertsResponse, SmartAlert } from '../lib/api'
 import { useModuleT } from '../i18n/useModuleT'
 import { alertsT, type AlertsT } from '../i18n/modules/alerts'
+import { useAgentWidget } from '../lib/agentRegistry/useAgentWidget'
+import { useAgentEntityHandler } from '../lib/agentRegistry/useAgentEntityHandler'
 
 const filters = ['TODAS', 'CRITICA', 'ALTA', 'MEDIA', 'BAJA'] as const
 
@@ -441,6 +443,39 @@ export function Alerts() {
   const grouped = useMemo(() => groupAlertsByDomain(filtered), [filtered])
   const priorityActions = useMemo(() => sortAlerts(filtered, t).slice(0, 5), [filtered, t])
 
+  const alertsDataRef = useRef(query.data)
+  alertsDataRef.current = query.data
+  const alertsListWidget = useAgentWidget({
+    id: 'alerts-priority-list',
+    moduleId: 'alertas',
+    type: 'alert-list',
+    label: 'Alertas operacionales',
+    description: 'Alertas abiertas ordenadas por severidad y prioridad.',
+    supportedActions: ['focus_widget', 'explain_widget'],
+    getSnapshot: () => {
+      const current = alertsDataRef.current
+      const top = current ? sortAlerts(current.items, t)[0] : null
+      return {
+        widgetId: 'alerts-priority-list',
+        type: 'alert-list',
+        label: 'Alertas operacionales',
+        updatedAt: new Date().toISOString(),
+        counts: current?.counts ?? {},
+        total: current?.count ?? 0,
+        topPriority: top ? { id: top.id, titulo: getAlertTitle(top, t), severidad: normalizeSeverity(top) } : null,
+      }
+    },
+  })
+
+  // Entity Navigation Service: mientras el usuario esta en Alertas, abrir un
+  // equipo (p.ej. "el equipo relacionado con esta alerta") no requiere
+  // navegar a Flota - este mismo EquipmentDetailDrawer ya sirve para eso.
+  useAgentEntityHandler('equipment', {
+    select: (entityId) => setSelectedEquipmentId(entityId),
+    open: (entityId) => setSelectedEquipmentId(entityId),
+    isOpen: (entityId) => selectedEquipmentId === entityId,
+  })
+
   if (query.isLoading) return <LoadingState label="Cargando alertas operacionales..." />
   if (query.isError || !query.data) return <ErrorState detail="No se pudo cargar /api/alerts/operational." onRetry={() => query.refetch()} />
 
@@ -551,7 +586,7 @@ export function Alerts() {
           />
         </section>
 
-        <section className="alerts-action-queue panel">
+        <section className="alerts-action-queue panel" ref={alertsListWidget.ref}>
           <div className="panel-header">
             <div>
               <span className="panel-kicker">Orden operacional</span>

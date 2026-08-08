@@ -1,4 +1,6 @@
 ﻿import { Fragment, useMemo, useRef, useState, type CSSProperties } from 'react'
+import { useAgentWidget } from '../lib/agentRegistry/useAgentWidget'
+import { useAgentEntityHandler } from '../lib/agentRegistry/useAgentEntityHandler'
 import { useQuery } from '@tanstack/react-query'
 import { Activity, AlertTriangle, ChevronDown, Clock, CircleDollarSign, Gauge, Mail, RefreshCw, ShieldAlert, Timer, Upload, Wrench } from 'lucide-react'
 import { ModuleHeader } from '../components/common/ModuleHeader'
@@ -344,6 +346,63 @@ export function AveriasPage() {
       ),
     [query.data?.history.items],
   )
+
+  const averiasDataRef = useRef(query.data)
+  averiasDataRef.current = query.data
+  useAgentWidget({
+    id: 'breakdown-summary',
+    moduleId: 'averias',
+    type: 'kpi',
+    label: 'Resumen de averías',
+    description: 'Averias activas, equipos inactivos y alertas criticas/altas.',
+    supportedActions: ['explain_widget'],
+    getSnapshot: () => {
+      const summary = averiasDataRef.current?.summary
+      return {
+        widgetId: 'breakdown-summary',
+        type: 'kpi',
+        label: 'Resumen de averías',
+        updatedAt: new Date().toISOString(),
+        activeBreakdowns: summary?.active_breakdowns ?? 0,
+        inactiveEquipment: summary?.inactive_equipment ?? 0,
+        maintenanceEquipment: summary?.maintenance_equipment ?? 0,
+        criticalAlerts: summary?.critical_alerts ?? 0,
+        highAlerts: summary?.high_alerts ?? 0,
+        value: summary?.active_breakdowns ?? 0,
+        status: !summary ? undefined : summary.critical_alerts > 0 ? 'critical' : summary.high_alerts > 0 ? 'warning' : 'ok',
+      }
+    },
+  })
+  useAgentWidget({
+    id: 'breakdown-active-list',
+    moduleId: 'averias',
+    type: 'alert-list',
+    label: 'Averías activas',
+    description: 'Equipos detenidos, duracion, severidad y sistema afectado.',
+    supportedActions: ['focus_widget', 'explain_widget'],
+    getSnapshot: () => {
+      const items = averiasDataRef.current?.summary.items ?? []
+      return {
+        widgetId: 'breakdown-active-list',
+        type: 'alert-list',
+        label: 'Averías activas',
+        updatedAt: new Date().toISOString(),
+        total: items.length,
+        items: items.slice(0, 15).map((item) => ({
+          id: item.id,
+          equipmentId: item.equipment_id,
+          severity: item.severity,
+          durationMin: item.duration_min,
+          description: item.description,
+        })),
+      }
+    },
+  })
+  useAgentEntityHandler('breakdown', {
+    select: (entityId) => setExpandedId(entityId),
+    open: (entityId) => setExpandedId(entityId),
+    isOpen: (entityId) => expandedId === entityId,
+  })
 
   if (!FAST_PUBLIC_DEMO && query.isLoading) return <LoadingState label="Cargando averias y mantenciones..." />
   if (query.isError || !query.data) return <ErrorState detail="No se pudo cargar el modulo de averias." onRetry={() => query.refetch()} />

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import ReactECharts from 'echarts-for-react'
 import type { EChartsOption } from 'echarts'
@@ -12,6 +12,8 @@ import { axisLabel, formatNumber, formatTons, premiumPalette, tooltipBase, useCh
 import type { CompareResponse } from '../lib/api'
 import { useModuleT } from '../i18n/useModuleT'
 import { compareT, type CompareT } from '../i18n/modules/compare'
+import { useAgentWidget } from '../lib/agentRegistry/useAgentWidget'
+import { useAgentEntityHandler } from '../lib/agentRegistry/useAgentEntityHandler'
 
 type Preset = 'half-month' | 'week' | 'month' | 'custom'
 
@@ -105,6 +107,34 @@ export function Compare() {
   const themeId = useChartPaletteKey()
   const hourlyOption = useMemo(() => query.data ? buildHourlyCompareOption(query.data, t) : undefined, [query.data, t, themeId])
   const loaderOption = useMemo(() => query.data ? buildLoaderCompareOption(query.data, t) : undefined, [query.data, t, themeId])
+
+  const compareDataRef = useRef(query.data)
+  compareDataRef.current = query.data
+  useAgentWidget({
+    id: 'comparison-variance',
+    moduleId: 'comparativa',
+    type: 'table',
+    label: 'Comparación de periodos',
+    description: 'Tabla de KPIs con variacion absoluta y porcentual entre el periodo A y el periodo B.',
+    supportedActions: ['focus_widget', 'explain_widget'],
+    getSnapshot: () => {
+      const current = compareDataRef.current
+      return {
+        widgetId: 'comparison-variance',
+        type: 'table',
+        label: 'Comparación de periodos',
+        updatedAt: new Date().toISOString(),
+        periodoA: current?.periodo_a ?? null,
+        periodoB: current?.periodo_b ?? null,
+        rows: (current?.tabla ?? []).map((row) => ({ kpi: row.kpi, a: row.a, b: row.b, variacion: row.var, tendencia: row.trend })),
+      }
+    },
+  })
+  useAgentEntityHandler('equipment', {
+    select: (entityId) => setSelectedEquipmentId(entityId),
+    open: (entityId) => setSelectedEquipmentId(entityId),
+    isOpen: (entityId) => selectedEquipmentId === entityId,
+  })
 
   if (query.isLoading) return <LoadingState label={t.loading} />
   if (query.isError || !query.data) return <ErrorState detail={t.error_detail} onRetry={() => query.refetch()} />

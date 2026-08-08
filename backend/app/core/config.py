@@ -13,7 +13,27 @@ except Exception:  # pragma: no cover - dotenv is optional at import time
     load_dotenv = None
 
 
-if load_dotenv:
+# Precedencia de configuracion (Etapa 4.1):
+#   1. Variables de entorno ya presentes en el proceso (una sesion de shell
+#      con $env:ELEVENLABS_API_KEY=..., un despliegue real, etc.) - SIEMPRE
+#      ganan: load_dotenv(..., override=False) nunca las pisa.
+#   2. Un archivo .env local (backend/.env o el que indique NORTHMINE_ENV) -
+#      solo rellena lo que el proceso no trae puesto. Es el mecanismo que
+#      esta arquitectura ya contempla para secretos de desarrollo (esta en
+#      .env.example y en .gitignore); no se inventa un .env.local nuevo.
+#   3. Los defaults de get_settings().
+#
+# testing es la UNICA excepcion: nunca debe leer un .env local. Antes, un
+# backend/.env de desarrollo (p.ej. con NORTHMINE_MODE=demo, o ahora con
+# ELEVENLABS_API_KEY real) se colaba en cualquier proceso con
+# ENVIRONMENT=testing porque este bloque corria sin mirar el entorno,
+# enmascarando fallos reales de tests y arriesgando una llamada real a un
+# proveedor externo (ElevenLabs) durante una corrida de tests. conftest.py
+# fija ENVIRONMENT=testing en os.environ ANTES de importar app.main, asi
+# que ya esta disponible aca.
+_environment_hint = os.getenv("ENVIRONMENT", "").strip().lower()
+
+if load_dotenv and _environment_hint != "testing":
     env_candidates = [
         os.getenv("NORTHMINE_ENV", ""),
         ".env",
@@ -142,6 +162,56 @@ class Settings:
     redis_url: str
     deployment_workers: int
     local_auto_sync_enabled: bool
+    # Voz ElevenLabs (Etapa 4) - la API key NUNCA sale del backend (seccion 3
+    # del brief): ni VITE_*, ni logs, ni errores HTTP, ni tests/fixtures.
+    elevenlabs_enabled: bool
+    elevenlabs_api_key: str
+    elevenlabs_voice_id: str
+    elevenlabs_model_id: str
+    elevenlabs_output_format: str
+    elevenlabs_timeout_seconds: float
+    elevenlabs_stability: float
+    elevenlabs_similarity_boost: float
+    elevenlabs_speed: float
+    agent_runtime_db_path: str
+    # Percepcion visual (Etapa 5) - reusa el proveedor generativo YA
+    # configurado (Etapa 1: ai_enabled + anthropic_api_key), nunca una API
+    # key nueva. vision_enabled es un apagador explicito adicional (el
+    # usuario puede desactivar SOLO vision sin apagar el chat/investigacion).
+    vision_enabled: bool
+    vision_timeout_seconds: float
+    vision_max_image_bytes: int
+    perception_max_viewport_captures_per_minute: int
+    perception_max_widget_captures_per_minute: int
+    perception_max_capture_dimension_px: int
+    # Memoria + proactividad (Etapa 6) - reusa agent_runtime_db_path, sin
+    # base de datos nueva (seccion 2 del brief: "no dupliques persistencia
+    # que ya exista"). Limites de rendimiento (seccion 39) y presupuesto de
+    # iniciativa (seccion 10) configurables, nunca hardcodeados en el codigo.
+    agent_working_memory_window_hours: float
+    agent_episode_retention_days: int
+    agent_max_working_memory_items: int
+    agent_max_episode_retrieval: int
+    agent_max_context_items: int
+    agent_memory_summary_threshold: int
+    agent_proactive_events_per_hour: int
+    agent_watch_limit_per_user: int
+    agent_watch_default_ttl_hours: float
+    agent_report_generation_timeout_seconds: float
+    agent_initiative_cooldown_seconds: int
+    agent_initiative_duplicate_suppression_seconds: int
+    agent_initiative_minimum_severity: str
+    agent_initiative_voice_minimum_severity: str
+    agent_event_monitor_interval_seconds: float
+    agent_event_monitor_enabled: bool
+
+    @property
+    def elevenlabs_available(self) -> bool:
+        return self.elevenlabs_enabled and bool(self.elevenlabs_api_key.strip())
+
+    @property
+    def vision_available(self) -> bool:
+        return self.vision_enabled and self.ai_enabled and bool(self.anthropic_api_key.strip())
 
     @property
     def is_production(self) -> bool:
@@ -369,4 +439,39 @@ def get_settings() -> Settings:
             "NORTHMINE_LOCAL_AUTO_SYNC_ENABLED",
             "false" if environment == "production" else "true",
         ).strip().lower() == "true",
+        elevenlabs_enabled=os.getenv("ELEVENLABS_ENABLED", "false").strip().lower() == "true",
+        elevenlabs_api_key=os.getenv("ELEVENLABS_API_KEY", "").strip(),
+        elevenlabs_voice_id=os.getenv("ELEVENLABS_VOICE_ID", "L4N9j1wT9BMWxuC0QVid").strip(),
+        elevenlabs_model_id=os.getenv("ELEVENLABS_MODEL_ID", "eleven_flash_v2_5").strip(),
+        elevenlabs_output_format=os.getenv("ELEVENLABS_OUTPUT_FORMAT", "mp3_44100_128").strip(),
+        elevenlabs_timeout_seconds=float(os.getenv("ELEVENLABS_TIMEOUT_SECONDS", "20")),
+        elevenlabs_stability=float(os.getenv("ELEVENLABS_STABILITY", "0.55")),
+        elevenlabs_similarity_boost=float(os.getenv("ELEVENLABS_SIMILARITY_BOOST", "0.82")),
+        elevenlabs_speed=float(os.getenv("ELEVENLABS_SPEED", "0.96")),
+        agent_runtime_db_path=os.getenv(
+            "NORTHMINE_AGENT_RUNTIME_DB",
+            str(root_dir / "northmine_agent_runtime.db"),
+        ),
+        vision_enabled=os.getenv("NORTHMINE_VISION_ENABLED", "true").strip().lower() == "true",
+        vision_timeout_seconds=float(os.getenv("NORTHMINE_VISION_TIMEOUT_SECONDS", "20")),
+        vision_max_image_bytes=int(os.getenv("NORTHMINE_VISION_MAX_IMAGE_BYTES", "3000000")),
+        perception_max_viewport_captures_per_minute=int(os.getenv("NORTHMINE_PERCEPTION_MAX_VIEWPORT_CAPTURES_PER_MINUTE", "4")),
+        perception_max_widget_captures_per_minute=int(os.getenv("NORTHMINE_PERCEPTION_MAX_WIDGET_CAPTURES_PER_MINUTE", "10")),
+        perception_max_capture_dimension_px=int(os.getenv("NORTHMINE_PERCEPTION_MAX_CAPTURE_DIMENSION_PX", "1600")),
+        agent_working_memory_window_hours=float(os.getenv("NORTHMINE_AGENT_WORKING_MEMORY_WINDOW_HOURS", "12")),
+        agent_episode_retention_days=int(os.getenv("NORTHMINE_AGENT_EPISODE_RETENTION_DAYS", "90")),
+        agent_max_working_memory_items=int(os.getenv("NORTHMINE_AGENT_MAX_WORKING_MEMORY_ITEMS", "200")),
+        agent_max_episode_retrieval=int(os.getenv("NORTHMINE_AGENT_MAX_EPISODE_RETRIEVAL", "20")),
+        agent_max_context_items=int(os.getenv("NORTHMINE_AGENT_MAX_CONTEXT_ITEMS", "12")),
+        agent_memory_summary_threshold=int(os.getenv("NORTHMINE_AGENT_MEMORY_SUMMARY_THRESHOLD", "8")),
+        agent_proactive_events_per_hour=int(os.getenv("NORTHMINE_AGENT_PROACTIVE_EVENTS_PER_HOUR", "6")),
+        agent_watch_limit_per_user=int(os.getenv("NORTHMINE_AGENT_WATCH_LIMIT_PER_USER", "20")),
+        agent_watch_default_ttl_hours=float(os.getenv("NORTHMINE_AGENT_WATCH_DEFAULT_TTL_HOURS", "12")),
+        agent_report_generation_timeout_seconds=float(os.getenv("NORTHMINE_AGENT_REPORT_GENERATION_TIMEOUT_SECONDS", "20")),
+        agent_initiative_cooldown_seconds=int(os.getenv("NORTHMINE_AGENT_INITIATIVE_COOLDOWN_SECONDS", "600")),
+        agent_initiative_duplicate_suppression_seconds=int(os.getenv("NORTHMINE_AGENT_INITIATIVE_DUPLICATE_SUPPRESSION_SECONDS", "300")),
+        agent_initiative_minimum_severity=os.getenv("NORTHMINE_AGENT_INITIATIVE_MINIMUM_SEVERITY", "warning").strip().lower(),
+        agent_initiative_voice_minimum_severity=os.getenv("NORTHMINE_AGENT_INITIATIVE_VOICE_MINIMUM_SEVERITY", "high").strip().lower(),
+        agent_event_monitor_interval_seconds=float(os.getenv("NORTHMINE_AGENT_EVENT_MONITOR_INTERVAL_SECONDS", "60")),
+        agent_event_monitor_enabled=os.getenv("NORTHMINE_AGENT_EVENT_MONITOR_ENABLED", "true").strip().lower() == "true",
     )

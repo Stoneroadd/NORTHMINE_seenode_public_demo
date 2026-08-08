@@ -5,7 +5,12 @@ from typing import Annotated
 from fastapi import APIRouter, BackgroundTasks, Cookie, Depends, File, HTTPException, Query, Request, Response, UploadFile, status
 from fastapi.responses import FileResponse, JSONResponse
 
+from app.ai.investigation_router import router as ai_investigations_router
 from app.ai.router import router as ai_copilot_router
+from app.ai.runtime.ws_router import router as ai_agent_ws_router
+from app.ai.voice.router import router as ai_agent_voice_router
+from app.ai.vision.router import router as ai_agent_vision_router
+from app.ai.work_products.router import router as ai_agent_work_products_router
 from app.api.operational import router as operational_router
 from app.core.audit import (
     blacklist_token,
@@ -109,6 +114,11 @@ from app.services.filtering import (
 router = APIRouter(prefix=get_settings().api_prefix)
 router.include_router(operational_router)
 router.include_router(ai_copilot_router)
+router.include_router(ai_investigations_router)
+router.include_router(ai_agent_voice_router)
+router.include_router(ai_agent_vision_router)
+router.include_router(ai_agent_work_products_router)
+router.include_router(ai_agent_ws_router)
 
 
 def _filters(request: Request) -> dict[str, str]:

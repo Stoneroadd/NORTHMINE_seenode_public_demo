@@ -206,6 +206,38 @@ def tool_get_data_quality_status(args: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def tool_get_loading_performance(args: dict[str, Any]) -> dict[str, Any]:
+    date = _date_arg(args.get("date"))
+    shift = _shift_arg(args.get("shift"))
+    loading_unit_id = str(args.get("loading_unit_id") or "").strip().upper() or None
+    dataset = _dataset_for(date)
+    summary = kpis.build_loading_units_summary(dataset, turno=shift)
+    items = summary["items"]
+    if loading_unit_id:
+        items = [item for item in items if str(item.get("carguio_id", "")).upper() == loading_unit_id]
+    quality = _quality(dataset)
+    return {
+        "total_toneladas": summary["total_toneladas"],
+        "rendimiento_promedio_tph": summary["rendimiento_promedio_tph"],
+        "unidades": [
+            {
+                "carguio_id": item["carguio_id"],
+                "modelo": item["modelo"],
+                "toneladas": item["toneladas"],
+                "ciclos": item["ciclos"],
+                "camiones_atendidos": item["camiones_atendidos"],
+                "rendimiento_tph": item["rendimiento_tph"],
+                "estado": item["estado"],
+                "variacion_pct": item["variacion_pct"],
+            }
+            for item in items
+        ],
+        "data_quality": quality,
+        "freshness": _freshness(dataset),
+        "confidence": _confidence_from_quality(quality),
+    }
+
+
 @dataclass(frozen=True)
 class ToolDefinition:
     name: str
@@ -294,6 +326,23 @@ TOOL_REGISTRY: dict[str, ToolDefinition] = {
             "additionalProperties": False,
         },
         handler=tool_get_data_quality_status,
+    ),
+    "get_loading_performance": ToolDefinition(
+        name="get_loading_performance",
+        description=(
+            "Rendimiento de unidades de carguio (palas/cargadores): toneladas, ciclos, "
+            "camiones atendidos, tasa de carguio (t/h) y variacion contra el promedio de flota."
+        ),
+        input_schema={
+            "type": "object",
+            "properties": {
+                "shift": _SHIFT_ENUM,
+                "date": _DATE_PROP,
+                "loading_unit_id": {"type": "string", "description": "Filtra por una unidad de carguio especifica, ej. 'EX3517'."},
+            },
+            "additionalProperties": False,
+        },
+        handler=tool_get_loading_performance,
     ),
 }
 

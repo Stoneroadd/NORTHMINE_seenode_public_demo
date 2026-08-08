@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Activity, AlertTriangle, Download, FileText, Filter, Gauge, History, Timer, Truck } from 'lucide-react'
 import { ModuleHeader } from '../components/common/ModuleHeader'
@@ -25,6 +25,7 @@ import { buildShiftNarrative } from '../lib/shiftNarrative'
 import { useModuleT } from '../i18n/useModuleT'
 import { currentShiftT } from '../i18n/modules/currentShift'
 import { shiftNarrativeT } from '../i18n/modules/shiftNarrative'
+import { useAgentWidget } from '../lib/agentRegistry/useAgentWidget'
 
 function tons(value: number) {
   return `${Math.round(value).toLocaleString('es-CL')} t`
@@ -297,6 +298,37 @@ export function CurrentShiftPage() {
   const hourlyMax = useMemo(() => Math.max(...(query.data?.current.hourly.map((item) => item.toneladas) ?? [1]), 1), [query.data?.current.hourly])
   const caexMax = useMemo(() => Math.max(...(query.data?.caex.map((item) => item.toneladas) ?? [1]), 1), [query.data?.caex])
   const loadingMax = useMemo(() => Math.max(...(query.data?.loadingUnits.map((item) => item.toneladas) ?? [1]), 1), [query.data?.loadingUnits])
+
+  const shiftDataRef = useRef(query.data)
+  shiftDataRef.current = query.data
+  useAgentWidget({
+    id: 'shift-summary',
+    moduleId: 'turno',
+    type: 'kpi',
+    label: 'Resumen de turno',
+    description: 'Produccion real vs meta, equipos activos y cumplimiento del turno en curso.',
+    supportedActions: ['explain_widget'],
+    getSnapshot: () => {
+      const current = shiftDataRef.current?.current
+      return {
+        widgetId: 'shift-summary',
+        type: 'kpi',
+        label: 'Resumen de turno',
+        updatedAt: new Date().toISOString(),
+        turno: current?.turno ?? null,
+        fecha: current?.fecha ?? null,
+        toneladas: current?.toneladas_turno ?? 0,
+        meta: current?.meta_turno ?? 0,
+        cumplimientoPct: current?.cumplimiento_pct ?? 0,
+        brechaTon: current?.brecha_ton ?? 0,
+        caexActivos: current?.caex_activos ?? 0,
+        caexSinActividad: current?.caex_sin_actividad ?? 0,
+        value: current?.cumplimiento_pct ?? 0,
+        unit: '%',
+        status: !current ? undefined : current.cumplimiento_pct >= 100 ? 'ok' : current.cumplimiento_pct >= 90 ? 'warning' : 'critical',
+      }
+    },
+  })
 
   if (query.isLoading) return <LoadingState label={t.cargando_turno} />
   if (query.isError || !query.data) return <ErrorState detail={t.error_turno} onRetry={() => query.refetch()} />

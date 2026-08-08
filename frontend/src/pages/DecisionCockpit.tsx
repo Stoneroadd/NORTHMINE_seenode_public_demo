@@ -39,6 +39,7 @@ import { useModuleT } from '../i18n/useModuleT'
 import { cockpitT, type CockpitT } from '../i18n/modules/cockpit'
 import { Tabs, TabsList, TabsTrigger } from '../components/ui/tabs'
 import { cn } from '@/lib/utils'
+import { useAgentWidget } from '../lib/agentRegistry/useAgentWidget'
 
 function availabilityLabel(value: string, t: CockpitT): string {
   if (value === 'available') return t.availability_real
@@ -441,6 +442,54 @@ export function DecisionCockpit() {
   }, [selectedDate, shiftComparisonQuery.data?.selected_date])
 
   const data = useMemo(() => query.data ? buildCockpitViewModel(query.data) : null, [query.data])
+
+  // Instrumentacion del Agent UI Registry (Etapa 2). Las 6 secciones del
+  // cockpit ya tienen ids DOM estables (COCKPIT_SECTION_IDS, usados por el
+  // IntersectionObserver de SectionNav) - se reusan tal cual como
+  // AgentWidgetManifest.id, sin inventar identificadores nuevos.
+  const cockpitDataRef = useRef(data)
+  cockpitDataRef.current = data
+  const cockpitSectionLabels: Record<(typeof COCKPIT_SECTION_IDS)[number], string> = {
+    'sec-turno': t.section_turno,
+    'sec-comparativa': t.section_comparativa,
+    'sec-equipos': t.section_equipos,
+    'sec-produccion': t.section_produccion,
+    'sec-decisiones': t.section_decisiones,
+    'sec-flota': t.section_flota,
+  }
+  for (const sectionId of COCKPIT_SECTION_IDS) {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    useAgentWidget({
+      id: sectionId,
+      moduleId: 'cockpit',
+      sectionId,
+      type: 'panel',
+      label: cockpitSectionLabels[sectionId],
+      description: `Sección "${cockpitSectionLabels[sectionId]}" del Decision Cockpit.`,
+      supportedActions: ['focus_widget'],
+    })
+  }
+  useAgentWidget({
+    id: 'cockpit-production-summary',
+    moduleId: 'cockpit',
+    type: 'kpi',
+    label: 'Producción vs meta',
+    description: 'Toneladas reales del turno contra meta y riesgo de incumplimiento.',
+    supportedActions: ['explain_widget'],
+    getSnapshot: () => {
+      const current = cockpitDataRef.current
+      return {
+        widgetId: 'cockpit-production-summary',
+        type: 'kpi',
+        label: 'Producción vs meta',
+        value: current?.actualTonnes ?? 0,
+        unit: 't',
+        target: current?.targetTonnes ?? undefined,
+        status: !current ? undefined : current.riskPct >= 50 ? 'critical' : current.riskPct >= 20 ? 'warning' : 'ok',
+        updatedAt: new Date().toISOString(),
+      }
+    },
+  })
 
   const downloadExecutiveReport = async () => {
     if (!data) return

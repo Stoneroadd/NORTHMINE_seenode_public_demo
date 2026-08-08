@@ -11,7 +11,13 @@ from fastapi.staticfiles import StaticFiles
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
+from app.ai.investigation_repository import init_investigation_db
+from app.ai.memory.persistence import init_memory_db
+from app.ai.proactivity import event_monitor
+from app.ai.proactivity.persistence import init_proactivity_db
 from app.ai.repository import init_ai_copilot_db
+from app.ai.runtime.persistence import init_runtime_db
+from app.ai.work_products.persistence import init_work_products_db
 from app.api.routes import router
 from app.api.operator_ranking import router as operator_ranking_router
 from app.api.demo_access import router as demo_access_router
@@ -86,7 +92,14 @@ async def audit_store_unavailable_handler(request: Request, exc: AuditStoreUnava
 
 
 @app.on_event("startup")
-def startup() -> None:
+async def startup() -> None:
+    # Async (Etapa 6): EventMonitor necesita `asyncio.create_task` sobre el
+    # loop real de uvicorn. Un handler sync se ejecuta en un threadpool
+    # (Starlette::run_in_threadpool) y NO tiene acceso a ese loop - por eso
+    # este handler paso de sync a async. Las llamadas init_*_db() de abajo
+    # son sqlite sincronas de arranque (una sola vez, no en el hot path),
+    # aceptable bloquear el loop brevemente igual que ya lo hacian corriendo
+    # en threadpool.
     settings.require_production_safe()
     verify_shared_services()
     init_audit_db()
@@ -94,6 +107,11 @@ def startup() -> None:
     init_mfa_table()
     init_user_repository()
     init_ai_copilot_db()
+    init_investigation_db()
+    init_runtime_db()
+    init_memory_db()
+    init_proactivity_db()
+    init_work_products_db()
     demo_access_repository = get_demo_access_repository()
     try:
         demo_access_repository.init_schema()
@@ -113,6 +131,8 @@ def startup() -> None:
         start_cycle_sync()
     else:
         logger.info("Local auto-sync is disabled; run syncs from a dedicated worker or scheduler")
+    if settings.agent_event_monitor_enabled:
+        event_monitor.start()
     logger.info(
         "NORTHMINE API started service=%s version=%s environment=%s mode=%s",
         settings.service_name,
@@ -120,6 +140,11 @@ def startup() -> None:
         settings.environment,
         settings.mode,
     )
+
+
+@app.on_event("shutdown")
+async def shutdown() -> None:
+    event_monitor.stop()
 
 
 @app.exception_handler(Exception)

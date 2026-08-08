@@ -10,6 +10,9 @@ import { getFleetStatus } from '../services/fleetService'
 import { getShiftExport, type FleetEquipment } from '../lib/api'
 import { useModuleT } from '../i18n/useModuleT'
 import { fleetT, type FleetT } from '../i18n/modules/fleet'
+import { useAgentWidget } from '../lib/agentRegistry/useAgentWidget'
+import { useAgentEntityHandler } from '../lib/agentRegistry/useAgentEntityHandler'
+import type { AgentWidgetSnapshot } from '../lib/agentRegistry/types'
 
 type StatusFilter = 'TODOS' | 'ACTIVO' | 'STANDBY' | 'DEMORA' | 'MANTENCION' | 'SIN ACTIVIDAD'
 type SortKey = 'caex_id' | 'estado' | 'toneladas' | 'ciclos' | 'minutos_sin_actividad' | 'status_code'
@@ -170,6 +173,37 @@ export function FleetPage() {
     setSortDirection(key === 'caex_id' || key === 'estado' ? 'asc' : 'desc')
   }
 
+  const fleetTableWidget = useAgentWidget({
+    id: 'fleet-status-table',
+    moduleId: 'flota',
+    type: 'table',
+    label: t.panel_full_list,
+    description: 'Estado, tonelaje y ciclos de cada CAEX del turno actual.',
+    supportedActions: ['focus_widget', 'explain_widget'],
+    getSnapshot: (): AgentWidgetSnapshot => ({
+      widgetId: 'fleet-status-table',
+      type: 'table',
+      label: t.panel_full_list,
+      updatedAt: new Date().toISOString(),
+      columns: ['caex_id', 'estado', 'toneladas', 'ciclos', 'minutos_sin_actividad'],
+      rowCount: filteredRows.length,
+      filters: { status, search: search || undefined },
+      statusCounts,
+      // Roster real y en vivo, usado por entityResolver.ts para resolver
+      // alias en lenguaje natural ("Pala 03") a IDs reales - nunca datasets
+      // completos, solo lo minimo (id/modelo/estado) para poder buscar.
+      rows: rows.map((item) => ({ id: item.caex_id, modelo: item.modelo, estado: operationalStatus(item) })),
+    }),
+  })
+
+  // Entity Navigation Service (Etapa 2.5): Flota es la fuente real de
+  // seleccion/apertura de equipos - EquipmentDetailDrawer ya vive aca.
+  useAgentEntityHandler('equipment', {
+    select: (entityId) => setSelectedEquipmentId(entityId),
+    open: (entityId) => setSelectedEquipmentId(entityId),
+    isOpen: (entityId) => selectedEquipmentId === entityId,
+  })
+
   if (query.isLoading) return <LoadingState label={t.loading_label} />
   if (query.isError || !data) return <ErrorState detail={t.error_detail} onRetry={() => query.refetch()} />
 
@@ -219,7 +253,7 @@ export function FleetPage() {
         </section>
 
         <section className="fleet-status-layout">
-          <div className="panel fleet-status-table-panel">
+          <div className="panel fleet-status-table-panel" ref={fleetTableWidget.ref}>
             <div className="panel-header">
               <div>
                 <span className="panel-kicker">{t.panel_current_status}</span>

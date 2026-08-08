@@ -30,6 +30,120 @@
   box-shadow: var(--shadow-card), 0 0 26px color-mix(in srgb, var(--nm-cyan) 42%, transparent);
 }
 
+.ai-agent-orb.is-active {
+  animation: ai-agent-pulse 1.8s ease-in-out infinite;
+}
+
+.ai-agent-orb.is-degraded {
+  border-color: color-mix(in srgb, var(--nm-amber) 55%, transparent);
+  color: var(--nm-amber);
+}
+
+/* Etapa 5: indicador discreto de percepcion visual activa (seccion 36) -
+   una insignia pequeña en la esquina del orbe, nunca reemplaza el icono
+   principal ni el texto de estado conversacional. */
+.ai-agent-orb-perception-badge {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: var(--nm-cyan);
+  color: #061014;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--bg-elevated);
+  animation: ai-agent-pulse 1.4s ease-in-out infinite;
+}
+
+/* Etapa 6, seccion 14: pulso proactivo - discreto, en la esquina OPUESTA a
+ * la insignia de percepcion para que ambas puedan coexistir sin superponerse. */
+.ai-agent-orb-proactive-badge {
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: var(--nm-amber);
+  color: #1a1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--bg-elevated);
+  animation: ai-agent-pulse 1.4s ease-in-out infinite;
+}
+
+.ai-agent-orb-proactive-badge.is-critical {
+  background: var(--nm-red);
+  color: #200404;
+}
+
+.ai-proactive-card {
+  position: fixed;
+  right: 20px;
+  bottom: 78px;
+  z-index: 849;
+  max-width: 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--nm-amber) 35%, var(--nm-border));
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow-card);
+}
+
+.ai-proactive-card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--nm-text);
+}
+
+.ai-proactive-card-header svg {
+  flex-shrink: 0;
+  color: var(--nm-amber);
+  margin-top: 1px;
+}
+
+.ai-proactive-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ai-proactive-card-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--nm-border);
+  background: transparent;
+  color: var(--nm-text);
+  cursor: pointer;
+}
+
+.ai-proactive-card-dismiss {
+  margin-left: auto;
+  padding: 4px !important;
+}
+
+@media (max-width: 640px) {
+  .ai-proactive-card {
+    right: 14px;
+    left: 14px;
+    max-width: none;
+    bottom: 72px;
+  }
+}
+
 .ai-agent-orb-ring {
   position: absolute;
   inset: -6px;
@@ -657,12 +771,17 @@
   color: var(--nm-muted);
 }
 
-.ai-agent-action-overlay li.is-applied {
+.ai-agent-action-overlay li.is-completed {
   color: var(--nm-green);
 }
 
-.ai-agent-action-overlay li.is-skipped {
-  color: var(--nm-muted);
+.ai-agent-action-overlay li.is-executing {
+  color: var(--nm-cyan);
+}
+
+.ai-agent-action-overlay li.is-rejected,
+.ai-agent-action-overlay li.is-failed {
+  color: var(--nm-red);
   text-decoration: line-through;
 }
 
@@ -732,4 +851,735 @@
   outline: 2px solid var(--nm-cyan) !important;
   outline-offset: 3px;
   transition: outline-color 200ms ease;
+}
+
+/* ---------------------------------------------------------------- *
+ * Etapa 3: panel de investigacion (Planner-Executor-Verifier)
+ * ---------------------------------------------------------------- */
+.ai-copilot-mode-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 8px 18px 0;
+}
+
+.ai-copilot-mode-tabs button {
+  flex: 1;
+  font-size: 11px;
+  padding: 7px 10px;
+  border-radius: 8px 8px 0 0;
+  border: 1px solid var(--nm-border);
+  border-bottom: none;
+  background: transparent;
+  color: var(--nm-muted);
+  cursor: pointer;
+}
+
+.ai-copilot-mode-tabs button.is-active {
+  color: var(--nm-cyan);
+  background: var(--bg-panel);
+  border-color: color-mix(in srgb, var(--nm-cyan) 35%, transparent);
+}
+
+.ai-investigation-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.ai-inv-intro {
+  margin: 0;
+  font-size: 12px;
+  color: var(--nm-muted);
+  line-height: 1.5;
+}
+
+.ai-inv-mode-toggle {
+  display: flex;
+  gap: 6px;
+}
+
+.ai-inv-mode-toggle button {
+  flex: 1;
+  font-size: 11px;
+  padding: 7px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--nm-border);
+  background: transparent;
+  color: var(--nm-muted);
+  cursor: pointer;
+}
+
+.ai-inv-mode-toggle button.is-active {
+  color: #061014;
+  background: var(--nm-cyan);
+  border-color: var(--nm-cyan);
+}
+
+.ai-inv-type-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.ai-inv-type-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--nm-border);
+  background: var(--bg-panel);
+  color: var(--nm-text);
+  font-size: 12px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 140ms ease, color 140ms ease;
+}
+
+.ai-inv-type-card:hover {
+  border-color: color-mix(in srgb, var(--nm-cyan) 45%, transparent);
+  color: var(--nm-cyan);
+}
+
+.ai-inv-plan {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ai-inv-plan header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.ai-inv-warning {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 11px;
+  color: var(--nm-amber);
+}
+
+.ai-inv-step-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ai-inv-step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--nm-muted);
+}
+
+.ai-inv-step.is-completed { color: var(--nm-green); }
+.ai-inv-step.is-running { color: var(--nm-cyan); }
+.ai-inv-step.is-failed { color: var(--nm-red); }
+
+.ai-inv-step-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: currentColor;
+  opacity: 0.5;
+  flex-shrink: 0;
+}
+
+.ai-inv-step-desc {
+  flex: 1;
+  color: var(--nm-text);
+}
+
+.ai-inv-step-meta {
+  font-size: 10px;
+  color: var(--nm-muted);
+  white-space: nowrap;
+}
+
+.ai-inv-ui-steps-note {
+  margin: 0;
+  font-size: 10px;
+  color: var(--nm-muted);
+}
+
+.ai-inv-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.ai-inv-primary,
+.ai-inv-secondary {
+  flex: 1;
+  font-size: 12px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.ai-inv-primary {
+  border: none;
+  background: var(--nm-cyan);
+  color: #061014;
+  font-weight: 700;
+}
+
+.ai-inv-secondary {
+  border: 1px solid var(--nm-border);
+  background: transparent;
+  color: var(--nm-muted);
+}
+
+.ai-inv-evidence-toggle button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: transparent;
+  border: none;
+  color: var(--nm-cyan);
+  font-size: 11px;
+  cursor: pointer;
+  padding: 0;
+}
+
+.ai-inv-hypotheses {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-top: 1px solid var(--nm-border);
+  padding-top: 10px;
+}
+
+.ai-inv-hypothesis-group {
+  font-size: 11px;
+}
+
+.ai-inv-hypothesis-group-label {
+  color: var(--nm-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 10px;
+}
+
+.ai-inv-hypothesis-group ul {
+  margin: 4px 0 0;
+  padding-left: 16px;
+}
+
+.ai-inv-hypothesis-score {
+  margin-left: 6px;
+  color: var(--nm-cyan);
+  font-variant-numeric: tabular-nums;
+}
+
+.ai-inv-hypothesis-caption {
+  margin: 2px 0 0;
+  font-size: 10px;
+  color: var(--nm-muted);
+  font-style: italic;
+}
+
+.ai-inv-conclusion {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-top: 1px solid var(--nm-border);
+  padding-top: 10px;
+}
+
+.ai-inv-summary {
+  margin: 0;
+  font-size: 13px;
+  color: var(--nm-text);
+  font-weight: 600;
+}
+
+.ai-inv-approval {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 4px 0 0;
+  font-size: 11px;
+  color: var(--nm-amber);
+  border-top: 1px dashed var(--nm-border);
+  padding-top: 8px;
+}
+
+.ai-inv-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--nm-red);
+}
+
+/* ---------------------------------------------------------------- *
+ * Etapa 4: Agent Runtime - status bar, hallazgos, transcripcion, controles
+ * ---------------------------------------------------------------- */
+.ai-rt-status-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  border-bottom: 1px solid var(--nm-border);
+  font-size: 10px;
+}
+
+.ai-rt-connection {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--nm-border);
+  color: var(--nm-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.ai-rt-connection.is-connected {
+  color: var(--nm-green);
+  border-color: color-mix(in srgb, var(--nm-green) 40%, transparent);
+}
+
+.ai-rt-connection.is-reconnecting,
+.ai-rt-connection.is-connecting,
+.ai-rt-connection.is-authenticating {
+  color: var(--nm-amber);
+  border-color: color-mix(in srgb, var(--nm-amber) 40%, transparent);
+}
+
+.ai-rt-connection.is-disconnected {
+  color: var(--nm-red);
+  border-color: color-mix(in srgb, var(--nm-red) 40%, transparent);
+}
+
+.ai-rt-voice-badge {
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--nm-cyan) 35%, transparent);
+  color: var(--nm-cyan);
+}
+
+.ai-rt-voice-badge.is-muted {
+  border-color: var(--nm-border);
+  color: var(--nm-muted);
+}
+
+.ai-rt-empty {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ai-rt-activity {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 11px;
+  color: var(--nm-cyan);
+}
+
+.ai-rt-findings {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-top: 1px solid var(--nm-border);
+  padding-top: 10px;
+}
+
+.ai-rt-findings ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ai-rt-finding {
+  font-size: 12px;
+  padding-left: 8px;
+  border-left: 2px solid var(--nm-border);
+  color: var(--nm-text);
+}
+
+.ai-rt-finding.is-warning {
+  border-left-color: var(--nm-amber);
+}
+
+.ai-rt-finding.is-critical {
+  border-left-color: var(--nm-red);
+}
+
+/* ---------------------------------------------------------------- *
+ * Etapa 5: seccion Percepcion (AgentWorkspace)
+ * ---------------------------------------------------------------- */
+.ai-perception-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-top: 1px solid var(--nm-border);
+  padding-top: 10px;
+}
+
+.ai-perception-facts {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ai-perception-facts > div {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 11px;
+}
+
+.ai-perception-facts dt {
+  flex: 0 0 auto;
+  min-width: 96px;
+  color: var(--nm-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  font-size: 10px;
+}
+
+.ai-perception-facts dd {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--nm-text);
+  flex: 1;
+}
+
+.ai-perception-inline-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: transparent;
+  border: none;
+  color: var(--nm-cyan);
+  font-size: 10px;
+  cursor: pointer;
+  padding: 0;
+}
+
+.ai-perception-visual {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ai-perception-summary {
+  margin: 0;
+  font-size: 12px;
+  color: var(--nm-text);
+}
+
+.ai-perception-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ai-copilot-badge--confidence.is-high { color: var(--nm-green); border-color: color-mix(in srgb, var(--nm-green) 40%, transparent); }
+.ai-copilot-badge--confidence.is-medium { color: var(--nm-amber); border-color: color-mix(in srgb, var(--nm-amber) 40%, transparent); }
+.ai-copilot-badge--confidence.is-low { color: var(--nm-red); border-color: color-mix(in srgb, var(--nm-red) 40%, transparent); }
+
+.ai-perception-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.ai-perception-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: transparent;
+  border: none;
+  color: var(--nm-cyan);
+  font-size: 11px;
+  cursor: pointer;
+  padding: 0;
+}
+
+.ai-perception-actions button:disabled {
+  color: var(--nm-muted);
+  cursor: default;
+}
+
+.ai-perception-capture-preview {
+  max-width: 100%;
+  max-height: 220px;
+  object-fit: contain;
+  border-radius: 8px;
+  border: 1px solid var(--nm-border);
+}
+
+.ai-perception-evidence {
+  margin-top: 0;
+}
+
+.ai-perception-empty {
+  margin: 0;
+  font-size: 11px;
+  color: var(--nm-muted);
+  font-style: italic;
+}
+
+.ai-rt-transcript-toggle button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: transparent;
+  border: none;
+  color: var(--nm-muted);
+  font-size: 11px;
+  cursor: pointer;
+  padding: 0;
+}
+
+/* ---------------------------------------------------------------- *
+ * Etapa 6: memoria, trabajo (informes/handover/tareas/seguimientos),
+ * banner proactivo
+ * ---------------------------------------------------------------- */
+.ai-memory-section,
+.ai-work-section {
+  border-top: 1px solid var(--nm-border);
+  padding-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ai-section-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  width: fit-content;
+}
+
+.ai-memory-body,
+.ai-work-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ai-memory-block,
+.ai-work-block {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ai-memory-block ul,
+.ai-memory-recall ul {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ai-memory-block li,
+.ai-memory-recall li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--nm-text);
+  border-left: 2px solid var(--nm-border);
+  padding-left: 8px;
+}
+
+.ai-memory-item-date {
+  color: var(--nm-muted);
+  font-size: 10px;
+}
+
+.ai-memory-recall {
+  border: 1px dashed var(--nm-border);
+  border-radius: 8px;
+  padding: 8px;
+}
+
+.ai-memory-counts {
+  margin: 0;
+  font-size: 10px;
+  color: var(--nm-muted);
+  border-top: 1px dashed var(--nm-border);
+  padding-top: 6px;
+}
+
+.ai-copilot-badge.is-new,
+.ai-copilot-badge.is-ongoing { color: var(--nm-cyan); border-color: color-mix(in srgb, var(--nm-cyan) 40%, transparent); }
+.ai-copilot-badge.is-worsening,
+.ai-copilot-badge.is-critical,
+.ai-copilot-badge.is-rejected { color: var(--nm-red); border-color: color-mix(in srgb, var(--nm-red) 40%, transparent); }
+.ai-copilot-badge.is-improving,
+.ai-copilot-badge.is-resolved,
+.ai-copilot-badge.is-approved,
+.ai-copilot-badge.is-completed,
+.ai-copilot-badge.is-active { color: var(--nm-green); border-color: color-mix(in srgb, var(--nm-green) 40%, transparent); }
+.ai-copilot-badge.is-warning,
+.ai-copilot-badge.is-high,
+.ai-copilot-badge.is-draft,
+.ai-copilot-badge.is-pending_approval,
+.ai-copilot-badge.is-triggered { color: var(--nm-amber); border-color: color-mix(in srgb, var(--nm-amber) 40%, transparent); }
+.ai-copilot-badge.is-cancelled,
+.ai-copilot-badge.is-expired { color: var(--nm-muted); }
+
+.ai-work-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border-radius: 8px;
+  border: 1px solid var(--nm-border);
+  padding: 8px;
+}
+
+.ai-work-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.ai-work-item-title {
+  background: transparent;
+  border: none;
+  color: var(--nm-text);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+}
+
+.ai-work-item-meta {
+  margin: 0;
+  font-size: 10px;
+  color: var(--nm-muted);
+}
+
+.ai-work-item-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+  padding-top: 6px;
+  border-top: 1px dashed var(--nm-border);
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.ai-work-report-section strong {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--nm-cyan);
+}
+
+.ai-work-report-section p {
+  margin: 2px 0 0;
+  font-size: 11px;
+  color: var(--nm-text);
+  white-space: pre-wrap;
+}
+
+.ai-work-item-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.ai-work-item-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--nm-border);
+  background: transparent;
+  color: var(--nm-text);
+  cursor: pointer;
+}
+
+.ai-work-item-actions button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.ai-proactive-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--nm-amber);
+  border: 1px solid color-mix(in srgb, var(--nm-amber) 40%, transparent);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.ai-rt-transcript-list {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 160px;
+  overflow-y: auto;
+}
+
+.ai-rt-transcript-list li {
+  font-size: 11px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: var(--bg-panel);
+  border: 1px solid var(--nm-border);
+}
+
+.ai-rt-transcript-list li.is-user {
+  align-self: flex-end;
+  border-color: color-mix(in srgb, var(--nm-cyan) 30%, transparent);
+}
+
+.ai-rt-controls {
+  display: flex;
+  gap: 8px;
+  padding: 8px 14px 0;
+}
+
+.ai-rt-controls button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  cursor: pointer;
 }

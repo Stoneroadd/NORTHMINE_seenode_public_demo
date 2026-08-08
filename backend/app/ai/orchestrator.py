@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 import time
 import uuid
 from datetime import datetime
@@ -19,12 +20,14 @@ from app.ai.schemas import (
     Evidence,
     FocusWidgetAction,
     NavigateAction,
+    OpenEntityAction,
     SelectEntityAction,
     SetFilterAction,
     TaskDraft,
     ToolExecution,
     UI_ACTION_RISK,
 )
+from app.ai.tool_formatting import summarize_tool_result
 from app.ai.tools import TOOL_REGISTRY, anthropic_tool_specs
 from app.core.config import Settings, get_settings
 from pydantic import ValidationError
@@ -87,13 +90,19 @@ EMIT_RESPONSE_TOOL: dict[str, Any] = {
                     "properties": {
                         "action": {
                             "type": "string",
-                            "enum": ["navigate", "set_filter", "clear_filter", "select_entity", "focus_widget"],
+                            "enum": ["navigate", "set_filter", "clear_filter", "select_entity", "open_entity", "focus_widget"],
                         },
                         "route": {"type": "string", "description": "Para 'navigate': seccion o ruta, ej. 'produccion' o '/produccion'."},
                         "filter_id": {"type": "string", "enum": ["shift", "start_date", "end_date", "equipo"]},
                         "value": {"type": "string", "description": "Para 'set_filter'."},
-                        "entity_type": {"type": "string", "enum": ["equipment", "loader", "alert"]},
-                        "entity_id": {"type": "string"},
+                        "entity_type": {
+                            "type": "string",
+                            "enum": ["equipment", "loading_unit", "alert", "report", "task", "operator", "breakdown"],
+                        },
+                        "entity_id": {
+                            "type": "string",
+                            "description": "ID real de la entidad (no un alias en lenguaje natural como 'Pala 03' - eso lo resuelve el frontend antes de ejecutar).",
+                        },
                         "widget_id": {"type": "string"},
                     },
                     "required": ["action"],
@@ -145,32 +154,7 @@ def _build_system_prompt(role: str, context: ChatContext, allowed_tools: frozens
     )
 
 
-def _summarize_tool_result(name: str, result: dict[str, Any]) -> str:
-    try:
-        if name == "get_current_shift_summary":
-            return (
-                f"Turno {result['turno']} ({result['fecha']}): {result['toneladas_turno']:,} t "
-                f"vs meta {result['meta_turno']:,} t ({result['cumplimiento_pct']}%), "
-                f"{result['caex_activos']} CAEX activos."
-            )
-        if name == "get_production_kpis":
-            return (
-                f"Cumplimiento {result['cumplimiento_pct']}%, brecha {result['brecha_ton']:,} t, "
-                f"ritmo actual {result['ritmo_actual_tph']} t/h, tendencia {result['tendencia']}."
-            )
-        if name == "get_fleet_status":
-            return (
-                f"{result['equipos_activos']}/{result['total_equipos']} CAEX activos, "
-                f"utilizacion {result['utilizacion_pct']}%, disponibilidad {result['disponibilidad_pct']}%."
-            )
-        if name == "get_alerts":
-            counts = result.get("counts", {})
-            return f"{result['count']} alertas ({counts.get('CRITICA', 0)} criticas, {counts.get('ALTA', 0)} altas)."
-        if name == "get_data_quality_status":
-            return f"Calidad de dato {result['score']}/100, estado {result['status']}."
-    except Exception:  # pragma: no cover - defensivo, nunca debe tumbar la respuesta
-        pass
-    return json.dumps(result, default=str)[:180]
+_summarize_tool_result = summarize_tool_result
 
 
 def _combine_confidence(entries: list[dict[str, Any]]) -> ConfidenceInfo:
@@ -208,6 +192,33 @@ def _maybe_build_chart(message: str, tool_outputs: list[tuple[str, dict[str, Any
     return []
 
 
+_VALID_SHIFT_VALUES = {"DIA", "NOCHE", "TODOS", "AMBOS", "ACTUAL"}
+_DATE_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+_ENTITY_ID_PATTERN = re.compile(r"^[A-Za-z0-9_\-]{1,40}$")
+
+
+def _is_valid_entity_id(entity_id: str) -> bool:
+    """Seccion 11: 'Entity ID o formato' se valida en el backend. El
+    resolver de alias (frontend) ya convierte texto libre a un ID real
+    antes de llegar aca - esto solo rechaza formato imposible/inyeccion,
+    no confirma que la entidad EXISTA (eso lo hace el modulo real que la
+    abre, contra su propio dataset)."""
+    return bool(_ENTITY_ID_PATTERN.match(entity_id.strip()))
+
+
+def _is_valid_filter_value(filter_id: Any, value: str) -> bool:
+    """Seccion 15: 'Valor valido' se valida en el backend, no solo en el
+    frontend - defensa en profundidad, el frontend hace su propia
+    normalizacion/validacion tambien antes de aplicar el filtro."""
+    if filter_id == "shift":
+        return value.strip().upper() in _VALID_SHIFT_VALUES
+    if filter_id in ("start_date", "end_date"):
+        return bool(_DATE_PATTERN.match(value.strip()))
+    if filter_id == "equipo":
+        return 0 < len(value.strip()) <= 40
+    return False
+
+
 def _validate_ui_actions(raw_actions: Any, role: str) -> list[Any]:
     """Filtra las acciones que el modelo propuso contra navigation.py/policies.py.
 
@@ -233,13 +244,28 @@ def _validate_ui_actions(raw_actions: Any, role: str) -> list[Any]:
                     continue
                 validated.append(NavigateAction(route=route))
             elif action_name == "set_filter":
-                validated.append(SetFilterAction(filter_id=item.get("filter_id"), value=str(item.get("value") or "")))
+                filter_id = item.get("filter_id")
+                value = str(item.get("value") or "")
+                if not _is_valid_filter_value(filter_id, value):
+                    continue
+                validated.append(SetFilterAction(filter_id=filter_id, value=value))
             elif action_name == "clear_filter":
                 validated.append(ClearFilterAction(filter_id=item.get("filter_id")))
             elif action_name == "select_entity":
-                validated.append(SelectEntityAction(entity_type=item.get("entity_type"), entity_id=str(item.get("entity_id") or "")))
+                entity_id = str(item.get("entity_id") or "")
+                if not _is_valid_entity_id(entity_id):
+                    continue
+                validated.append(SelectEntityAction(entity_type=item.get("entity_type"), entity_id=entity_id))
+            elif action_name == "open_entity":
+                entity_id = str(item.get("entity_id") or "")
+                if not _is_valid_entity_id(entity_id):
+                    continue
+                validated.append(OpenEntityAction(entity_type=item.get("entity_type"), entity_id=entity_id))
             elif action_name == "focus_widget":
-                validated.append(FocusWidgetAction(widget_id=str(item.get("widget_id") or "")))
+                widget_id = str(item.get("widget_id") or "")
+                if not navigation.is_widget_known(widget_id):
+                    continue
+                validated.append(FocusWidgetAction(widget_id=widget_id))
         except ValidationError:
             continue
     return validated

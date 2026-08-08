@@ -45,6 +45,14 @@ export default defineConfig({
       '/api': {
         target: apiProxyTarget,
         changeOrigin: true,
+        // Sin esto, el proxy HTTP de Vite reenvia REST normalmente pero
+        // NUNCA reenvia el upgrade de /api/ai-agent/ws: el WebSocket del
+        // navegador queda indefinidamente en CONNECTING (sin open, sin
+        // close, sin error) porque Vite ni rechaza ni completa el
+        // handshake - se queda colgado en silencio. Confirmado en Chrome
+        // real (Etapa 6.1): con `ws: true` el mismo proxy tambien reenvia
+        // upgrades HTTP -> WebSocket hacia el backend real.
+        ws: true,
       },
     },
   },

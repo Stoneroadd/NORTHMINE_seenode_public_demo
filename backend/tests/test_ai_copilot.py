@@ -5,7 +5,6 @@ import json
 from app.ai import navigation, policies, repository
 from app.ai.orchestrator import _validate_ui_actions
 from app.ai.providers import NullProvider
-from app.ai.schemas import NavigateAction
 from app.ai.tools import TOOL_REGISTRY
 from tests.conftest import auth_header
 
@@ -153,10 +152,31 @@ def test_navigation_accepts_both_section_id_and_route():
     assert navigation.normalize_target("") is None
 
 
-def test_admin_section_is_restricted_to_admin_role():
-    assert navigation.is_navigation_allowed("admin", "admin") is True
+def test_admin_placeholder_section_is_unavailable_for_every_role():
+    # 'admin' es un marcador sin contenido real (App.tsx solo muestra un
+    # placeholder) - nunca se propone como navegacion valida, ni siquiera
+    # para el rol admin (seccion 20: no afirmar control semantico de algo
+    # que no existe).
+    assert navigation.is_navigation_allowed("admin", "admin") is False
     assert navigation.is_navigation_allowed("admin", "operador") is False
     assert navigation.is_navigation_allowed("admin", "supervisor") is False
+
+
+def test_admin_prefixed_routes_are_unavailable_regardless_of_role():
+    for route in ("adminSistema", "adminUsers", "adminDemoAccess", "adminAuditoria"):
+        assert navigation.is_navigation_allowed(route, "admin") is False
+
+
+def test_operator_ranking_requires_admin_or_supervisor_role():
+    assert navigation.is_navigation_allowed("operatorRanking", "admin") is True
+    assert navigation.is_navigation_allowed("operatorRanking", "supervisor") is True
+    assert navigation.is_navigation_allowed("operatorRanking", "operador") is False
+
+
+def test_known_widgets_allowlist_rejects_unregistered_ids():
+    assert navigation.is_widget_known("production-hourly-chart") is True
+    assert navigation.is_widget_known("sec-produccion") is True
+    assert navigation.is_widget_known("widget-inventado-por-el-modelo") is False
 
 
 def test_non_admin_sections_have_no_role_restriction():
@@ -202,10 +222,31 @@ def test_validate_ui_actions_drops_closed_list_and_unknown_action_violations():
     assert _validate_ui_actions(proposed, role="operador") == []
 
 
-def test_validate_ui_actions_admin_navigation_allowed_for_admin_role():
+def test_validate_ui_actions_admin_navigation_rejected_even_for_admin_role():
     validated = _validate_ui_actions([{"action": "navigate", "route": "admin"}], role="admin")
-    assert len(validated) == 1
-    assert isinstance(validated[0], NavigateAction)
+    assert validated == []
+
+
+def test_validate_ui_actions_rejects_unknown_widget_id():
+    validated = _validate_ui_actions([{"action": "focus_widget", "widget_id": "widget-inventado"}], role="operador")
+    assert validated == []
+
+
+def test_validate_ui_actions_rejects_invalid_filter_value():
+    proposed = [
+        {"action": "set_filter", "filter_id": "shift", "value": "MEDIODIA"},
+        {"action": "set_filter", "filter_id": "start_date", "value": "no-es-una-fecha"},
+    ]
+    assert _validate_ui_actions(proposed, role="operador") == []
+
+
+def test_validate_ui_actions_accepts_known_widget_and_valid_filter_value():
+    proposed = [
+        {"action": "focus_widget", "widget_id": "production-hourly-chart"},
+        {"action": "set_filter", "filter_id": "shift", "value": "DIA"},
+    ]
+    validated = _validate_ui_actions(proposed, role="operador")
+    assert [type(item).__name__ for item in validated] == ["FocusWidgetAction", "SetFilterAction"]
 
 
 def test_validate_ui_actions_handles_non_list_input_gracefully():
@@ -218,6 +259,46 @@ def test_validate_ui_actions_caps_at_five_actions():
     proposed = [{"action": "set_filter", "filter_id": "shift", "value": "DIA"} for _ in range(20)]
     validated = _validate_ui_actions(proposed, role="operador")
     assert len(validated) == 5
+
+
+# ── open_entity y allowlist ampliada (Etapa 2.5) ─────────────────────────────
+
+def test_open_entity_accepts_valid_id_and_known_entity_type():
+    validated = _validate_ui_actions(
+        [{"action": "open_entity", "entity_type": "equipment", "entity_id": "CAEX-104"}], role="operador"
+    )
+    assert len(validated) == 1
+    assert validated[0].action == "open_entity"
+    assert validated[0].entity_id == "CAEX-104"
+
+
+def test_open_entity_rejects_malformed_id_defense_in_depth():
+    # El resolver de alias vive en el frontend (registry en vivo); esto es
+    # la ultima linea de defensa contra un ID con formato imposible o con
+    # intento de inyeccion, sin importar de donde vino.
+    proposed = [
+        {"action": "open_entity", "entity_type": "equipment", "entity_id": "CAEX-104; DROP TABLE"},
+        {"action": "open_entity", "entity_type": "equipment", "entity_id": ""},
+        {"action": "open_entity", "entity_type": "equipment", "entity_id": "a" * 41},
+    ]
+    assert _validate_ui_actions(proposed, role="operador") == []
+
+
+def test_open_entity_accepts_all_new_entity_types():
+    for entity_type in ("equipment", "loading_unit", "alert", "report", "task", "operator", "breakdown"):
+        validated = _validate_ui_actions(
+            [{"action": "open_entity", "entity_type": entity_type, "entity_id": "ID-1"}], role="operador"
+        )
+        assert len(validated) == 1, f"entity_type {entity_type} deberia validar"
+
+
+def test_newly_instrumented_widgets_are_in_the_backend_allowlist():
+    for widget_id in (
+        "shift-summary", "performance-summary", "performance-by-equipment",
+        "loading-rate-chart", "breakdown-summary", "breakdown-active-list",
+        "comparison-variance", "operator-ranking-table",
+    ):
+        assert navigation.is_widget_known(widget_id), f"{widget_id} deberia estar en KNOWN_WIDGET_IDS"
 
 
 def test_get_alerts_tool_returns_deterministic_shape(monkeypatch):
