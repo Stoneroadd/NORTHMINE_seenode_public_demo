@@ -25,6 +25,7 @@ from app.ai import planner
 from app.ai.runtime import command_router, findings as findings_module, interruption
 from app.ai.runtime.command_router import AgentCommand, AgentCommandType
 from app.ai.runtime.event_bus import emit
+from app.ai.runtime import speech_segmenter
 from app.ai.runtime.session_manager import LiveSession
 from app.ai.runtime.state_machine import AgentRuntimeState
 from app.ai.runtime.ui_actions import UIActionAcknowledgement, register_wait, wait_for_ack
@@ -410,18 +411,31 @@ async def _emit_finding(live: LiveSession, finding: findings_module.Investigatio
 
 
 async def _speak(live: LiveSession, correlation_id: str, *, text: str, priority: str, segment_id: str) -> None:
-    await emit(
-        live, "agent.speech.segment", correlation_id=correlation_id,
-        payload={
-            "segmentId": segment_id, "text": text, "priority": priority, "sequence": live.next_sequence,
-            "interruptible": True,
-            # Etapa 7: turno dueño de este segmento - el cliente lo compara
-            # contra su turno activo y descarta el segmento si ya no
-            # corresponde (seccion 19: "un segmento de un turn anterior no
-            # puede reproducirse despues de que ese turn fue interrumpido").
-            "turnId": live.current_turn_id,
-        },
-    )
+    # Etapa 7, seccion 18: SpeechSegmenter parte el texto en oraciones
+    # naturales en vez de truncarlo a un numero fijo de caracteres (los
+    # llamadores ya no truncan - ver runtime.py handle_recall_operational_context
+    # / handle_compare_with_memory / handle_screen_context / handle_visual_observation_reported).
+    # La mayoria de las llamadas (un hallazgo, una conclusion) ya son una
+    # sola oracion corta, asi que esto normalmente devuelve un solo segmento.
+    chunks = speech_segmenter.split_for_speech(text)
+    for index, chunk in enumerate(chunks):
+        await emit(
+            live, "agent.speech.segment", correlation_id=correlation_id,
+            payload={
+                "segmentId": segment_id if index == 0 else f"{segment_id}-{index}",
+                "text": chunk, "priority": priority,
+                # Sequence propio del segmento (no el sequence del sobre WS):
+                # ordena la cola de reproduccion del cliente cuando una
+                # misma respuesta se parte en varios segmentos.
+                "sequence": live.next_sequence,
+                "interruptible": True,
+                # Etapa 7: turno dueño de este segmento - el cliente lo compara
+                # contra su turno activo y descarta el segmento si ya no
+                # corresponde (seccion 19: "un segmento de un turn anterior no
+                # puede reproducirse despues de que ese turn fue interrumpido").
+                "turnId": live.current_turn_id,
+            },
+        )
 
 
 async def speak_now(live: LiveSession, correlation_id: str, *, text: str, priority: str, segment_id: str) -> None:
@@ -549,7 +563,7 @@ async def handle_screen_context(live: LiveSession, correlation_id: str) -> None:
     if focused:
         parts.append(f"El widget enfocado es {focused.label}: {focused.semantic_summary}")
     await emit(live, "agent.text.delta", correlation_id=correlation_id, payload={"text": " ".join(parts)})
-    await _speak(live, correlation_id, text=" ".join(parts)[:220], priority="status", segment_id=f"seg-{uuid.uuid4().hex[:10]}")
+    await _speak(live, correlation_id, text=" ".join(parts), priority="status", segment_id=f"seg-{uuid.uuid4().hex[:10]}")
 
 
 async def handle_explain_widget(live: LiveSession, command: AgentCommand, correlation_id: str) -> None:
@@ -562,7 +576,7 @@ async def handle_explain_widget(live: LiveSession, command: AgentCommand, correl
         })
         return
     await emit(live, "agent.text.delta", correlation_id=correlation_id, payload={"text": summary})
-    await _speak(live, correlation_id, text=summary[:220], priority="status", segment_id=f"seg-{uuid.uuid4().hex[:10]}")
+    await _speak(live, correlation_id, text=summary, priority="status", segment_id=f"seg-{uuid.uuid4().hex[:10]}")
 
 
 async def handle_analyze_visually(live: LiveSession, command: AgentCommand, correlation_id: str, *, target_type: str) -> None:
@@ -650,7 +664,7 @@ async def handle_visual_observation_reported(live: LiveSession, user: dict, payl
         live, "perception.snapshot_updated", correlation_id=correlation_id,
         payload={"observation": observation.model_dump(mode="json"), "conflict": conflict.model_dump(mode="json") if conflict else None},
     )
-    await _speak(live, correlation_id, text=" ".join(summary_parts)[:260], priority="finding", segment_id=f"seg-{uuid.uuid4().hex[:10]}")
+    await _speak(live, correlation_id, text=" ".join(summary_parts), priority="finding", segment_id=f"seg-{uuid.uuid4().hex[:10]}")
 
 
 # ── Etapa 6: memoria, continuidad, proactividad, work products ────────────
@@ -692,7 +706,7 @@ async def handle_recall_operational_context(live: LiveSession, user: dict, comma
     if result.working_memory_entity and result.working_memory_entity.status in ("ongoing", "worsening", "new"):
         text += " Puedo reabrir la investigación si quieres revisarlo de nuevo."
     await emit(live, "agent.text.delta", correlation_id=correlation_id, payload={"text": text})
-    await _speak(live, correlation_id, text=text[:260], priority="status", segment_id=f"seg-{uuid.uuid4().hex[:10]}")
+    await _speak(live, correlation_id, text=text, priority="status", segment_id=f"seg-{uuid.uuid4().hex[:10]}")
 
 
 async def handle_compare_with_memory(live: LiveSession, user: dict, command: AgentCommand, correlation_id: str, ip: str) -> None:
@@ -725,7 +739,7 @@ async def handle_compare_with_memory(live: LiveSession, user: dict, command: Age
     await emit(live, "memory.recalled", correlation_id=correlation_id, payload={
         "queryEntity": entity, "items": [i.model_dump(mode="json") for i in retrieval_items(previous)],
     })
-    await _speak(live, correlation_id, text=text[:260], priority="status", segment_id=f"seg-{uuid.uuid4().hex[:10]}")
+    await _speak(live, correlation_id, text=text, priority="status", segment_id=f"seg-{uuid.uuid4().hex[:10]}")
 
 
 def retrieval_items(entity):

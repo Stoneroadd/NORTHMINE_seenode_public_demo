@@ -11,6 +11,7 @@ from app.ai.runtime import command_router, interruption, persistence, runtime, s
 from app.ai.runtime.command_router import AgentCommandType, classify
 from app.ai.runtime.protocol import AgentEvent, UnknownEventType, build_server_event
 from app.ai.runtime.session_manager import AgentSessionManager, SessionNotFound, SessionOwnershipError
+from app.ai.runtime.speech_segmenter import split_for_speech
 from app.ai.runtime.state_machine import AgentRuntimeState, AgentStateMachine, InvalidStateTransition
 from app.ai.voice.elevenlabs_provider import ElevenLabsTTSProvider
 from app.ai.voice.null_provider import NullTTSProvider
@@ -550,3 +551,63 @@ def test_ws_interrupt_stop_event_carries_the_turn_id_being_interrupted(client, l
         # agent.interrupt identifica el turno que EMPIEZA, todavia sin texto,
         # y no debe pisar de que turno se esta cortando el audio.
         assert stop_event["payload"]["turnId"] == "turn-1"
+
+
+def test_ws_multi_sentence_memory_response_yields_multiple_ordered_speech_segments_same_turn(client, login_as_operador):
+    """Etapa 7, auditoria de gaps (prioridad 1): handle_recall_operational_context
+    arma una respuesta de MAS de una oracion (el resumen de memoria + "Puedo
+    reabrir la investigacion..."). Antes se truncaba a 220 caracteres con
+    `text[:220]`; ahora SpeechSegmenter la parte en oraciones reales, y cada
+    segmento resultante debe compartir turnId y venir con sequence creciente
+    (seccion 9/19/20 del brief)."""
+    from app.ai.memory import working_memory
+
+    # _extract_equipment_query (command_router.py) solo reconoce
+    # "pala|caex|camion" + numero - un numero al azar de 3 digitos evita
+    # colisionar con equipos de ejemplo de bajo numero (Pala 03, etc.) que
+    # otros tests puedan haber dejado en la misma base de memoria.
+    number = str(100 + (uuid.uuid4().int % 800))
+    entity = f"PALA {number}"
+    working_memory.track_entity(
+        entity=entity, entity_type="equipment", company_id=None, site_id=None, shift="DIA",
+        current_issue="Rendimiento bajo el plan.", metric_value=-10.0, metric_label="variacion_pct",
+        metric_direction="lower_is_worse", created_by="tester",
+    )
+
+    token = login_as_operador["access_token"]
+    with client.websocket_connect(f"/api/ai-agent/ws?token={token}") as ws:
+        ws.receive_json()
+        ws.send_json(_client_event("user.text", text=f"¿Sigue ocurriendo lo de la pala {number}?", turnId="turn-mem-1"))
+
+        # handle_recall_operational_context no emite ningun evento terminal
+        # despues de sus agent.speech.segment (no arranca una investigacion) -
+        # esperar por un evento "siguiente" que nunca llega cuelga el test.
+        # En cambio: se lee hasta agent.text.delta (que manda el texto
+        # COMPLETO antes de segmentarlo), se calcula cuantos segmentos deberia
+        # producir SpeechSegmenter sobre ese mismo texto, y se leen
+        # exactamente esos.
+        full_text = None
+        for _ in range(10):
+            e = ws.receive_json()
+            if e["event_type"] == "agent.error":
+                pytest.fail(f"comando de memoria fallo inesperadamente: {e['payload']}")
+            if e["event_type"] == "agent.text.delta":
+                full_text = e["payload"]["text"]
+                break
+        assert full_text, "se esperaba agent.text.delta con el texto completo antes de los segmentos"
+        assert full_text.count(".") >= 2, f"el texto deberia tener 2+ oraciones para ejercitar el segmentador, llego: {full_text!r}"
+
+        expected_segment_count = len(split_for_speech(full_text))
+        assert expected_segment_count >= 2
+
+        segments = [ws.receive_json()["payload"] for _ in range(expected_segment_count)]
+
+        assert len(segments) >= 2, f"se esperaban 2+ segmentos (memoria + oracion de reapertura), llegaron: {segments}"
+        assert all(s["turnId"] == "turn-mem-1" for s in segments)
+        sequences = [s["sequence"] for s in segments]
+        assert sequences == sorted(sequences) and len(set(sequences)) == len(sequences)
+        # Ninguna oracion quedo cortada a mitad de palabra (el viejo text[:220]
+        # si lo permitia) - cada segmento termina en puntuacion real.
+        assert all(s["text"].strip()[-1] in ".!?" for s in segments)
+        segment_ids = [s["segmentId"] for s in segments]
+        assert len(set(segment_ids)) == len(segment_ids)  # nunca colisionan en SpeechOutputRouter (dedupe por segmentId)

@@ -337,8 +337,14 @@ def test_ws_visual_observation_never_overrides_confirmed_semantic_data(client, l
         assert snapshot_event["event_type"] == "perception.snapshot_updated"
         assert snapshot_event["payload"]["conflict"] is not None
 
+        # Etapa 7: SpeechSegmenter parte la respuesta (observacion + aviso de
+        # conflicto) en oraciones naturales en vez de un solo bloque truncado -
+        # "no confirman" queda en la segunda oracion/segmento, no en la primera.
         assert speech_event["event_type"] == "agent.speech.segment"
-        assert "no confirman" in speech_event["payload"]["text"].lower()
+        second_speech_event = ws.receive_json()
+        assert second_speech_event["event_type"] == "agent.speech.segment"
+        combined_text = f"{speech_event['payload']['text']} {second_speech_event['payload']['text']}".lower()
+        assert "no confirman" in combined_text
 
 
 def test_ws_visual_observation_without_conflict_has_no_conflict_event(client, login_as_operador):
