@@ -824,6 +824,121 @@
   animation: ai-agent-pulse 1.6s ease-in-out infinite;
 }
 
+/* ---------------------------------------------------------------- *
+ * Onboarding del microfono - explicacion antes del permiso nativo
+ * ---------------------------------------------------------------- */
+.ai-mic-onboarding-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 950;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ai-mic-onboarding-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(4, 6, 10, 0.6);
+  backdrop-filter: blur(2px);
+}
+
+.ai-mic-onboarding-card {
+  position: relative;
+  z-index: 1;
+  width: min(320px, calc(100vw - 32px));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 24px 20px 20px;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--nm-cyan) 35%, var(--nm-border));
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow-card);
+  color: var(--nm-text);
+  text-align: center;
+}
+
+.ai-mic-onboarding-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  border: none;
+  background: transparent;
+  color: var(--nm-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.ai-mic-onboarding-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--nm-cyan);
+  background: color-mix(in srgb, var(--nm-cyan) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--nm-cyan) 35%, transparent);
+}
+
+.ai-mic-onboarding-card h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.ai-mic-onboarding-card p {
+  margin: 0;
+  font-size: 12px;
+  color: var(--nm-muted);
+  line-height: 1.4;
+}
+
+.ai-mic-onboarding-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+  width: 100%;
+}
+
+.ai-mic-onboarding-actions button {
+  flex: 1;
+  padding: 9px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  cursor: pointer;
+  border: 1px solid var(--nm-border);
+}
+
+.ai-mic-onboarding-later {
+  background: transparent;
+  color: var(--nm-muted);
+}
+
+.ai-mic-onboarding-activate {
+  background: var(--nm-cyan);
+  border-color: var(--nm-cyan);
+  color: #061014;
+  font-weight: 600;
+}
+
+.ai-mic-onboarding-actions button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.ai-agent-mic-button.is-requesting {
+  color: var(--nm-cyan);
+  border-color: var(--nm-cyan);
+}
+
 .ai-agent-interrupt-button {
   display: inline-flex;
   align-items: center;
