@@ -160,10 +160,12 @@ export class ConversationTurnManager {
   }
 
   /** Debe llamarse desde un gesto explicito del usuario (seccion 5: "el
-   * microfono solo puede activarse mediante interaccion explicita"). */
-  async activate(): Promise<void> {
+   * microfono solo puede activarse mediante interaccion explicita").
+   * `existingStream`: si el onboarding de permiso (micPermission.ts) ya
+   * obtuvo el MediaStream, se lo pasa aca para no volver a pedirlo. */
+  async activate(existingStream?: MediaStream): Promise<void> {
     if (this.active) return
-    await this.audio.start()
+    await this.audio.start(existingStream)
     const graph = this.audio.getAudioGraph()
     if (graph) await this.vad.attach(graph.context, graph.stream)
     this.transcription.start()

@@ -8,11 +8,13 @@ import { agentSessionClient } from '../../lib/agentRuntime/AgentSessionClient'
 import { useAgentRuntimeStore } from '../../lib/agentRuntime/runtimeStore'
 import { conversationTurnManager } from '../../lib/agentRealtime/ConversationTurnManager'
 import type { ConversationTurn } from '../../lib/agentRealtime/contracts'
+import { classifyMicRequestError, queryMicPermissionState, requestMicrophoneStream } from '../../lib/agentRealtime/micPermission'
 import { speechOutputRouter } from '../../lib/agentVoice/SpeechOutputRouter'
 import type { VoiceOutputProviderName } from '../../lib/agentVoice/types'
 import type { CopilotContext } from '../../lib/aiCopilot'
 import { AgentActionOverlay } from './AgentActionOverlay'
 import { AgentLiveTranscript } from './AgentLiveTranscript'
+import { MicOnboardingModal } from './MicOnboardingModal'
 import { usePerceptionStore } from '../../lib/agentPerception/perceptionStore'
 import { performCaptureAndAnalyze } from '../../lib/agentPerception/perceptionManager'
 import { buildSemanticPerceptionSnapshot } from '../../lib/agentPerception/semanticPerception'
@@ -100,6 +102,15 @@ export function AgentWorkspace({ open, onClose, context, role: _role, canApprove
   const [evidenceOpen, setEvidenceOpen] = useState(false)
   const [listening, setListening] = useState(false)
   const [micError, setMicError] = useState<string | null>(null)
+  // Estados de onboarding del microfono: DESACTIVADO(idle)/SOLICITANDO
+  // PERMISO(requesting)/ACTIVO(listening ya cubre esto)/BLOQUEADO(blocked)/
+  // SIN DISPOSITIVO(no_device). 'showing_onboarding' es el modal propio de
+  // NORTHMINE, antes del dialogo nativo del navegador.
+  const [micState, setMicState] = useState<'idle' | 'showing_onboarding' | 'requesting' | 'blocked' | 'no_device'>('idle')
+  // Separado de micState: evita que el modal "parpadee" cuando el permiso
+  // ya estaba concedido (ese camino pasa por 'requesting' tambien, pero sin
+  // haber mostrado nunca la explicacion previa).
+  const [micOnboardingOpen, setMicOnboardingOpen] = useState(false)
   const [voiceProvider, setVoiceProvider] = useState<VoiceOutputProviderName | null>(null)
   const [currentTurn, setCurrentTurn] = useState<ConversationTurn | null>(null)
   const [micLevel, setMicLevel] = useState(0)
@@ -266,6 +277,44 @@ export function AgentWorkspace({ open, onClose, context, role: _role, canApprove
     setInputText('')
   }
 
+  function micRequestErrorMessage(kind: 'blocked' | 'no_device' | 'unknown'): string {
+    if (kind === 'blocked') return 'El micrófono está bloqueado para NORTHMINE. Habilítalo desde los permisos del sitio.'
+    if (kind === 'no_device') return 'No se encontró un micrófono disponible en este dispositivo.'
+    return 'No se pudo acceder al micrófono.'
+  }
+
+  async function activateWithStream(stream: MediaStream) {
+    try {
+      await conversationTurnManager.activate(stream)
+      setListening(true)
+      setMicState('idle')
+      setMicError(null)
+    } catch {
+      setMicError('No se pudo iniciar el reconocimiento de voz.')
+      setMicState('idle')
+    } finally {
+      setMicOnboardingOpen(false)
+    }
+  }
+
+  // Unico punto que llama a getUserMedia (via requestMicrophoneStream) -
+  // se invoca SOLO desde un click real (el boton de abajo si el permiso ya
+  // esta concedido, o el boton del modal de onboarding si no) para que el
+  // navegador siga considerando la llamada activada por el usuario en
+  // cualquier dispositivo (desktop, Android, tablet).
+  async function requestMicAndActivate() {
+    setMicState('requesting')
+    try {
+      const stream = await requestMicrophoneStream()
+      await activateWithStream(stream)
+    } catch (error) {
+      const kind = classifyMicRequestError(error)
+      setMicState(kind === 'blocked' ? 'blocked' : kind === 'no_device' ? 'no_device' : 'idle')
+      setMicError(micRequestErrorMessage(kind))
+      setMicOnboardingOpen(false)
+    }
+  }
+
   async function toggleMic() {
     if (!conversationTurnManager.isSupported()) {
       setMicError('Reconocimiento de voz no disponible en este navegador.')
@@ -274,23 +323,41 @@ export function AgentWorkspace({ open, onClose, context, role: _role, canApprove
     if (listening) {
       conversationTurnManager.deactivate()
       setListening(false)
+      setMicState('idle')
       return
     }
-    // Seccion 5 del brief: el microfono solo se activa por un gesto
-    // explicito del usuario - este handler SOLO corre desde el onClick del
-    // boton de abajo, nunca automaticamente.
     setMicError(null)
-    try {
-      await conversationTurnManager.activate()
-      setListening(true)
-    } catch {
-      const permission = conversationTurnManager.getMicPermission()
-      setMicError(
-        permission === 'denied'
-          ? 'Permiso de microfono denegado. Actívalo desde los ajustes del navegador.'
-          : 'No se pudo acceder al micrófono.',
-      )
+
+    // queryMicPermissionState() es la UNICA consulta previa permitida antes
+    // de getUserMedia: no requiere ni consume gesto del usuario (resuelve
+    // casi instantaneo, sin red ni backend) - solo decide si hace falta
+    // mostrar la explicacion de NORTHMINE antes del dialogo nativo, o si se
+    // puede pedir el stream directo porque el permiso ya esta concedido.
+    const permission = await queryMicPermissionState()
+    if (permission === 'granted') {
+      await requestMicAndActivate()
+      return
     }
+    if (permission === 'denied') {
+      // Seccion "no repetir requests infinitamente": no se llama a
+      // getUserMedia de nuevo automaticamente - se muestra el estado
+      // bloqueado y se espera un nuevo click explicito del usuario (que
+      // vuelve a consultar el permiso por si ya lo arreglo el mismo).
+      setMicState('blocked')
+      setMicError(micRequestErrorMessage('blocked'))
+      return
+    }
+    // 'prompt' o 'unsupported' (Safari no soporta permissions.query para
+    // microfono): mostrar la explicacion de NORTHMINE ANTES del dialogo
+    // nativo del navegador - el click en el modal es el gesto real que
+    // dispara requestMicAndActivate().
+    setMicState('showing_onboarding')
+    setMicOnboardingOpen(true)
+  }
+
+  function dismissMicOnboarding() {
+    setMicState('idle')
+    setMicOnboardingOpen(false)
   }
 
   function toggleMute() {
@@ -797,7 +864,19 @@ export function AgentWorkspace({ open, onClose, context, role: _role, canApprove
         >
           {micError && <p className="ai-agent-mic-error">{micError}</p>}
           <div className="ai-copilot-composer-input">
-            <button type="button" className={`ai-agent-mic-button${listening ? ' is-listening' : ''}`} onClick={toggleMic} aria-label={listening ? 'Detener escucha' : 'Hablar'}>
+            <button
+              type="button"
+              className={`ai-agent-mic-button${listening ? ' is-listening' : ''}${micState === 'requesting' ? ' is-requesting' : ''}`}
+              onClick={toggleMic}
+              aria-label={listening ? 'Detener escucha' : micState === 'requesting' ? 'Solicitando permiso de micrófono' : 'Hablar'}
+              title={
+                listening ? 'Micrófono activo'
+                : micState === 'requesting' ? 'Solicitando permiso…'
+                : micState === 'blocked' ? 'Micrófono bloqueado'
+                : micState === 'no_device' ? 'Sin dispositivo de micrófono'
+                : 'Micrófono desactivado'
+              }
+            >
               {listening ? <MicOff size={16} /> : <Mic size={16} />}
             </button>
             <textarea
@@ -826,6 +905,14 @@ export function AgentWorkspace({ open, onClose, context, role: _role, canApprove
           La validacion y decision operacional final corresponde al usuario autorizado.
         </footer>
       </aside>
+
+      {micOnboardingOpen && (
+        <MicOnboardingModal
+          requesting={micState === 'requesting'}
+          onActivate={() => void requestMicAndActivate()}
+          onDismiss={dismissMicOnboarding}
+        />
+      )}
     </div>
   )
 }

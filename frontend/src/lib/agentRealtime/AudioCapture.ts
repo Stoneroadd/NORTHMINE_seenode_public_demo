@@ -1,4 +1,5 @@
 import type { AudioInputProvider, MicPermissionState } from './contracts'
+import { MIC_CONSTRAINTS } from './micPermission'
 
 /**
  * AudioCapture (Etapa 7, seccion 4 del brief): unico punto de contacto con
@@ -22,12 +23,14 @@ export class AudioCapture implements AudioInputProvider {
   private deviceChangeHandlers = new Set<() => void>()
   private deviceChangeBound = () => this.deviceChangeHandlers.forEach((h) => h())
 
-  async start(): Promise<void> {
+  /** `existingStream` permite entregar un MediaStream ya obtenido por el
+   * modal de onboarding (mic permission) - evita pedir el microfono dos
+   * veces (una para el modal, otra aca) y respeta que solo el primer
+   * getUserMedia necesita venir de un click real. */
+  async start(existingStream?: MediaStream): Promise<void> {
     if (this.stream) return
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
-      })
+      const stream = existingStream ?? await navigator.mediaDevices.getUserMedia(MIC_CONSTRAINTS)
       this.stream = stream
       this._setPermission('granted')
 

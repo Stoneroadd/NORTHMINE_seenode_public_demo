@@ -109,7 +109,10 @@ export type RealtimeSpeechProvider = AgentSpeechOutput
 export type MicPermissionState = 'idle' | 'granted' | 'denied' | 'unavailable'
 
 export interface AudioInputProvider {
-  start(): Promise<void>
+  /** `existingStream`: permite entregar un MediaStream ya obtenido por un
+   * flujo de onboarding externo (ver micPermission.ts) en vez de volver a
+   * llamar getUserMedia. */
+  start(existingStream?: MediaStream): Promise<void>
   pause(): void
   resume(): void
   stop(): void
