@@ -15,8 +15,16 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-XSS-Protection"]       = "1; mode=block"
         response.headers["Referrer-Policy"]        = "strict-origin-when-cross-origin"
+        # microphone=(self): la Etapa 7 agrego captura real de microfono
+        # (getUserMedia) para el Agent Runtime, que solo la pagina propia
+        # necesita (nunca un iframe de terceros - por eso no se abre a "*").
+        # Con "()" (vacio, valor original de antes de esa etapa) el navegador
+        # rechaza getUserMedia de inmediato para CUALQUIER usuario, en
+        # CUALQUIER dispositivo, sin mostrar siquiera el dialogo nativo de
+        # permiso - la causa real detras de "el microfono no funciona en
+        # ningun dispositivo", no una configuracion del lado del usuario.
         response.headers["Permissions-Policy"] = (
-            "geolocation=(), microphone=(), camera=(), payment=(), usb=(), bluetooth=()"
+            "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), bluetooth=()"
         )
         # FastAPI genera Swagger/ReDoc con un script inline y recursos CDN.
         # En produccion esos endpoints no existen, asi que la politica puede
