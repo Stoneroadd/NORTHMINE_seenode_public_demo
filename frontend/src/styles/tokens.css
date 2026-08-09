@@ -277,6 +277,21 @@ button {
   -webkit-backdrop-filter: blur(20px);
 }
 
+.demo-mode-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 7px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--amber);
+  background: color-mix(in srgb, var(--amber) 8%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--amber) 28%, transparent);
+}
+
 .eyebrow,
 .hero-kicker,
 .panel-kicker {

@@ -10,6 +10,7 @@ from app.api.operational import router as operational_router
 from app.core.audit import (
     blacklist_token,
     check_password_in_history,
+    count_audit_log,
     get_active_sessions_count,
     get_audit_log_size_mb,
     get_blocked_ips,
@@ -1426,14 +1427,17 @@ def admin_reset_user_password(user_id: str, payload: UserPasswordResetRequest, r
 def audit_log(
     request: Request,
     limit: Annotated[int, Query(ge=1, le=500)] = 100,
+    offset: Annotated[int, Query(ge=0)] = 0,
     usuario: Annotated[str | None, Query()] = None,
     endpoint: Annotated[str | None, Query()] = None,
+    accion: Annotated[str | None, Query()] = None,
     desde: Annotated[str | None, Query()] = None,
     user: dict = RequireAdmin,
 ) -> dict:
-    rows = query_audit_log(limit=limit, usuario=usuario, endpoint=endpoint, desde=desde)
+    rows = query_audit_log(limit=limit, offset=offset, usuario=usuario, endpoint=endpoint, accion=accion, desde=desde)
     protected_rows = _protect_demo_audit_rows(rows)
-    return {"count": len(protected_rows), "items": protected_rows}
+    total = count_audit_log(usuario=usuario, endpoint=endpoint, accion=accion, desde=desde)
+    return {"count": total, "items": protected_rows, "offset": offset}
 
 
 @router.post("/auth/change-password")

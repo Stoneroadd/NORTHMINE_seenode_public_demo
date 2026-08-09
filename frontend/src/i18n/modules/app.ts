@@ -7,6 +7,8 @@ export interface AppT {
   acceso_restringido_sistema_desc: string
   acceso_restringido_usuarios_titulo: string
   acceso_restringido_usuarios_desc: string
+  acceso_restringido_auditoria_titulo: string
+  acceso_restringido_auditoria_desc: string
   acceso_restringido_ranking_titulo: string
   acceso_restringido_ranking_desc: string
   admin_titulo: string
@@ -25,6 +27,8 @@ export const appT: ModuleDict<AppT> = {
     acceso_restringido_sistema_desc: 'Modulo disponible solo para rol admin.',
     acceso_restringido_usuarios_titulo: 'Usuarios',
     acceso_restringido_usuarios_desc: 'Modulo disponible solo para rol admin.',
+    acceso_restringido_auditoria_titulo: 'Auditoria',
+    acceso_restringido_auditoria_desc: 'Modulo disponible solo para rol admin.',
     acceso_restringido_ranking_titulo: 'Ranking Operadores',
     acceso_restringido_ranking_desc: 'Modulo disponible para roles admin y supervisor.',
     admin_titulo: 'Admin',
@@ -41,6 +45,8 @@ export const appT: ModuleDict<AppT> = {
     acceso_restringido_sistema_desc: 'Module available only for the admin role.',
     acceso_restringido_usuarios_titulo: 'Users',
     acceso_restringido_usuarios_desc: 'Module available only for the admin role.',
+    acceso_restringido_auditoria_titulo: 'Audit log',
+    acceso_restringido_auditoria_desc: 'Module available only for the admin role.',
     acceso_restringido_ranking_titulo: 'Operator Ranking',
     acceso_restringido_ranking_desc: 'Module available for admin and supervisor roles.',
     admin_titulo: 'Admin',
@@ -57,6 +63,8 @@ export const appT: ModuleDict<AppT> = {
     acceso_restringido_sistema_desc: 'Modul nur für die Rolle Administrator verfügbar.',
     acceso_restringido_usuarios_titulo: 'Benutzer',
     acceso_restringido_usuarios_desc: 'Modul nur für die Rolle Administrator verfügbar.',
+    acceso_restringido_auditoria_titulo: 'Prüfprotokoll',
+    acceso_restringido_auditoria_desc: 'Modul nur für die Rolle Administrator verfügbar.',
     acceso_restringido_ranking_titulo: 'Rangliste der Operatoren',
     acceso_restringido_ranking_desc: 'Modul für die Rollen Administrator und Supervisor verfügbar.',
     admin_titulo: 'Admin',

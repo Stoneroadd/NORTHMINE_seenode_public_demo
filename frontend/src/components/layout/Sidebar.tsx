@@ -5,6 +5,7 @@ import {
   ClipboardList,
   FlaskConical,
   Gauge,
+  Inbox,
   LayoutDashboard,
   LockKeyhole,
   Map,
@@ -177,6 +178,14 @@ export function Sidebar({ active, onSelect, mobileOpen = false, onNavigate }: Pr
               <span>
                 <span className="nav-label">Usuarios</span>
                 <span className="nav-caption">Roles y acceso</span>
+              </span>
+            </a>
+            <a className={`nav-item ${window.location.pathname === '/admin/demo-access' ? 'is-active' : ''}`} href="/admin/demo-access" title="Solicitudes: Pedidos de acceso al demo" onClick={onNavigate}>
+              <span className="nav-active-line" />
+              <span className="nav-icon"><Inbox size={18} /></span>
+              <span>
+                <span className="nav-label">Solicitudes</span>
+                <span className="nav-caption">Pedidos de demo</span>
               </span>
             </a>
             <a className={`nav-item ${window.location.pathname === '/admin/sistema' ? 'is-active' : ''}`} href="/admin/sistema" title="Sistema: Salud y monitoreo" onClick={onNavigate}>

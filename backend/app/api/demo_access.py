@@ -6,6 +6,7 @@ from typing import Annotated, NoReturn
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 
 from app.core.config import get_settings
+from app.core.audit import log_event
 from app.core.dependencies import RequireAdmin
 from app.core.rate_limit import endpoint_limit, limiter
 from app.repositories.demo_access_repository import (
@@ -121,6 +122,7 @@ def get_demo_access_request(
 
 
 def _review_request(
+    request: Request,
     request_id: str,
     payload: DemoAccessReviewRequest,
     *,
@@ -140,6 +142,21 @@ def _review_request(
         _persistence_unavailable(f"review:{action}", repository)
     if record is None:
         raise HTTPException(status_code=404, detail="Solicitud no encontrada")
+    log_event(
+        usuario=reviewed_by,
+        ip=request.client.host if request.client else "unknown",
+        accion=f"demo_access.{action}",
+        resultado="ok",
+        metodo="POST",
+        endpoint=request.url.path,
+        status_code=200,
+        user_agent=request.headers.get("user-agent", ""),
+        detalle={
+            "request_id": request_id,
+            "reviewed_by": reviewed_by,
+            "internal_notes": (payload.internal_notes or "")[:500],
+        },
+    )
     return _admin_record(record)
 
 
@@ -153,6 +170,7 @@ def approve_demo_access_request(
     user: dict = RequireAdmin,
 ) -> DemoAccessRequestAdmin:
     return _review_request(
+        request,
         request_id,
         payload,
         action="approved",
@@ -171,6 +189,7 @@ def reject_demo_access_request(
     user: dict = RequireAdmin,
 ) -> DemoAccessRequestAdmin:
     return _review_request(
+        request,
         request_id,
         payload,
         action="rejected",

@@ -15,7 +15,7 @@ from app.ai.repository import init_ai_copilot_db
 from app.api.routes import router
 from app.api.operator_ranking import router as operator_ranking_router
 from app.api.demo_access import router as demo_access_router
-from app.core.audit import AuditStoreUnavailable, init_audit_db, init_security_tables
+from app.core.audit import AuditStoreUnavailable, init_audit_db, init_security_tables, rotate_audit_log
 from app.core.audit_middleware import AuditMiddleware
 from app.core.config import get_settings
 from app.core.distributed import verify_shared_services
@@ -94,6 +94,9 @@ def startup() -> None:
     init_mfa_table()
     init_user_repository()
     init_ai_copilot_db()
+    # Purga eventos de auditoria mayores a 30 dias en cada arranque
+    # (la BD de auditoria no tiene un worker de mantenimiento dedicado).
+    rotate_audit_log()
     demo_access_repository = get_demo_access_repository()
     try:
         demo_access_repository.init_schema()

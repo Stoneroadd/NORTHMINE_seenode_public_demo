@@ -8,6 +8,7 @@ import { useAppStore } from '../../store'
 import { CommandCenterBackground } from '../effects/CommandCenterBackground'
 import { Sidebar, type SectionId } from './Sidebar'
 import { Topbar } from './Topbar'
+import { DemoModeBanner } from './DemoModeBanner'
 import { useModuleT } from '../../i18n/useModuleT'
 import { layoutT } from '../../i18n/modules/layout'
 
@@ -120,6 +121,7 @@ export function AppShell({ session, onLogout, children }: Props) {
           onRefresh={handleRefresh}
           onLogout={handleLogout}
         />
+        <DemoModeBanner />
         <main className="content-area">{children(section)}</main>
       </div>
     </div>

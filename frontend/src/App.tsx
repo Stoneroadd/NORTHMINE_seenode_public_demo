@@ -36,6 +36,7 @@ const loadAveriasPage = () => import('./pages/AveriasPage')
 const loadExpertAnalysisPage = () => import('./pages/ExpertAnalysisPage')
 const loadAlerts      = () => import('./pages/Alerts')
 const loadDemoAccessAdminPage = () => import('./pages/DemoAccessAdminPage')
+const loadAdminHubPage = () => import('./pages/AdminHubPage')
 
 const Prediction  = lazy(() => loadPrediction().then(m => ({ default: m.Prediction })))
 const Simulator   = lazy(() => loadSimulator().then(m => ({ default: m.Simulator })))
@@ -58,6 +59,7 @@ const AveriasPage = lazy(() => loadAveriasPage().then(m => ({ default: m.Averias
 const ExpertAnalysisPage = lazy(() => loadExpertAnalysisPage().then(m => ({ default: m.ExpertAnalysisPage })))
 const Alerts      = lazy(() => loadAlerts().then(m => ({ default: m.Alerts })))
 const DemoAccessAdminPage = lazy(() => loadDemoAccessAdminPage().then(m => ({ default: m.DemoAccessAdminPage })))
+const AdminHubPage = lazy(() => loadAdminHubPage().then(m => ({ default: m.AdminHubPage })))
 import { Settings } from 'lucide-react'
 
 const ALL_MODULE_LOADERS = [
@@ -66,6 +68,7 @@ const ALL_MODULE_LOADERS = [
   loadDecisionCockpit, loadOperationalMindMap3D, loadCurrentShift, loadProduction,
   loadPerformance, loadFleet, loadLoadingUnits, loadAveriasPage, loadExpertAnalysisPage,
   loadAlerts,
+  loadAdminHubPage,
 ]
 
 const FAST_DEMO_MODULE_LOADERS = [
@@ -162,7 +165,20 @@ function renderSection(section: SectionId, session: AuthSession, t: AppT) {
     }
     return wrap(_S(<AdminUsersPage />), '/admin/users')
   }
-  if (path === '/admin/auditoria') return wrap(_S(<AuditLog />), '/admin/auditoria')
+  if (path === '/admin/auditoria') {
+    if (session.rol !== 'admin') {
+      return wrap(
+        <div className="section-placeholder">
+          <Settings size={34} />
+          <span>{t.acceso_restringido}</span>
+          <h2>{t.acceso_restringido_auditoria_titulo}</h2>
+          <p>{t.acceso_restringido_auditoria_desc}</p>
+        </div>,
+        '/admin/auditoria-denied',
+      )
+    }
+    return wrap(_S(<AuditLog />), '/admin/auditoria')
+  }
   if (path === '/comparativa') return wrap(_S(<Compare />), '/comparativa')
   if (path === '/operator-ranking') {
     if (!['admin', 'supervisor'].includes(session.rol)) {
@@ -212,15 +228,18 @@ function renderSection(section: SectionId, session: AuthSession, t: AppT) {
     case 'reportes':
       return wrap(_S(<Reports />), 'reportes')
     case 'admin':
-      return wrap(
-        <div className="section-placeholder">
-          <Settings size={34} />
-          <span>{t.admin_titulo}</span>
-          <h2>{t.admin_subtitulo}</h2>
-          <p>{t.admin_desc}</p>
-        </div>,
-        'admin',
-      )
+      if (session.rol !== 'admin') {
+        return wrap(
+          <div className="section-placeholder">
+            <Settings size={34} />
+            <span>{t.acceso_restringido}</span>
+            <h2>{t.acceso_restringido_usuarios_titulo}</h2>
+            <p>{t.acceso_restringido_usuarios_desc}</p>
+          </div>,
+          'admin',
+        )
+      }
+      return wrap(_S(<AdminHubPage />), 'admin')
   }
 }
 

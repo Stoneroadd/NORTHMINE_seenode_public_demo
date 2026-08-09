@@ -272,10 +272,14 @@ def get_blocked_ips() -> list[str]:
 
 
 def get_failed_logins_last_hour() -> int:
+    # Solo cuenta los eventos de login fallido registrados explicitamente por el
+    # handler de auth (accion='login_failed'). El middleware de auditoria tambien
+    # registra la peticion 401 de /api/auth/login (accion='POST /api/auth/login'),
+    # asi que filtrar por endpoint+status duplicaria el conteo.
     try:
         conn = _conn()
         row = conn.execute(
-            "SELECT COUNT(*) AS cnt FROM audit_log WHERE endpoint = '/api/auth/login' AND status_code = 401 AND timestamp > datetime('now', '-1 hour')"
+            "SELECT COUNT(*) AS cnt FROM audit_log WHERE accion = 'login_failed' AND timestamp > datetime('now', '-1 hour')"
         ).fetchone()
         pass
         return row["cnt"] if row else 0
@@ -416,10 +420,27 @@ def rotate_audit_log() -> None:
         pass
 
 
+def _normalize_iso_desde(value: str) -> str:
+    # Los timestamps se guardan como ISO UTC con offset y microsegundos
+    # (2026-05-31T00:00:00.123456+00:00). Normalizar el filtro para que la
+    # comparacion lexicografica contra el TEXT de SQLite incluya el segundo entero.
+    v = value.strip()
+    if v.endswith("Z"):
+        v = v[:-1] + "+00:00"
+    if "+" in v:
+        body, tz = v.rsplit("+", 1)
+        if "." not in body:
+            body = body + ".000000"
+        v = body + "+" + tz
+    return v
+
+
 def query_audit_log(
     limit: int = 100,
+    offset: int = 0,
     usuario: str | None = None,
     endpoint: str | None = None,
+    accion: str | None = None,
     desde: str | None = None,
 ) -> list[dict]:
     try:
@@ -432,13 +453,17 @@ def query_audit_log(
         if endpoint:
             clauses.append("endpoint LIKE ?")
             params.append(f"%{endpoint}%")
+        if accion:
+            clauses.append("accion LIKE ?")
+            params.append(f"%{accion}%")
         if desde:
             clauses.append("timestamp >= ?")
-            params.append(desde)
+            params.append(_normalize_iso_desde(desde))
         where = ("WHERE " + " AND ".join(clauses)) if clauses else ""
         params.append(limit)
+        params.append(offset)
         rows = conn.execute(
-            f"SELECT * FROM audit_log {where} ORDER BY id DESC LIMIT ?", params
+            f"SELECT * FROM audit_log {where} ORDER BY id DESC LIMIT ? OFFSET ?", params
         ).fetchall()
         pass
         from app.core.crypto import decrypt_sensitive_data
@@ -464,3 +489,35 @@ def query_audit_log(
         return result
     except Exception:
         return []
+
+
+def count_audit_log(
+    usuario: str | None = None,
+    endpoint: str | None = None,
+    accion: str | None = None,
+    desde: str | None = None,
+) -> int:
+    try:
+        conn = _conn()
+        clauses = []
+        params: list = []
+        if usuario:
+            clauses.append("usuario LIKE ?")
+            params.append(f"%{usuario}%")
+        if endpoint:
+            clauses.append("endpoint LIKE ?")
+            params.append(f"%{endpoint}%")
+        if accion:
+            clauses.append("accion LIKE ?")
+            params.append(f"%{accion}%")
+        if desde:
+            clauses.append("timestamp >= ?")
+            params.append(_normalize_iso_desde(desde))
+        where = ("WHERE " + " AND ".join(clauses)) if clauses else ""
+        row = conn.execute(
+            f"SELECT COUNT(*) AS cnt FROM audit_log {where}", params
+        ).fetchone()
+        pass
+        return row["cnt"] if row else 0
+    except Exception:
+        return 0
