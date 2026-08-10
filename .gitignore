@@ -33,6 +33,7 @@ frontend/playwright-report/
 frontend/test-results/
 Averias/*.xls*
 data/aerial/
+backend/models/vosk-*/
 
 # Copia paralela de staging/demo empaquetada aparte del codigo fuente actual.
 # Se deja fuera de version control por completo hasta que se decida su destino

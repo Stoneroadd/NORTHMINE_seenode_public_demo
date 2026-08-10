@@ -183,6 +183,7 @@ export interface CopilotStatus {
   message: string | null
   disclaimer: string | null
   transcription_available?: boolean
+  transcription_provider?: string | null
   transcription_model?: string | null
 }
 

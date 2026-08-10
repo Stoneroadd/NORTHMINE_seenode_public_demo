@@ -92,12 +92,17 @@ def test_voice_transcription_reports_missing_server_provider(client, login_as_op
 
 def test_voice_transcription_returns_provider_text(client, login_as_operador, monkeypatch):
     from app.ai import router as ai_router
+    from app.ai.transcription import TranscriptionResult
 
     settings = replace(ai_router.get_settings(), openai_api_key="test-key")
     monkeypatch.setattr(ai_router, "get_settings", lambda: settings)
 
     async def fake_transcribe_audio(**_kwargs):
-        return "Genera el reporte del turno"
+        return TranscriptionResult(
+            text="Genera el reporte del turno",
+            provider="openai",
+            model=settings.speech_transcription_model,
+        )
 
     monkeypatch.setattr(ai_router, "transcribe_audio", fake_transcribe_audio)
     response = client.post(
@@ -110,6 +115,33 @@ def test_voice_transcription_returns_provider_text(client, login_as_operador, mo
     assert response.status_code == 200
     assert response.json()["text"] == "Genera el reporte del turno"
     assert response.json()["provider"] == "openai"
+
+
+def test_voice_transcription_returns_local_windows_provider(client, login_as_operador, monkeypatch):
+    from app.ai import router as ai_router
+    from app.ai.transcription import TranscriptionResult
+
+    async def fake_transcribe_audio(**_kwargs):
+        return TranscriptionResult(
+            text="Analiza el turno actual",
+            provider="windows_speech",
+            model="windows-speech-es-ES",
+        )
+
+    monkeypatch.setattr(ai_router, "transcribe_audio", fake_transcribe_audio)
+    response = client.post(
+        "/api/ai-copilot/transcribe",
+        headers=auth_header(login_as_operador),
+        files={"audio": ("jarvis.wav", b"RIFF-audio", "audio/wav")},
+        data={"language": "es-ES"},
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "text": "Analiza el turno actual",
+        "provider": "windows_speech",
+        "model": "windows-speech-es-ES",
+    }
 
 
 def test_task_approval_endpoints_require_authentication(client):

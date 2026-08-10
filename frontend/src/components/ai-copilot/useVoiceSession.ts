@@ -68,6 +68,44 @@ function recognitionLanguage(): string {
   return configured.toLowerCase() === 'es' ? 'es-ES' : configured
 }
 
+function createPcmWavBlob(chunks: Float32Array[], sampleRate: number): Blob | null {
+  const sampleCount = chunks.reduce((total, chunk) => total + chunk.length, 0)
+  if (!sampleCount || !Number.isFinite(sampleRate) || sampleRate <= 0) return null
+
+  const bytesPerSample = 2
+  const buffer = new ArrayBuffer(44 + sampleCount * bytesPerSample)
+  const view = new DataView(buffer)
+  const writeAscii = (offset: number, value: string) => {
+    for (let index = 0; index < value.length; index += 1) {
+      view.setUint8(offset + index, value.charCodeAt(index))
+    }
+  }
+
+  writeAscii(0, 'RIFF')
+  view.setUint32(4, 36 + sampleCount * bytesPerSample, true)
+  writeAscii(8, 'WAVE')
+  writeAscii(12, 'fmt ')
+  view.setUint32(16, 16, true)
+  view.setUint16(20, 1, true)
+  view.setUint16(22, 1, true)
+  view.setUint32(24, sampleRate, true)
+  view.setUint32(28, sampleRate * bytesPerSample, true)
+  view.setUint16(32, bytesPerSample, true)
+  view.setUint16(34, 16, true)
+  writeAscii(36, 'data')
+  view.setUint32(40, sampleCount * bytesPerSample, true)
+
+  let offset = 44
+  for (const chunk of chunks) {
+    for (let index = 0; index < chunk.length; index += 1) {
+      const sample = Math.max(-1, Math.min(1, chunk[index]))
+      view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7fff, true)
+      offset += bytesPerSample
+    }
+  }
+  return new Blob([buffer], { type: 'audio/wav' })
+}
+
 async function onDeviceRecognitionAvailable(
   RecognitionCtor: SpeechRecognitionCtor,
   lang: string,
@@ -121,6 +159,11 @@ export function useVoiceSession(onFinalTranscript: (text: string) => void): Voic
   const recordedChunksRef = useRef<Blob[]>([])
   const streamRef = useRef<MediaStream | null>(null)
   const audioCtxRef = useRef<AudioContext | null>(null)
+  const pcmProcessorRef = useRef<ScriptProcessorNode | null>(null)
+  const pcmSourceRef = useRef<MediaStreamAudioSourceNode | null>(null)
+  const pcmSilentGainRef = useRef<GainNode | null>(null)
+  const pcmChunksRef = useRef<Float32Array[]>([])
+  const pcmSampleRateRef = useRef(0)
   const rafRef = useRef<number | null>(null)
   const maxRecordingTimerRef = useRef<number | null>(null)
   const finalPiecesRef = useRef<string[]>([])
@@ -171,6 +214,12 @@ export function useVoiceSession(onFinalTranscript: (text: string) => void): Voic
     clearRecordingTimer()
     streamRef.current?.getTracks().forEach((track) => track.stop())
     streamRef.current = null
+    pcmProcessorRef.current?.disconnect()
+    pcmProcessorRef.current = null
+    pcmSourceRef.current?.disconnect()
+    pcmSourceRef.current = null
+    pcmSilentGainRef.current?.disconnect()
+    pcmSilentGainRef.current = null
     audioCtxRef.current?.close().catch(() => undefined)
     audioCtxRef.current = null
     setAudioLevel(0)
@@ -237,7 +286,8 @@ export function useVoiceSession(onFinalTranscript: (text: string) => void): Voic
         recordedChunksRef.current = []
         mediaRecorderRef.current = null
         if (discardRecordingRef.current) return
-        const blob = new Blob(chunks, { type: recorder.mimeType || 'audio/webm' })
+        const wavBlob = createPcmWavBlob(pcmChunksRef.current, pcmSampleRateRef.current)
+        const blob = wavBlob ?? new Blob(chunks, { type: recorder.mimeType || 'audio/webm' })
         if (blob.size === 0) {
           setInterimTranscript('')
           setMicError('No detecté audio. Pulse el micrófono e inténtelo nuevamente.')
@@ -266,9 +316,23 @@ export function useVoiceSession(onFinalTranscript: (text: string) => void): Voic
       const audioContext = new AudioContextCtor()
       audioCtxRef.current = audioContext
       const source = audioContext.createMediaStreamSource(stream)
+      pcmSourceRef.current = source
       const analyser = audioContext.createAnalyser()
       analyser.fftSize = 256
       source.connect(analyser)
+      pcmChunksRef.current = []
+      pcmSampleRateRef.current = audioContext.sampleRate
+      const processor = audioContext.createScriptProcessor(4096, 1, 1)
+      const silentGain = audioContext.createGain()
+      silentGain.gain.value = 0
+      processor.onaudioprocess = (event) => {
+        pcmChunksRef.current.push(new Float32Array(event.inputBuffer.getChannelData(0)))
+      }
+      source.connect(processor)
+      processor.connect(silentGain)
+      silentGain.connect(audioContext.destination)
+      pcmProcessorRef.current = processor
+      pcmSilentGainRef.current = silentGain
       const buffer = new Uint8Array(analyser.frequencyBinCount)
 
       const tick = () => {

@@ -12,7 +12,12 @@ from app.ai import audit, policies, repository
 from app.ai.orchestrator import run_chat_turn
 from app.ai.schemas import ChatRequest, FeedbackRequest, TaskActionRequest
 from app.ai.providers import AnthropicProvider, LocalOperationalProvider, OpenAIProvider, get_provider
-from app.ai.transcription import TranscriptionFailed, TranscriptionUnavailable, transcribe_audio
+from app.ai.transcription import (
+    TranscriptionFailed,
+    TranscriptionUnavailable,
+    transcribe_audio,
+    transcription_provider,
+)
 from app.core.config import get_settings
 from app.core.dependencies import RequireAny, RequireOperador
 from app.core.rate_limit import endpoint_limit, limiter
@@ -31,6 +36,7 @@ def copilot_status(user: dict = RequireAny) -> dict[str, Any]:
     available = isinstance(provider, (AnthropicProvider, OpenAIProvider, LocalOperationalProvider))
     local_mode = isinstance(provider, LocalOperationalProvider)
     connected_provider = "openai" if isinstance(provider, OpenAIProvider) else "anthropic"
+    speech_provider = transcription_provider(settings)
     return {
         "ai_enabled": settings.ai_enabled,
         "available": available,
@@ -40,14 +46,9 @@ def copilot_status(user: dict = RequireAny) -> dict[str, Any]:
         "disclaimer": policies.DEGRADED_MODE_NOTICE if not available else None,
         "reasoning_mode": "deterministic_rules" if local_mode else "model_tool_calling",
         "data_source": "synthetic_demo_tools",
-        "transcription_available": bool(
-            settings.speech_transcription_enabled and settings.openai_api_key
-        ),
-        "transcription_model": (
-            settings.speech_transcription_model
-            if settings.speech_transcription_enabled and settings.openai_api_key
-            else None
-        ),
+        "transcription_available": speech_provider is not None,
+        "transcription_provider": speech_provider[0] if speech_provider else None,
+        "transcription_model": speech_provider[1] if speech_provider else None,
     }
 
 
@@ -75,7 +76,7 @@ async def transcribe_voice(
         raise HTTPException(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail="La grabacion excede el limite permitido")
 
     try:
-        text = await transcribe_audio(
+        result = await transcribe_audio(
             settings=settings,
             audio=payload,
             content_type=content_type,
@@ -92,9 +93,9 @@ async def transcribe_voice(
         raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(exc)) from exc
 
     return {
-        "text": text,
-        "provider": "openai",
-        "model": settings.speech_transcription_model,
+        "text": result.text,
+        "provider": result.provider,
+        "model": result.model,
     }
 
 

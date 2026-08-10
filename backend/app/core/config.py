@@ -116,6 +116,11 @@ class Settings:
     speech_transcription_model: str
     speech_transcription_max_bytes: int
     speech_transcription_timeout_seconds: float
+    windows_speech_enabled: bool
+    windows_speech_language: str
+    windows_speech_timeout_seconds: float
+    vosk_speech_enabled: bool
+    vosk_model_path: str
     password_history_count: int
     session_timeout_minutes: int
     bcrypt_rounds: int
@@ -350,6 +355,22 @@ def get_settings() -> Settings:
         speech_transcription_timeout_seconds=float(
             os.getenv("NORTHMINE_SPEECH_TRANSCRIPTION_TIMEOUT_SECONDS", "45")
         ),
+        windows_speech_enabled=os.getenv(
+            "NORTHMINE_WINDOWS_SPEECH_ENABLED", "true"
+        ).strip().lower() == "true",
+        windows_speech_language=os.getenv(
+            "NORTHMINE_WINDOWS_SPEECH_LANGUAGE", "es-ES"
+        ).strip(),
+        windows_speech_timeout_seconds=float(
+            os.getenv("NORTHMINE_WINDOWS_SPEECH_TIMEOUT_SECONDS", "20")
+        ),
+        vosk_speech_enabled=os.getenv(
+            "NORTHMINE_VOSK_SPEECH_ENABLED", "true"
+        ).strip().lower() == "true",
+        vosk_model_path=os.getenv(
+            "NORTHMINE_VOSK_MODEL_PATH",
+            str(root_dir / "backend" / "models" / "vosk-model-small-es-0.42"),
+        ).strip(),
         password_history_count=int(os.getenv("PASSWORD_HISTORY_COUNT", "5")),
         session_timeout_minutes=int(os.getenv("SESSION_TIMEOUT_MINUTES", "30")),
         bcrypt_rounds=int(os.getenv("BCRYPT_ROUNDS", "12")),
