@@ -230,7 +230,15 @@ export function AgentWorkspace({ open, onClose, context, role, canApprove }: Pro
         )}
 
         <AgentLiveTranscript listening={voice.listening} interimText={voice.interimTranscript} audioLevel={voice.audioLevel} />
-        {voice.micError && <p className="ai-agent-mic-error">Microfono: {voice.micError}</p>}
+        {voice.micError && (
+          <div id="jarvis-mic-feedback" className="ai-agent-mic-error" role="alert">
+            <AlertTriangle size={15} aria-hidden="true" />
+            <span>{voice.micError}</span>
+            <button type="button" disabled={voice.requestingPermission} onClick={() => void voice.startListening()}>
+              {voice.requestingPermission ? 'Solicitando…' : 'Reintentar'}
+            </button>
+          </div>
+        )}
 
         <div className="ai-copilot-body">
           <AIConversation turns={turns} canApprove={canApprove} />
@@ -242,8 +250,10 @@ export function AgentWorkspace({ open, onClose, context, role, canApprove }: Pro
           supported={voice.supported}
           listening={voice.listening}
           speaking={voice.speaking}
+          requestingPermission={voice.requestingPermission}
+          permissionState={voice.permissionState}
           voiceOutputEnabled={voiceOutputEnabled}
-          onToggleListening={() => (voice.listening ? voice.stopListening() : voice.startListening())}
+          onToggleListening={() => (voice.listening ? voice.stopListening() : void voice.startListening())}
           onStopSpeaking={voice.stopSpeaking}
           onToggleVoiceOutput={() => setVoiceOutputEnabled((value) => !value)}
         />

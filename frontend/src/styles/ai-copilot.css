@@ -710,9 +710,31 @@
 }
 
 .ai-agent-mic-error {
-  margin: 6px 18px 0;
-  font-size: 11px;
+  margin: 8px 18px 0;
+  padding: 10px 12px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid color-mix(in srgb, var(--nm-red) 38%, var(--nm-border));
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--nm-red) 8%, var(--bg-panel));
+  font-size: 12px;
+  line-height: 1.4;
   color: var(--nm-red);
+}
+
+.ai-agent-mic-error span { overflow-wrap: anywhere; }
+
+.ai-agent-mic-error button {
+  min-height: 36px;
+  padding: 6px 10px;
+  border: 1px solid currentColor;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
 }
 
 /* ---------------------------------------------------------------- *
@@ -760,6 +782,11 @@
   padding: 8px 14px 0;
 }
 
+.ai-agent-permission-status {
+  color: var(--nm-cyan);
+  font-size: 11px;
+}
+
 .ai-agent-voice-unsupported {
   margin: 0;
   padding: 8px 14px 0;
@@ -787,6 +814,29 @@
   background: var(--nm-cyan);
   border-color: var(--nm-cyan);
   animation: ai-agent-pulse 1.6s ease-in-out infinite;
+}
+
+.ai-agent-mic-button.is-requesting {
+  color: var(--nm-cyan);
+  border-color: color-mix(in srgb, var(--nm-cyan) 45%, var(--nm-border));
+}
+
+.ai-agent-mic-button:disabled,
+.ai-agent-mic-error button:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
+@media (max-width: 520px) {
+  .ai-agent-mic-error {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .ai-agent-mic-error button {
+    grid-column: 2;
+    justify-self: start;
+    min-height: 44px;
+  }
 }
 
 .ai-agent-interrupt-button {

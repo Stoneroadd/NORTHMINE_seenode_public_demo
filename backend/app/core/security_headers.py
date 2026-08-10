@@ -16,7 +16,10 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response.headers["X-XSS-Protection"]       = "1; mode=block"
         response.headers["Referrer-Policy"]        = "strict-origin-when-cross-origin"
         response.headers["Permissions-Policy"] = (
-            "geolocation=(), microphone=(), camera=(), payment=(), usb=(), bluetooth=()"
+            # JARVIS necesita captura de voz desde el mismo origen. Mantener
+            # el resto de capacidades sensibles deshabilitadas y no delegar
+            # el microfono a iframes u origenes externos.
+            "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), bluetooth=()"
         )
         # FastAPI genera Swagger/ReDoc con un script inline y recursos CDN.
         # En produccion esos endpoints no existen, asi que la politica puede

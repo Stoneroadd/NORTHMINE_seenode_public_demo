@@ -17,6 +17,16 @@ def test_operator_cannot_access_supervisor_endpoints(client, login_as_operador):
     assert response.status_code == 403
 
 
+def test_security_policy_allows_same_origin_microphone_only(client):
+    response = client.get("/health")
+
+    assert response.status_code == 200
+    policy = response.headers["Permissions-Policy"]
+    assert "microphone=(self)" in policy
+    assert "microphone=()" not in policy
+    assert "camera=()" in policy
+
+
 def test_brute_force_on_login(client):
     for _ in range(3):
         resp = client.post("/api/auth/login", json={"username": "admin", "password": "wrong"})

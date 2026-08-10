@@ -1,9 +1,11 @@
-import { Mic, MicOff, Square, Volume2, VolumeX } from 'lucide-react'
+import { Loader2, Mic, MicOff, Square, Volume2, VolumeX } from 'lucide-react'
 
 interface Props {
   supported: boolean
   listening: boolean
   speaking: boolean
+  requestingPermission: boolean
+  permissionState: PermissionState | 'unknown' | 'unavailable'
   voiceOutputEnabled: boolean
   onToggleListening: () => void
   onStopSpeaking: () => void
@@ -15,6 +17,8 @@ export function AgentVoiceControls({
   supported,
   listening,
   speaking,
+  requestingPermission,
+  permissionState,
   voiceOutputEnabled,
   onToggleListening,
   onStopSpeaking,
@@ -28,14 +32,18 @@ export function AgentVoiceControls({
     <div className="ai-agent-voice-controls">
       <button
         type="button"
-        className={`ai-agent-mic-button${listening ? ' is-listening' : ''}`}
+        className={`ai-agent-mic-button${listening ? ' is-listening' : ''}${requestingPermission ? ' is-requesting' : ''}`}
         onClick={onToggleListening}
+        disabled={requestingPermission}
         aria-pressed={listening}
-        aria-label={listening ? 'Detener microfono' : 'Activar microfono'}
-        title={listening ? 'Detener microfono (Ctrl+Espacio)' : 'Hablar (Ctrl+Espacio)'}
+        aria-describedby="jarvis-mic-feedback"
+        aria-label={listening ? 'Detener micrófono' : requestingPermission ? 'Solicitando permiso de micrófono' : 'Permitir y activar micrófono'}
+        title={listening ? 'Detener micrófono (Ctrl+Espacio)' : 'Permitir micrófono y hablar (Ctrl+Espacio)'}
       >
-        {listening ? <Mic size={16} /> : <MicOff size={16} />}
+        {requestingPermission ? <Loader2 size={16} className="ai-copilot-spin" /> : permissionState === 'denied' ? <MicOff size={16} /> : <Mic size={16} />}
       </button>
+
+      {requestingPermission && <span className="ai-agent-permission-status" role="status">Solicitando permiso…</span>}
 
       {speaking && (
         <button type="button" className="ai-agent-interrupt-button" onClick={onStopSpeaking} aria-label="Interrumpir">
@@ -53,7 +61,7 @@ export function AgentVoiceControls({
         {voiceOutputEnabled ? <Volume2 size={15} /> : <VolumeX size={15} />}
       </button>
 
-      {listening && (
+      {listening && !requestingPermission && (
         <span className="ai-agent-privacy-indicator" role="status">
           ● Micrófono activo
         </span>
