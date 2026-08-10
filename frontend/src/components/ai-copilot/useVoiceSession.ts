@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { copilotApi } from '../../lib/aiCopilot'
 
 /**
  * Pipeline B (desacoplado) del brief: Audio -> Speech-to-Text -> agente ->
@@ -135,6 +136,9 @@ export function useVoiceSession(onFinalTranscript: (text: string) => void): Voic
   const rafRef = useRef<number | null>(null)
   const requestingRef = useRef(false)
   const requestAttemptRef = useRef(0)
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
+  const recordedChunksRef = useRef<Blob[]>([])
+  const serverFallbackActiveRef = useRef(false)
   const onFinalRef = useRef(onFinalTranscript)
   onFinalRef.current = onFinalTranscript
 
@@ -202,10 +206,78 @@ export function useVoiceSession(onFinalTranscript: (text: string) => void): Voic
     }
   }, [])
 
+  const finishServerTranscription = useCallback(async (blob: Blob) => {
+    requestingRef.current = true
+    setRequestingPermission(true)
+    setInterimTranscript('Transcribiendo audio con el motor seguro de JARVIS…')
+    try {
+      const result = await copilotApi.transcribe(blob, recognitionLanguage())
+      setMicError(null)
+      setInterimTranscript('')
+      if (result.text.trim()) onFinalRef.current(result.text.trim())
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'No se pudo transcribir la grabacion.'
+      setInterimTranscript('')
+      setMicError(message)
+    } finally {
+      requestingRef.current = false
+      setRequestingPermission(false)
+      serverFallbackActiveRef.current = false
+      mediaRecorderRef.current = null
+      stopWaveform()
+    }
+  }, [stopWaveform])
+
+  const startServerRecorder = useCallback((stream: MediaStream): boolean => {
+    if (!('MediaRecorder' in window)) return false
+    try {
+      const preferredType = ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg;codecs=opus']
+        .find((type) => MediaRecorder.isTypeSupported(type))
+      const recorder = new MediaRecorder(stream, preferredType ? { mimeType: preferredType } : undefined)
+      recordedChunksRef.current = []
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) recordedChunksRef.current.push(event.data)
+      }
+      recorder.onerror = () => {
+        setMicError('No se pudo grabar el audio para la transcripcion segura. Continue por texto.')
+        serverFallbackActiveRef.current = false
+        setListening(false)
+        stopWaveform()
+      }
+      recorder.onstop = () => {
+        const chunks = recordedChunksRef.current
+        recordedChunksRef.current = []
+        const blob = new Blob(chunks, { type: recorder.mimeType || 'audio/webm' })
+        if (blob.size === 0) {
+          setMicError('La grabacion quedo vacia. Pulse el microfono, hable y vuelva a detenerlo.')
+          serverFallbackActiveRef.current = false
+          stopWaveform()
+          return
+        }
+        void finishServerTranscription(blob)
+      }
+      mediaRecorderRef.current = recorder
+      serverFallbackActiveRef.current = true
+      recorder.start(250)
+      setListening(true)
+      setMicError(null)
+      setInterimTranscript('Modo seguro activo. Hable y pulse detener al terminar.')
+      return true
+    } catch {
+      return false
+    }
+  }, [finishServerTranscription, stopWaveform])
+
   const stopListening = useCallback(() => {
     requestAttemptRef.current += 1
     recognitionRef.current?.stop()
+    recognitionRef.current = null
     setListening(false)
+    const recorder = mediaRecorderRef.current
+    if (recorder && recorder.state !== 'inactive') {
+      recorder.stop()
+      return
+    }
     stopWaveform()
   }, [stopWaveform])
 
@@ -321,9 +393,13 @@ export function useVoiceSession(onFinalTranscript: (text: string) => void): Voic
       } else if (event.error === 'audio-capture') {
         setMicError('El navegador perdió acceso al micrófono. Compruebe que no esté ocupado y pulse Reintentar.')
       } else if (event.error === 'network') {
+        if (!useOnDeviceRecognition && startServerRecorder(stream)) {
+          recognitionRef.current = null
+          return
+        }
         setMicError(useOnDeviceRecognition
           ? 'El reconocimiento local no pudo completar la transcripcion. Pulse Reintentar o continue por texto.'
-          : 'El servicio de voz del navegador no respondio. JARVIS conserva el permiso del microfono; pulse Reintentar. Para voz sin depender de este servicio, use un navegador con reconocimiento local disponible.')
+          : 'El navegador y el servidor no tienen un motor de transcripcion disponible. Continue por texto o habilite la transcripcion segura en el servidor.')
       } else if (event.error === 'language-not-supported') {
         setMicError(`El navegador no tiene instalado reconocimiento para ${lang}. Actualice el navegador o continue por texto.`)
       } else if (event.error !== 'aborted' && event.error !== 'no-speech') {
@@ -334,6 +410,7 @@ export function useVoiceSession(onFinalTranscript: (text: string) => void): Voic
     }
 
     recognition.onend = () => {
+      if (serverFallbackActiveRef.current) return
       setListening(false)
       stopWaveform()
       const finalText = finalPiecesRef.current.join(' ').trim()
@@ -358,7 +435,7 @@ export function useVoiceSession(onFinalTranscript: (text: string) => void): Voic
       requestingRef.current = false
       setRequestingPermission(false)
     }
-  }, [RecognitionCtor, listening, startWaveform, stopSpeaking, stopWaveform])
+  }, [RecognitionCtor, listening, startServerRecorder, startWaveform, stopSpeaking, stopWaveform])
 
   const speak = useCallback(
     (text: string) => {
@@ -380,6 +457,11 @@ export function useVoiceSession(onFinalTranscript: (text: string) => void): Voic
   useEffect(() => {
     return () => {
       recognitionRef.current?.abort()
+      const recorder = mediaRecorderRef.current
+      if (recorder && recorder.state !== 'inactive') {
+        recorder.onstop = null
+        recorder.stop()
+      }
       window.speechSynthesis?.cancel()
       stopWaveform()
     }

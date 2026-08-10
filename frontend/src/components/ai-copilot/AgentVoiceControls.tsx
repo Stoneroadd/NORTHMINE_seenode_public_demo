@@ -37,13 +37,13 @@ export function AgentVoiceControls({
         disabled={requestingPermission}
         aria-pressed={listening}
         aria-describedby="jarvis-mic-feedback"
-        aria-label={listening ? 'Detener micrófono' : requestingPermission ? 'Preparando reconocimiento de voz' : 'Permitir y activar micrófono'}
+        aria-label={listening ? 'Detener micrófono' : requestingPermission ? 'Procesando voz con JARVIS' : 'Permitir y activar micrófono'}
         title={listening ? 'Detener micrófono (Ctrl+Espacio)' : 'Permitir micrófono y hablar (Ctrl+Espacio)'}
       >
         {requestingPermission ? <Loader2 size={16} className="ai-copilot-spin" /> : permissionState === 'denied' ? <MicOff size={16} /> : <Mic size={16} />}
       </button>
 
-      {requestingPermission && <span className="ai-agent-permission-status" role="status">Preparando reconocimiento…</span>}
+      {requestingPermission && <span className="ai-agent-permission-status" role="status">Procesando voz…</span>}
 
       {speaking && (
         <button type="button" className="ai-agent-interrupt-button" onClick={onStopSpeaking} aria-label="Interrumpir">

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from dataclasses import replace
 
 from app.ai import navigation, policies, repository
 from app.ai.orchestrator import _validate_ui_actions
@@ -60,6 +61,54 @@ def test_soften_language_rewrites_authority_phrases():
 def test_chat_endpoint_requires_authentication(client):
     resp = client.post("/api/ai-copilot/chat", json={"message": "hola", "context": {}})
     assert resp.status_code == 401
+
+
+def test_voice_transcription_requires_authentication(client):
+    response = client.post(
+        "/api/ai-copilot/transcribe",
+        files={"audio": ("jarvis.webm", b"audio", "audio/webm")},
+        data={"language": "es"},
+    )
+    assert response.status_code == 401
+
+
+def test_voice_transcription_reports_missing_server_provider(client, login_as_operador, monkeypatch):
+    from app.ai import router as ai_router
+
+    settings = replace(ai_router.get_settings(), openai_api_key="")
+    monkeypatch.setattr(ai_router, "get_settings", lambda: settings)
+
+    response = client.post(
+        "/api/ai-copilot/transcribe",
+        headers=auth_header(login_as_operador),
+        files={"audio": ("jarvis.webm", b"audio", "audio/webm")},
+        data={"language": "es"},
+    )
+
+    assert response.status_code == 503
+    assert "no esta habilitada" in response.json()["detail"]
+
+
+def test_voice_transcription_returns_provider_text(client, login_as_operador, monkeypatch):
+    from app.ai import router as ai_router
+
+    settings = replace(ai_router.get_settings(), openai_api_key="test-key")
+    monkeypatch.setattr(ai_router, "get_settings", lambda: settings)
+
+    async def fake_transcribe_audio(**_kwargs):
+        return "Genera el reporte del turno"
+
+    monkeypatch.setattr(ai_router, "transcribe_audio", fake_transcribe_audio)
+    response = client.post(
+        "/api/ai-copilot/transcribe",
+        headers=auth_header(login_as_operador),
+        files={"audio": ("jarvis.webm", b"audio", "audio/webm")},
+        data={"language": "es"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["text"] == "Genera el reporte del turno"
+    assert response.json()["provider"] == "openai"
 
 
 def test_task_approval_endpoints_require_authentication(client):

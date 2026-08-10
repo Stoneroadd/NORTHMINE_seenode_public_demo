@@ -16,6 +16,7 @@ RATE_LIMITS: dict[str, str] = {
     "/api/simulator/run": "5/minute",
     "/api/ai/analysis": "10/minute",
     "/api/ai-copilot/chat": "15/minute",
+    "/api/ai-copilot/transcribe": "10/minute",
     "/api/averias/import-xls": "10/minute",
     "/api/averias/mail-sync": "5/minute",
     "/api/admin/audit-log": "30/minute",

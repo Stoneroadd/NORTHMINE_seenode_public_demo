@@ -5,13 +5,14 @@ import json
 import time
 from typing import Any, AsyncIterator
 
-from fastapi import APIRouter, HTTPException, Request, status
+from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile, status
 from fastapi.responses import StreamingResponse
 
 from app.ai import audit, policies, repository
 from app.ai.orchestrator import run_chat_turn
 from app.ai.schemas import ChatRequest, FeedbackRequest, TaskActionRequest
 from app.ai.providers import AnthropicProvider, LocalOperationalProvider, get_provider
+from app.ai.transcription import TranscriptionFailed, TranscriptionUnavailable, transcribe_audio
 from app.core.config import get_settings
 from app.core.dependencies import RequireAny, RequireOperador
 from app.core.rate_limit import endpoint_limit, limiter
@@ -36,6 +37,61 @@ def copilot_status(user: dict = RequireAny) -> dict[str, Any]:
         "model": "northmine-rules-v1" if local_mode else (settings.ai_model if available else None),
         "message": "Motor operacional local activo" if local_mode else (None if available else policies.DEGRADED_MODE_NOTICE),
         "disclaimer": policies.DEGRADED_MODE_NOTICE if not available else None,
+        "transcription_available": bool(
+            settings.speech_transcription_enabled and settings.openai_api_key
+        ),
+        "transcription_model": (
+            settings.speech_transcription_model
+            if settings.speech_transcription_enabled and settings.openai_api_key
+            else None
+        ),
+    }
+
+
+@router.post("/transcribe")
+@limiter.limit(endpoint_limit("/api/ai-copilot/transcribe"))
+async def transcribe_voice(
+    request: Request,
+    audio: UploadFile = File(...),
+    language: str = Form("es"),
+    user: dict = RequireAny,
+) -> dict[str, str]:
+    if not policies.can_use_chat(str(user.get("rol") or "")):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Rol sin acceso a voz JARVIS")
+
+    settings = get_settings()
+    content_type = (audio.content_type or "").split(";", 1)[0].strip().lower()
+    try:
+        payload = await audio.read(settings.speech_transcription_max_bytes + 1)
+    finally:
+        await audio.close()
+
+    if not payload:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="La grabacion esta vacia")
+    if len(payload) > settings.speech_transcription_max_bytes:
+        raise HTTPException(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail="La grabacion excede el limite permitido")
+
+    try:
+        text = await transcribe_audio(
+            settings=settings,
+            audio=payload,
+            content_type=content_type,
+            language=language,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, detail=str(exc)) from exc
+    except TranscriptionUnavailable as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="La transcripcion segura de JARVIS no esta habilitada en este servidor",
+        ) from exc
+    except TranscriptionFailed as exc:
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(exc)) from exc
+
+    return {
+        "text": text,
+        "provider": "openai",
+        "model": settings.speech_transcription_model,
     }
 
 

@@ -182,6 +182,8 @@ export interface CopilotStatus {
   model: string | null
   message: string | null
   disclaimer: string | null
+  transcription_available?: boolean
+  transcription_model?: string | null
 }
 
 export interface CopilotHistoryItem {
@@ -260,6 +262,32 @@ export async function streamCopilotChat(
 
 export const copilotApi = {
   status: () => apiFetch<CopilotStatus>('/api/ai-copilot/status'),
+  transcribe: async (audio: Blob, language = 'es'): Promise<{ text: string; provider: string; model: string }> => {
+    const token = authToken()
+    const form = new FormData()
+    form.append('audio', audio, audio.type.includes('ogg') ? 'jarvis.ogg' : 'jarvis.webm')
+    form.append('language', language)
+    const response = await fetch(`${BASE_URL}/api/ai-copilot/transcribe`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: form,
+    })
+    if (!response.ok) {
+      let message = `HTTP ${response.status}`
+      try {
+        const data = await response.json()
+        message = typeof data?.detail === 'string' ? data.detail : message
+      } catch {
+        // Se mantiene el estado HTTP cuando no hay JSON legible.
+      }
+      throw new ApiError(response.status, message)
+    }
+    return response.json()
+  },
   listTasks: (statusFilter?: TaskStatus) =>
     apiFetch<{ items: CopilotTaskDraft[]; count: number }>(
       `/api/ai-copilot/tasks${statusFilter ? `?status_filter=${encodeURIComponent(statusFilter)}` : ''}`,

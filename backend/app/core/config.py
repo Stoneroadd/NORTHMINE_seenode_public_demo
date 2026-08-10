@@ -103,6 +103,7 @@ class Settings:
     environment: str
     demo_mode: bool
     anthropic_api_key: str
+    openai_api_key: str
     ai_enabled: bool
     ai_provider: str
     ai_model: str
@@ -110,6 +111,10 @@ class Settings:
     ai_max_output_tokens: int
     ai_daily_budget_usd: float
     ai_copilot_db_path: str
+    speech_transcription_enabled: bool
+    speech_transcription_model: str
+    speech_transcription_max_bytes: int
+    speech_transcription_timeout_seconds: float
     password_history_count: int
     session_timeout_minutes: int
     bcrypt_rounds: int
@@ -307,6 +312,7 @@ def get_settings() -> Settings:
         environment=environment,
         demo_mode=os.getenv("NORTHMINE_DEMO_MODE", "false").lower() == "true" or data_mode == "DEMO",
         anthropic_api_key=os.getenv("ANTHROPIC_API_KEY", ""),
+        openai_api_key=os.getenv("NORTHMINE_OPENAI_API_KEY", os.getenv("OPENAI_API_KEY", "")).strip(),
         ai_enabled=os.getenv("NORTHMINE_AI_ENABLED", "true").strip().lower() == "true",
         ai_provider=os.getenv("NORTHMINE_AI_PROVIDER", "anthropic").strip().lower(),
         ai_model=os.getenv("NORTHMINE_AI_MODEL", "claude-haiku-4-5-20251001").strip(),
@@ -316,6 +322,18 @@ def get_settings() -> Settings:
         ai_copilot_db_path=os.getenv(
             "NORTHMINE_AI_COPILOT_DB",
             str(root_dir / "northmine_ai_copilot.db"),
+        ),
+        speech_transcription_enabled=os.getenv(
+            "NORTHMINE_SPEECH_TRANSCRIPTION_ENABLED", "true"
+        ).strip().lower() == "true",
+        speech_transcription_model=os.getenv(
+            "NORTHMINE_SPEECH_TRANSCRIPTION_MODEL", "gpt-4o-mini-transcribe"
+        ).strip(),
+        speech_transcription_max_bytes=int(
+            os.getenv("NORTHMINE_SPEECH_TRANSCRIPTION_MAX_BYTES", str(10 * 1024 * 1024))
+        ),
+        speech_transcription_timeout_seconds=float(
+            os.getenv("NORTHMINE_SPEECH_TRANSCRIPTION_TIMEOUT_SECONDS", "45")
         ),
         password_history_count=int(os.getenv("PASSWORD_HISTORY_COUNT", "5")),
         session_timeout_minutes=int(os.getenv("SESSION_TIMEOUT_MINUTES", "30")),
