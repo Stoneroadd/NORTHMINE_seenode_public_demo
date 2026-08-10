@@ -83,6 +83,38 @@ function ensureUvicorn(python) {
   run(python, ["-m", "pip", "install", "--break-system-packages", "-r", requirementsFile]);
 }
 
+function ensureWindowsOfflineSpeech(python) {
+  if (!isWindows) return;
+
+  if (!commandOk(python, ["-c", "import vosk"])) {
+    console.warn("Vosk no esta instalado; preparando reconocimiento de voz local para JARVIS.");
+    const install = tryRun(python, ["-m", "pip", "install", "vosk==0.3.45"]);
+    if (install.status !== 0) {
+      console.warn("No se pudo instalar Vosk. JARVIS usara otro proveedor de voz disponible.");
+      return;
+    }
+  }
+
+  const modelConfig = resolve(
+    "backend",
+    "models",
+    "vosk-model-small-es-0.42",
+    "conf",
+    "model.conf",
+  );
+  if (existsSync(modelConfig)) return;
+
+  console.warn("Modelo de voz espanol no encontrado; descargandolo una sola vez para JARVIS.");
+  const installer = resolve("backend", "scripts", "install_vosk_model.ps1");
+  const installModel = tryRun(
+    "powershell.exe",
+    ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", installer],
+  );
+  if (installModel.status !== 0 || !existsSync(modelConfig)) {
+    console.warn("No se pudo preparar el modelo offline. JARVIS usara otro proveedor de voz disponible.");
+  }
+}
+
 const python = findPython();
 const port = process.env.PORT || "8080";
 const defaultDbDir = isWindows ? "." : "/tmp";
@@ -103,6 +135,7 @@ const env = {
 };
 
 ensureUvicorn(python);
+ensureWindowsOfflineSpeech(python);
 
 const child = spawn(
   commandName(python),
