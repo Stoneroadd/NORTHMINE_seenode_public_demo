@@ -182,6 +182,23 @@
   padding: 32px 12px;
 }
 
+.ai-copilot-empty > div {
+  max-width: 34rem;
+}
+
+.ai-copilot-empty strong {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--nm-text);
+  font-size: 16px;
+  line-height: 1.4;
+}
+
+.ai-copilot-empty p {
+  margin: 0;
+  line-height: 1.55;
+}
+
 .ai-copilot-conversation {
   display: flex;
   flex-direction: column;

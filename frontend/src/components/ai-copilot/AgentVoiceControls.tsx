@@ -25,7 +25,7 @@ export function AgentVoiceControls({
   onToggleVoiceOutput,
 }: Props) {
   if (!supported) {
-    return <p className="ai-agent-voice-unsupported">Este navegador no soporta voz — use texto.</p>
+    return <p className="ai-agent-voice-unsupported">Este navegador no puede capturar voz. El chat escrito sigue disponible.</p>
   }
 
   return (
@@ -43,7 +43,7 @@ export function AgentVoiceControls({
         {requestingPermission ? <Loader2 size={16} className="ai-copilot-spin" /> : permissionState === 'denied' ? <MicOff size={16} /> : <Mic size={16} />}
       </button>
 
-      {requestingPermission && <span className="ai-agent-permission-status" role="status">Procesando voz…</span>}
+      {requestingPermission && <span className="ai-agent-permission-status" role="status">Entendiendo tu solicitud…</span>}
 
       {speaking && (
         <button type="button" className="ai-agent-interrupt-button" onClick={onStopSpeaking} aria-label="Interrumpir">
@@ -63,7 +63,7 @@ export function AgentVoiceControls({
 
       {listening && !requestingPermission && (
         <span className="ai-agent-privacy-indicator" role="status">
-          ● Micrófono activo
+          Micrófono activo
         </span>
       )}
     </div>

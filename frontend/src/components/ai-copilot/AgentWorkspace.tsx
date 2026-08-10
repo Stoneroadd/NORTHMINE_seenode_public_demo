@@ -43,9 +43,13 @@ export function AgentWorkspace({ open, onClose, context, role, canApprove }: Pro
   const abortRef = useRef<AbortController | null>(null)
   const contextRef = useRef(context)
   contextRef.current = context
-  const viaVoiceRef = useRef(false)
   const closeButtonRef = useRef<HTMLButtonElement | null>(null)
   const panelRef = useRef<HTMLElement | null>(null)
+  const voiceRef = useRef<ReturnType<typeof useVoiceSession> | null>(null)
+  const voiceOutputEnabledRef = useRef(voiceOutputEnabled)
+  const openRef = useRef(open)
+  voiceOutputEnabledRef.current = voiceOutputEnabled
+  openRef.current = open
 
   useEffect(() => {
     if (!open) return
@@ -115,6 +119,7 @@ export function AgentWorkspace({ open, onClose, context, role, canApprove }: Pro
 
     const controller = new AbortController()
     abortRef.current = controller
+    const responseTimer = window.setTimeout(() => controller.abort(), 15_000)
 
     try {
       await streamCopilotChat(
@@ -139,41 +144,64 @@ export function AgentWorkspace({ open, onClose, context, role, canApprove }: Pro
             } else if (event.type === 'final') {
               conversationIdRef.current = event.response.conversation_id
               updateTurn(assistantId, () => ({ id: assistantId, role: 'assistant', status: 'done', response: event.response }))
-              if (viaVoiceRef.current && voiceOutputEnabled && !event.response.degraded) {
-                voice.speak(event.response.message)
+              if (voiceOutputEnabledRef.current) {
+                voice.speak(event.response.message, () => {
+                  if (openRef.current) void voiceRef.current?.startListening()
+                })
               }
             }
           },
         },
       )
     } catch (error) {
+      const errorMessage = error instanceof DOMException && error.name === 'AbortError'
+        ? 'JARVIS agotó el tiempo de respuesta. Pulse Reintentar o formule la solicitud nuevamente.'
+        : error instanceof Error ? error.message : 'No se pudo obtener respuesta del agente.'
       updateTurn(assistantId, () => ({
         id: assistantId,
         role: 'assistant',
         status: 'error',
-        error: error instanceof Error ? error.message : 'No se pudo obtener respuesta del agente.',
+        error: errorMessage,
       }))
+      if (openRef.current && voiceOutputEnabledRef.current) {
+        voice.speak('No pude responder en este momento. Puede reintentar o continuar escribiendo.')
+      }
     } finally {
+      window.clearTimeout(responseTimer)
       setSending(false)
-      viaVoiceRef.current = false
     }
   }
 
   const handleTextSend = (message: string) => {
-    viaVoiceRef.current = false
     void handleSend(message)
   }
 
   const handleVoiceFinal = (message: string) => {
-    viaVoiceRef.current = true
     void handleSend(message)
   }
 
   const voice = useVoiceSession(handleVoiceFinal)
+  voiceRef.current = voice
+
+  useEffect(() => {
+    if (!open) return
+    const greeting = 'Hola, jefe. ¿En qué necesitas que te ayude?'
+    const timer = window.setTimeout(() => {
+      const currentVoice = voiceRef.current
+      if (!currentVoice) return
+      if (voiceOutputEnabledRef.current) {
+        currentVoice.speak(greeting, () => void voiceRef.current?.startListening())
+      } else {
+        void currentVoice.startListening()
+      }
+    }, 120)
+    return () => window.clearTimeout(timer)
+  }, [open])
 
   useEffect(() => {
     if (!open) {
-      voice.stopListening()
+      abortRef.current?.abort()
+      voice.cancelListening()
       voice.stopSpeaking()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

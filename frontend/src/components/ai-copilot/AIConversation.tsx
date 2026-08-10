@@ -14,7 +14,10 @@ export function AIConversation({ turns, canApprove }: { turns: ChatTurn[]; canAp
     return (
       <div className="ai-copilot-empty">
         <Bot size={28} />
-        <p>Pregunte por el desempeno del turno, brechas de produccion, alertas criticas o pida un grafico.</p>
+        <div>
+          <strong>Hola, jefe. ¿En qué necesitas que te ayude?</strong>
+          <p>Estoy listo para analizar el turno, revisar alertas, moverme por NORTHMINE o generar un reporte.</p>
+        </div>
       </div>
     )
   }
