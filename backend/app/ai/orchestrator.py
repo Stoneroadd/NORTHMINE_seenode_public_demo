@@ -381,6 +381,41 @@ def _run_local_operational_turn(
     allowed_tools: frozenset[str], history: list[dict[str, str]],
 ) -> tuple[CopilotResponse, list[str]]:
     normalized_message = _normalized(message)
+    asks_about_agent = any(
+        phrase in normalized_message
+        for phrase in (
+            "de donde saca los datos",
+            "de donde vienen los datos",
+            "como razona",
+            "que modelo",
+            "eres una ia",
+            "motor de ia",
+        )
+    )
+    if asks_about_agent:
+        return CopilotResponse(
+            message=(
+                "En este momento estoy usando el motor operacional local NORTHMINE. "
+                "Consulto herramientas autorizadas del demo y aplico reglas verificables; "
+                "no soy todavía un modelo generativo conectado en esta sesión. Cuando el "
+                "servidor habilita OpenAI, el modelo razona y solicita esas mismas herramientas, "
+                "pero los datos y las acciones siguen siendo validados por NORTHMINE."
+            ),
+            response_type="observation",
+            facts=[
+                "La demo pública usa datos sintéticos y representativos.",
+                "Las cifras provienen de herramientas internas autorizadas, no del conocimiento del modelo.",
+                "El backend valida el rol, la herramienta y cualquier acción antes de ejecutarla.",
+            ],
+            limitations=[
+                "El motor local tiene razonamiento acotado por reglas y no reemplaza un modelo generativo amplio.",
+                "La demo pública no está conectada a SQL ni WENCO.",
+            ],
+            confidence=ConfidenceInfo(level="alta", reasons=["Estado del proveedor y origen de datos conocidos por el backend."]),
+            data_freshness=DataFreshness(status="current", age_minutes=0),
+            requires_human_approval=False,
+            conversation_id=conversation_id,
+        ), []
     is_follow_up = len(normalized_message) < 100 and any(
         token in normalized_message for token in ("por que", "con eso", "y eso", "tambien", "ahora", "ese", "esa")
     )

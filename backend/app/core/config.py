@@ -107,6 +107,7 @@ class Settings:
     ai_enabled: bool
     ai_provider: str
     ai_model: str
+    ai_reasoning_effort: str
     ai_timeout_seconds: float
     ai_max_output_tokens: int
     ai_daily_budget_usd: float
@@ -288,6 +289,19 @@ def get_settings() -> Settings:
         os.getenv("DATABASE_URL", ""),
     ).strip()
     env_cors_origins = os.getenv("NORTHMINE_CORS_ORIGINS", "").strip()
+    anthropic_api_key = os.getenv("ANTHROPIC_API_KEY", "").strip()
+    openai_api_key = os.getenv("NORTHMINE_OPENAI_API_KEY", os.getenv("OPENAI_API_KEY", "")).strip()
+    requested_ai_provider = os.getenv("NORTHMINE_AI_PROVIDER", "auto").strip().lower()
+    if requested_ai_provider == "auto":
+        ai_provider = "openai" if openai_api_key else "anthropic" if anthropic_api_key else "local_operational"
+    else:
+        ai_provider = requested_ai_provider
+    default_ai_model = "gpt-5.6-terra" if ai_provider == "openai" else "claude-haiku-4-5-20251001"
+    ai_model = os.getenv("NORTHMINE_AI_MODEL", "").strip() or default_ai_model
+    ai_reasoning_effort = os.getenv("NORTHMINE_AI_REASONING_EFFORT", "low").strip().lower()
+    if ai_reasoning_effort not in {"none", "low", "medium", "high", "xhigh", "max"}:
+        ai_reasoning_effort = "low"
+
     return Settings(
         app_name=os.getenv("NORTHMINE_APP_NAME", "NORTHMINE SaaS API"),
         service_name=os.getenv("NORTHMINE_SERVICE_NAME", "northmine-api"),
@@ -311,11 +325,12 @@ def get_settings() -> Settings:
         password_salt_is_ephemeral=not env_password_salt,
         environment=environment,
         demo_mode=os.getenv("NORTHMINE_DEMO_MODE", "false").lower() == "true" or data_mode == "DEMO",
-        anthropic_api_key=os.getenv("ANTHROPIC_API_KEY", ""),
-        openai_api_key=os.getenv("NORTHMINE_OPENAI_API_KEY", os.getenv("OPENAI_API_KEY", "")).strip(),
+        anthropic_api_key=anthropic_api_key,
+        openai_api_key=openai_api_key,
         ai_enabled=os.getenv("NORTHMINE_AI_ENABLED", "true").strip().lower() == "true",
-        ai_provider=os.getenv("NORTHMINE_AI_PROVIDER", "anthropic").strip().lower(),
-        ai_model=os.getenv("NORTHMINE_AI_MODEL", "claude-haiku-4-5-20251001").strip(),
+        ai_provider=ai_provider,
+        ai_model=ai_model,
+        ai_reasoning_effort=ai_reasoning_effort,
         ai_timeout_seconds=float(os.getenv("NORTHMINE_AI_TIMEOUT_SECONDS", "30")),
         ai_max_output_tokens=int(os.getenv("NORTHMINE_AI_MAX_OUTPUT_TOKENS", "1200")),
         ai_daily_budget_usd=float(os.getenv("NORTHMINE_AI_DAILY_BUDGET_USD", "0")),

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import json
 from dataclasses import replace
 
@@ -124,6 +125,96 @@ def test_copilot_status_endpoint_reports_availability(client, login_as_operador)
     assert "available" in body
 
 
+def test_openai_provider_is_selected_for_configured_server_key():
+    from app.ai.providers import OpenAIProvider, get_provider
+    from app.core.config import get_settings
+
+    settings = replace(
+        get_settings(),
+        ai_enabled=True,
+        ai_provider="openai",
+        ai_model="gpt-5.6-terra",
+        openai_api_key="server-only-test-key",
+    )
+
+    assert isinstance(get_provider(settings), OpenAIProvider)
+
+
+def test_openai_provider_maps_responses_function_calls(monkeypatch):
+    from app.ai.providers import OpenAIProvider
+    from app.core.config import get_settings
+
+    captured: dict = {}
+
+    class FakeResponse:
+        status_code = 200
+
+        @staticmethod
+        def json():
+            return {
+                "output": [
+                    {"type": "reasoning", "id": "rs_test", "summary": []},
+                    {
+                        "type": "function_call",
+                        "id": "fc_test",
+                        "call_id": "call_test",
+                        "name": "get_production_kpis",
+                        "arguments": '{"shift":"DIA"}',
+                    },
+                ],
+                "usage": {"input_tokens": 20, "output_tokens": 8},
+            }
+
+    class FakeClient:
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *_args):
+            return False
+
+        async def post(self, url, **kwargs):
+            captured["url"] = url
+            captured["payload"] = kwargs["json"]
+            captured["authorization"] = kwargs["headers"]["Authorization"]
+            return FakeResponse()
+
+    monkeypatch.setattr("app.ai.providers.httpx.AsyncClient", lambda **_kwargs: FakeClient())
+    settings = replace(
+        get_settings(),
+        ai_enabled=True,
+        ai_provider="openai",
+        ai_model="gpt-5.6-terra",
+        ai_reasoning_effort="low",
+        openai_api_key="server-only-test-key",
+    )
+    provider = OpenAIProvider(settings)
+    response = asyncio.run(
+        provider.generate(
+            system="Usa solo herramientas autorizadas.",
+            messages=[{"role": "user", "content": "Analiza el turno"}],
+            tools=[
+                {
+                    "name": "get_production_kpis",
+                    "description": "KPIs de produccion",
+                    "input_schema": {"type": "object", "properties": {"shift": {"type": "string"}}},
+                }
+            ],
+        )
+    )
+
+    assert captured["url"].endswith("/v1/responses")
+    assert captured["payload"]["model"] == "gpt-5.6-terra"
+    assert captured["payload"]["reasoning"] == {"effort": "low"}
+    assert captured["payload"]["tools"][0]["name"] == "get_production_kpis"
+    assert captured["authorization"].startswith("Bearer ")
+    assert "server-only-test-key" not in json.dumps(captured["payload"])
+    assert response.stop_reason == "tool_use"
+    assert any(block.get("type") == "openai_item" for block in response.content)
+    tool_call = next(block for block in response.content if block.get("type") == "tool_use")
+    assert tool_call["name"] == "get_production_kpis"
+    assert tool_call["input"] == {"shift": "DIA"}
+
+
 def test_local_operational_engine_is_available_without_external_api_key(client, login_as_operador, monkeypatch):
     from app.ai.providers import LocalOperationalProvider
 
@@ -159,6 +250,27 @@ def test_local_operational_engine_generates_a_report_draft(client, login_as_oper
     assert final["report_drafts"][0]["sections"]["Alcance"]
     assert any(action["action"] == "navigate" and action["route"] == "reportes" for action in final["ui_actions"])
     assert final["tool_executions"]
+
+
+def test_local_engine_explains_its_data_and_reasoning_truthfully(client, login_as_operador, monkeypatch):
+    from app.ai.providers import LocalOperationalProvider
+
+    monkeypatch.setattr("app.ai.orchestrator.get_provider", lambda _settings: LocalOperationalProvider())
+    response = client.post(
+        "/api/ai-copilot/chat",
+        headers=auth_header(login_as_operador),
+        json={
+            "message": "De donde saca los datos y como razona?",
+            "context": {"section": "cockpit", "mine": "MINA CHILE DEMO"},
+        },
+    )
+
+    events = [json.loads(line) for line in response.text.strip().splitlines() if line.strip()]
+    final = [event for event in events if event["type"] == "final"][-1]["response"]
+    assert final["degraded"] is False
+    assert "motor operacional local" in final["message"]
+    assert any("datos sintéticos" in fact for fact in final["facts"])
+    assert any("SQL" in limitation for limitation in final["limitations"])
 
 
 def test_chat_history_is_bounded_and_supports_follow_up_context(client, login_as_operador, monkeypatch):
