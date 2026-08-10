@@ -15,7 +15,18 @@ import { useCallback, useEffect, useRef, useState } from 'react'
  * cuando el permiso quedo bloqueado a nivel del sitio.
  */
 
-type SpeechRecognitionCtor = new () => SpeechRecognitionLike
+type SpeechRecognitionAvailability = 'available' | 'downloadable' | 'downloading' | 'unavailable'
+
+interface SpeechRecognitionOptionsLike {
+  langs: string[]
+  processLocally: boolean
+}
+
+interface SpeechRecognitionCtor {
+  new (): SpeechRecognitionLike
+  available?: (options: SpeechRecognitionOptionsLike) => Promise<SpeechRecognitionAvailability>
+  install?: (options: SpeechRecognitionOptionsLike) => Promise<boolean>
+}
 
 interface SpeechRecognitionResultLike {
   isFinal: boolean
@@ -31,11 +42,13 @@ interface SpeechRecognitionLike extends EventTarget {
   lang: string
   continuous: boolean
   interimResults: boolean
+  processLocally?: boolean
+  onstart: (() => void) | null
   onresult: ((event: SpeechRecognitionEventLike) => void) | null
   onerror: ((event: { error: string }) => void) | null
   onend: (() => void) | null
   onspeechend: (() => void) | null
-  start: () => void
+  start: (audioTrack?: MediaStreamTrack) => void
   stop: () => void
   abort: () => void
 }
@@ -60,6 +73,31 @@ function microphoneAllowedByDocumentPolicy(): boolean {
   }
   const policy = documentWithPolicy.permissionsPolicy ?? documentWithPolicy.featurePolicy
   return policy?.allowsFeature('microphone') ?? true
+}
+
+function recognitionLanguage(): string {
+  const configured = document.documentElement.lang || navigator.language || 'es-CL'
+  return configured.toLowerCase() === 'es' ? 'es-ES' : configured
+}
+
+async function prepareOnDeviceRecognition(
+  RecognitionCtor: SpeechRecognitionCtor,
+  lang: string,
+): Promise<boolean> {
+  if (!RecognitionCtor.available || !RecognitionCtor.install) return false
+
+  const options: SpeechRecognitionOptionsLike = { langs: [lang], processLocally: true }
+  try {
+    const availability = await RecognitionCtor.available(options)
+    if (availability === 'available') return true
+    if (availability === 'downloadable' || availability === 'downloading') {
+      return await RecognitionCtor.install(options)
+    }
+  } catch {
+    // Algunos Chromium exponen la API antes de habilitar el paquete local.
+    // En ese caso se conserva el servicio normal del navegador.
+  }
+  return false
 }
 
 export interface VoiceSession {
@@ -213,6 +251,8 @@ export function useVoiceSession(onFinalTranscript: (text: string) => void): Voic
       })
       if (requestAttempt !== requestAttemptRef.current) {
         stream.getTracks().forEach((track) => track.stop())
+        requestingRef.current = false
+        setRequestingPermission(false)
         return
       }
       setPermissionState('granted')
@@ -231,16 +271,30 @@ export function useVoiceSession(onFinalTranscript: (text: string) => void): Voic
         setPermissionState('unknown')
         setMicError('No se pudo abrir el micrófono. Revise el permiso del sitio y pulse Reintentar.')
       }
-      return
-    } finally {
       requestingRef.current = false
       setRequestingPermission(false)
+      return
+    }
+
+    const lang = recognitionLanguage()
+    const useOnDeviceRecognition = await prepareOnDeviceRecognition(RecognitionCtor, lang)
+    if (requestAttempt !== requestAttemptRef.current) {
+      stream.getTracks().forEach((track) => track.stop())
+      requestingRef.current = false
+      setRequestingPermission(false)
+      return
     }
 
     const recognition = new RecognitionCtor()
-    recognition.lang = document.documentElement.lang || 'es-CL'
+    recognition.lang = lang
     recognition.continuous = true
     recognition.interimResults = true
+    if ('processLocally' in recognition) recognition.processLocally = useOnDeviceRecognition
+
+    recognition.onstart = () => {
+      setListening(true)
+      setMicError(null)
+    }
 
     recognition.onresult = (event) => {
       if (speakingRef.current) stopSpeaking()
@@ -266,6 +320,12 @@ export function useVoiceSession(onFinalTranscript: (text: string) => void): Voic
         setMicError('El reconocimiento de voz fue bloqueado. Abra el candado de la barra de direcciones, permita el micrófono y pulse Reintentar.')
       } else if (event.error === 'audio-capture') {
         setMicError('El navegador perdió acceso al micrófono. Compruebe que no esté ocupado y pulse Reintentar.')
+      } else if (event.error === 'network') {
+        setMicError(useOnDeviceRecognition
+          ? 'El reconocimiento local no pudo completar la transcripcion. Pulse Reintentar o continue por texto.'
+          : 'El servicio de voz del navegador no respondio. JARVIS conserva el permiso del microfono; pulse Reintentar. Para voz sin depender de este servicio, use un navegador con reconocimiento local disponible.')
+      } else if (event.error === 'language-not-supported') {
+        setMicError(`El navegador no tiene instalado reconocimiento para ${lang}. Actualice el navegador o continue por texto.`)
       } else if (event.error !== 'aborted' && event.error !== 'no-speech') {
         setMicError(`No se pudo iniciar el reconocimiento de voz (${event.error}). Pulse Reintentar.`)
       }
@@ -284,11 +344,19 @@ export function useVoiceSession(onFinalTranscript: (text: string) => void): Voic
     recognitionRef.current = recognition
     startWaveform(stream)
     try {
-      recognition.start()
+      const audioTrack = stream.getAudioTracks()[0]
+      if (!audioTrack) throw new DOMException('No hay una pista de audio activa.', 'NotFoundError')
+      // La misma pista alimenta el medidor y el reconocedor. Esto evita que
+      // SpeechRecognition intente abrir una segunda captura del microfono.
+      recognition.start(audioTrack)
       setListening(true)
-    } catch {
+    } catch (error) {
       stopWaveform()
-      setMicError('El reconocimiento de voz no pudo iniciarse. Pulse Reintentar o continúe por texto.')
+      const detail = error instanceof DOMException ? error.name : 'Error interno'
+      setMicError(`El reconocimiento de voz no pudo iniciarse (${detail}). Pulse Reintentar o continue por texto.`)
+    } finally {
+      requestingRef.current = false
+      setRequestingPermission(false)
     }
   }, [RecognitionCtor, listening, startWaveform, stopSpeaking, stopWaveform])
 
