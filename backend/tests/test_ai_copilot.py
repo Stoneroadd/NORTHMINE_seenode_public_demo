@@ -75,6 +75,69 @@ def test_copilot_status_endpoint_reports_availability(client, login_as_operador)
     assert "available" in body
 
 
+def test_local_operational_engine_is_available_without_external_api_key(client, login_as_operador, monkeypatch):
+    from app.ai.providers import LocalOperationalProvider
+
+    monkeypatch.setattr("app.ai.router.get_provider", lambda _settings: LocalOperationalProvider())
+    response = client.get("/api/ai-copilot/status", headers=auth_header(login_as_operador))
+
+    assert response.status_code == 200
+    assert response.json()["available"] is True
+    assert response.json()["provider"] == "local_operational"
+
+
+def test_local_operational_engine_generates_a_report_draft(client, login_as_operador, monkeypatch):
+    from app.ai.providers import LocalOperationalProvider
+    from app.services.data_provider import _demo_dataset
+
+    monkeypatch.setattr("app.ai.orchestrator.get_provider", lambda _settings: LocalOperationalProvider())
+    monkeypatch.setattr("app.ai.tools.provider_get_dataset", lambda fecha=None: _demo_dataset(fecha, 1))
+    response = client.post(
+        "/api/ai-copilot/chat",
+        headers=auth_header(login_as_operador),
+        json={
+            "message": "Genera un reporte PDF del turno y abre reportes",
+            "context": {"section": "turno", "mine": "MINA CHILE DEMO", "shift": "DIA"},
+        },
+    )
+
+    assert response.status_code == 200
+    events = [json.loads(line) for line in response.text.strip().splitlines() if line.strip()]
+    final = [event for event in events if event["type"] == "final"][-1]["response"]
+    assert final["degraded"] is False
+    assert final["report_drafts"]
+    assert final["report_drafts"][0]["status"] == "draft"
+    assert final["report_drafts"][0]["sections"]["Alcance"]
+    assert any(action["action"] == "navigate" and action["route"] == "reportes" for action in final["ui_actions"])
+    assert final["tool_executions"]
+
+
+def test_chat_history_is_bounded_and_supports_follow_up_context(client, login_as_operador, monkeypatch):
+    from app.ai.providers import LocalOperationalProvider
+    from app.services.data_provider import _demo_dataset
+
+    monkeypatch.setattr("app.ai.orchestrator.get_provider", lambda _settings: LocalOperationalProvider())
+    monkeypatch.setattr("app.ai.tools.provider_get_dataset", lambda fecha=None: _demo_dataset(fecha, 1))
+    response = client.post(
+        "/api/ai-copilot/chat",
+        headers=auth_header(login_as_operador),
+        json={
+            "message": "Y con eso genera un reporte",
+            "history": [
+                {"role": "user", "content": "Analiza la produccion y la flota"},
+                {"role": "assistant", "content": "Revise los indicadores disponibles."},
+            ],
+            "context": {"section": "turno", "shift": "DIA"},
+        },
+    )
+
+    events = [json.loads(line) for line in response.text.strip().splitlines() if line.strip()]
+    final = [event for event in events if event["type"] == "final"][-1]["response"]
+    used_tools = {execution["name"] for execution in final["tool_executions"] if execution["status"] == "ok"}
+    assert {"get_production_kpis", "get_fleet_status"} <= used_tools
+    assert final["report_drafts"]
+
+
 # ── Modo degradado (seccion 19 del brief): sin proveedor, el chat sigue
 # respondiendo 200 con una respuesta segura, nunca rompe la plataforma ────
 

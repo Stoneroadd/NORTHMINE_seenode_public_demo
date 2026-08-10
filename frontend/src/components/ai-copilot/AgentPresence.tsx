@@ -9,7 +9,7 @@ import '../../styles/ai-copilot.css'
 import '../../lib/agentRegistry/devBridge'
 
 const APPROVAL_ROLES = new Set(['admin', 'supervisor', 'operador'])
-const CHAT_ROLES = new Set(['admin', 'supervisor', 'operador', 'viewer'])
+const CHAT_ROLES = new Set(['admin', 'supervisor', 'operador', 'demo', 'viewer'])
 
 function shiftForAgent(shift: string | null): string | null {
   if (!shift) return null
@@ -67,10 +67,10 @@ export function AgentPresence() {
         type="button"
         className={`ai-agent-orb${open ? ' is-open' : ''}`}
         onClick={() => setOpen((value) => !value)}
-        aria-label="NORTHMINE AI — Operational Intelligence Agent"
+        aria-label="Abrir JARVIS, asistente operacional de NORTHMINE"
         aria-haspopup="dialog"
         aria-expanded={open}
-        title="NORTHMINE AI"
+        title="Abrir JARVIS"
       >
         <span className="ai-agent-orb-ring" aria-hidden="true" />
         <Sparkles size={18} />

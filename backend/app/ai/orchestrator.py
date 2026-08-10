@@ -9,7 +9,7 @@ from datetime import datetime
 from typing import Any
 
 from app.ai import navigation, policies, repository
-from app.ai.providers import AIProvider, ProviderError, get_provider
+from app.ai.providers import AIProvider, LocalOperationalProvider, ProviderError, get_provider
 from app.ai.schemas import (
     ChartSpec,
     ChatContext,
@@ -21,6 +21,7 @@ from app.ai.schemas import (
     FocusWidgetAction,
     NavigateAction,
     OpenEntityAction,
+    ReportDraft,
     SelectEntityAction,
     SetFilterAction,
     TaskDraft,
@@ -74,6 +75,20 @@ EMIT_RESPONSE_TOOL: dict[str, Any] = {
                     "suggested_owner": {"type": "string"},
                 },
                 "required": ["title", "reason"],
+            },
+            "propose_report": {
+                "type": "object",
+                "description": "Incluir cuando el usuario pide generar un reporte o informe descargable.",
+                "properties": {
+                    "kind": {"type": "string"},
+                    "title": {"type": "string"},
+                    "sections": {
+                        "type": "object",
+                        "additionalProperties": {"type": "string"},
+                        "description": "Secciones del reporte basadas exclusivamente en la evidencia consultada.",
+                    },
+                },
+                "required": ["title", "sections"],
             },
             "ui_actions": {
                 "type": "array",
@@ -308,12 +323,165 @@ def _degraded_response(conversation_id: str, reason: str) -> CopilotResponse:
     )
 
 
+def _normalized(text: str) -> str:
+    import unicodedata
+
+    return "".join(
+        character for character in unicodedata.normalize("NFKD", text.lower())
+        if not unicodedata.combining(character)
+    )
+
+
+def _local_tool_plan(message: str, allowed_tools: frozenset[str]) -> list[str]:
+    text = _normalized(message)
+    wants_report = any(word in text for word in ("reporte", "informe", "pdf"))
+    wants_analysis = any(word in text for word in ("analiza", "analisis", "diagnostica", "que esta pasando"))
+    planned: list[str] = []
+    rules = (
+        ("get_current_shift_summary", ("turno", "resumen", "estado", "analiza", "hola", "jarvis")),
+        ("get_production_kpis", ("produccion", "plan", "brecha", "ritmo", "tonel", "proyeccion", "grafico")),
+        ("get_fleet_status", ("flota", "equipo", "caex", "camion", "rendimiento", "disponibilidad")),
+        ("get_alerts", ("alerta", "riesgo", "critica", "problema", "anomalo", "anormal")),
+        ("get_data_quality_status", ("calidad", "dato", "fuente", "actualiz", "analiza")),
+    )
+    for name, keywords in rules:
+        if name in allowed_tools and (wants_report or wants_analysis or any(keyword in text for keyword in keywords)):
+            planned.append(name)
+    if not planned and "get_current_shift_summary" in allowed_tools:
+        planned.append("get_current_shift_summary")
+    return planned
+
+
+def _local_ui_actions(message: str, role: str) -> list[Any]:
+    text = _normalized(message)
+    if not any(verb in text for verb in ("abre", "ir a", "llevame", "muevete", "muestra", "navega")):
+        return []
+    routes = (
+        (("reporte", "informe"), "reportes"),
+        (("produccion",), "produccion"),
+        (("flota", "equipos", "caex"), "flota"),
+        (("alerta", "riesgo"), "alertas"),
+        (("turno",), "turno"),
+        (("carguio", "pala"), "carguio"),
+        (("averia", "mantencion"), "averias"),
+        (("rendimiento",), "rendimiento"),
+        (("comparativa", "comparar"), "comparativa"),
+        (("simulador", "simular"), "simulador"),
+        (("cockpit", "centro de decision"), "cockpit"),
+        (("resumen", "dashboard"), "dashboard"),
+    )
+    for keywords, route in routes:
+        if any(keyword in text for keyword in keywords):
+            return _validate_ui_actions([{"action": "navigate", "route": route}], role)
+    return []
+
+
+def _run_local_operational_turn(
+    *, user: dict[str, Any], message: str, context: ChatContext, conversation_id: str,
+    allowed_tools: frozenset[str], history: list[dict[str, str]],
+) -> tuple[CopilotResponse, list[str]]:
+    normalized_message = _normalized(message)
+    is_follow_up = len(normalized_message) < 100 and any(
+        token in normalized_message for token in ("por que", "con eso", "y eso", "tambien", "ahora", "ese", "esa")
+    )
+    planning_message = " ".join(item.get("content", "") for item in history[-4:]) + " " + message if is_follow_up else message
+    args = {"shift": context.shift, "date": context.selected_date}
+    outputs: list[tuple[str, dict[str, Any], dict[str, Any]]] = []
+    executions: list[ToolExecution] = []
+    for name in _local_tool_plan(planning_message, allowed_tools):
+        started = time.perf_counter()
+        try:
+            tool_args = {key: value for key, value in args.items() if value}
+            result = TOOL_REGISTRY[name].handler(tool_args)
+            outputs.append((name, tool_args, result))
+            executions.append(ToolExecution(
+                name=name, args=tool_args, status="ok",
+                duration_ms=int((time.perf_counter() - started) * 1000),
+                summary=_summarize_tool_result(name, result),
+            ))
+        except Exception as exc:  # noqa: BLE001 - una fuente parcial no tumba el dialogo
+            logger.exception("Fallo en herramienta local %s", name)
+            executions.append(ToolExecution(
+                name=name, args={}, status="error",
+                duration_ms=int((time.perf_counter() - started) * 1000), summary=str(exc)[:200],
+            ))
+
+    facts = [_summarize_tool_result(name, result) for name, _args, result in outputs]
+    recommendations: list[str] = []
+    inferences: list[str] = []
+    limitations: list[str] = []
+    for name, _tool_args, result in outputs:
+        if name == "get_production_kpis":
+            if float(result.get("brecha_ton") or 0) > 0:
+                recommendations.append(
+                    f"Evaluar un ritmo de {result.get('ritmo_requerido_tph', 0):,.0f} t/h para cerrar la brecha del turno."
+                )
+            inferences.append(
+                f"La proyeccion disponible es {result.get('proyeccion_fin_turno', 0):,.0f} t; requiere validacion con la continuidad operacional."
+            )
+        elif name == "get_alerts" and int(result.get("count") or 0) > 0:
+            recommendations.append("Priorizar la revision humana de las alertas criticas y altas antes de cambiar asignaciones.")
+        elif name == "get_data_quality_status" and result.get("stale"):
+            limitations.append("La fuente reporta datos desactualizados; las conclusiones deben tomarse como referenciales.")
+
+    text = _normalized(message)
+    wants_report = any(word in text for word in ("reporte", "informe", "pdf"))
+    ui_actions = _local_ui_actions(message, str(user.get("rol") or ""))
+    report_drafts: list[ReportDraft] = []
+    if wants_report and facts:
+        title = f"Reporte operacional {context.selected_date or 'turno actual'}"
+        sections = {
+            "Alcance": f"{context.mine or 'MINA CHILE DEMO'} · turno {context.shift or 'actual'} · datos sintéticos de demostración.",
+            "Resumen ejecutivo": "\n".join(facts),
+            "Inferencias": "\n".join(inferences) or "No se generaron inferencias adicionales.",
+            "Recomendaciones": "\n".join(recommendations) or "Mantener monitoreo y validar las decisiones con un usuario autorizado.",
+            "Limitaciones": "\n".join(limitations) or "Este reporte usa datos disponibles en la demo pública y no está conectado a SQL/WENCO.",
+        }
+        record = repository.create_report_draft(
+            conversation_id=conversation_id, kind="operational_shift", title=title,
+            sections=sections, created_by=str(user.get("sub") or "anon"),
+        )
+        report_drafts.append(ReportDraft(**record))
+
+    confidence = _combine_confidence([result.get("confidence", {}) for _n, _a, result in outputs])
+    freshness = _combine_freshness([result.get("freshness", {}) for _n, _a, result in outputs])
+    if not facts:
+        message_text = "Puedo conversar, navegar por NORTHMINE, analizar el turno y generar reportes, pero este rol no tiene una fuente autorizada para esa consulta."
+        limitations.append("No hay herramientas de datos autorizadas para el rol actual.")
+    elif wants_report:
+        message_text = "Generé un borrador de reporte PDF con la evidencia disponible. Puedes revisarlo y descargarlo desde esta conversación."
+    elif ui_actions:
+        message_text = "Entendido. Abriré el módulo solicitado y mantendré esta conversación disponible."
+    else:
+        message_text = "Revisé los datos disponibles del contexto actual. Estos son los hallazgos verificables para apoyar la decisión."
+
+    response = CopilotResponse(
+        message=message_text,
+        response_type="draft" if report_drafts else ("finding" if facts else "information_insufficient"),
+        facts=facts, inferences=inferences, recommendations=recommendations,
+        limitations=limitations, evidence=[
+            Evidence(
+                source=name, metric=name,
+                period=str(tool_args.get("date") or tool_args.get("shift") or context.selected_date or "turno actual"),
+                detail=_summarize_tool_result(name, result), tool=name,
+                generated_at=datetime.now().isoformat(timespec="seconds"),
+            ) for name, tool_args, result in outputs
+        ],
+        chart_specs=_maybe_build_chart(message, outputs), report_drafts=report_drafts,
+        ui_actions=ui_actions, confidence=confidence, data_freshness=freshness,
+        requires_human_approval=bool(recommendations), tool_executions=executions,
+        degraded=False, conversation_id=conversation_id,
+    )
+    return response, [name for name, _args, _result in outputs]
+
+
 async def run_chat_turn(
     *,
     user: dict[str, Any],
     message: str,
     context: ChatContext,
     conversation_id: str | None,
+    history: list[dict[str, str]] | None = None,
 ) -> tuple[CopilotResponse, list[str]]:
     """Ejecuta un turno completo: resolucion de herramientas + sintesis forzada.
 
@@ -324,14 +492,25 @@ async def run_chat_turn(
     settings: Settings = get_settings()
     role = str(user.get("rol") or "").strip().lower()
     conversation_id = conversation_id or f"conv-{uuid.uuid4().hex[:12]}"
+    history = history or []
 
     if not policies.can_use_chat(role):
         return _degraded_response(conversation_id, "Rol sin acceso al copiloto."), []
 
     provider: AIProvider = get_provider(settings)
     allowed_tools = policies.tools_allowed_for_role(role)
+    if isinstance(provider, LocalOperationalProvider):
+        return _run_local_operational_turn(
+            user=user, message=message, context=context, conversation_id=conversation_id,
+            allowed_tools=allowed_tools, history=history,
+        )
     system = _build_system_prompt(role, context, allowed_tools)
-    messages: list[dict[str, Any]] = [{"role": "user", "content": message}]
+    messages: list[dict[str, Any]] = [
+        {"role": item["role"], "content": item["content"]}
+        for item in history[-10:]
+        if item.get("role") in {"user", "assistant"} and item.get("content")
+    ]
+    messages.append({"role": "user", "content": message})
     tool_executions: list[ToolExecution] = []
     tool_outputs: list[tuple[str, dict[str, Any], dict[str, Any]]] = []
     used_tool_names: list[str] = []
@@ -441,6 +620,21 @@ async def run_chat_turn(
         except Exception:  # noqa: BLE001 - una tarea borrador que falla no debe romper el chat
             logger.exception("No se pudo guardar el borrador de tarea propuesto por el copiloto")
 
+    report_drafts: list[ReportDraft] = []
+    propose_report = payload.get("propose_report")
+    if isinstance(propose_report, dict) and propose_report.get("title") and isinstance(propose_report.get("sections"), dict):
+        try:
+            record = repository.create_report_draft(
+                conversation_id=conversation_id,
+                kind=str(propose_report.get("kind") or "operational"),
+                title=str(propose_report["title"]),
+                sections={str(key): str(value) for key, value in propose_report["sections"].items()},
+                created_by=str(user.get("sub") or "anon"),
+            )
+            report_drafts.append(ReportDraft(**record))
+        except Exception:  # noqa: BLE001 - el chat puede responder aunque el borrador no persista
+            logger.exception("No se pudo guardar el borrador de reporte propuesto por el copiloto")
+
     message_text = policies.soften_language(str(payload.get("message") or ""))
     validated_ui_actions = _validate_ui_actions(payload.get("ui_actions"), role)
     try:
@@ -454,6 +648,7 @@ async def run_chat_turn(
             evidence=evidence,
             chart_specs=chart_specs,
             task_drafts=task_drafts,
+            report_drafts=report_drafts,
             ui_actions=validated_ui_actions,
             confidence=confidence,
             data_freshness=freshness,

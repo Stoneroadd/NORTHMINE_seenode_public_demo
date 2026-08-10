@@ -68,10 +68,16 @@ class ChatContext(BaseModel):
         return value
 
 
+class ChatHistoryItem(BaseModel):
+    role: Literal["user", "assistant"]
+    content: str = Field(min_length=1, max_length=2000)
+
+
 class ChatRequest(BaseModel):
     conversation_id: str | None = Field(default=None, max_length=64)
     message: str = Field(min_length=1, max_length=2000)
     context: ChatContext = Field(default_factory=ChatContext)
+    history: list[ChatHistoryItem] = Field(default_factory=list, max_length=10)
 
     @field_validator("message")
     @classmethod

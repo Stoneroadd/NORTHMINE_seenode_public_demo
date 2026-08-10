@@ -186,6 +186,46 @@ def _row_to_task(row: sqlite3.Row) -> dict[str, Any]:
     return data
 
 
+def create_report_draft(
+    *,
+    conversation_id: str | None,
+    kind: str,
+    title: str,
+    sections: dict[str, str],
+    created_by: str,
+) -> dict[str, Any]:
+    conn = _connection()
+    report_id = f"report-{uuid.uuid4().hex[:12]}"
+    now = _now()
+    bounded_sections = {
+        str(key)[:80]: str(value)[:4000]
+        for key, value in list(sections.items())[:12]
+        if str(value).strip()
+    }
+    conn.execute(
+        """
+        INSERT INTO ai_report_drafts
+        (id, conversation_id, kind, title, sections, status, created_by, created_at, updated_at)
+        VALUES (?,?,?,?,?, 'draft', ?, ?, ?)
+        """,
+        (
+            report_id,
+            conversation_id,
+            kind[:80],
+            title[:200],
+            json.dumps(bounded_sections, ensure_ascii=False),
+            created_by,
+            now,
+            now,
+        ),
+    )
+    conn.commit()
+    row = conn.execute("SELECT * FROM ai_report_drafts WHERE id = ?", (report_id,)).fetchone()
+    data = dict(row)
+    data["sections"] = json.loads(data["sections"])
+    return data
+
+
 def save_feedback(*, message_id: str, rating: str, note: str | None, created_by: str, context: dict[str, Any]) -> None:
     conn = _connection()
     conn.execute(

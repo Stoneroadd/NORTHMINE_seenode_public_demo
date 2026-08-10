@@ -102,9 +102,23 @@ class NullProvider:
         raise ProviderError("Proveedor de IA no disponible (modo degradado)")
 
 
+class LocalOperationalProvider:
+    """Marcador del motor determinista local.
+
+    La ejecucion vive en orchestrator.py porque usa las mismas herramientas,
+    politicas y esquemas que el flujo con modelo externo. Este proveedor no
+    llama a red y mantiene util la demo publica sin distribuir API keys.
+    """
+
+    async def generate(self, **_kwargs: Any) -> ProviderResponse:  # pragma: no cover - el orquestador lo intercepta
+        raise ProviderError("El motor operacional local debe ejecutarse desde el orquestador")
+
+
 def get_provider(settings: Settings) -> AIProvider:
-    if not settings.ai_enabled or not settings.anthropic_api_key:
+    if not settings.ai_enabled:
         return NullProvider()
+    if not settings.anthropic_api_key:
+        return LocalOperationalProvider()
     if settings.ai_provider == "anthropic":
         return AnthropicProvider(settings)
     logger.warning("NORTHMINE_AI_PROVIDER desconocido=%s, usando modo degradado", settings.ai_provider)

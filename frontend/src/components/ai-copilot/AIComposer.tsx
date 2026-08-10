@@ -3,10 +3,10 @@ import { Send } from 'lucide-react'
 
 const QUICK_ACTIONS = [
   'Analiza el desempeno del turno actual',
-  'Resume las alertas criticas',
-  'Compara produccion real contra plan',
-  'Muestra un grafico de toneladas por hora',
-  'Detecta equipos con rendimiento anormal',
+  'Genera un reporte PDF del turno',
+  'Abre el modulo de reportes',
+  'Muestra un grafico del turno',
+  'Explica la calidad de los datos',
 ]
 
 interface Props {
@@ -47,6 +47,7 @@ export function AIComposer({ disabled, onSend }: Props) {
           placeholder="Pregunte sobre el turno, la flota, alertas o pida un informe..."
           rows={2}
           maxLength={2000}
+          aria-label="Mensaje para JARVIS"
           onChange={(event) => setValue(event.target.value)}
           onKeyDown={onKeyDown}
         />

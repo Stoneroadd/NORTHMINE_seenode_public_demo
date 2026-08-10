@@ -128,6 +128,16 @@ export interface CopilotTaskDraft {
   created_at?: string | null
 }
 
+export interface CopilotReportDraft {
+  id: string
+  kind: string
+  title: string
+  sections: Record<string, string>
+  status: 'draft' | 'approved' | 'discarded'
+  created_by?: string | null
+  created_at?: string | null
+}
+
 export interface CopilotToolExecution {
   name: string
   args: Record<string, unknown>
@@ -146,7 +156,7 @@ export interface CopilotResponse {
   evidence: CopilotEvidence[]
   chart_specs: CopilotChartSpec[]
   task_drafts: CopilotTaskDraft[]
-  report_drafts: unknown[]
+  report_drafts: CopilotReportDraft[]
   ui_actions: CopilotUIAction[]
   confidence: CopilotConfidence
   data_freshness: CopilotFreshness
@@ -174,6 +184,11 @@ export interface CopilotStatus {
   disclaimer: string | null
 }
 
+export interface CopilotHistoryItem {
+  role: 'user' | 'assistant'
+  content: string
+}
+
 function authToken(): string | null {
   return useAppStore.getState().usuario?.token ?? null
 }
@@ -186,7 +201,7 @@ function authToken(): string | null {
  * progresiva de una respuesta ya validada, no streaming de tokens del modelo.
  */
 export async function streamCopilotChat(
-  payload: { conversation_id?: string | null; message: string; context: CopilotContext },
+  payload: { conversation_id?: string | null; message: string; context: CopilotContext; history?: CopilotHistoryItem[] },
   handlers: { onEvent: (event: CopilotStreamEvent) => void; signal?: AbortSignal },
 ): Promise<CopilotResponse> {
   const token = authToken()

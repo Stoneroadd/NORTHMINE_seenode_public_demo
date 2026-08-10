@@ -1696,11 +1696,13 @@ def _alert(
 def build_alerts(
     summary: dict[str, Any] | None = None,
     fleet: list[dict[str, Any]] | None = None,
+    dataset: dict[str, Any] | None = None,
+    turno: str | None = None,
 ) -> list[dict[str, Any]]:
-    summary = summary or build_summary()
-    production = build_production_shift()
-    fleet = fleet or build_fleet_status()
-    loading = build_loading_units_summary()
+    summary = summary or build_summary(dataset)
+    production = build_production_shift(dataset, turno=turno)
+    fleet = fleet or build_fleet_status(dataset, turno=turno)
+    loading = build_loading_units_summary(dataset, turno=turno)
     alerts: list[dict[str, Any]] = []
 
     if production["cumplimiento_pct"] < 98:
@@ -1756,7 +1758,7 @@ def build_shift_report(
     production = build_production_shift(dataset, turno=turno)
     loading = build_loading_units_summary(dataset, turno=turno)
     fleet = build_fleet_overview(dataset, turno=turno)
-    alerts = build_alerts(build_summary(dataset), fleet["lista_equipos"])
+    alerts = build_alerts(build_summary(dataset), fleet["lista_equipos"], dataset, turno=turno)
     source = str(dataset.get("source") or "wenco-sql-live")
     is_demo_dataset = (
         str(dataset.get("data_source") or "").upper() == "DEMO"

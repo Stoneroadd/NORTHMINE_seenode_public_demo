@@ -3,6 +3,7 @@ import { AIConfidenceBadge, AIDataFreshnessBadge, AIThinkingIndicator, AIToolExe
 import { AIEvidencePanel } from './AIEvidencePanel'
 import { AIChartRenderer } from './AIChartRenderer'
 import { AITaskDraftCard } from './AITaskDraftCard'
+import { AIReportDraftCard } from './AIReportDraftCard'
 import type { ChatTurn } from './types'
 
 const RESPONSE_TYPE_LABEL: Record<string, string> = {
@@ -96,6 +97,10 @@ export function AIMessage({ turn, canApprove }: { turn: ChatTurn; canApprove: bo
 
         {response.task_drafts.map((task) => (
           <AITaskDraftCard key={task.id} task={task} canApprove={canApprove} />
+        ))}
+
+        {response.report_drafts.map((report) => (
+          <AIReportDraftCard key={report.id} report={report} />
         ))}
 
         <AIEvidencePanel evidence={response.evidence} />

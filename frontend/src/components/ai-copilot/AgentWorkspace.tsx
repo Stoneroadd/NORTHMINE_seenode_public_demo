@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
-import { AlertTriangle, X } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, RotateCcw, X } from 'lucide-react'
 import { copilotApi, streamCopilotChat } from '../../lib/aiCopilot'
-import type { CopilotContext, CopilotStatus, CopilotStreamEvent } from '../../lib/aiCopilot'
+import type { CopilotContext, CopilotHistoryItem, CopilotStatus, CopilotStreamEvent } from '../../lib/aiCopilot'
 import { AIContextBar } from './AIContextBar'
 import { AIConversation } from './AIConversation'
 import { AIComposer } from './AIComposer'
@@ -44,6 +44,8 @@ export function AgentWorkspace({ open, onClose, context, role, canApprove }: Pro
   const contextRef = useRef(context)
   contextRef.current = context
   const viaVoiceRef = useRef(false)
+  const closeButtonRef = useRef<HTMLButtonElement | null>(null)
+  const panelRef = useRef<HTMLElement | null>(null)
 
   useEffect(() => {
     if (!open) return
@@ -65,12 +67,45 @@ export function AgentWorkspace({ open, onClose, context, role, canApprove }: Pro
     return () => abortRef.current?.abort()
   }, [])
 
+  useEffect(() => {
+    if (!open) return
+    const previousFocus = document.activeElement as HTMLElement | null
+    closeButtonRef.current?.focus()
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose()
+      if (event.key !== 'Tab') return
+      const focusable = Array.from(
+        panelRef.current?.querySelectorAll<HTMLElement>('button:not([disabled]), textarea:not([disabled]), [href], [tabindex]:not([tabindex="-1"])') ?? [],
+      )
+      if (focusable.length === 0) return
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault()
+        first.focus()
+      }
+    }
+    window.addEventListener('keydown', handleEscape)
+    return () => {
+      window.removeEventListener('keydown', handleEscape)
+      previousFocus?.focus()
+    }
+  }, [open, onClose])
+
   const updateTurn = (id: string, updater: (turn: ChatTurn) => ChatTurn) => {
     setTurns((current) => current.map((turn) => (turn.id === id ? updater(turn) : turn)))
   }
 
   const handleSend = async (message: string) => {
     if (sending) return
+    const history = turns.slice(-10).reduce<CopilotHistoryItem[]>((items, turn) => {
+      if (turn.role === 'user') items.push({ role: 'user', content: turn.text })
+      else if (turn.status === 'done') items.push({ role: 'assistant', content: turn.response.message })
+      return items
+    }, [])
     setSending(true)
     const userTurn: ChatTurn = { id: newId(), role: 'user', text: message }
     const assistantId = newId()
@@ -83,7 +118,7 @@ export function AgentWorkspace({ open, onClose, context, role, canApprove }: Pro
 
     try {
       await streamCopilotChat(
-        { conversation_id: conversationIdRef.current, message, context: contextRef.current },
+        { conversation_id: conversationIdRef.current, message, context: contextRef.current, history },
         {
           signal: controller.signal,
           onEvent: (event: CopilotStreamEvent) => {
@@ -160,18 +195,19 @@ export function AgentWorkspace({ open, onClose, context, role, canApprove }: Pro
   if (!open) return null
 
   const degraded = status ? !status.available : false
+  const localMode = status?.provider === 'local_operational'
   const agentPhase = voice.listening ? 'listening' : voice.speaking ? 'speaking' : sending ? 'analyzing' : 'idle'
 
   return (
-    <div className="ai-copilot-overlay" role="dialog" aria-modal="true" aria-label="NORTHMINE AI — Operational Intelligence Agent">
+    <div className="ai-copilot-overlay" role="dialog" aria-modal="true" aria-labelledby="jarvis-title">
       <div className="ai-copilot-backdrop" onClick={onClose} />
-      <aside className={`ai-copilot-panel is-${agentPhase}`}>
+      <aside ref={panelRef} className={`ai-copilot-panel is-${agentPhase}`}>
         <header className="ai-copilot-header">
           <div>
-            <span className="ai-copilot-eyebrow">NORTHMINE Operational Intelligence Agent</span>
-            <h2>NORTHMINE AI</h2>
+            <h2 id="jarvis-title">JARVIS</h2>
+            <span className="ai-copilot-subtitle">Asistente operacional NORTHMINE</span>
           </div>
-          <button type="button" className="ai-copilot-close" onClick={onClose} aria-label="Cerrar">
+          <button ref={closeButtonRef} type="button" className="ai-copilot-close" onClick={onClose} aria-label="Cerrar JARVIS">
             <X size={18} />
           </button>
         </header>
@@ -182,6 +218,14 @@ export function AgentWorkspace({ open, onClose, context, role, canApprove }: Pro
           <div className="ai-copilot-degraded-banner">
             <AlertTriangle size={14} />
             <span>{status?.message ?? 'El agente no esta disponible temporalmente.'}</span>
+            <button type="button" onClick={() => window.location.reload()}><RotateCcw size={13} /> Reintentar</button>
+          </div>
+        )}
+
+        {!degraded && status && (
+          <div className="ai-copilot-engine-status" role="status">
+            <CheckCircle2 size={13} />
+            <span>{localMode ? 'Motor local · datos demo · sin claves externas' : `Motor conectado · ${status.model ?? status.provider}`}</span>
           </div>
         )}
 

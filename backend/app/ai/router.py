@@ -11,6 +11,7 @@ from fastapi.responses import StreamingResponse
 from app.ai import audit, policies, repository
 from app.ai.orchestrator import run_chat_turn
 from app.ai.schemas import ChatRequest, FeedbackRequest, TaskActionRequest
+from app.ai.providers import AnthropicProvider, LocalOperationalProvider, get_provider
 from app.core.config import get_settings
 from app.core.dependencies import RequireAny, RequireOperador
 from app.core.rate_limit import endpoint_limit, limiter
@@ -25,13 +26,15 @@ def _client_ip(request: Request) -> str:
 @router.get("/status")
 def copilot_status(user: dict = RequireAny) -> dict[str, Any]:
     settings = get_settings()
-    available = bool(settings.ai_enabled and settings.anthropic_api_key)
+    provider = get_provider(settings)
+    available = isinstance(provider, (AnthropicProvider, LocalOperationalProvider))
+    local_mode = isinstance(provider, LocalOperationalProvider)
     return {
         "ai_enabled": settings.ai_enabled,
         "available": available,
-        "provider": settings.ai_provider,
-        "model": settings.ai_model if available else None,
-        "message": None if available else policies.DEGRADED_MODE_NOTICE,
+        "provider": "local_operational" if local_mode else settings.ai_provider,
+        "model": "northmine-rules-v1" if local_mode else (settings.ai_model if available else None),
+        "message": "Motor operacional local activo" if local_mode else (None if available else policies.DEGRADED_MODE_NOTICE),
         "disclaimer": policies.DEGRADED_MODE_NOTICE if not available else None,
     }
 
@@ -51,6 +54,7 @@ async def _chat_events(request: Request, payload: ChatRequest, user: dict) -> As
         message=payload.message,
         context=payload.context,
         conversation_id=payload.conversation_id,
+        history=[item.model_dump() for item in payload.history],
     )
 
     for execution in response.tool_executions:
