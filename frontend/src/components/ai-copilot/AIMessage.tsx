@@ -1,4 +1,4 @@
-import { AlertTriangle, User2 } from 'lucide-react'
+import { AlertTriangle } from 'lucide-react'
 import { AIConfidenceBadge, AIDataFreshnessBadge, AIThinkingIndicator, AIToolExecutionStatus } from './AIBadges'
 import { AIEvidencePanel } from './AIEvidencePanel'
 import { AIChartRenderer } from './AIChartRenderer'
@@ -22,9 +22,7 @@ export function AIMessage({ turn, canApprove }: { turn: ChatTurn; canApprove: bo
   if (turn.role === 'user') {
     return (
       <div className="ai-copilot-message is-user">
-        <div className="ai-copilot-message-avatar">
-          <User2 size={14} />
-        </div>
+        <span className="ai-copilot-message-author">ORDEN</span>
         <p>{turn.text}</p>
       </div>
     )
@@ -58,6 +56,7 @@ export function AIMessage({ turn, canApprove }: { turn: ChatTurn; canApprove: bo
   return (
     <div className={`ai-copilot-message is-assistant${response.degraded ? ' is-degraded' : ''}`}>
       <div className="ai-copilot-message-body">
+        <span className="ai-copilot-message-author">JARVIS / RESPUESTA VERIFICADA</span>
         <div className="ai-copilot-message-tags">
           <span className="ai-copilot-badge ai-copilot-badge--type">{RESPONSE_TYPE_LABEL[response.response_type] ?? response.response_type}</span>
           <AIConfidenceBadge confidence={response.confidence} />

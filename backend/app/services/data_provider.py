@@ -21,6 +21,8 @@ from __future__ import annotations
 import logging
 import random
 from datetime import date, datetime, time, timedelta
+from functools import lru_cache
+from threading import Lock
 from typing import Any
 
 from app.core.config import get_settings
@@ -34,6 +36,7 @@ _dataset_cache: dict[tuple[str | None, int], dict[str, Any]] = {}
 _fleet_cache: dict[int, dict[str, Any]] = {}
 _status_cache: dict[int, dict[str, Any]] = {}
 _status_history_cache: dict[int, list[dict[str, Any]]] = {}
+_demo_dataset_lock = Lock()
 
 
 def _demo_equipment_status(dias: int = 1) -> dict[str, dict[str, Any]]:
@@ -102,6 +105,7 @@ def _demo_equipment_status_history(dias: int = 7) -> list[dict[str, Any]]:
     return result
 
 
+@lru_cache(maxsize=32)
 def _demo_dataset(fecha: str | None, dias: int) -> dict[str, Any]:
     """Genera turnos reproducibles, pero distintos, para la demo local.
 
@@ -211,7 +215,13 @@ def _demo_dataset(fecha: str | None, dias: int) -> dict[str, Any]:
 
 def get_dataset(fecha: str | None = None, dias: int = 2) -> dict[str, Any]:
     if get_settings().is_demo:
-        return _demo_dataset(fecha, dias)
+        # La demo es deterministica por fecha. Resolver el dia explicito evita
+        # regenerar miles de ciclos para cada herramienta de un mismo dialogo.
+        selected_date = fecha or date.today().isoformat()
+        # lru_cache protege su estructura, pero permite computos duplicados si
+        # varios hilos fallan el cache a la vez. El lock evita ese arranque frio.
+        with _demo_dataset_lock:
+            return _demo_dataset(selected_date, dias)
     key = (fecha, dias)
     try:
         result = get_wenco_dataset(fecha, dias=dias) if fecha else get_wenco_dataset(dias=dias)

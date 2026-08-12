@@ -12,7 +12,7 @@ interface Props {
   onToggleVoiceOutput: () => void
 }
 
-/** Controles de voz: microfono, interrumpir mientras habla, silenciar salida. */
+/** Controles del canal de voz: captura, interrupción y salida verbal. */
 export function AgentVoiceControls({
   supported,
   listening,
@@ -25,7 +25,7 @@ export function AgentVoiceControls({
   onToggleVoiceOutput,
 }: Props) {
   if (!supported) {
-    return <p className="ai-agent-voice-unsupported">Este navegador no puede capturar voz. El chat escrito sigue disponible.</p>
+    return <p className="ai-agent-voice-unsupported">Captura de voz no disponible. El canal escrito permanece operativo.</p>
   }
 
   return (
@@ -36,18 +36,21 @@ export function AgentVoiceControls({
         onClick={onToggleListening}
         disabled={requestingPermission}
         aria-pressed={listening}
-        aria-describedby="jarvis-mic-feedback"
         aria-label={listening ? 'Detener micrófono' : requestingPermission ? 'Procesando voz con JARVIS' : 'Permitir y activar micrófono'}
         title={listening ? 'Detener micrófono (Ctrl+Espacio)' : 'Permitir micrófono y hablar (Ctrl+Espacio)'}
       >
-        {requestingPermission ? <Loader2 size={16} className="ai-copilot-spin" /> : permissionState === 'denied' ? <MicOff size={16} /> : <Mic size={16} />}
+        {requestingPermission ? <Loader2 size={17} className="ai-copilot-spin" /> : permissionState === 'denied' ? <MicOff size={17} /> : <Mic size={17} />}
+        <span className="ai-agent-mic-copy">
+          <strong>{listening ? 'DETENER' : 'HABLAR'}</strong>
+          <small>{listening ? 'Captura activa' : 'Ctrl + Espacio'}</small>
+        </span>
       </button>
 
-      {requestingPermission && <span className="ai-agent-permission-status" role="status">Entendiendo tu solicitud…</span>}
+      {requestingPermission && <span className="ai-agent-permission-status" role="status">ENTENDIENDO ORDEN</span>}
 
       {speaking && (
-        <button type="button" className="ai-agent-interrupt-button" onClick={onStopSpeaking} aria-label="Interrumpir">
-          <Square size={13} /> Interrumpir
+        <button type="button" className="ai-agent-interrupt-button" onClick={onStopSpeaking} aria-label="Interrumpir respuesta verbal">
+          <Square size={13} /> INTERRUMPIR
         </button>
       )}
 
@@ -56,15 +59,14 @@ export function AgentVoiceControls({
         className="ai-agent-mute-button"
         onClick={onToggleVoiceOutput}
         aria-pressed={!voiceOutputEnabled}
+        aria-label={voiceOutputEnabled ? 'Silenciar respuestas' : 'Activar voz de respuesta'}
         title={voiceOutputEnabled ? 'Silenciar respuestas' : 'Activar voz de respuesta'}
       >
-        {voiceOutputEnabled ? <Volume2 size={15} /> : <VolumeX size={15} />}
+        {voiceOutputEnabled ? <Volume2 size={17} /> : <VolumeX size={17} />}
       </button>
 
       {listening && !requestingPermission && (
-        <span className="ai-agent-privacy-indicator" role="status">
-          Micrófono activo
-        </span>
+        <span className="ai-agent-privacy-indicator" role="status">MIC ACTIVO</span>
       )}
     </div>
   )

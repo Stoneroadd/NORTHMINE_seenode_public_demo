@@ -884,3 +884,655 @@
   outline-offset: 3px;
   transition: outline-color 200ms ease;
 }
+
+/* ========================================================================
+ * JARVIS COMMAND SLATE
+ * Consola editorial-industrial: grafito, latón mineral y señal instrumentada.
+ * ======================================================================== */
+.ai-copilot-overlay {
+  --jarvis-ink: #07090b;
+  --jarvis-surface: #0c0f12;
+  --jarvis-surface-raised: #12161a;
+  --jarvis-brass: #c79a63;
+  --jarvis-brass-bright: #e2bc87;
+  --jarvis-text: #f1eee8;
+  --jarvis-muted: #8d9297;
+  --jarvis-rule: rgba(226, 188, 135, 0.2);
+  --jarvis-phase: var(--jarvis-brass);
+  background: rgba(0, 0, 0, 0.36);
+}
+
+.ai-copilot-backdrop {
+  background: rgba(3, 4, 5, 0.72);
+  backdrop-filter: none;
+}
+
+.ai-agent-orb {
+  width: 56px;
+  height: 56px;
+  border-radius: 3px;
+  border-color: rgba(199, 154, 99, 0.48);
+  background: #0c0f12;
+  color: #d9ad76;
+  box-shadow: -8px 12px 30px rgba(0, 0, 0, 0.46);
+  transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1), border-color 180ms ease;
+}
+
+.ai-agent-orb::after {
+  content: 'J';
+  position: absolute;
+  inset: auto 5px 3px auto;
+  color: rgba(226, 188, 135, 0.62);
+  font: 600 8px/1 'IBM Plex Mono', monospace;
+}
+
+.ai-agent-orb:hover {
+  transform: translateY(-3px);
+  border-color: #e2bc87;
+}
+
+.ai-agent-orb.is-open {
+  color: #090a0b;
+  background: #c79a63;
+  border-color: #e2bc87;
+  box-shadow: -8px 12px 30px rgba(0, 0, 0, 0.46);
+}
+
+.ai-agent-orb-ring {
+  inset: -5px;
+  border-radius: 5px;
+  border-color: rgba(199, 154, 99, 0.3);
+  animation: none;
+}
+
+.ai-copilot-panel {
+  width: min(620px, 100vw);
+  background: var(--jarvis-ink);
+  border-left: 1px solid var(--jarvis-rule);
+  box-shadow: -30px 0 90px rgba(0, 0, 0, 0.62);
+  color: var(--jarvis-text);
+  overflow: hidden;
+  animation: jarvis-panel-enter 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.ai-copilot-panel::before {
+  content: '';
+  position: absolute;
+  z-index: 2;
+  inset: 0 auto 0 11px;
+  width: 1px;
+  background: rgba(199, 154, 99, 0.12);
+  pointer-events: none;
+}
+
+@keyframes jarvis-panel-enter {
+  from { transform: translateX(34px); opacity: 0.72; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+.ai-copilot-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 20px;
+  min-height: 104px;
+  padding: 22px 24px 18px 30px;
+  border-bottom-color: var(--jarvis-rule);
+  background: var(--jarvis-surface);
+}
+
+.ai-copilot-header-identity {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: end;
+  gap: 16px;
+  min-width: 0;
+}
+
+.ai-copilot-header-index {
+  align-self: start;
+  padding-top: 5px;
+  color: var(--jarvis-brass);
+  font: 600 9px/1 'IBM Plex Mono', monospace;
+  letter-spacing: 0.12em;
+  writing-mode: vertical-rl;
+}
+
+.ai-copilot-header h2 {
+  margin: 0;
+  color: var(--jarvis-text);
+  font-size: clamp(28px, 3vw, 40px);
+  font-weight: 620;
+  letter-spacing: -0.035em;
+  line-height: 0.95;
+}
+
+.ai-copilot-subtitle {
+  margin-top: 9px;
+  color: var(--jarvis-muted);
+  font-size: 11px;
+  letter-spacing: 0.02em;
+}
+
+.ai-copilot-header-state {
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--jarvis-phase);
+  font: 600 9px/1 'IBM Plex Mono', monospace;
+  letter-spacing: 0.12em;
+}
+
+.ai-copilot-header-state > span {
+  width: 7px;
+  height: 7px;
+  background: currentColor;
+  box-shadow: 0 0 0 4px color-mix(in srgb, currentColor 14%, transparent);
+}
+
+.ai-copilot-close {
+  align-self: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 2px;
+  border-color: var(--jarvis-rule);
+  color: var(--jarvis-muted);
+  background: transparent;
+}
+
+.ai-copilot-close:hover {
+  color: var(--jarvis-text);
+  border-color: var(--jarvis-brass);
+}
+
+.ai-copilot-context-bar {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr 0.8fr 1fr 0.8fr;
+  gap: 0;
+  margin: 0;
+  padding: 0 18px 0 30px;
+  border-bottom-color: var(--jarvis-rule);
+  background: #090c0e;
+}
+
+.ai-copilot-context-bar > div {
+  min-width: 0;
+  padding: 11px 10px 12px;
+  border-right: 1px solid var(--jarvis-rule);
+}
+
+.ai-copilot-context-bar > div:first-child { padding-left: 0; }
+.ai-copilot-context-bar > div:last-child { border-right: 0; }
+
+.ai-copilot-context-bar dt {
+  color: #6f757b;
+  font: 600 8px/1 'IBM Plex Mono', monospace;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.ai-copilot-context-bar dd {
+  overflow: hidden;
+  margin: 6px 0 0;
+  color: #c6c4bf;
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ai-copilot-context-role dd {
+  color: var(--jarvis-brass-bright);
+  text-transform: uppercase;
+}
+
+.ai-copilot-engine-status,
+.ai-copilot-degraded-banner {
+  min-height: 30px;
+  padding: 6px 24px 6px 30px;
+  border-bottom-color: var(--jarvis-rule);
+  background: #07090b;
+  font: 500 9px/1.3 'IBM Plex Mono', monospace;
+  letter-spacing: 0.04em;
+}
+
+.ai-copilot-engine-status { color: #7ba58a; }
+
+.ai-agent-transcript {
+  position: relative;
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 22px;
+  min-height: 116px;
+  margin: 0;
+  padding: 20px 24px 20px 30px;
+  border: 0;
+  border-bottom: 1px solid var(--jarvis-rule);
+  border-radius: 0;
+  background: var(--jarvis-surface-raised);
+}
+
+.ai-agent-transcript.is-listening { --jarvis-phase: #e2bc87; }
+.ai-agent-transcript.is-speaking { --jarvis-phase: #77a987; }
+.ai-agent-transcript.is-analyzing { --jarvis-phase: #d49b54; }
+.ai-agent-transcript.is-idle { --jarvis-phase: #72787d; }
+
+.ai-agent-transcript-waveform {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  align-items: center;
+  gap: 5px;
+  height: 54px;
+  margin: 0;
+}
+
+.ai-agent-transcript-waveform span {
+  width: auto;
+  min-width: 3px;
+  height: 100%;
+  border-radius: 0;
+  background: var(--jarvis-phase);
+  opacity: 0.8;
+  transition: transform 60ms linear, background-color 180ms ease;
+}
+
+.ai-agent-transcript.is-listening .ai-agent-transcript-waveform span {
+  animation: jarvis-signal-flicker 900ms steps(2, end) infinite alternate;
+}
+
+.ai-agent-transcript-waveform span:nth-child(2n) { animation-delay: -280ms !important; }
+.ai-agent-transcript-waveform span:nth-child(3n) { animation-delay: -540ms !important; }
+
+@keyframes jarvis-signal-flicker {
+  from { opacity: 0.48; }
+  to { opacity: 1; }
+}
+
+.ai-agent-transcript-state {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 14px;
+  min-width: 0;
+}
+
+.ai-agent-transcript-code {
+  padding: 4px 5px;
+  border: 1px solid color-mix(in srgb, var(--jarvis-phase) 54%, transparent);
+  color: var(--jarvis-phase);
+  font: 600 8px/1 'IBM Plex Mono', monospace;
+  letter-spacing: 0.08em;
+}
+
+.ai-agent-transcript-label {
+  color: var(--jarvis-text);
+  font-size: 17px;
+  font-weight: 570;
+  letter-spacing: -0.015em;
+  text-transform: none;
+}
+
+.ai-agent-transcript-text {
+  min-height: 0;
+  margin: 6px 0 0;
+  color: var(--jarvis-muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.ai-agent-transcript-channel {
+  align-self: end;
+  color: #5f6469;
+  font: 600 8px/1 'IBM Plex Mono', monospace;
+  letter-spacing: 0.12em;
+}
+
+.ai-copilot-body {
+  padding: 0 24px 0 30px;
+  background: var(--jarvis-ink);
+  scrollbar-color: rgba(199, 154, 99, 0.4) transparent;
+}
+
+.ai-copilot-empty {
+  align-items: stretch;
+  justify-content: center;
+  gap: 24px;
+  min-height: 280px;
+  padding: 36px 0;
+  color: var(--jarvis-muted);
+  text-align: left;
+}
+
+.ai-copilot-empty-code,
+.ai-copilot-message-author {
+  color: var(--jarvis-brass);
+  font: 600 9px/1 'IBM Plex Mono', monospace;
+  letter-spacing: 0.14em;
+}
+
+.ai-copilot-empty-copy strong {
+  margin: 0;
+  color: var(--jarvis-text);
+  font-size: clamp(32px, 5vw, 52px);
+  font-weight: 520;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+
+.ai-copilot-empty-copy p {
+  max-width: 36rem;
+  margin-top: 12px;
+  color: #a4a6a5;
+  font-size: 17px;
+}
+
+.ai-copilot-empty-verbs {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border-top: 1px solid var(--jarvis-rule);
+  border-bottom: 1px solid var(--jarvis-rule);
+}
+
+.ai-copilot-empty-verbs span {
+  padding: 11px 8px;
+  border-right: 1px solid var(--jarvis-rule);
+  color: #747a7f;
+  font: 500 8px/1 'IBM Plex Mono', monospace;
+  letter-spacing: 0.09em;
+  text-align: center;
+}
+
+.ai-copilot-empty-verbs span:last-child { border-right: 0; }
+
+.ai-copilot-conversation { gap: 0; }
+
+.ai-copilot-message {
+  display: block;
+  padding: 20px 0;
+  border-bottom: 1px solid rgba(226, 188, 135, 0.12);
+}
+
+.ai-copilot-message.is-user {
+  display: grid;
+  grid-template-columns: 82px minmax(0, 1fr);
+  gap: 16px;
+  padding: 16px 0;
+}
+
+.ai-copilot-message.is-user p {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #d7d4cd;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.ai-copilot-message-avatar { display: none; }
+
+.ai-copilot-message.is-assistant .ai-copilot-message-body {
+  gap: 14px;
+  max-width: none;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  font-size: 13px;
+  line-height: 1.62;
+}
+
+.ai-copilot-message-text {
+  color: #e3e0da;
+  font-size: 14px;
+}
+
+.ai-copilot-message-tags { gap: 5px; }
+
+.ai-copilot-badge {
+  padding: 4px 6px;
+  border-radius: 1px;
+  border-color: var(--jarvis-rule);
+  color: var(--jarvis-muted);
+  font: 500 8px/1 'IBM Plex Mono', monospace;
+}
+
+.ai-copilot-block {
+  display: grid;
+  grid-template-columns: 128px minmax(0, 1fr);
+  gap: 14px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(226, 188, 135, 0.12);
+}
+
+.ai-copilot-block ul {
+  margin: 0;
+  padding-left: 16px;
+}
+
+.ai-copilot-block-title {
+  color: #7c8185;
+  font: 600 8px/1.4 'IBM Plex Mono', monospace;
+  letter-spacing: 0.11em;
+}
+
+.ai-copilot-evidence-list li {
+  padding: 9px 0;
+  border-left: 0;
+  border-top: 1px solid rgba(226, 188, 135, 0.12);
+}
+
+.ai-copilot-quick-actions {
+  gap: 0;
+  padding: 0;
+  border-top: 1px solid var(--jarvis-rule);
+  border-bottom: 1px solid var(--jarvis-rule);
+}
+
+.ai-copilot-quick-actions button {
+  min-height: 42px;
+  padding: 8px 12px;
+  border: 0;
+  border-right: 1px solid var(--jarvis-rule);
+  border-radius: 0;
+  color: #92969a;
+  background: transparent;
+  font: 500 9px/1.2 'IBM Plex Mono', monospace;
+}
+
+.ai-copilot-quick-actions button:hover {
+  color: var(--jarvis-brass-bright);
+  border-color: var(--jarvis-rule);
+  background: rgba(199, 154, 99, 0.07);
+}
+
+.ai-agent-voice-controls {
+  gap: 0;
+  min-height: 62px;
+  padding: 0 24px 0 30px;
+  border-top: 1px solid var(--jarvis-rule);
+  background: var(--jarvis-surface);
+}
+
+.ai-agent-mic-button {
+  width: auto;
+  min-width: 152px;
+  height: 44px;
+  justify-content: flex-start;
+  gap: 10px;
+  padding: 0 14px;
+  border-radius: 2px;
+  border-color: rgba(199, 154, 99, 0.42);
+  color: var(--jarvis-brass-bright);
+  background: transparent;
+}
+
+.ai-agent-mic-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+}
+
+.ai-agent-mic-copy strong {
+  font: 600 9px/1 'IBM Plex Mono', monospace;
+  letter-spacing: 0.1em;
+}
+
+.ai-agent-mic-copy small {
+  color: #777d82;
+  font-size: 9px;
+}
+
+.ai-agent-mic-button.is-listening {
+  color: #0b0d0f;
+  background: var(--jarvis-brass-bright);
+  border-color: var(--jarvis-brass-bright);
+  animation: none;
+}
+
+.ai-agent-mic-button.is-listening .ai-agent-mic-copy small { color: #4b3b28; }
+
+.ai-agent-mute-button {
+  width: 44px;
+  height: 44px;
+  margin-left: 8px;
+  border-radius: 2px;
+  border-color: var(--jarvis-rule);
+  color: #8d9297;
+}
+
+.ai-agent-interrupt-button {
+  min-height: 44px;
+  margin-left: 8px;
+  padding: 0 12px;
+  border-radius: 2px;
+  font: 600 8px/1 'IBM Plex Mono', monospace;
+  letter-spacing: 0.08em;
+}
+
+.ai-agent-permission-status {
+  margin-left: 12px;
+  color: var(--jarvis-brass);
+  font: 600 8px/1 'IBM Plex Mono', monospace;
+  letter-spacing: 0.1em;
+}
+
+.ai-agent-privacy-indicator {
+  color: #d58373;
+  font: 600 8px/1 'IBM Plex Mono', monospace;
+  letter-spacing: 0.11em;
+}
+
+.ai-agent-privacy-indicator::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  background: currentColor;
+}
+
+.ai-copilot-composer {
+  gap: 10px;
+  padding: 0 24px 12px 30px;
+  border-top: 0;
+  background: var(--jarvis-surface);
+}
+
+.ai-copilot-composer-input {
+  gap: 0;
+  border-bottom: 1px solid rgba(199, 154, 99, 0.52);
+}
+
+.ai-copilot-composer-input textarea {
+  min-height: 54px;
+  padding: 13px 12px 10px 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--jarvis-text);
+  line-height: 1.45;
+}
+
+.ai-copilot-composer-input textarea::placeholder { color: #666c71; }
+
+.ai-copilot-composer-input button {
+  width: 48px;
+  height: 48px;
+  border-radius: 2px;
+  background: var(--jarvis-brass);
+  color: #0b0d0f;
+}
+
+.ai-copilot-disclaimer {
+  padding: 8px 24px 10px 30px;
+  border-top: 0;
+  background: #060708;
+  color: #60656a;
+  font: 500 8px/1.45 'IBM Plex Mono', monospace;
+}
+
+.ai-agent-mic-error {
+  margin: 0;
+  padding: 11px 24px 11px 30px;
+  border: 0;
+  border-bottom: 1px solid rgba(205, 104, 87, 0.42);
+  border-radius: 0;
+  background: rgba(98, 33, 25, 0.16);
+}
+
+.ai-agent-action-overlay {
+  padding: 8px 24px 8px 30px;
+  border-top: 1px solid var(--jarvis-rule);
+}
+
+.ai-copilot-panel.is-listening,
+.ai-copilot-panel.is-speaking {
+  box-shadow: -30px 0 90px rgba(0, 0, 0, 0.62);
+}
+
+.ai-copilot-panel.is-listening { --jarvis-phase: #e2bc87; }
+.ai-copilot-panel.is-speaking { --jarvis-phase: #77a987; }
+.ai-copilot-panel.is-analyzing { --jarvis-phase: #d49b54; }
+
+@media (max-width: 720px) {
+  .ai-copilot-panel { width: 100vw; }
+  .ai-copilot-header { min-height: 88px; padding: 16px 16px 14px 24px; gap: 12px; }
+  .ai-copilot-header-index { display: none; }
+  .ai-copilot-header-identity { grid-template-columns: 1fr; }
+  .ai-copilot-header-state { display: none; }
+  .ai-copilot-context-bar {
+    grid-template-columns: repeat(3, 1fr);
+    padding-left: 24px;
+  }
+  .ai-copilot-context-bar > div:nth-child(4),
+  .ai-copilot-context-bar > div:nth-child(5) { display: none; }
+  .ai-agent-transcript {
+    grid-template-columns: 104px minmax(0, 1fr);
+    gap: 16px;
+    min-height: 100px;
+    padding: 16px 16px 16px 24px;
+  }
+  .ai-agent-transcript-channel { display: none; }
+  .ai-copilot-body { padding-inline: 24px 16px; }
+  .ai-copilot-empty-copy strong { font-size: 38px; }
+  .ai-copilot-empty-verbs { grid-template-columns: repeat(2, 1fr); }
+  .ai-copilot-empty-verbs span:nth-child(2) { border-right: 0; }
+  .ai-copilot-empty-verbs span:nth-child(-n+2) { border-bottom: 1px solid var(--jarvis-rule); }
+  .ai-copilot-block { grid-template-columns: 1fr; gap: 7px; }
+  .ai-agent-voice-controls { padding-inline: 24px 16px; }
+  .ai-agent-mic-button { min-width: 132px; }
+  .ai-agent-privacy-indicator { display: none; }
+  .ai-copilot-composer { padding-inline: 24px 16px; }
+  .ai-copilot-disclaimer { padding-inline: 24px 16px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ai-copilot-panel,
+  .ai-agent-transcript-waveform span,
+  .ai-agent-orb-ring {
+    animation: none !important;
+    transition: none !important;
+  }
+}

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { AlertTriangle, CheckCircle2, RotateCcw, X } from 'lucide-react'
 import { copilotApi, streamCopilotChat } from '../../lib/aiCopilot'
-import type { CopilotContext, CopilotHistoryItem, CopilotStatus, CopilotStreamEvent } from '../../lib/aiCopilot'
+import type { CopilotContext, CopilotHistoryItem, CopilotResponse, CopilotStatus, CopilotStreamEvent } from '../../lib/aiCopilot'
 import { AIContextBar } from './AIContextBar'
 import { AIConversation } from './AIConversation'
 import { AIComposer } from './AIComposer'
@@ -23,6 +23,39 @@ interface Props {
 
 function newId(): string {
   return `t-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+}
+
+const MAX_SPOKEN_RESPONSE_CHARS = 240
+
+function conciseSpeech(text: string): string {
+  const normalized = text
+    .replace(/\s+/g, ' ')
+    .replace(/[*_`#]/g, '')
+    .trim()
+  if (normalized.length <= MAX_SPOKEN_RESPONSE_CHARS) return normalized
+
+  const sentences = normalized.match(/[^.!?]+[.!?]+/g) ?? []
+  let spoken = ''
+  for (const sentence of sentences) {
+    const candidate = `${spoken} ${sentence.trim()}`.trim()
+    if (candidate.length > MAX_SPOKEN_RESPONSE_CHARS) break
+    spoken = candidate
+  }
+  if (spoken) return spoken
+
+  const clipped = normalized.slice(0, MAX_SPOKEN_RESPONSE_CHARS - 1)
+  const lastSpace = clipped.lastIndexOf(' ')
+  return `${clipped.slice(0, Math.max(lastSpace, 1)).trim()}…`
+}
+
+function spokenResponse(response: CopilotResponse): string {
+  const message = response.message.trim()
+  const messageIsGeneric = /^revis[eé] los datos disponibles/i.test(message)
+  const operationalAnswer = response.recommendations[0]
+    ?? response.facts[0]
+    ?? message
+  const selected = messageIsGeneric ? operationalAnswer : message
+  return conciseSpeech(selected || 'Respuesta lista en pantalla.')
 }
 
 /**
@@ -145,9 +178,11 @@ export function AgentWorkspace({ open, onClose, context, role, canApprove }: Pro
               conversationIdRef.current = event.response.conversation_id
               updateTurn(assistantId, () => ({ id: assistantId, role: 'assistant', status: 'done', response: event.response }))
               if (voiceOutputEnabledRef.current) {
-                voice.speak(event.response.message, () => {
+                voice.speak(spokenResponse(event.response), () => {
                   if (openRef.current) void voiceRef.current?.startListening()
                 })
+              } else if (openRef.current) {
+                void voiceRef.current?.startListening()
               }
             }
           },
@@ -164,7 +199,11 @@ export function AgentWorkspace({ open, onClose, context, role, canApprove }: Pro
         error: errorMessage,
       }))
       if (openRef.current && voiceOutputEnabledRef.current) {
-        voice.speak('No pude responder en este momento. Puede reintentar o continuar escribiendo.')
+        voice.speak('No pude responder en este momento. Inténtalo nuevamente.', () => {
+          if (openRef.current) void voiceRef.current?.startListening()
+        })
+      } else if (openRef.current) {
+        void voiceRef.current?.startListening()
       }
     } finally {
       window.clearTimeout(responseTimer)
@@ -225,15 +264,23 @@ export function AgentWorkspace({ open, onClose, context, role, canApprove }: Pro
   const degraded = status ? !status.available : false
   const localMode = status?.provider === 'local_operational'
   const agentPhase = voice.listening ? 'listening' : voice.speaking ? 'speaking' : sending ? 'analyzing' : 'idle'
+  const phaseLabel = agentPhase === 'listening' ? 'ESCUCHANDO' : agentPhase === 'speaking' ? 'RESPONDIENDO' : agentPhase === 'analyzing' ? 'ANALIZANDO' : 'LISTO'
 
   return (
     <div className="ai-copilot-overlay" role="dialog" aria-modal="true" aria-labelledby="jarvis-title">
       <div className="ai-copilot-backdrop" onClick={onClose} />
       <aside ref={panelRef} className={`ai-copilot-panel is-${agentPhase}`}>
         <header className="ai-copilot-header">
-          <div>
-            <h2 id="jarvis-title">JARVIS</h2>
-            <span className="ai-copilot-subtitle">Asistente operacional NORTHMINE</span>
+          <div className="ai-copilot-header-identity">
+            <span className="ai-copilot-header-index" aria-hidden="true">NM / J-01</span>
+            <div>
+              <h2 id="jarvis-title">JARVIS</h2>
+              <span className="ai-copilot-subtitle">Interfaz de comando operacional</span>
+            </div>
+          </div>
+          <div className="ai-copilot-header-state" role="status">
+            <span aria-hidden="true" />
+            {phaseLabel}
           </div>
           <button ref={closeButtonRef} type="button" className="ai-copilot-close" onClick={onClose} aria-label="Cerrar JARVIS">
             <X size={18} />
@@ -257,7 +304,7 @@ export function AgentWorkspace({ open, onClose, context, role, canApprove }: Pro
           </div>
         )}
 
-        <AgentLiveTranscript listening={voice.listening} interimText={voice.interimTranscript} audioLevel={voice.audioLevel} />
+        <AgentLiveTranscript phase={agentPhase} interimText={voice.interimTranscript} audioLevel={voice.audioLevel} />
         {voice.micError && (
           <div id="jarvis-mic-feedback" className="ai-agent-mic-error" role="alert">
             <AlertTriangle size={15} aria-hidden="true" />

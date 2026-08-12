@@ -1,5 +1,4 @@
 import { useEffect, useRef } from 'react'
-import { Bot } from 'lucide-react'
 import { AIMessage } from './AIMessage'
 import type { ChatTurn } from './types'
 
@@ -13,10 +12,13 @@ export function AIConversation({ turns, canApprove }: { turns: ChatTurn[]; canAp
   if (turns.length === 0) {
     return (
       <div className="ai-copilot-empty">
-        <Bot size={28} />
-        <div>
-          <strong>Hola, jefe. ¿En qué necesitas que te ayude?</strong>
-          <p>Estoy listo para analizar el turno, revisar alertas, moverme por NORTHMINE o generar un reporte.</p>
+        <span className="ai-copilot-empty-code">CANAL OPERACIONAL / 01</span>
+        <div className="ai-copilot-empty-copy">
+          <strong>Hola, jefe.</strong>
+          <p>¿Qué necesita decidir, comprobar o abrir?</p>
+        </div>
+        <div className="ai-copilot-empty-verbs" aria-label="Capacidades disponibles">
+          <span>ANALIZAR</span><span>NAVEGAR</span><span>REPORTAR</span><span>EXPLICAR</span>
         </div>
       </div>
     )

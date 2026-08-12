@@ -7,13 +7,22 @@ interface Props {
 }
 
 export function AIContextBar({ section, mine, shift, selectedDate, role }: Props) {
+  const items = [
+    ['Faena', mine || 'Sin contexto'],
+    ['Vista', section || 'General'],
+    ['Turno', shift || 'Actual'],
+    ['Corte', selectedDate || 'Hoy'],
+    ['Autoridad', role],
+  ]
+
   return (
-    <div className="ai-copilot-context-bar">
-      <span>{mine || 'Faena'}</span>
-      <span>{section || 'General'}</span>
-      <span>{shift || 'Turno actual'}</span>
-      <span>{selectedDate || 'Fecha actual'}</span>
-      <span className="ai-copilot-context-role">{role}</span>
-    </div>
+    <dl className="ai-copilot-context-bar" aria-label="Contexto operacional activo">
+      {items.map(([label, value]) => (
+        <div key={label} className={label === 'Autoridad' ? 'ai-copilot-context-role' : undefined}>
+          <dt>{label}</dt>
+          <dd>{value}</dd>
+        </div>
+      ))}
+    </dl>
   )
 }

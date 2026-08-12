@@ -5,6 +5,7 @@ import logging
 import re
 import time
 import uuid
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from typing import Any
 
@@ -423,23 +424,35 @@ def _run_local_operational_turn(
     args = {"shift": context.shift, "date": context.selected_date}
     outputs: list[tuple[str, dict[str, Any], dict[str, Any]]] = []
     executions: list[ToolExecution] = []
-    for name in _local_tool_plan(planning_message, allowed_tools):
+    tool_plan = _local_tool_plan(planning_message, allowed_tools)
+
+    def execute_read_tool(name: str) -> tuple[str, dict[str, Any], dict[str, Any] | None, ToolExecution]:
         started = time.perf_counter()
+        tool_args = {key: value for key, value in args.items() if value}
         try:
-            tool_args = {key: value for key, value in args.items() if value}
             result = TOOL_REGISTRY[name].handler(tool_args)
-            outputs.append((name, tool_args, result))
-            executions.append(ToolExecution(
+            execution = ToolExecution(
                 name=name, args=tool_args, status="ok",
                 duration_ms=int((time.perf_counter() - started) * 1000),
                 summary=_summarize_tool_result(name, result),
-            ))
+            )
+            return name, tool_args, result, execution
         except Exception as exc:  # noqa: BLE001 - una fuente parcial no tumba el dialogo
             logger.exception("Fallo en herramienta local %s", name)
-            executions.append(ToolExecution(
+            execution = ToolExecution(
                 name=name, args={}, status="error",
                 duration_ms=int((time.perf_counter() - started) * 1000), summary=str(exc)[:200],
-            ))
+            )
+            return name, tool_args, None, execution
+
+    # Las consultas del plan local son independientes y de solo lectura. Ejecutarlas
+    # en paralelo evita que la latencia de cada fuente se acumule durante el dialogo.
+    if tool_plan:
+        with ThreadPoolExecutor(max_workers=min(5, len(tool_plan)), thread_name_prefix="jarvis-read") as executor:
+            for name, tool_args, result, execution in executor.map(execute_read_tool, tool_plan):
+                executions.append(execution)
+                if result is not None:
+                    outputs.append((name, tool_args, result))
 
     facts = [_summarize_tool_result(name, result) for name, _args, result in outputs]
     recommendations: list[str] = []
