@@ -481,7 +481,7 @@ class AgentDemoController {
   private presentationDwell(speed: AgentDemoSpeed): Promise<void> {
     // Presentation pacing is deliberately human-visible. It occurs only
     // after the real acknowledgement, never as action synchronization.
-    const duration = speed === 'fast' ? 120 : speed === 'normal' ? 1_800 : 8_500
+    const duration = speed === 'fast' ? 120 : speed === 'normal' ? 1_800 : 9_500
     return new Promise((resolve) => window.setTimeout(resolve, duration))
   }
 
