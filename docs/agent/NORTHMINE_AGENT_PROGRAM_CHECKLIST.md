@@ -88,6 +88,7 @@ Estados sincronizados de requisitos históricos:
 | Automated Chrome E2E | BLOCKED_BY_TOOLING | extensión/puente nativo ausentes; no bloquea funcionalidad del producto |
 | Automated visual regression | BLOCKED_BY_TOOLING | depende del mismo bridge de automatización |
 | Physical Chrome acceptance | PENDING | protocolo en `PHYSICAL_ACCEPTANCE.md` |
+| OpenAI Realtime LIVE | NOT_CONFIGURED | `REALTIME_LIVE_READY=false`; faltan WebRTC, endpoint de sesión efímera y sideband en este HEAD |
 | Product functionality | NOT BLOCKED BY EXTENSION | pruebas lógicas pasan; experiencia física pendiente |
 | Seenode | NOT_DEPLOYED | no existe push ni despliegue de esta fase |
 
@@ -189,9 +190,12 @@ Realtime Conversation
 ## Known issues y release acceptance
 
 - ENVIRONMENT: WENCO SQL/pyodbc no está disponible en el entorno local de pruebas.
-- RESOLVED LOCAL: `npm ci`, typecheck, 94/94 unit y build pasaron el 2026-08-12.
+- RESOLVED LOCAL: `npm ci`, typecheck, 97/97 unit y build pasaron el 2026-08-12.
 - AUTOMATION_TOOLING_BLOCKER: Chrome está instalado y abierto, pero la ChatGPT Chrome Extension y el puente nativo no están instalados. Solo bloquea E2E/visual automatizados; NORTHMINE no depende de esa extensión para funcionar.
-- PREEXISTING / ENVIRONMENT: suite backend completa 341/355; 14 fallos: 13 dependen de SQL/WENCO/`pyodbc` y 1 corresponde a un test histórico del endpoint demo retirado (`/api/demo/summary`, esperaba 200 y recibe 410). Regresión introducida por Agent Demo Tour: NO. Capacidades afectadas: sólo SQL/WENCO y ese oráculo histórico. Runtime + Demo Tour focalizado: 49/49 PASS.
+- 13 × `PREEXISTING / ENVIRONMENT / SQL-WENCO`: WENCO/`pyodbc` no disponible localmente. Regresión: NO.
+- 1 × `PREEXISTING / SUPERSEDED_TEST / NON_REGRESSION`: `test_security_hardening` llama `/api/demo/summary`, retirado con 410; reemplazado por `/api/summary`.
+- Suite backend completa: 341/355. Runtime + Demo Tour focalizado: 49/49 PASS.
+- `REALTIME_LIVE_READY=false`: la auditoría en `LIVE_REALTIME_GATE.md` confirma que este HEAD no contiene cliente OpenAI WebRTC, endpoint de sesión efímera ni sideband. No se leyó ni expuso ningún secreto.
 - RESOLVED TEST ORACLE: barge-in corta audio localmente y la confirmación backend conserva FIFO/replay. Agent Runtime: 43/43 PASS.
 - La fase actual no está desplegada. Backend health, frontend health, WebSocket, Realtime, Chrome console, mobile/tablet y rollback siguen `NOT VERIFIED` para el commit final.
 
