@@ -8,7 +8,7 @@
 export const PROTOCOL_VERSION = '1.0'
 
 export type ClientEventType =
-  | 'session.start' | 'session.resume' | 'session.heartbeat' | 'context.update'
+  | 'session.start' | 'session.resume' | 'session.heartbeat' | 'context.update' | 'demo.start'
   | 'user.text' | 'user.intent' | 'user.speech.partial' | 'user.speech.final'
   | 'agent.pause' | 'agent.resume' | 'agent.cancel' | 'agent.interrupt'
   | 'ui_action.completed' | 'ui_action.failed' | 'ui_action.rejected' | 'ui_action.cancelled'
@@ -18,7 +18,7 @@ export type ClientEventType =
   | 'perception.observation_reported' | 'perception.capture_unavailable'
 
 export type ServerEventType =
-  | 'session.ready'
+  | 'session.ready' | 'demo.ready'
   | 'agent.state.changed'
   | 'agent.plan.created' | 'agent.plan.updated'
   | 'step.started' | 'step.completed'

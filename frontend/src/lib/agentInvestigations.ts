@@ -95,6 +95,9 @@ export interface OperationalHypothesis {
   supporting_evidence_ids: string[]
   contradicting_evidence_ids: string[]
   score: number | null
+  causal_status?: 'confirmed' | 'strongly_supported' | 'plausible' | 'weak' | 'unsupported' | 'contradicted' | 'insufficient_data'
+  rationale?: string | null
+  missing_evidence?: string[]
 }
 
 export interface InvestigationConclusion {

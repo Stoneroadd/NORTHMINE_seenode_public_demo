@@ -114,19 +114,27 @@ const env = {
 
 ensureUvicorn(python);
 
+const uvicornArgs = [
+  "-m",
+  "uvicorn",
+  "app.main:app",
+  "--app-dir",
+  "backend",
+  "--host",
+  "0.0.0.0",
+  "--port",
+  port,
+];
+// El handshake WebSocket transporta el JWT en el query string. Durante el
+// recorrido automatizado no imprimimos access logs para que el token no
+// termine en consola ni en artefactos capturados por CI.
+if (process.env.AGENT_DEMO_MODE === "true") {
+  uvicornArgs.push("--no-access-log", "--log-level", "warning");
+}
+
 const child = spawn(
   commandName(python),
-  [
-    "-m",
-    "uvicorn",
-    "app.main:app",
-    "--app-dir",
-    "backend",
-    "--host",
-    "0.0.0.0",
-    "--port",
-    port,
-  ],
+  uvicornArgs,
   {
     stdio: "inherit",
     env,

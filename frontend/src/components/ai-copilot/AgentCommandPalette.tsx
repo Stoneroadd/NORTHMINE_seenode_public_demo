@@ -1,7 +1,9 @@
 import { Search } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { agentSessionClient } from '../../lib/agentRuntime/AgentSessionClient'
 import { actionsForModule, GLOBAL_QUICK_ACTIONS, moduleFromPath } from '../../lib/agentRuntime/quickActions'
+import { dispatchStructuredIntent } from '../../lib/agentRuntime/dispatchIntent'
+
+export const AGENT_COMMAND_PALETTE_DEMO_EVENT = 'northmine:agent-command-palette-demo'
 
 export function AgentCommandPalette() {
   const [open, setOpen] = useState(false)
@@ -27,6 +29,27 @@ export function AgentCommandPalette() {
   }, [])
 
   useEffect(() => {
+    const openForDemo = (event: Event) => {
+      const detail = (event as CustomEvent<{ actionId?: string; entityId?: string }>).detail
+      const actionId = detail?.actionId
+      const action = [...actionsForModule(moduleFromPath(window.location.pathname), 8), ...GLOBAL_QUICK_ACTIONS]
+        .find((candidate) => candidate.id === actionId)
+      if (!action) return
+      setOpen(true)
+      setQuery(action.label)
+      // Two animation frames are a render acknowledgement: the palette is
+      // visibly present before the same structured-intent path is invoked.
+      window.requestAnimationFrame(() => window.requestAnimationFrame(() => {
+        dispatchStructuredIntent(action, 'command_palette', moduleFromPath(window.location.pathname), detail?.entityId)
+        setOpen(false)
+        window.dispatchEvent(new CustomEvent('northmine:agent-command-palette-dispatched', { detail: { actionId } }))
+      }))
+    }
+    window.addEventListener(AGENT_COMMAND_PALETTE_DEMO_EVENT, openForDemo)
+    return () => window.removeEventListener(AGENT_COMMAND_PALETTE_DEMO_EVENT, openForDemo)
+  }, [])
+
+  useEffect(() => {
     if (open) window.requestAnimationFrame(() => inputRef.current?.focus())
     else setQuery('')
   }, [open])
@@ -40,7 +63,7 @@ export function AgentCommandPalette() {
         <div role="listbox" aria-label="Acciones disponibles">
           {actions.map((action) => (
             <button key={action.id} type="button" role="option" aria-selected="false" onClick={() => {
-              agentSessionClient.send('user.intent', { intent: action.intent, scope: 'current_context', module_id: moduleId, source: 'command_palette' })
+              dispatchStructuredIntent(action, 'command_palette', moduleId)
               setOpen(false)
             }}>
               <span>{action.label}</span><small>{action.modules?.includes(moduleId) ? 'Contextual' : 'Global'}</small>

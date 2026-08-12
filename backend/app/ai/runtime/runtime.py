@@ -132,11 +132,30 @@ async def dispatch_command(live: LiveSession, user: dict, command: AgentCommand,
         await handle_create_task_draft(live, user, command, correlation_id, ip)
     elif command.type == AgentCommandType.SHOW_PENDING_WORK:
         await handle_show_pending_work(live, correlation_id)
+    elif command.type == AgentCommandType.CHECK_EXTERNAL_SOURCE:
+        await handle_external_source_check(live, correlation_id)
     else:
         await emit(live, "agent.error", correlation_id=correlation_id, payload={
             "message": "Esta capacidad todavia no esta disponible en la version actual del agente.",
             "recoverable": True,
         })
+
+
+async def handle_external_source_check(live: LiveSession, correlation_id: str) -> None:
+    """Reporta disponibilidad verificable; un fixture nunca se presenta como WENCO real."""
+    if live.demo_mode == "deterministic":
+        text = "La fuente WENCO no está disponible en este entorno, por lo que no puedo verificar ese valor."
+    else:
+        from app.core.config import get_settings
+
+        settings = get_settings()
+        text = (
+            "La fuente WENCO está configurada; necesito una métrica y un periodo concretos para verificar el valor."
+            if not settings.is_demo and settings.data_mode == "REAL"
+            else "La fuente WENCO no está disponible en este entorno, por lo que no puedo verificar ese valor."
+        )
+    await emit(live, "agent.text.delta", correlation_id=correlation_id, payload={"text": text})
+    await _speak(live, correlation_id, text=text, priority="warning", segment_id=f"seg-{uuid.uuid4().hex[:10]}")
 
 
 # ── Iniciar investigacion ───────────────────────────────────────────────
@@ -221,6 +240,20 @@ async def _run_investigation(live: LiveSession, user: dict, plan: InvestigationP
             plan.scope = plan.scope.model_copy(update={"equipment_ids": [live.focus_override]})
 
         if step.kind == "ui_action":
+            # The Demo Tour is the visual sequencer above this same Runtime.
+            # Planner UI suggestions remain in the plan, but optional ones
+            # are executed by AgentDemoController at their narrative scene so
+            # they do not race each other off-screen. Required actions still
+            # use the normal Runtime acknowledgement path.
+            if live.demo_mode and step.requirement != "required":
+                step.status = "skipped"
+                step.error = "sequenced_by_agent_demo_controller"
+                await emit(
+                    live, "step.completed", correlation_id=correlation_id,
+                    investigation_id=plan.investigation_id, step_id=step.step_id,
+                    payload={"status": "skipped", "reason": step.error},
+                )
+                continue
             await _run_ui_action_step(live, plan, step, correlation_id, usuario, ip)
             continue
 
@@ -330,7 +363,15 @@ async def _run_tool_step(live: LiveSession, plan: InvestigationPlan, step: PlanS
     started = time.perf_counter()
     try:
         args = _args_for_step(step, plan.scope)
-        result = await asyncio.wait_for(asyncio.to_thread(tool.handler, args), timeout=capability.timeout_seconds)
+        if live.demo_mode == "deterministic" and live.demo_fixture_id:
+            from app.ai.demo_tour import normalized_tool_result
+
+            result = await asyncio.wait_for(
+                asyncio.to_thread(normalized_tool_result, live.demo_fixture_id, step.capability_id),
+                timeout=capability.timeout_seconds,
+            )
+        else:
+            result = await asyncio.wait_for(asyncio.to_thread(tool.handler, args), timeout=capability.timeout_seconds)
         item = _evidence_from_tool_result(step.capability_id, result, plan.scope)
         evidence.append(item)
         step.evidence_ids.append(item.evidence_id)
@@ -843,6 +884,7 @@ async def handle_create_watch(live: LiveSession, user: dict, command: AgentComma
             condition="above", threshold=(baseline.last_metric_value if baseline else None),
             baseline_reference=baseline.entity_id if baseline else None,
             source_investigation_id=(baseline.related_investigation_ids[-1] if baseline and baseline.related_investigation_ids else None),
+            status="draft" if live.demo_mode else "active",
         )
     except subscriptions.WatchLimitExceeded:
         await emit(live, "agent.error", correlation_id=correlation_id, payload={
@@ -853,7 +895,11 @@ async def handle_create_watch(live: LiveSession, user: dict, command: AgentComma
     live.memory.record_entity(entity_id=entity_id, label=entity, entity_type=entity_type)
     runtime_audit.record_watch_created(usuario=usuario, ip=ip, watch_id=watch.watch_id, entity_ids=[entity], metric=watch.metric)
     await emit(live, "watch.created", correlation_id=correlation_id, payload={"watch": watch.model_dump(mode="json")})
-    text = f"Voy a avisarte si {entity} vuelve a empeorar. Puedes cancelar este seguimiento cuando quieras."
+    text = (
+        f"Preparé un borrador de seguimiento para {entity}; requiere validación humana antes de activarse."
+        if watch.status == "draft"
+        else f"Voy a avisarte si {entity} vuelve a empeorar. Puedes cancelar este seguimiento cuando quieras."
+    )
     await emit(live, "agent.text.delta", correlation_id=correlation_id, payload={"text": text})
     await _speak(live, correlation_id, text=text, priority="status", segment_id=f"seg-{uuid.uuid4().hex[:10]}")
 
@@ -915,6 +961,7 @@ async def handle_generate_report(live: LiveSession, user: dict, command: AgentCo
     report = reports_module.build_report(
         report_type=report_type, scope=scope, generated_by=usuario,
         company_id=live.session.company_id, site_id=live.session.site_id, investigation_id=investigation_id,
+        title="REPORTE OPERACIONAL DE TURNO" if live.demo_mode else None,
     )
     from app.ai.work_products import persistence as work_products_persistence
     work_products_persistence.save_report_version(report)

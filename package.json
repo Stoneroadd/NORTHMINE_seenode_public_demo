@@ -16,5 +16,7 @@
     ,"agent:harness": "node scripts/run_agent_harness.mjs"
     ,"agent:harness:live": "node scripts/run_agent_harness_live.mjs"
     ,"agent:checklist": "node scripts/validate_agent_checklist.mjs"
+    ,"agent:demo:harness": "node scripts/run_agent_demo_harness.mjs"
+    ,"agent:demo": "node scripts/run_agent_demo.mjs"
   }
 }

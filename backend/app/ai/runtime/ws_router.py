@@ -13,6 +13,7 @@ from pydantic import ValidationError
 from app.ai import audit as runtime_audit
 from app.ai.runtime import command_router, persistence, runtime
 from app.ai.runtime.command_router import AgentCommand, AgentCommandType
+from app.ai.runtime.event_bus import emit
 from app.ai.runtime.protocol import AgentEvent, UnknownEventType, now_utc
 from app.ai.runtime.session_manager import LiveSession, session_manager
 from app.ai.runtime.ui_actions import UIActionAcknowledgement
@@ -261,6 +262,48 @@ def _row_to_event(row: dict) -> AgentEvent:
 async def _dispatch_client_event(live: LiveSession, user: dict, event: AgentEvent, ip: str) -> None:
     event_type = event.event_type
     payload = event.payload
+
+    if event_type == "demo.start":
+        from app.ai.demo_tour import demo_tour_enabled, fixture_for
+
+        if not demo_tour_enabled():
+            await emit(live, "agent.error", correlation_id=event.correlation_id, payload={
+                "message": "La demostración automática no está habilitada en este entorno.",
+                "recoverable": False,
+            })
+            return
+        scenario_id = str(payload.get("scenarioId") or "full_operational_demo")
+        mode = str(payload.get("mode") or "deterministic")
+        if mode not in {"deterministic", "live"}:
+            return
+        try:
+            fixture_id, _ = fixture_for(scenario_id)
+        except KeyError:
+            await emit(live, "agent.error", correlation_id=event.correlation_id, payload={
+                "message": "El escenario de demostración solicitado no existe.",
+                "recoverable": False,
+            })
+            return
+        from app.ai.demo_tour import live_demo_available, seed_demo_memory
+        effective_mode = mode if mode != "live" or live_demo_available() else "deterministic"
+        live.demo_mode = effective_mode
+        live.demo_scenario_id = scenario_id
+        live.demo_fixture_id = fixture_id if effective_mode == "deterministic" else None
+        if live.demo_fixture_id:
+            seed_demo_memory(fixture_id=live.demo_fixture_id, user=user)
+        runtime_audit.record_command(
+            usuario=str(user.get("sub") or "anon"), ip=ip, session_id=live.session.session_id,
+            command_type="automated_agent_demo_started", confidence="rule", source="demo_tour",
+        )
+        await emit(live, "demo.ready", correlation_id=event.correlation_id, payload={
+            "scenarioId": scenario_id,
+            "mode": effective_mode,
+            "requestedMode": mode,
+            "fallbackReason": "OpenAI Realtime no está configurado; se usa demo determinística." if effective_mode != mode else None,
+            "fixtureId": live.demo_fixture_id,
+            "classification": "AUTOMATED_AGENT_DEMO",
+        })
+        return
 
     # Etapa 7, secciones 9/32-34: turn_id lo asigna el cliente
     # (ConversationTurnManager). Solo eventos de CONTENIDO de una nueva

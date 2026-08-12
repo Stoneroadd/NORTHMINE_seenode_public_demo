@@ -51,6 +51,7 @@ class AgentCommandType(str, Enum):
     MODIFY_REPORT = "modify_report"
     CREATE_TASK_DRAFT = "create_task_draft"
     SHOW_PENDING_WORK = "show_pending_work"
+    CHECK_EXTERNAL_SOURCE = "check_external_source"
     UNKNOWN = "unknown"
 
 
@@ -281,6 +282,11 @@ def classify(
 
     if _has(normalized, r"\bqu[eé] (?:tengo|hay) pendiente\b", r"\bmu[eé]strame las tareas\b", r"\btareas pendientes\b", r"\bseguimientos activos\b"):
         return AgentCommand(type=AgentCommandType.SHOW_PENDING_WORK, raw_text=text)
+
+    if _has(normalized, r"\bwenco\b", r"\bsql\b") and _has(
+        normalized, r"\bvalor exacto\b", r"\bfuente\b", r"\bverifica\b", r"\bobtenido\b",
+    ):
+        return AgentCommand(type=AgentCommandType.CHECK_EXTERNAL_SOURCE, raw_text=text)
 
     # ── Percepcion (Etapa 5, seccion 24) - siempre reglas primero, el
     # VisionProvider solo entra cuando la ejecucion real lo requiere ────────

@@ -14,6 +14,7 @@ import { useModuleT } from './i18n/useModuleT'
 import { appT, type AppT } from './i18n/modules/app'
 import { FAST_PUBLIC_DEMO } from './demo/fastDemo'
 import { AgentPresence } from './components/ai-copilot/AgentPresence'
+import { AgentDemoTour } from './components/ai-copilot/AgentDemoTour'
 
 const loadPrediction  = () => import('./pages/Prediction')
 const loadSimulator   = () => import('./pages/Simulator')
@@ -400,6 +401,7 @@ export default function App() {
         )}
       </AppShell>
       <AgentPresence />
+      <AgentDemoTour />
     </>
   )
 }

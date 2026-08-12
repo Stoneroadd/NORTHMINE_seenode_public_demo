@@ -75,7 +75,7 @@ export interface MemorySummary {
 
 export type QuietMode = 'normal' | 'visual_only' | 'quiet' | 'critical_only'
 export type ProactiveSeverity = 'informational' | 'warning' | 'high' | 'critical'
-export type WatchStatus = 'active' | 'triggered' | 'expired' | 'cancelled'
+export type WatchStatus = 'draft' | 'active' | 'triggered' | 'expired' | 'cancelled'
 
 export interface AgentWatch {
   watch_id: string

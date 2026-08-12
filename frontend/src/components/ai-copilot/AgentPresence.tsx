@@ -14,6 +14,7 @@ import { usePerceptionStore } from '../../lib/agentPerception/perceptionStore'
 import { workProductsApi } from '../../lib/agentWorkProducts'
 import type { CopilotContext } from '../../lib/aiCopilot'
 import '../../styles/ai-copilot.css'
+import { AGENT_DEMO_WORK_PRODUCT_FOCUS } from '../../lib/agentDemo/events'
 import '../../lib/agentRegistry/devBridge'
 
 const APPROVAL_ROLES = new Set(['admin', 'supervisor', 'operador'])
@@ -67,6 +68,12 @@ export function AgentPresence() {
   const runtimeState = useAgentRuntimeStore((s) => s.state)
   const connectionStatus = useAgentRuntimeStore((s) => s.connectionStatus)
   const proactiveEvents = useAgentRuntimeStore((s) => s.proactiveEvents)
+
+  useEffect(() => {
+    const openForDemo = () => setOpen(true)
+    window.addEventListener(AGENT_DEMO_WORK_PRODUCT_FOCUS, openForDemo)
+    return () => window.removeEventListener(AGENT_DEMO_WORK_PRODUCT_FOCUS, openForDemo)
+  }, [])
 
   useEffect(() => {
     if (usuario) void agentEquipmentCatalog.load()

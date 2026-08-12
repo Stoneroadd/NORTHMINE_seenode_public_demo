@@ -186,4 +186,23 @@ describe('SpeechOutputRouter', () => {
     await flushMicrotasks()
     expect(eleven.calls.filter((c) => c.segmentId === 's2')).toHaveLength(0)
   })
+
+  it('demo deterministica conserva el ACK usando solo salida de texto', async () => {
+    const eleven = new ControllableFakeOutput('elevenlabs')
+    const browser = new ControllableFakeOutput('browser')
+    const textOnly = new ControllableFakeOutput('text_only')
+    const router = new SpeechOutputRouter(eleven, browser, textOnly)
+    const results: SpeechPlaybackResult[] = []
+    router.onPlaybackResult((result) => results.push(result))
+    router.setForcedTextOnly(true)
+
+    router.enqueue(makeSegment({ segmentId: 'demo-text' }))
+    await flushMicrotasks()
+    expect(eleven.calls).toHaveLength(0)
+    expect(browser.calls).toHaveLength(0)
+    expect(textOnly.calls).toHaveLength(1)
+    textOnly.resolveCurrent()
+    await flushMicrotasks()
+    expect(results[0]).toMatchObject({ segmentId: 'demo-text', provider: 'text_only', result: 'completed' })
+  })
 })

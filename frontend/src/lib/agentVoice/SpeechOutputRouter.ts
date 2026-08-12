@@ -20,6 +20,7 @@ export class SpeechOutputRouter {
   private seenSegmentIds = new Set<string>()
   private activeProvider: AgentSpeechOutput | null = null
   private muted = false
+  private forcedTextOnly = false
   private elevenLabsDegraded = false
   private processing = false
   private stopRequested = false
@@ -64,6 +65,17 @@ export class SpeechOutputRouter {
   setMuted(muted: boolean): void {
     this.muted = muted
     if (muted) this.stop()
+  }
+
+  /** Automated demo/CI visual mode: keep captions and playback ACKs while
+   * avoiding physical speakers and external TTS providers. This is never
+   * reported as physical voice acceptance. */
+  setForcedTextOnly(enabled: boolean): void {
+    this.forcedTextOnly = enabled
+    if (enabled) {
+      this.elevenlabs.stop()
+      this.browser.stop()
+    }
   }
 
   clearQueue(): void {
@@ -113,7 +125,9 @@ export class SpeechOutputRouter {
     const started = performance.now()
     this.stopRequested = false
 
-    let provider: AgentSpeechOutput = this.elevenLabsDegraded ? this.browser : this.elevenlabs
+    let provider: AgentSpeechOutput = this.forcedTextOnly
+      ? this.textOnly
+      : this.elevenLabsDegraded ? this.browser : this.elevenlabs
     this.activeProvider = provider
     this.providerHandler?.(provider.providerName)
 
@@ -128,7 +142,7 @@ export class SpeechOutputRouter {
       }
     }
 
-    if (provider === this.elevenlabs) {
+    if (!this.forcedTextOnly && provider === this.elevenlabs) {
       this.elevenLabsDegraded = true
       provider = this.browser
       this.activeProvider = provider

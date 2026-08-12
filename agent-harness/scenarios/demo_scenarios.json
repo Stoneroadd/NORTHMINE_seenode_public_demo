@@ -1,0 +1,39 @@
+[
+  {
+    "id": "full_operational_demo",
+    "label": "Recorrido operacional completo",
+    "fixture": "production_drop",
+    "duration_target_seconds": [180, 360],
+    "story": "Producción bajo objetivo → investigación → Pala 03 → contraste con transporte → periodo crítico → comparación → impacto → reporte → seguimiento.",
+    "required_capabilities": [
+      "context", "reasoning", "hypotheses", "contradictions", "verification",
+      "navigation", "ui_manipulation", "guidance", "chart_highlight", "table_highlight",
+      "map_focus_or_degradation", "quick_action", "command_palette", "comparison",
+      "report", "report_verifier", "work_product", "watch_draft", "honest_degradation"
+    ]
+  },
+  {
+    "id": "production_investigation_demo",
+    "label": "Investigación de producción",
+    "fixture": "production_drop",
+    "required_capabilities": ["context", "reasoning", "hypotheses", "contradictions", "verification", "chart_highlight"]
+  },
+  {
+    "id": "fleet_demo",
+    "label": "Contraste de flota",
+    "fixture": "insufficient_trucks",
+    "required_capabilities": ["context", "navigation", "table_highlight", "comparison", "verification"]
+  },
+  {
+    "id": "report_demo",
+    "label": "Reporte operacional",
+    "fixture": "production_drop",
+    "required_capabilities": ["report", "report_verifier", "work_product"]
+  },
+  {
+    "id": "failure_recovery_demo",
+    "label": "Recuperación y degradación honesta",
+    "fixture": "provider_failure",
+    "required_capabilities": ["honest_degradation", "safety", "failure_recovery"]
+  }
+]

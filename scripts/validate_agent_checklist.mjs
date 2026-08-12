@@ -6,8 +6,10 @@ const root = resolve(import.meta.dirname, '..')
 const checklistPath = resolve(root, 'docs/agent/NORTHMINE_AGENT_PROGRAM_CHECKLIST.json')
 const markdownPath = resolve(root, 'docs/agent/NORTHMINE_AGENT_PROGRAM_CHECKLIST.md')
 const scenariosPath = resolve(root, 'agent-harness/scenarios/golden_scenarios.json')
+const demoScenariosPath = resolve(root, 'agent-harness/scenarios/demo_scenarios.json')
 const data = JSON.parse(readFileSync(checklistPath, 'utf8'))
 const scenarios = JSON.parse(readFileSync(scenariosPath, 'utf8'))
+const demoScenarios = JSON.parse(readFileSync(demoScenariosPath, 'utf8'))
 const markdown = readFileSync(markdownPath, 'utf8')
 const errors = []
 const statusSet = new Set(data.status_definitions)
@@ -49,6 +51,15 @@ for (const capability of data.capability_matrix) {
 if (scenarios.length < 20) errors.push(`only ${scenarios.length} golden scenarios; minimum is 20`)
 const duplicateScenarios = scenarios.filter((item, index) => scenarios.findIndex((other) => other.id === item.id) !== index)
 if (duplicateScenarios.length) errors.push(`duplicate scenario ids: ${duplicateScenarios.map((item) => item.id).join(', ')}`)
+if (demoScenarios.length < 5) errors.push(`only ${demoScenarios.length} demo scenarios; minimum is 5`)
+for (const requiredId of ['full_operational_demo', 'production_investigation_demo', 'fleet_demo', 'report_demo', 'failure_recovery_demo']) {
+  if (!demoScenarios.some((scenario) => scenario.id === requiredId)) errors.push(`missing demo scenario ${requiredId}`)
+}
+const demoStage = data.stages.find((stage) => stage.id === 'automated_agent_demo')
+if (!demoStage) errors.push('automated_agent_demo stage missing')
+if (demoStage?.status === 'ACCEPTED' && !demoStage.acceptance?.evidence?.some((item) => String(item).includes('agent-demo-trace'))) {
+  errors.push('automated_agent_demo ACCEPTED without visual trace evidence')
+}
 
 const current = data.stages.find((stage) => stage.id === 'operational_agent_hardening')
 const phaseCounts = Object.groupBy(current.requirements, (item) => item.status)

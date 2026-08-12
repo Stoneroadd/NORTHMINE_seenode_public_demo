@@ -4,7 +4,7 @@ Este documento es la vista humana de `NORTHMINE_AGENT_PROGRAM_CHECKLIST.json`. G
 
 Phase progress: 40 requirements; 0 accepted; 12 verified; 16 implemented; 8 partial; 2 planned
 
-Program progress: 13 stages; 0 accepted; 11 merged; 1 partial; 1 current
+Program progress: 14 stages; 0 accepted; 11 merged; 1 partial; 1 current
 
 ## Historia reconstruida
 
@@ -23,6 +23,7 @@ Program progress: 13 stages; 0 accepted; 11 merged; 1 partial; 1 current
 | Microphone Onboarding | MERGED | `7cc01d8`, `1d32f03`, merge `34f690a` | DEVICE MATRIX PENDING |
 | Realtime Speech-to-Speech | PARTIAL | arquitectura vigente | ENTITLEMENT/LIVE PENDING |
 | Operational Agent Hardening | IN_PROGRESS | checkpoint local `31712a6`, base `34f690a` | NOT DEPLOYED |
+| NORTHMINE Agent Demo Tour | VERIFIED | cambios locales sobre `c4cd431` | DEMO_ACCEPTED LOCAL; no acredita aceptación física ni producción |
 
 Estados sincronizados de requisitos históricos:
 
@@ -45,6 +46,29 @@ Estados sincronizados de requisitos históricos:
 <!-- mic-user-gesture:VERIFIED -->
 <!-- mic-policy:MERGED -->
 <!-- realtime-authority:IMPLEMENTED -->
+<!-- demo-environment-gate:VERIFIED -->
+<!-- demo-controller:VERIFIED -->
+<!-- demo-full-tour:VERIFIED -->
+<!-- demo-five-scenarios:VERIFIED -->
+<!-- demo-runtime-reuse:VERIFIED -->
+<!-- demo-trace:VERIFIED -->
+<!-- demo-cli:VERIFIED -->
+<!-- demo-visual-evidence:VERIFIED -->
+<!-- demo-deterministic-acceptance:VERIFIED -->
+<!-- demo-physical-separation:VERIFIED -->
+
+## NORTHMINE Agent Demo Tour
+
+| Gate | Estado | Evidencia |
+|---|---|---|
+| Environment gate | VERIFIED | `AGENT_DEMO_MODE=true`, rechazo fuera de entorno autorizado cubierto por prueba |
+| Controller + 20 escenas | VERIFIED | `AgentDemoController`; trace completo 20/20 |
+| Cinco escenarios | VERIFIED | `agent:demo:harness` PASS |
+| Runtime/Harness reuse | VERIFIED | fixtures del harness + WebSocket Runtime + Planner/tools/Verifier reales |
+| Trace y evidencia visual | VERIFIED | trace sanitizado, 8 screenshots; video permanece opcional |
+| Demo determinística visual | VERIFIED | 20/20 escenas, UI Actions 8/8, Chrome sin errores de consola/red |
+| Demo accepted | DEMO_ACCEPTED | aceptación local visual y determinística; no es aceptación física |
+| Physical browser acceptance | SEPARATE / PENDING | no se acredita por esta demo |
 
 ## Operational Agent Hardening
 
@@ -167,7 +191,7 @@ Realtime Conversation
 - ENVIRONMENT: WENCO SQL/pyodbc no está disponible en el entorno local de pruebas.
 - RESOLVED LOCAL: `npm ci`, typecheck, 94/94 unit y build pasaron el 2026-08-12.
 - AUTOMATION_TOOLING_BLOCKER: Chrome está instalado y abierto, pero la ChatGPT Chrome Extension y el puente nativo no están instalados. Solo bloquea E2E/visual automatizados; NORTHMINE no depende de esa extensión para funcionar.
-- PREEXISTING / ENVIRONMENT: suite backend completa 336/349; 13 fallos dependen de SQL/WENCO/`pyodbc`. Regresión introducida por esta fase: NO. Capacidades afectadas: sólo dependientes de SQL/WENCO. Agent Runtime específico: 43/43 PASS.
+- PREEXISTING / ENVIRONMENT: suite backend completa 341/355; 14 fallos: 13 dependen de SQL/WENCO/`pyodbc` y 1 corresponde a un test histórico del endpoint demo retirado (`/api/demo/summary`, esperaba 200 y recibe 410). Regresión introducida por Agent Demo Tour: NO. Capacidades afectadas: sólo SQL/WENCO y ese oráculo histórico. Runtime + Demo Tour focalizado: 49/49 PASS.
 - RESOLVED TEST ORACLE: barge-in corta audio localmente y la confirmación backend conserva FIFO/replay. Agent Runtime: 43/43 PASS.
 - La fase actual no está desplegada. Backend health, frontend health, WebSocket, Realtime, Chrome console, mobile/tablet y rollback siguen `NOT VERIFIED` para el commit final.
 

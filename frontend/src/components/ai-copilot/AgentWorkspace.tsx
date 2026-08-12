@@ -23,6 +23,7 @@ import type { SemanticPerceptionSnapshot } from '../../lib/agentPerception/types
 import { workProductsApi } from '../../lib/agentWorkProducts'
 import type { MemorySummary, ReportDraft, ShiftHandoverDraft, TaskDraft } from '../../lib/agentWorkProducts'
 import { actionsForModule, moduleFromPath } from '../../lib/agentRuntime/quickActions'
+import { AGENT_DEMO_WORK_PRODUCT_FOCUS, AGENT_DEMO_WORK_PRODUCT_READY } from '../../lib/agentDemo/events'
 
 interface Props {
   open: boolean
@@ -122,6 +123,28 @@ export function AgentWorkspace({ open, onClose, context, role: _role, canApprove
   const [workOpen, setWorkOpen] = useState(false)
   const [openReportId, setOpenReportId] = useState<string | null>(null)
   const [pendingActionId, setPendingActionId] = useState<string | null>(null)
+  const demoReportRef = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    const focusWorkProduct = (event: Event) => {
+      const reportId = (event as CustomEvent<{ reportId?: string }>).detail?.reportId
+      setWorkOpen(true)
+      if (reportId) setOpenReportId(reportId)
+    }
+    window.addEventListener(AGENT_DEMO_WORK_PRODUCT_FOCUS, focusWorkProduct)
+    return () => window.removeEventListener(AGENT_DEMO_WORK_PRODUCT_FOCUS, focusWorkProduct)
+  }, [])
+
+  useEffect(() => {
+    if (!open || !workOpen || !openReportId) return
+    const firstFrame = window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        demoReportRef.current?.scrollIntoView({ behavior: 'auto', block: 'center' })
+        window.dispatchEvent(new CustomEvent(AGENT_DEMO_WORK_PRODUCT_READY, { detail: { reportId: openReportId } }))
+      })
+    })
+    return () => window.cancelAnimationFrame(firstFrame)
+  }, [open, workOpen, openReportId])
 
   useEffect(() => {
     speechOutputRouter.onProviderChanged(setVoiceProvider)
@@ -722,10 +745,10 @@ export function AgentWorkspace({ open, onClose, context, role: _role, canApprove
                 <div className="ai-work-block">
                   <span className="ai-copilot-block-title"><FileText size={11} /> Informes</span>
                   {runtime.reports.length ? runtime.reports.map((report: ReportDraft) => (
-                    <div key={report.report_id} className="ai-work-item">
+                    <div key={report.report_id} className="ai-work-item" ref={openReportId === report.report_id ? demoReportRef : undefined}>
                       <div className="ai-work-item-header">
                         <button type="button" className="ai-work-item-title" onClick={() => setOpenReportId((id) => (id === report.report_id ? null : report.report_id))}>
-                          {REPORT_TYPE_LABELS[report.report_type] ?? report.report_type} · v{report.version}
+                          {report.title || REPORT_TYPE_LABELS[report.report_type] || report.report_type} · v{report.version}
                         </button>
                         <span className={`ai-copilot-badge is-${report.status}`}>{WORK_PRODUCT_STATUS_LABELS[report.status] ?? report.status}</span>
                       </div>
