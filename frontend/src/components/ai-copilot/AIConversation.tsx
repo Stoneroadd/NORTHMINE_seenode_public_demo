@@ -15,8 +15,8 @@ export function AIConversation({ turns, canApprove, context }: { turns: ChatTurn
       <div className="ai-copilot-empty">
         <span className="ai-copilot-empty-code">CANAL OPERACIONAL / 01</span>
         <div className="ai-copilot-empty-copy">
-          <strong>Hola, jefe.</strong>
-          <p>¿Qué necesita decidir, comprobar o abrir?</p>
+          <strong>Modo agente activado.</strong>
+          <p>Puede hablar o escribir una orden.</p>
         </div>
         <div className="ai-copilot-empty-verbs" aria-label="Capacidades disponibles">
           <span>ANALIZAR</span><span>NAVEGAR</span><span>REPORTAR</span><span>EXPLICAR</span>

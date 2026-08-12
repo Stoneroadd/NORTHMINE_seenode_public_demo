@@ -247,7 +247,7 @@ export function AgentWorkspace({ open, onClose, context, role, canApprove }: Pro
 
   useEffect(() => {
     if (!open) return
-    const greeting = 'Hola, jefe. ¿En qué necesitas que te ayude?'
+    const greeting = 'Modo agente activado.'
     const timer = window.setTimeout(() => {
       const currentVoice = voiceRef.current
       if (!currentVoice) return
