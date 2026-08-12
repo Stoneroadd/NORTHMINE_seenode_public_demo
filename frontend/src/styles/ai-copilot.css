@@ -473,9 +473,36 @@
 }
 
 .ai-copilot-chart {
+  position: relative;
+  overflow: hidden;
   border: 1px solid var(--nm-border);
   border-radius: 8px;
   padding: 8px;
+}
+
+.ai-copilot-chart--visualizing::before,
+.ai-agent-chart-focus::after {
+  content: '';
+  position: absolute;
+  z-index: 6;
+  inset: 0;
+  width: 34%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--data-cyan) 16%, transparent),
+    color-mix(in srgb, white 9%, transparent),
+    transparent
+  );
+  transform: translateX(-145%) skewX(-12deg);
+  pointer-events: none;
+  animation: ai-agent-chart-scan 720ms cubic-bezier(0.16, 1, 0.3, 1) 80ms both;
+}
+
+.ai-agent-chart-focus {
+  position: relative !important;
+  overflow: hidden;
+  isolation: isolate;
 }
 
 .ai-copilot-chart-title {
@@ -1748,6 +1775,12 @@
   100% { outline-color: color-mix(in srgb, var(--data-cyan) 58%, transparent); filter: brightness(1.04); }
 }
 
+@keyframes ai-agent-chart-scan {
+  0% { opacity: 0; transform: translateX(-145%) skewX(-12deg); }
+  18% { opacity: 1; }
+  100% { opacity: 0; transform: translateX(390%) skewX(-12deg); }
+}
+
 @media (max-width: 720px) {
   .ai-copilot-panel { width: 100vw; }
   .ai-copilot-context-bar { grid-template-columns: 1.4fr 0.8fr 1fr; padding-left: 18px; }
@@ -1758,4 +1791,6 @@
 
 @media (prefers-reduced-motion: reduce) {
   .ai-agent-guided-highlight { animation: none !important; }
+  .ai-copilot-chart--visualizing::before,
+  .ai-agent-chart-focus::after { display: none; animation: none !important; }
 }

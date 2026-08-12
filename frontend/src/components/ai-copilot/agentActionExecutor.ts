@@ -5,6 +5,7 @@ import { moduleForRoute, NORTHMINE_MODULES } from '../../lib/agentRegistry/modul
 import { agentWidgetRegistry } from '../../lib/agentRegistry/registry'
 import { agentEntityNavigator } from '../../lib/agentRegistry/entityNavigator'
 import { resolveEquipmentAlias } from '../../lib/agentRegistry/entityResolver'
+import { gsap } from '../../lib/animation/gsap'
 import type { AgentActionExecutionStatus, AgentActionResult } from '../../lib/agentRegistry/types'
 import type { CopilotUIAction } from '../../lib/aiCopilot'
 
@@ -76,6 +77,162 @@ const TOOL_GUIDANCE_TARGETS: Record<string, { widgetIds: string[]; label: string
 let guidanceSequence: Promise<void> = Promise.resolve()
 let guidanceEpoch = 0
 const queuedGuidanceTargets = new Set<string>()
+let activeGuidanceCleanup: (() => void) | null = null
+
+const GUIDED_VALUE_SELECTOR = [
+  '[data-agent-value]',
+  '.nmcp-kpi-value',
+  '.kpi-value',
+  '.ai-copilot-chart-fallback-table td',
+  'strong',
+  'b',
+].join(',')
+
+const GUIDED_CHART_SELECTOR = [
+  '.recharts-wrapper',
+  '.echarts-for-react',
+  '.nmcp-hourly-chart',
+  '.ai-copilot-chart',
+  'canvas',
+].join(',')
+
+function uniqueElements<T extends Element>(elements: T[]): T[] {
+  return [...new Set(elements)]
+}
+
+function guidedValues(element: HTMLElement): HTMLElement[] {
+  return uniqueElements(Array.from(element.querySelectorAll<HTMLElement>(GUIDED_VALUE_SELECTOR)))
+    .filter((candidate) => /\d/.test(candidate.textContent ?? '') && candidate.getClientRects().length > 0)
+    .slice(0, 14)
+}
+
+function guidedCharts(element: HTMLElement): HTMLElement[] {
+  const engines = Array.from(element.querySelectorAll<HTMLElement>('.recharts-wrapper, .echarts-for-react'))
+  if (element.matches('.recharts-wrapper, .echarts-for-react')) engines.unshift(element)
+  const descendants = engines.length
+    ? engines
+    : Array.from(element.querySelectorAll<HTMLElement>(GUIDED_CHART_SELECTOR))
+  if (!engines.length && element.matches(GUIDED_CHART_SELECTOR)) descendants.unshift(element)
+  return uniqueElements(descendants)
+    .filter((candidate) => !candidate.matches('canvas') || !candidate.parentElement?.closest('.echarts-for-react'))
+    .filter((candidate) => candidate.getClientRects().length > 0)
+    .slice(0, 4)
+}
+
+/**
+ * Convierte el foco semantico del agente en una lectura visual breve: primero
+ * el modulo, luego sus cifras y finalmente las marcas del grafico. No altera
+ * valores ni inventa datos; solo anima nodos que ya estan renderizados.
+ */
+function startGuidanceEffects(element: HTMLElement): () => void {
+  activeGuidanceCleanup?.()
+
+  const values = guidedValues(element)
+  const charts = guidedCharts(element)
+  const bars = Array.from(element.querySelectorAll<SVGGraphicsElement>(
+    '.recharts-bar-rectangle path, .recharts-bar-rectangle rect',
+  )).slice(0, 18)
+  const lines = Array.from(element.querySelectorAll<SVGPathElement>('.recharts-line-curve')).slice(0, 4)
+  const dots = Array.from(element.querySelectorAll<SVGGraphicsElement>(
+    '.recharts-line-dot, .recharts-active-dot, .recharts-scatter-symbol',
+  )).slice(0, 18)
+
+  element.dataset.agentEffect = [values.length ? 'values' : '', charts.length ? 'chart' : '']
+    .filter(Boolean)
+    .join(' ')
+  charts.forEach((chart) => chart.classList.add('ai-agent-chart-focus'))
+
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    const cleanupReduced = () => {
+      charts.forEach((chart) => chart.classList.remove('ai-agent-chart-focus'))
+      delete element.dataset.agentEffect
+      if (activeGuidanceCleanup === cleanupReduced) activeGuidanceCleanup = null
+    }
+    activeGuidanceCleanup = cleanupReduced
+    return cleanupReduced
+  }
+
+  const timeline = gsap.timeline({ defaults: { ease: 'power3.out', overwrite: 'auto' } })
+
+  if (values.length) {
+    timeline.fromTo(values, {
+      autoAlpha: 0.42,
+      y: 7,
+      scale: 0.97,
+      willChange: 'transform, opacity',
+    }, {
+      autoAlpha: 1,
+      y: 0,
+      scale: 1,
+      duration: 0.42,
+      stagger: 0.045,
+      clearProps: 'transform,opacity,visibility,willChange',
+    }, 0.08)
+  }
+
+  if (charts.length) {
+    timeline.fromTo(charts, {
+      filter: 'brightness(0.88) saturate(0.82)',
+    }, {
+      filter: 'brightness(1.08) saturate(1.08)',
+      duration: 0.34,
+      stagger: 0.06,
+      yoyo: true,
+      repeat: 1,
+      clearProps: 'filter',
+    }, 0.12)
+  }
+
+  if (bars.length) {
+    timeline.fromTo(bars, {
+      autoAlpha: 0.35,
+      scaleY: 0.76,
+      transformOrigin: '50% 100%',
+    }, {
+      autoAlpha: 1,
+      scaleY: 1,
+      duration: 0.46,
+      stagger: 0.025,
+      clearProps: 'transform,opacity,visibility,transformOrigin',
+    }, 0.18)
+  }
+
+  lines.forEach((line, index) => {
+    let length = 0
+    try { length = line.getTotalLength() } catch { length = 0 }
+    if (length <= 0) return
+    gsap.set(line, { strokeDasharray: length, strokeDashoffset: length })
+    timeline.to(line, {
+      strokeDashoffset: 0,
+      duration: 0.68,
+      clearProps: 'strokeDasharray,strokeDashoffset',
+    }, 0.22 + index * 0.05)
+  })
+
+  if (dots.length) {
+    timeline.fromTo(dots, { autoAlpha: 0.3, scale: 0.65, transformOrigin: '50% 50%' }, {
+      autoAlpha: 1,
+      scale: 1,
+      duration: 0.3,
+      stagger: 0.025,
+      clearProps: 'transform,opacity,visibility,transformOrigin',
+    }, 0.42)
+  }
+
+  const animatedTargets = [...values, ...charts, ...bars, ...lines, ...dots]
+  const cleanup = () => {
+    timeline.kill()
+    gsap.killTweensOf(animatedTargets)
+    gsap.set(animatedTargets, {
+      clearProps: 'transform,opacity,visibility,filter,willChange,transformOrigin,strokeDasharray,strokeDashoffset',
+    })
+    charts.forEach((chart) => chart.classList.remove('ai-agent-chart-focus'))
+    delete element.dataset.agentEffect
+    if (activeGuidanceCleanup === cleanup) activeGuidanceCleanup = null
+  }
+  activeGuidanceCleanup = cleanup
+  return cleanup
+}
 
 function guidanceElement(widgetIds: string[]): HTMLElement | null {
   for (const widgetId of widgetIds) {
@@ -118,7 +275,9 @@ async function showGuidance(
 
   element.dataset.agentCue = guidanceCopy(target, summary).slice(0, 150)
   element.classList.add('ai-agent-guided-highlight')
+  const cleanupEffects = startGuidanceEffects(element)
   await new Promise((resolve) => window.setTimeout(resolve, 1800))
+  cleanupEffects()
   element.classList.remove('ai-agent-guided-highlight')
   delete element.dataset.agentCue
 }
@@ -142,6 +301,7 @@ export function cancelAgentGuidance(): void {
   guidanceEpoch += 1
   guidanceSequence = Promise.resolve()
   queuedGuidanceTargets.clear()
+  activeGuidanceCleanup?.()
   document.querySelectorAll<HTMLElement>('.ai-agent-guided-highlight').forEach((element) => {
     element.classList.remove('ai-agent-guided-highlight')
     delete element.dataset.agentCue
@@ -304,7 +464,11 @@ async function executeOne(actionId: string, action: CopilotUIAction): Promise<Ag
       } else if (element) {
         element.scrollIntoView({ behavior: 'smooth', block: 'center' })
         element.classList.add('ai-agent-highlight')
-        window.setTimeout(() => element.classList.remove('ai-agent-highlight'), 1600)
+        const cleanupEffects = startGuidanceEffects(element as HTMLElement)
+        window.setTimeout(() => {
+          cleanupEffects()
+          element.classList.remove('ai-agent-highlight')
+        }, 1600)
       }
       return { actionId, status: 'completed', label: `Enfocando ${widget?.label ?? action.widget_id}` }
     }
