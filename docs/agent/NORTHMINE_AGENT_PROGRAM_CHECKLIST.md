@@ -22,7 +22,7 @@ Program progress: 13 stages; 0 accepted; 11 merged; 1 partial; 1 current
 | Production Reconciliation | MERGED | `311a9d1`, `075c111`, `8cc8a00`, `8419e1`, `34f690a` | NOT VERIFIED |
 | Microphone Onboarding | MERGED | `7cc01d8`, `1d32f03`, merge `34f690a` | DEVICE MATRIX PENDING |
 | Realtime Speech-to-Speech | PARTIAL | arquitectura vigente | ENTITLEMENT/LIVE PENDING |
-| Operational Agent Hardening | IN_PROGRESS | rama local desde `34f690a` | NOT DEPLOYED |
+| Operational Agent Hardening | IN_PROGRESS | checkpoint local `31712a6`, base `34f690a` | NOT DEPLOYED |
 
 Estados sincronizados de requisitos históricos:
 

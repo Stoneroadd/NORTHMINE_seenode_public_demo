@@ -8,7 +8,7 @@ Este protocolo certifica la experiencia integrada en un Chrome real. No depende 
 
 | Campo | Valor |
 |---|---|
-| Commit | Checkpoint commit que contiene este protocolo (`git rev-parse HEAD`) |
+| Commit | `31712a6` — checkpoint funcional bajo prueba |
 | Fecha / hora | NOT TESTED |
 | Operador | NOT TESTED |
 | Equipo / SO | NOT TESTED |
