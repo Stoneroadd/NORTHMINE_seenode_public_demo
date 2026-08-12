@@ -1,0 +1,14 @@
+[
+  {"fault":"tool_timeout","expected":"partial_with_limitation"},
+  {"fault":"tool_500","expected":"partial_with_limitation"},
+  {"fault":"stale_data","expected":"partial_with_limitation"},
+  {"fault":"missing_metric","expected":"insufficient_data"},
+  {"fault":"ws_disconnect","expected":"reconnect_preserve_session"},
+  {"fault":"realtime_disconnect","expected":"fallback_text"},
+  {"fault":"ui_ack_timeout","expected":"failed_action_no_false_ack"},
+  {"fault":"provider_unavailable","expected":"fallback_text"},
+  {"fault":"redis_unavailable","expected":"local_degraded_no_false_global_state"},
+  {"fault":"duplicate_event","expected":"deduplicated"},
+  {"fault":"late_result","expected":"discard_stale_turn"},
+  {"fault":"conflicting_data","expected":"surface_contradiction"}
+]

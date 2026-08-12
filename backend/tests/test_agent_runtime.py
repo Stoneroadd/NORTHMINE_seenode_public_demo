@@ -7,11 +7,10 @@ import uuid
 import pytest
 from pydantic import ValidationError
 
-from app.ai.runtime import command_router, interruption, persistence, runtime, session_manager as sm, ui_actions
+from app.ai.runtime import command_router, interruption, persistence, runtime, session_manager as sm, speech_policy, ui_actions
 from app.ai.runtime.command_router import AgentCommandType, classify
 from app.ai.runtime.protocol import AgentEvent, UnknownEventType, build_server_event
 from app.ai.runtime.session_manager import AgentSessionManager, SessionNotFound, SessionOwnershipError
-from app.ai.runtime.speech_segmenter import split_for_speech
 from app.ai.runtime.state_machine import AgentRuntimeState, AgentStateMachine, InvalidStateTransition
 from app.ai.voice.elevenlabs_provider import ElevenLabsTTSProvider
 from app.ai.voice.null_provider import NullTTSProvider
@@ -492,7 +491,10 @@ def test_persisted_events_are_ordered_and_replayable(client, login_as_operador):
         ready = ws.receive_json()
         session_id = ready["payload"]["sessionId"]
         ws.send_json(_client_event("user.text", text="Dame el resumen del turno."))
-        for _ in range(10):
+        # El cliente ya corto el audio localmente antes de enviar este evento.
+        # Esta es la confirmacion autoritativa del backend y mantiene FIFO para
+        # que replay/since_sequence nunca omita evidencia previa ya persistida.
+        for _ in range(60):
             if ws.receive_json()["event_type"] == "agent.plan.created":
                 break
 
@@ -538,7 +540,10 @@ def test_ws_interrupt_stop_event_carries_the_turn_id_being_interrupted(client, l
 
         ws.send_json(_client_event("agent.interrupt", turnId="turn-2"))
         stop_event = None
-        for _ in range(10):
+        # El navegador ya corto el audio local antes de enviar agent.interrupt.
+        # Esta confirmacion conserva FIFO para que since_sequence/replay no
+        # omita evidencia persistida anterior al evento de control.
+        for _ in range(60):
             e = ws.receive_json()
             if e["event_type"] == "agent.speech.stop":
                 stop_event = e
@@ -553,13 +558,10 @@ def test_ws_interrupt_stop_event_carries_the_turn_id_being_interrupted(client, l
         assert stop_event["payload"]["turnId"] == "turn-1"
 
 
-def test_ws_multi_sentence_memory_response_yields_multiple_ordered_speech_segments_same_turn(client, login_as_operador):
-    """Etapa 7, auditoria de gaps (prioridad 1): handle_recall_operational_context
-    arma una respuesta de MAS de una oracion (el resumen de memoria + "Puedo
-    reabrir la investigacion..."). Antes se truncaba a 220 caracteres con
-    `text[:220]`; ahora SpeechSegmenter la parte en oraciones reales, y cada
-    segmento resultante debe compartir turnId y venir con sequence creciente
-    (seccion 9/19/20 del brief)."""
+def test_ws_memory_response_keeps_visual_detail_and_speaks_a_brief_status(client, login_as_operador):
+    """La memoria conserva el texto visual completo, mientras Speech Policy
+    limita STATUS a una frase. El oracle no espera voz que la politica actual
+    prohibe leer en voz alta."""
     from app.ai.memory import working_memory
 
     # _extract_equipment_query (command_router.py) solo reconoce
@@ -579,13 +581,9 @@ def test_ws_multi_sentence_memory_response_yields_multiple_ordered_speech_segmen
         ws.receive_json()
         ws.send_json(_client_event("user.text", text=f"¿Sigue ocurriendo lo de la pala {number}?", turnId="turn-mem-1"))
 
-        # handle_recall_operational_context no emite ningun evento terminal
-        # despues de sus agent.speech.segment (no arranca una investigacion) -
-        # esperar por un evento "siguiente" que nunca llega cuelga el test.
-        # En cambio: se lee hasta agent.text.delta (que manda el texto
-        # COMPLETO antes de segmentarlo), se calcula cuantos segmentos deberia
-        # producir SpeechSegmenter sobre ese mismo texto, y se leen
-        # exactamente esos.
+        # Este handler no emite un terminal porque no abre investigacion. Se
+        # calcula exactamente la salida hablada para no bloquear esperando una
+        # segunda frase que STATUS no debe pronunciar.
         full_text = None
         for _ in range(10):
             e = ws.receive_json()
@@ -597,12 +595,12 @@ def test_ws_multi_sentence_memory_response_yields_multiple_ordered_speech_segmen
         assert full_text, "se esperaba agent.text.delta con el texto completo antes de los segmentos"
         assert full_text.count(".") >= 2, f"el texto deberia tener 2+ oraciones para ejercitar el segmentador, llego: {full_text!r}"
 
-        expected_segment_count = len(split_for_speech(full_text))
-        assert expected_segment_count >= 2
+        expected_segment_count = len(speech_policy.spoken_chunks(full_text, "STATUS"))
+        assert expected_segment_count == 1
 
         segments = [ws.receive_json()["payload"] for _ in range(expected_segment_count)]
 
-        assert len(segments) >= 2, f"se esperaban 2+ segmentos (memoria + oracion de reapertura), llegaron: {segments}"
+        assert len(segments) == 1
         assert all(s["turnId"] == "turn-mem-1" for s in segments)
         sequences = [s["sequence"] for s in segments]
         assert sequences == sorted(sequences) and len(set(sequences)) == len(sequences)

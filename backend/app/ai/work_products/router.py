@@ -83,6 +83,14 @@ def approve_report(report_id: str, request: Request, user: dict = RequireAny) ->
     report = persistence.get_latest_report(report_id)
     if not report:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Informe no encontrado")
+    if not report.quality_gate.passed:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={
+                "message": "El ReportVerifier rechazó la aprobación.",
+                "quality_gate": report.quality_gate.model_dump(),
+            },
+        )
     approved = report.model_copy(update={"status": "approved", "approved_by": str(user.get("sub") or "anon"), "approved_at": _now()})
     persistence.save_report_version(approved)
     _record_report_episode(approved, human_decision="approved")

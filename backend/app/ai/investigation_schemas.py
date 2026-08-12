@@ -112,6 +112,10 @@ class VerificationResult(BaseModel):
 # ── Hipotesis (seccion 12) ───────────────────────────────────────────────
 
 HypothesisStatus = Literal["unsupported", "possible", "probable", "insufficient_data"]
+CausalityAssessment = Literal[
+    "confirmed", "strongly_supported", "plausible", "weak",
+    "unsupported", "contradicted", "insufficient_data",
+]
 
 
 class OperationalHypothesis(BaseModel):
@@ -120,6 +124,9 @@ class OperationalHypothesis(BaseModel):
     status: HypothesisStatus
     supporting_evidence_ids: list[str] = Field(default_factory=list)
     contradicting_evidence_ids: list[str] = Field(default_factory=list)
+    missing_evidence: list[str] = Field(default_factory=list)
+    causal_status: CausalityAssessment = "insufficient_data"
+    rationale: str | None = None
     score: float | None = None
 
 
@@ -143,12 +150,33 @@ class InvestigationConclusion(BaseModel):
     requires_human_approval: Literal[True] = True
 
 
+class OperationalInvestigation(BaseModel):
+    """Vista operacional verificable; nunca contiene razonamiento privado."""
+
+    question: str
+    scope: InvestigationScope
+    entities: list[str] = Field(default_factory=list)
+    timeframe: DateRange | None = None
+    observations: list[str] = Field(default_factory=list)
+    deviations: list[str] = Field(default_factory=list)
+    hypotheses: list[OperationalHypothesis] = Field(default_factory=list)
+    supporting_evidence: list[EvidenceItem] = Field(default_factory=list)
+    contradicting_evidence: list[EvidenceItem] = Field(default_factory=list)
+    missing_evidence: list[str] = Field(default_factory=list)
+    verified_findings: list[str] = Field(default_factory=list)
+    conclusion: str
+    confidence: ConfidenceInfo
+    limitations: list[str] = Field(default_factory=list)
+    recommended_next_actions: list[str] = Field(default_factory=list)
+
+
 class InvestigationResult(BaseModel):
     plan: InvestigationPlan
     evidence: list[EvidenceItem] = Field(default_factory=list)
     verification: VerificationResult
     hypotheses: list[OperationalHypothesis] = Field(default_factory=list)
     conclusion: InvestigationConclusion | None = None
+    operational_investigation: OperationalInvestigation | None = None
 
 
 # ── Request/response de API ──────────────────────────────────────────────

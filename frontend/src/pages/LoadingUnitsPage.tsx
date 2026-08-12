@@ -94,6 +94,7 @@ function UnitRow({ label, value, max, index, primaryValue, primaryDigits = 0, pr
 export function LoadingUnitsPage() {
   const t = useModuleT(loadingUnitsT)
   const [exporting, setExporting] = useState(false)
+  const [rateGuidance, setRateGuidance] = useState<string | null>(null)
   const query = useQuery({
     queryKey: ['stage17-loading-units'],
     queryFn: async () => {
@@ -110,13 +111,19 @@ export function LoadingUnitsPage() {
 
   const loadingDataRef = useRef(query.data)
   loadingDataRef.current = query.data
-  useAgentWidget({
+  const loadingRateWidget = useAgentWidget({
     id: 'loading-rate-chart',
     moduleId: 'carguio',
     type: 'table',
     label: 'Tasa de carguío por pala',
     description: 'Toneladas, ciclos y rendimiento (t/h) de cada unidad de carguio del turno.',
-    supportedActions: ['focus_widget', 'explain_widget'],
+    supportedActions: ['focus_widget', 'explain_widget', 'focus_row', 'highlight_row', 'sort_by', 'focus_anomaly', 'clear_highlight'],
+    agentGuidance: { preferredEffect: 'highlight', canHighlightRow: true },
+    performSemanticAction: (action) => {
+      setRateGuidance(action === 'clear_highlight' ? null : action)
+      if (action !== 'clear_highlight') window.setTimeout(() => setRateGuidance(null), 1500)
+      return true
+    },
     getSnapshot: () => {
       const items = loadingDataRef.current?.ranking.items ?? []
       return {
@@ -161,7 +168,7 @@ export function LoadingUnitsPage() {
       </section>
 
       <section className="two-column loading-visual-grid">
-        <div className="panel loading-animated-panel">
+        <div className={`panel loading-animated-panel ${rateGuidance ? 'is-agent-data-highlight' : ''}`} ref={loadingRateWidget.ref} data-agent-highlight={rateGuidance ?? undefined}>
           <div className="panel-header"><div><span className="panel-kicker">{t.ranking_kicker}</span><h2>{t.ranking_title}</h2></div><span className="panel-tag">{t.ranking_tag(data.ranking.count)}</span></div>
           <div className="nm-loading-list">
             {data.ranking.items.map((item, index) => <UnitRow key={item.carguio_id} index={index} label={item.carguio_id} value={item.toneladas} max={tonMax} primaryValue={item.toneladas} primarySuffix=" t" secondaryValue={item.rendimiento_tph} secondaryDigits={1} secondarySuffix=" tph" tone="cyan" />)}

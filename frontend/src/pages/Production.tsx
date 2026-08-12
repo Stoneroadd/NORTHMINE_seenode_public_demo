@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Activity, AlertTriangle, CheckCircle2, Clock3, RefreshCcw, Target, TrendingUp } from 'lucide-react'
 import { ApiError } from '../lib/api'
@@ -59,6 +59,7 @@ function productionState(hasTarget: boolean, currentGap: number | null, projecte
 
 export function Production() {
   const t = useModuleT(productionT)
+  const [chartGuidance, setChartGuidance] = useState<string | null>(null)
   const token = useAppStore((state) => state.usuario?.token)
   const query = useQuery({
     queryKey: ['production-shift', 'ACTUAL'],
@@ -114,7 +115,13 @@ export function Production() {
     type: 'chart',
     label: t.chart_toneladas_hora_title,
     description: 'Toneladas producidas por hora del turno actual, acumulado y meta.',
-    supportedActions: ['focus_widget', 'explain_widget'],
+    supportedActions: ['focus_widget', 'explain_widget', 'highlight_series', 'highlight_range', 'highlight_point', 'focus_anomaly', 'clear_highlight'],
+    agentGuidance: { preferredEffect: 'spotlight', canHighlightSeries: true, canHighlightPoint: true, canHighlightRange: true },
+    performSemanticAction: (action) => {
+      setChartGuidance(action === 'clear_highlight' ? null : action)
+      if (action !== 'clear_highlight') window.setTimeout(() => setChartGuidance(null), 1500)
+      return true
+    },
     getSnapshot: hourlyChartSnapshot,
   })
 
@@ -293,7 +300,7 @@ export function Production() {
       </section>
 
       {hasProductionRows && <section className="chart-grid">
-        <div className="panel" ref={hourlyChartWidget.ref}>
+        <div className={`panel ${chartGuidance ? 'is-agent-data-highlight' : ''}`} ref={hourlyChartWidget.ref} data-agent-highlight={chartGuidance ?? undefined}>
           <div className="panel-header">
             <div>
               <span className="panel-kicker">{t.chart_toneladas_hora_kicker}</span>

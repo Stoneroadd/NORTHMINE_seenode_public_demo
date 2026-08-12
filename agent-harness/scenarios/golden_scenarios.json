@@ -1,0 +1,22 @@
+[
+  {"id":"01_production_drop","category":"production","difficulty":"easy","investigation_type":"production_drop","fixture":"production_drop","required":{"hypotheses":5,"supporting_evidence":true,"contradicting_evidence":true,"ui_action":"navigate_production"}},
+  {"id":"02_pala_03_underperformance","category":"loading","difficulty":"easy","investigation_type":"loading_unit_underperformance","fixture":"pala_03","entity":"PALA 03","required":{"hypotheses":2,"supporting_evidence":true,"ui_action":"highlight_pala_03"}},
+  {"id":"03_insufficient_trucks","category":"haulage","difficulty":"ambiguous","investigation_type":"production_drop","fixture":"insufficient_trucks","required":{"hypotheses":5,"supporting_evidence":true,"contradicting_evidence":true}},
+  {"id":"04_destination_queue","category":"delay","difficulty":"easy","investigation_type":"cycle_time_increase","fixture":"destination_queue","required":{"hypotheses":2,"supporting_evidence":true,"ui_action":"focus_route"}},
+  {"id":"05_equipment_breakdown","category":"breakdown","difficulty":"easy","investigation_type":"production_drop","fixture":"breakdown","required":{"hypotheses":5,"supporting_evidence":true,"ui_action":"highlight_row"}},
+  {"id":"06_low_availability","category":"availability","difficulty":"easy","investigation_type":"production_drop","fixture":"low_availability","required":{"hypotheses":5,"supporting_evidence":true}},
+  {"id":"07_utilization_anomaly","category":"utilization","difficulty":"ambiguous","investigation_type":"production_drop","fixture":"utilization_anomaly","required":{"hypotheses":5,"contradicting_evidence":true}},
+  {"id":"08_stale_telemetry","category":"data_quality","difficulty":"insufficient_data","investigation_type":"shift_summary","fixture":"stale","required":{"limitations":true,"no_invented_cause":true}},
+  {"id":"09_conflicting_kpi","category":"data_quality","difficulty":"conflicting","investigation_type":"production_drop","fixture":"conflicting","required":{"contradicting_evidence":true,"no_invented_cause":true}},
+  {"id":"10_compare_shifts","category":"comparison","difficulty":"easy","investigation_type":"shift_summary","fixture":"normal","required":{"verified_evidence":true,"intent":"COMPARE_SHIFT"}},
+  {"id":"11_current_screen_explanation","category":"shift_summary","difficulty":"easy","investigation_type":"shift_summary","fixture":"normal","required":{"verified_evidence":true,"ui_action":"focus_widget"}},
+  {"id":"12_find_equipment","category":"loading","difficulty":"ambiguous","investigation_type":"loading_unit_underperformance","fixture":"pala_03","entity":"PALA 03","required":{"ui_action":"focus_entity","ack":true}},
+  {"id":"13_map_navigation","category":"haulage","difficulty":"easy","investigation_type":"cycle_time_increase","fixture":"normal","required":{"ui_action":"focus_entity","ack":true}},
+  {"id":"14_create_watch","category":"availability","difficulty":"easy","investigation_type":"shift_summary","fixture":"normal","required":{"security":"allowlisted","intent":"CREATE_WATCH"}},
+  {"id":"15_shift_handover","category":"shift_summary","difficulty":"easy","investigation_type":"shift_summary","fixture":"normal","required":{"report":true,"intent":"SHIFT_HANDOVER"}},
+  {"id":"16_executive_report","category":"shift_summary","difficulty":"easy","investigation_type":"shift_summary","fixture":"normal","required":{"report":true,"report_quality":75}},
+  {"id":"17_ambiguous_entity","category":"loading","difficulty":"ambiguous","investigation_type":"loading_unit_underperformance","fixture":"pala_03","required":{"no_execution":true,"follow_up_question":true}},
+  {"id":"18_insufficient_evidence","category":"data_quality","difficulty":"insufficient_data","investigation_type":"production_drop","fixture":"empty","required":{"no_invented_cause":true,"limitations":true}},
+  {"id":"19_interrupted_investigation","category":"production","difficulty":"conflicting","investigation_type":"production_drop","fixture":"production_drop","required":{"realtime":"barge_in","preserve_evidence":true}},
+  {"id":"20_provider_failure","category":"data_quality","difficulty":"insufficient_data","investigation_type":"shift_summary","fixture":"provider_failure","required":{"fault":"provider_unavailable","honest_degradation":true}}
+]

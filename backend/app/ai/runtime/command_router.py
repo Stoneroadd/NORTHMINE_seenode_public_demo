@@ -67,6 +67,51 @@ class AgentCommand(BaseModel):
     quiet_duration_minutes: int | None = None
     report_modification: str | None = None
     task_description: str | None = None
+    source: Literal["text", "voice", "quick_action", "command_palette", "context_action"] = "text"
+
+
+class StructuredAgentIntent(BaseModel):
+    intent: Literal[
+        "ANALYZE_SHIFT", "INVESTIGATE_PRODUCTION_DROP", "WHAT_CHANGED", "FIND_DEVIATIONS",
+        "EXECUTIVE_SUMMARY", "PREPARE_REPORT", "SHIFT_HANDOVER", "CRITICAL_EQUIPMENT",
+        "PRODUCTION_IMPACT", "COMPARE_SHIFT", "FIND_WORST_HOUR", "ANALYZE_LOADING",
+        "ANALYZE_CYCLE", "NAVIGATE_MODULE", "CREATE_WATCH",
+    ]
+    scope: Literal["current_context", "current_shift", "selected_entity"] = "current_context"
+    module_id: str | None = None
+    entity_id: str | None = None
+    widget_id: str | None = None
+    source: Literal["quick_action", "command_palette", "context_action"] = "quick_action"
+
+
+def command_from_intent(intent: StructuredAgentIntent) -> AgentCommand:
+    mapping: dict[str, tuple[AgentCommandType, InvestigationType | None]] = {
+        "ANALYZE_SHIFT": (AgentCommandType.START_INVESTIGATION, InvestigationType.SHIFT_SUMMARY),
+        "INVESTIGATE_PRODUCTION_DROP": (AgentCommandType.START_INVESTIGATION, InvestigationType.PRODUCTION_DROP),
+        "WHAT_CHANGED": (AgentCommandType.COMPARE_WITH_MEMORY, None),
+        "FIND_DEVIATIONS": (AgentCommandType.START_INVESTIGATION, InvestigationType.SHIFT_SUMMARY),
+        "EXECUTIVE_SUMMARY": (AgentCommandType.START_INVESTIGATION, InvestigationType.SHIFT_SUMMARY),
+        "PREPARE_REPORT": (AgentCommandType.GENERATE_REPORT, None),
+        "SHIFT_HANDOVER": (AgentCommandType.GENERATE_HANDOVER, None),
+        "CRITICAL_EQUIPMENT": (AgentCommandType.START_INVESTIGATION, InvestigationType.LOADING_UNIT_UNDERPERFORMANCE),
+        "PRODUCTION_IMPACT": (AgentCommandType.START_INVESTIGATION, InvestigationType.PRODUCTION_DROP),
+        "COMPARE_SHIFT": (AgentCommandType.COMPARE_WITH_MEMORY, None),
+        "FIND_WORST_HOUR": (AgentCommandType.START_INVESTIGATION, InvestigationType.PRODUCTION_DROP),
+        "ANALYZE_LOADING": (AgentCommandType.START_INVESTIGATION, InvestigationType.LOADING_UNIT_UNDERPERFORMANCE),
+        "ANALYZE_CYCLE": (AgentCommandType.START_INVESTIGATION, InvestigationType.CYCLE_TIME_INCREASE),
+        "NAVIGATE_MODULE": (AgentCommandType.NAVIGATE, None),
+        "CREATE_WATCH": (AgentCommandType.CREATE_WATCH, None),
+    }
+    command_type, investigation_type = mapping[intent.intent]
+    return AgentCommand(
+        type=command_type,
+        raw_text=intent.intent,
+        investigation_type=investigation_type,
+        target_module=intent.module_id,
+        equipment_query=intent.entity_id,
+        widget_reference=intent.widget_id,
+        source=intent.source,
+    )
 
 
 LLMClassifier = Callable[[str], "AgentCommand | None"]

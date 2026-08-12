@@ -16,34 +16,20 @@ contenido de cada seccion, no aca.
 """
 
 STANDARD_SECTION_TITLES: list[str] = [
-    "Objetivo", "Alcance", "Periodo", "Resumen ejecutivo", "Estado operacional",
-    "Desviaciones", "Evidencia", "Causas probables", "Evidencia contradictoria",
-    "Riesgos", "Recomendaciones", "Acciones propuestas", "Calidad de datos",
-    "Limitaciones", "Fuentes", "Responsable de validación",
+    "Resumen ejecutivo", "Resultado operacional", "Producción", "Carguío",
+    "Transporte", "Utilización y disponibilidad", "Demoras", "Desviaciones principales",
+    "Análisis de causas", "Evidencia relevante", "Evidencia contradictoria",
+    "Riesgos operacionales", "Impacto estimado", "Acciones y recomendaciones",
+    "Pendientes", "Calidad de datos", "Anexos",
 ]
 
 _SECTIONS_BY_TYPE: dict[ReportType, list[str]] = {
     "SHIFT_REPORT": STANDARD_SECTION_TITLES,
     "INVESTIGATION_REPORT": STANDARD_SECTION_TITLES,
-    "EXECUTIVE_SUMMARY": [
-        "Objetivo", "Alcance", "Periodo", "Resumen ejecutivo", "Estado operacional",
-        "Riesgos", "Recomendaciones", "Calidad de datos", "Limitaciones", "Fuentes", "Responsable de validación",
-    ],
-    "PRODUCTION_REPORT": [
-        "Objetivo", "Alcance", "Periodo", "Resumen ejecutivo", "Estado operacional",
-        "Desviaciones", "Evidencia", "Recomendaciones", "Calidad de datos", "Limitaciones", "Fuentes",
-        "Responsable de validación",
-    ],
-    "FLEET_REPORT": [
-        "Objetivo", "Alcance", "Periodo", "Resumen ejecutivo", "Estado operacional",
-        "Desviaciones", "Evidencia", "Riesgos", "Recomendaciones", "Calidad de datos", "Limitaciones", "Fuentes",
-        "Responsable de validación",
-    ],
-    "BREAKDOWN_REPORT": [
-        "Objetivo", "Alcance", "Periodo", "Resumen ejecutivo", "Desviaciones", "Evidencia",
-        "Causas probables", "Riesgos", "Recomendaciones", "Acciones propuestas", "Calidad de datos",
-        "Limitaciones", "Fuentes", "Responsable de validación",
-    ],
+    "EXECUTIVE_SUMMARY": ["Resumen ejecutivo", "Resultado operacional", "Desviaciones principales", "Riesgos operacionales", "Impacto estimado", "Acciones y recomendaciones", "Calidad de datos"],
+    "PRODUCTION_REPORT": ["Resumen ejecutivo", "Resultado operacional", "Producción", "Carguío", "Transporte", "Desviaciones principales", "Análisis de causas", "Evidencia relevante", "Impacto estimado", "Acciones y recomendaciones", "Calidad de datos", "Anexos"],
+    "FLEET_REPORT": ["Resumen ejecutivo", "Resultado operacional", "Transporte", "Utilización y disponibilidad", "Demoras", "Desviaciones principales", "Evidencia relevante", "Riesgos operacionales", "Acciones y recomendaciones", "Calidad de datos", "Anexos"],
+    "BREAKDOWN_REPORT": ["Resumen ejecutivo", "Resultado operacional", "Demoras", "Desviaciones principales", "Análisis de causas", "Evidencia relevante", "Riesgos operacionales", "Impacto estimado", "Acciones y recomendaciones", "Pendientes", "Calidad de datos", "Anexos"],
 }
 
 
@@ -63,4 +49,15 @@ def audience_label(audience: Audience) -> str:
     return _AUDIENCE_LABELS.get(audience, audience)
 
 
-REPORT_TITLE_PREFIX = "BORRADOR IA — REQUIERE VALIDACIÓN HUMANA"
+REPORT_TITLES: dict[ReportType, str] = {
+    "SHIFT_REPORT": "REPORTE OPERACIONAL DE TURNO",
+    "INVESTIGATION_REPORT": "REPORTE DE INVESTIGACIÓN OPERACIONAL",
+    "PRODUCTION_REPORT": "REPORTE OPERACIONAL DE PRODUCCIÓN",
+    "FLEET_REPORT": "REPORTE OPERACIONAL DE FLOTA",
+    "BREAKDOWN_REPORT": "REPORTE OPERACIONAL DE AVERÍAS",
+    "EXECUTIVE_SUMMARY": "RESUMEN EJECUTIVO OPERACIONAL",
+}
+
+
+def report_title(report_type: ReportType) -> str:
+    return REPORT_TITLES[report_type]

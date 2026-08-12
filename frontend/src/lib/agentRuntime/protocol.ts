@@ -9,7 +9,7 @@ export const PROTOCOL_VERSION = '1.0'
 
 export type ClientEventType =
   | 'session.start' | 'session.resume' | 'session.heartbeat' | 'context.update'
-  | 'user.text' | 'user.speech.partial' | 'user.speech.final'
+  | 'user.text' | 'user.intent' | 'user.speech.partial' | 'user.speech.final'
   | 'agent.pause' | 'agent.resume' | 'agent.cancel' | 'agent.interrupt'
   | 'ui_action.completed' | 'ui_action.failed' | 'ui_action.rejected' | 'ui_action.cancelled'
   | 'approval.confirmed' | 'approval.rejected'

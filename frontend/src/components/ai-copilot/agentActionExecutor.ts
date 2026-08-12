@@ -7,6 +7,7 @@ import { agentEntityNavigator } from '../../lib/agentRegistry/entityNavigator'
 import { resolveEquipmentAlias } from '../../lib/agentRegistry/entityResolver'
 import type { AgentActionExecutionStatus, AgentActionResult } from '../../lib/agentRegistry/types'
 import type { CopilotUIAction } from '../../lib/aiCopilot'
+import { agentGuidance } from '../../lib/agentGuidance/guidanceStore'
 
 /**
  * Ejecutor de acciones semanticas con maquina de estados (seccion 9-10 del
@@ -43,10 +44,30 @@ async function drainQueue(): Promise<void> {
     const item = queue.shift()!
     if (seenActionIds.has(item.id)) continue
     seenActionIds.add(item.id)
+    const guidance = guidanceForAction(item.action)
+    if (guidance) agentGuidance.start({ actionId: item.id, ...guidance })
     const result = await executeOne(item.id, item.action)
+    if (guidance) agentGuidance.finish(item.id, result.status === 'completed')
     item.onResult(result)
   }
   processing = false
+}
+
+function guidanceForAction(action: CopilotUIAction): { targetId: string; effect: NonNullable<CopilotUIAction['guidance']>['effect']; durationMs?: number; label: string } | null {
+  const requested = action.guidance
+  if (action.action === 'navigate') {
+    const module = isSectionId(action.route) ? NORTHMINE_MODULES[action.route] : moduleForRoute(action.route.startsWith('/') ? action.route : `/${action.route}`)
+    const moduleId = module?.id ?? action.route
+    return { targetId: `module:${moduleId}`, effect: requested?.effect ?? 'sweep', durationMs: requested?.durationMs, label: requested?.label ?? `Abrir ${module?.label ?? action.route}` }
+  }
+  if (action.action === 'focus_widget' || action.action === 'widget_action') {
+    const manifest = agentWidgetRegistry.get(action.widget_id)
+    return { targetId: `widget:${action.widget_id}`, effect: requested?.effect ?? manifest?.agentGuidance?.preferredEffect ?? 'spotlight', durationMs: requested?.durationMs, label: requested?.label ?? `Enfocar ${manifest?.label ?? action.widget_id}` }
+  }
+  if (action.action === 'select_entity' || action.action === 'open_entity') {
+    return { targetId: `entity:${action.entity_type}:${action.entity_id}`, effect: requested?.effect ?? 'glow', durationMs: requested?.durationMs, label: requested?.label ?? `Mostrar ${action.entity_id}` }
+  }
+  return null
 }
 
 function isSectionId(value: string): value is SectionId {
@@ -211,7 +232,7 @@ async function executeOne(actionId: string, action: CopilotUIAction): Promise<Ag
     case 'focus_widget': {
       const widget = agentWidgetRegistry.get(action.widget_id)
       const element =
-        document.getElementById(action.widget_id) ?? document.querySelector(`[data-agent-widget-id="${action.widget_id}"]`)
+        agentWidgetRegistry.getElement(action.widget_id)
       if (!widget && !element) {
         return fail('rejected', `No pude encontrar el panel ${action.widget_id} porque no esta disponible en esta vista.`)
       }
@@ -220,10 +241,23 @@ async function executeOne(actionId: string, action: CopilotUIAction): Promise<Ag
         widget.focus()
       } else if (element) {
         element.scrollIntoView({ behavior: 'smooth', block: 'center' })
-        element.classList.add('ai-agent-highlight')
-        window.setTimeout(() => element.classList.remove('ai-agent-highlight'), 1600)
       }
       return { actionId, status: 'completed', label: `Enfocando ${widget?.label ?? action.widget_id}` }
+    }
+
+    case 'widget_action': {
+      const widget = agentWidgetRegistry.get(action.widget_id)
+      const element = agentWidgetRegistry.getElement(action.widget_id)
+      if (!widget || !element) return fail('rejected', `El panel ${action.widget_id} no está disponible en esta vista.`)
+      if (!widget.supportedActions.includes(action.semantic_action) || !widget.performSemanticAction) {
+        return fail('rejected', `${widget.label} no soporta ${action.semantic_action}.`)
+      }
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      agentWidgetRegistry.setFocusedWidget(action.widget_id)
+      const confirmed = await widget.performSemanticAction(action.semantic_action, action.args)
+      return confirmed
+        ? { actionId, status: 'completed', label: `Resaltando ${widget.label}` }
+        : fail('failed', `No se pudo confirmar ${action.semantic_action} en ${widget.label}`)
     }
 
     default:

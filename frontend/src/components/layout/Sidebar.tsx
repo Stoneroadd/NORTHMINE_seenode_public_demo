@@ -115,6 +115,7 @@ export function Sidebar({ active, onSelect, mobileOpen = false, onNavigate }: Pr
             <button
               key={item.id}
               className={`nav-item ${isActive ? 'is-active' : ''}`}
+              data-agent-guidance-target={`module:${item.id}`}
               type="button"
               title={`${label}: ${item.caption}`}
               onClick={() => {

@@ -136,6 +136,34 @@ export interface ReportSection {
   evidence_ids: string[]
 }
 
+export interface ReportTable {
+  table_id: string
+  title: string
+  question: string
+  columns: string[]
+  rows: Array<Record<string, string | number | null>>
+  evidence_ids: string[]
+}
+
+export interface ReportChart {
+  chart_id: string
+  title: string
+  question: string
+  chart_type: 'bar' | 'line' | 'area'
+  x_field: string
+  y_fields: string[]
+  data: Array<Record<string, string | number | null>>
+  evidence_ids: string[]
+}
+
+export interface ReportQualityGate {
+  passed: boolean
+  total_score: number
+  numerical_consistency: number
+  errors: string[]
+  warnings: string[]
+}
+
 export interface ReportDraft {
   report_id: string
   report_type: ReportType
@@ -143,6 +171,8 @@ export interface ReportDraft {
   scope: ReportScope
   status: WorkProductStatus
   sections: ReportSection[]
+  tables: ReportTable[]
+  charts: ReportChart[]
   evidence_ids: string[]
   investigation_ids: string[]
   company_id: string | null
@@ -152,6 +182,8 @@ export interface ReportDraft {
   updated_at: string
   version: number
   change_log: string[]
+  conceptual_diff: string[]
+  quality_gate: ReportQualityGate
   approved_by: string | null
   approved_at: string | null
   rejection_reason: string | null

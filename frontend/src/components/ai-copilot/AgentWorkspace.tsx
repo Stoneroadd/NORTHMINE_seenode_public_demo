@@ -22,6 +22,7 @@ import { agentWidgetRegistry } from '../../lib/agentRegistry/registry'
 import type { SemanticPerceptionSnapshot } from '../../lib/agentPerception/types'
 import { workProductsApi } from '../../lib/agentWorkProducts'
 import type { MemorySummary, ReportDraft, ShiftHandoverDraft, TaskDraft } from '../../lib/agentWorkProducts'
+import { actionsForModule, moduleFromPath } from '../../lib/agentRuntime/quickActions'
 
 interface Props {
   open: boolean
@@ -40,12 +41,6 @@ const STATE_LABELS: Record<string, string> = {
 const VOICE_LABELS: Record<VoiceOutputProviderName, string> = {
   elevenlabs: 'Voz NORTHMINE', browser: 'Voz local de respaldo', text_only: 'Solo texto',
 }
-
-const QUICK_COMMANDS = [
-  'Investiga por qué bajó producción',
-  'Revisa el tiempo de ciclo',
-  'Dame el resumen del turno',
-]
 
 const STEP_STATUS_LABELS: Record<string, string> = {
   pending: 'Pendiente', running: 'En curso', completed: 'Completado', failed: 'Fallido',
@@ -277,6 +272,15 @@ export function AgentWorkspace({ open, onClose, context, role: _role, canApprove
     setInputText('')
   }
 
+  function sendQuickAction(intent: string) {
+    agentSessionClient.send('user.intent', {
+      intent,
+      scope: 'current_context',
+      module_id: moduleFromPath(window.location.pathname),
+      source: 'quick_action',
+    })
+  }
+
   function micRequestErrorMessage(kind: 'blocked' | 'no_device' | 'unknown'): string {
     if (kind === 'blocked') return 'El micrófono está bloqueado para NORTHMINE. Habilítalo desde los permisos del sitio.'
     if (kind === 'no_device') return 'No se encontró un micrófono disponible en este dispositivo.'
@@ -430,8 +434,8 @@ export function AgentWorkspace({ open, onClose, context, role: _role, canApprove
                 herramientas de solo lectura y explica lo que encuentra a medida que avanza.
               </p>
               <div className="ai-copilot-quick-actions">
-                {QUICK_COMMANDS.map((cmd) => (
-                  <button key={cmd} type="button" onClick={() => sendCommand(cmd, false)}>{cmd}</button>
+                {actionsForModule(moduleFromPath(window.location.pathname), 5).map((action) => (
+                  <button key={action.id} type="button" onClick={() => sendQuickAction(action.intent)}>{action.label}</button>
                 ))}
               </div>
             </div>
@@ -725,7 +729,10 @@ export function AgentWorkspace({ open, onClose, context, role: _role, canApprove
                         </button>
                         <span className={`ai-copilot-badge is-${report.status}`}>{WORK_PRODUCT_STATUS_LABELS[report.status] ?? report.status}</span>
                       </div>
-                      <p className="ai-work-item-meta">{report.generated_by} · {report.generated_at} · {report.scope.audience}</p>
+                      <p className="ai-work-item-meta">Estado: {report.status === 'draft' ? 'Pendiente de validación' : WORK_PRODUCT_STATUS_LABELS[report.status] ?? report.status} · {report.generated_at} · {report.scope.audience}</p>
+                      <p className={`ai-work-quality is-${report.quality_gate?.passed ? 'passed' : 'failed'}`}>
+                        Verificación {report.quality_gate?.passed ? 'aprobada' : 'pendiente'} · {report.quality_gate?.total_score ?? 0}/100
+                      </p>
                       {openReportId === report.report_id && (
                         <div className="ai-work-item-detail">
                           {report.sections.map((s) => (
@@ -734,9 +741,23 @@ export function AgentWorkspace({ open, onClose, context, role: _role, canApprove
                               <p>{s.content}</p>
                             </div>
                           ))}
+                          {report.tables?.map((table) => (
+                            <div key={table.table_id} className="ai-work-report-table">
+                              <strong>{table.title}</strong><small>{table.question}</small>
+                              <div className="ai-work-report-table-scroll"><table><thead><tr>{table.columns.map((column) => <th key={column}>{column}</th>)}</tr></thead>
+                                <tbody>{table.rows.map((row, index) => <tr key={index}>{table.columns.map((column) => <td key={column}>{row[column] ?? '—'}</td>)}</tr>)}</tbody></table></div>
+                            </div>
+                          ))}
+                          {report.charts?.map((chart) => (
+                            <div key={chart.chart_id} className="ai-work-report-chart">
+                              <strong>{chart.title}</strong><small>{chart.question}</small>
+                              <p>{chart.data.length} puntos verificados · series: {chart.y_fields.join(', ')}</p>
+                            </div>
+                          ))}
+                          {report.conceptual_diff?.length > 0 && <div className="ai-work-report-diff"><strong>Cambios v{report.version}</strong><ul>{report.conceptual_diff.map((item) => <li key={item}>{item}</li>)}</ul></div>}
                         </div>
                       )}
-                      {canApprove && report.status === 'draft' && (
+                      {canApprove && report.status === 'draft' && report.quality_gate?.passed && (
                         <div className="ai-work-item-actions">
                           <button type="button" disabled={pendingActionId === report.report_id} onClick={() => approveReport(report.report_id)}><ThumbsUp size={12} /> Aprobar</button>
                           <button type="button" disabled={pendingActionId === report.report_id} onClick={() => rejectReport(report.report_id)}><ThumbsDown size={12} /> Rechazar</button>

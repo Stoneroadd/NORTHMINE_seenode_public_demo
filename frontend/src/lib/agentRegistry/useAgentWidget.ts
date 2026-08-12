@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef } from 'react'
 import { agentWidgetRegistry } from './registry'
-import type { AgentActionType, AgentModuleId, AgentWidgetSnapshot, AgentWidgetType } from './types'
+import type { AgentActionType, AgentGuidanceManifest, AgentModuleId, AgentWidgetSnapshot, AgentWidgetType } from './types'
 
 export interface UseAgentWidgetOptions {
   id: string
@@ -10,7 +10,9 @@ export interface UseAgentWidgetOptions {
   label: string
   description: string
   supportedActions: AgentActionType[]
+  agentGuidance?: AgentGuidanceManifest
   getSnapshot?: () => AgentWidgetSnapshot
+  performSemanticAction?: (action: AgentActionType, args?: Record<string, unknown>) => Promise<boolean> | boolean
 }
 
 /**
@@ -34,7 +36,11 @@ export function useAgentWidget(options: UseAgentWidgetOptions) {
       label: options.label,
       description: options.description,
       supportedActions: options.supportedActions,
+      agentGuidance: options.agentGuidance,
       getSnapshot: options.getSnapshot ? () => optionsRef.current.getSnapshot!() : undefined,
+      performSemanticAction: options.performSemanticAction
+        ? (action, args) => optionsRef.current.performSemanticAction!(action, args)
+        : undefined,
     })
     return () => agentWidgetRegistry.unregister(options.id)
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -44,6 +50,7 @@ export function useAgentWidget(options: UseAgentWidgetOptions) {
     (element: HTMLElement | null) => {
       if (element) {
         element.setAttribute('data-agent-widget-id', options.id)
+        if (!element.hasAttribute('tabindex')) element.tabIndex = 0
         // Etapa 5: visibilidad real via IntersectionObserver (seccion 7) -
         // registrar el nodo DOM real, no solo el manifest en memoria.
         agentWidgetRegistry.observeElement(options.id, element)

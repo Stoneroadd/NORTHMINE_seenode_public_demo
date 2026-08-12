@@ -25,6 +25,7 @@ CLIENT_EVENT_TYPES: frozenset[str] = frozenset(
         "session.heartbeat",
         "context.update",
         "user.text",
+        "user.intent",
         "user.speech.partial",
         "user.speech.final",
         "agent.pause",

@@ -358,17 +358,18 @@ def test_expire_due_watches_expires_only_past_due():
 
 # ── Reports (seccion 43) ───────────────────────────────────────────────────
 
-def test_build_report_produces_all_standard_sections():
+def test_build_report_omits_unsupported_sections_and_requires_evidence():
     report = reports_module.build_report(
         report_type="SHIFT_REPORT", scope=ReportScope(shift=None, audience="supervisor"),
         generated_by="tester", company_id=None, site_id=None,
     )
-    titles = [s.title for s in report.sections]
-    assert "Resumen ejecutivo" in titles
-    assert "Responsable de validación" in titles
+    assert all(section.content.strip() for section in report.sections)
+    assert all("IA" not in section.title for section in report.sections)
     assert report.requires_human_approval is True
     assert report.decision_authority == "human"
     assert report.version == 1
+    if not report.evidence_ids:
+        assert report.quality_gate.passed is False
 
 
 def test_verify_report_evidence_flags_dangling_citation():
@@ -427,6 +428,7 @@ def test_report_approval_requires_permission(client, login_as_operador, login_as
         generated_by="tester", company_id=None, site_id=None,
     )
     from app.ai.work_products import persistence as wp_persistence
+    report = report.model_copy(update={"quality_gate": report.quality_gate.model_copy(update={"passed": True})})
     wp_persistence.save_report_version(report)
 
     # Ambos roles pueden aprobar (policies.APPROVAL_ROLES incluye operador) -
@@ -437,6 +439,26 @@ def test_report_approval_requires_permission(client, login_as_operador, login_as
     )
     assert resp.status_code == 200
     assert resp.json()["status"] == "approved"
+
+
+def test_report_approval_rejects_failed_quality_gate(client, login_as_supervisor):
+    report = reports_module.build_report(
+        report_type="SHIFT_REPORT", scope=ReportScope(shift=None, audience="supervisor"),
+        generated_by="tester", company_id=None, site_id=None,
+    )
+    from app.ai.work_products import persistence as wp_persistence
+    report = report.model_copy(update={"quality_gate": report.quality_gate.model_copy(update={
+        "passed": False,
+        "errors": ["Evidencia insuficiente"],
+    })})
+    wp_persistence.save_report_version(report)
+
+    resp = client.post(
+        f"/api/ai-agent/work-products/reports/{report.report_id}/approve",
+        headers=auth_header(login_as_supervisor),
+    )
+    assert resp.status_code == 409
+    assert "ReportVerifier" in resp.json()["detail"]["message"]
 
 
 def test_report_rejection_records_reason(client, login_as_supervisor):

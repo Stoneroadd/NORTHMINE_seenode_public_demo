@@ -15,11 +15,11 @@ export function actionForCapability(capabilityId: string, equipmentQuery: string
     case 'navigate_production':
       return { action: 'navigate', route: 'produccion' }
     case 'focus_production_chart':
-      return { action: 'focus_widget', widget_id: 'production-hourly-chart' }
+      return { action: 'widget_action', widget_id: 'production-hourly-chart', semantic_action: 'focus_anomaly' }
     case 'navigate_loading':
       return { action: 'navigate', route: 'carguio' }
     case 'focus_loading_chart':
-      return { action: 'focus_widget', widget_id: 'loading-rate-chart' }
+      return { action: 'widget_action', widget_id: 'loading-rate-chart', semantic_action: 'focus_anomaly' }
     case 'navigate_fleet':
       return { action: 'navigate', route: 'flota' }
     case 'open_affected_equipment':

@@ -292,7 +292,7 @@ export function FleetPage() {
                   {filteredRows.map((item) => {
                     const state = operationalStatus(item)
                     return (
-                      <tr key={item.caex_id} onClick={() => setSelectedEquipmentId(item.caex_id)}>
+                      <tr key={item.caex_id} data-agent-guidance-target={`entity:equipment:${item.caex_id}`} className={selectedEquipmentId === item.caex_id ? 'is-agent-data-highlight' : undefined} onClick={() => setSelectedEquipmentId(item.caex_id)}>
                         <td><strong>{item.caex_id}</strong><small>{item.modelo}</small></td>
                         <td><span className={`fleet-status-pill ${statusClass(state)}`}>{state}</span></td>
                         <td><span className="fleet-status-detail">{statusDetail(item, t)}</span></td>

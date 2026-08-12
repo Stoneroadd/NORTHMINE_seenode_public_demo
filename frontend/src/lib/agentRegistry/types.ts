@@ -61,6 +61,21 @@ export type AgentWidgetType =
 export type AgentActionType =
   | 'navigate' | 'open_section' | 'set_filter' | 'clear_filter'
   | 'select_entity' | 'open_entity' | 'focus_widget' | 'explain_widget' | 'reset_view'
+  | 'highlight_series' | 'highlight_range' | 'highlight_point' | 'compare_series' | 'focus_anomaly'
+  | 'clear_highlight' | 'focus_row' | 'highlight_row' | 'sort_by' | 'apply_filter'
+  | 'focus_entity' | 'highlight_entity' | 'focus_route' | 'highlight_area' | 'fit_bounds'
+
+export type AgentGuidanceEffect = 'glow' | 'pulse' | 'spotlight' | 'sweep' | 'highlight'
+export type AgentGuidanceState = 'targeting' | 'executing' | 'confirmed' | 'failed'
+
+export interface AgentGuidanceManifest {
+  preferredEffect: AgentGuidanceEffect
+  canHighlightSeries?: boolean
+  canHighlightPoint?: boolean
+  canHighlightRange?: boolean
+  canHighlightRow?: boolean
+  canHighlightEntity?: boolean
+}
 
 export interface AgentWidgetSnapshot {
   widgetId: string
@@ -78,8 +93,10 @@ export interface AgentWidgetManifest {
   label: string
   description: string
   supportedActions: AgentActionType[]
+  agentGuidance?: AgentGuidanceManifest
   getSnapshot?: () => AgentWidgetSnapshot
   focus?: () => void
+  performSemanticAction?: (action: AgentActionType, args?: Record<string, unknown>) => Promise<boolean> | boolean
 }
 
 // ── Entidades navegables (Etapa 2.5) ─────────────────────────────────────

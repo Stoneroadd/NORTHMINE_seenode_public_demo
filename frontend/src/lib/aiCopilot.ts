@@ -76,13 +76,28 @@ export interface FocusWidgetUIAction {
   widget_id: string
 }
 
-export type CopilotUIAction =
+export interface WidgetSemanticUIAction {
+  action: 'widget_action'
+  widget_id: string
+  semantic_action: import('./agentRegistry/types').AgentActionType
+  args?: Record<string, unknown>
+}
+
+export interface AgentGuidanceIntent {
+  effect: 'glow' | 'pulse' | 'spotlight' | 'sweep' | 'highlight'
+  durationMs?: number
+  label?: string
+}
+
+export type CopilotUIAction = (
   | NavigateUIAction
   | SetFilterUIAction
   | ClearFilterUIAction
   | SelectEntityUIAction
   | OpenEntityUIAction
   | FocusWidgetUIAction
+  | WidgetSemanticUIAction
+) & { guidance?: AgentGuidanceIntent }
 
 export interface CopilotEvidence {
   source: string

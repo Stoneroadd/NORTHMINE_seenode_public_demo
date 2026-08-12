@@ -22,10 +22,9 @@ from app.ai.investigation_schemas import (
     new_id,
 )
 from app.ai import planner
-from app.ai.runtime import command_router, findings as findings_module, interruption
+from app.ai.runtime import command_router, findings as findings_module, interruption, speech_policy
 from app.ai.runtime.command_router import AgentCommand, AgentCommandType
 from app.ai.runtime.event_bus import emit
-from app.ai.runtime import speech_segmenter
 from app.ai.runtime.session_manager import LiveSession
 from app.ai.runtime.state_machine import AgentRuntimeState
 from app.ai.runtime.ui_actions import UIActionAcknowledgement, register_wait, wait_for_ack
@@ -67,6 +66,17 @@ async def handle_user_text(live: LiveSession, user: dict, text: str, correlation
     runtime_audit.record_command(
         usuario=str(user.get("sub") or "anon"), ip=ip, session_id=live.session.session_id,
         command_type=command.type.value, confidence=command.confidence,
+    )
+    await dispatch_command(live, user, command, correlation_id, ip)
+
+
+async def handle_structured_intent(
+    live: LiveSession, user: dict, intent: command_router.StructuredAgentIntent, correlation_id: str, ip: str,
+) -> None:
+    command = command_router.command_from_intent(intent)
+    runtime_audit.record_command(
+        usuario=str(user.get("sub") or "anon"), ip=ip, session_id=live.session.session_id,
+        command_type=command.type.value, confidence="rule", source=command.source,
     )
     await dispatch_command(live, user, command, correlation_id, ip)
 
@@ -259,7 +269,11 @@ async def _run_investigation(live: LiveSession, user: dict, plan: InvestigationP
     plan.status = "completed" if all(s.status == "completed" for s in tool_required) else "failed"
 
     conclusion = conclusion_module.build_conclusion(plan, evidence, verification, hyps)
-    result = InvestigationResult(plan=plan, evidence=evidence, verification=verification, hypotheses=hyps, conclusion=conclusion)
+    operational = conclusion_module.build_operational_investigation(plan, evidence, verification, hyps, conclusion)
+    result = InvestigationResult(
+        plan=plan, evidence=evidence, verification=verification, hypotheses=hyps,
+        conclusion=conclusion, operational_investigation=operational,
+    )
     save_investigation(result, created_by=usuario, role=live.session.role)
 
     runtime_audit.record_command(
@@ -341,6 +355,17 @@ async def _run_tool_step(live: LiveSession, plan: InvestigationPlan, step: PlanS
         await emit(live, "tool.failed", correlation_id=correlation_id, investigation_id=plan.investigation_id, step_id=step.step_id, payload={"error": step.error})
 
 
+def _guidance_for_capability(capability_id: str) -> dict[str, str | int]:
+    """El Runtime elige intencion visual; el cliente conserva control del CSS."""
+    if capability_id.startswith("navigate_"):
+        return {"effect": "sweep", "durationMs": 800}
+    if capability_id.startswith("focus_"):
+        return {"effect": "spotlight", "durationMs": 1100}
+    if capability_id in {"select_equipment_entity", "open_affected_equipment"}:
+        return {"effect": "glow", "durationMs": 1000}
+    return {"effect": "pulse", "durationMs": 800}
+
+
 async def _run_ui_action_step(live: LiveSession, plan: InvestigationPlan, step: PlanStep, correlation_id: str, usuario: str, ip: str) -> None:
     capability = get_capability(step.capability_id)
     action_id = f"action-{uuid.uuid4().hex[:12]}"
@@ -351,6 +376,7 @@ async def _run_ui_action_step(live: LiveSession, plan: InvestigationPlan, step: 
         "moduleId": capability.module_id if capability else None,
         "widgetId": capability.widget_id if capability else None,
         "entityQuery": live.focus_override if step.capability_id == "select_equipment_entity" else None,
+        "guidance": _guidance_for_capability(step.capability_id),
     }
     step.status = "running"
     await emit(live, "step.started", correlation_id=correlation_id, investigation_id=plan.investigation_id, step_id=step.step_id)
@@ -417,13 +443,14 @@ async def _speak(live: LiveSession, correlation_id: str, *, text: str, priority:
     # / handle_compare_with_memory / handle_screen_context / handle_visual_observation_reported).
     # La mayoria de las llamadas (un hallazgo, una conclusion) ya son una
     # sola oracion corta, asi que esto normalmente devuelve un solo segmento.
-    chunks = speech_segmenter.split_for_speech(text)
+    kind = speech_policy.kind_for_priority(priority)
+    chunks = speech_policy.spoken_chunks(text, kind)
     for index, chunk in enumerate(chunks):
         await emit(
             live, "agent.speech.segment", correlation_id=correlation_id,
             payload={
                 "segmentId": segment_id if index == 0 else f"{segment_id}-{index}",
-                "text": chunk, "priority": priority,
+                "text": chunk, "priority": priority, "kind": kind,
                 # Sequence propio del segmento (no el sequence del sobre WS):
                 # ordena la cola de reproduccion del cliente cuando una
                 # misma respuesta se parte en varios segmentos.

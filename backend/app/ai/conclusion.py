@@ -7,6 +7,7 @@ from app.ai.investigation_schemas import (
     InvestigationPlan,
     InvestigationType,
     OperationalHypothesis,
+    OperationalInvestigation,
     VerificationResult,
 )
 from app.ai.tool_formatting import summarize_tool_result
@@ -81,4 +82,50 @@ def build_conclusion(
         recommendations=_recommendations_for(plan.type, hypotheses),
         limitations=limitations,
         confidence=ConfidenceInfo(level=confidence_level),
+    )
+
+
+def build_operational_investigation(
+    plan: InvestigationPlan,
+    evidence: list[EvidenceItem],
+    verification: VerificationResult,
+    hypotheses: list[OperationalHypothesis],
+    conclusion: InvestigationConclusion,
+) -> OperationalInvestigation:
+    accepted = set(verification.accepted_evidence_ids)
+    supporting_ids = {eid for h in hypotheses for eid in h.supporting_evidence_ids}
+    contradicting_ids = {eid for h in hypotheses for eid in h.contradicting_evidence_ids}
+    supporting = [item for item in evidence if item.evidence_id in accepted & supporting_ids]
+    contradicting = [item for item in evidence if item.evidence_id in accepted & contradicting_ids]
+    observations = [
+        summarize_tool_result(item.capability_id, item.value)
+        for item in evidence
+        if item.evidence_id in accepted and isinstance(item.value, dict)
+    ]
+    deviations = [h.label for h in hypotheses if h.causal_status in ("strongly_supported", "plausible")]
+    missing = list(dict.fromkeys([
+        *plan.missing_capabilities,
+        *(missing for hypothesis in hypotheses for missing in hypothesis.missing_evidence),
+    ]))
+    verified_findings = [
+        summarize_tool_result(item.capability_id, item.value)
+        for item in evidence
+        if item.verification_status == "verified" and isinstance(item.value, dict)
+    ]
+    return OperationalInvestigation(
+        question=plan.goal,
+        scope=plan.scope,
+        entities=list(plan.scope.equipment_ids),
+        timeframe=plan.scope.date_range,
+        observations=observations,
+        deviations=deviations,
+        hypotheses=hypotheses,
+        supporting_evidence=supporting,
+        contradicting_evidence=contradicting,
+        missing_evidence=missing,
+        verified_findings=verified_findings,
+        conclusion=conclusion.summary,
+        confidence=conclusion.confidence,
+        limitations=conclusion.limitations,
+        recommended_next_actions=conclusion.recommendations[:3],
     )

@@ -11,7 +11,7 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from pydantic import ValidationError
 
 from app.ai import audit as runtime_audit
-from app.ai.runtime import persistence, runtime
+from app.ai.runtime import command_router, persistence, runtime
 from app.ai.runtime.command_router import AgentCommand, AgentCommandType
 from app.ai.runtime.protocol import AgentEvent, UnknownEventType, now_utc
 from app.ai.runtime.session_manager import LiveSession, session_manager
@@ -185,6 +185,11 @@ async def agent_ws(websocket: WebSocket) -> None:
             event: AgentEvent = await live.outbox.get()
             try:
                 await websocket.send_text(event.model_dump_json())
+                # Starlette/TestClient y algunos ASGI servers pueden completar
+                # send_text de inmediato. Ceder explicitamente evita que una
+                # rafaga de progreso monopolice el loop y retrase la recepcion
+                # de agent.interrupt, que tiene prioridad humana.
+                await asyncio.sleep(0)
             except Exception:
                 return
 
@@ -275,6 +280,14 @@ async def _dispatch_client_event(live: LiveSession, user: dict, event: AgentEven
         text = str(payload.get("text", "")).strip()
         if text:
             await runtime.handle_user_text(live, user, text, event.correlation_id, ip)
+        return
+
+    if event_type == "user.intent":
+        try:
+            structured = command_router.StructuredAgentIntent.model_validate(payload)
+        except ValidationError:
+            return
+        await runtime.handle_structured_intent(live, user, structured, event.correlation_id, ip)
         return
 
     if event_type == "user.speech.partial":

@@ -10,7 +10,7 @@ import type { AgentSpeechOutput, AgentSpeechSegment, SpeechPlaybackResult, Speec
  * conoce del lado de salida de voz - nunca habla directo con un provider.
  */
 
-const PRIORITY_RANK: Record<SpeechPriority, number> = { warning: 0, result: 1, finding: 2, status: 3 }
+const PRIORITY_RANK: Record<SpeechPriority, number> = { warning: 0, question: 1, result: 1, finding: 2, status: 3 }
 
 export class SpeechOutputRouter {
   private readonly elevenlabs: AgentSpeechOutput

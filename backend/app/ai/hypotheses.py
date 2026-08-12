@@ -35,13 +35,46 @@ def _status_from_score(score: float, has_data: bool) -> str:
     return "unsupported"
 
 
+def _causal_status(score: float | None, has_data: bool, has_contradiction: bool) -> str:
+    if not has_data or score is None:
+        return "insufficient_data"
+    if has_contradiction and score < 0.3:
+        return "contradicted"
+    if score >= 0.8:
+        return "strongly_supported"
+    if score >= 0.5:
+        return "plausible"
+    if score >= 0.3:
+        return "weak"
+    return "unsupported"
+
+
+def assess_causality(hypotheses: list[OperationalHypothesis]) -> list[OperationalHypothesis]:
+    """Clasifica causalidad sin convertir un score heuristico en probabilidad."""
+    for hypothesis in hypotheses:
+        has_data = hypothesis.score is not None
+        hypothesis.causal_status = _causal_status(
+            hypothesis.score, has_data, bool(hypothesis.contradicting_evidence_ids),
+        )
+        if not has_data:
+            hypothesis.missing_evidence = ["No existe una metrica suficiente para evaluar esta hipotesis."]
+            hypothesis.rationale = "Evidencia insuficiente."
+        elif hypothesis.causal_status == "contradicted":
+            hypothesis.rationale = "La evidencia observada contradice la explicacion propuesta."
+        elif hypothesis.causal_status in ("strongly_supported", "plausible"):
+            hypothesis.rationale = "La evidencia disponible sustenta la hipotesis, sin demostrar causalidad exclusiva."
+        else:
+            hypothesis.rationale = "La evidencia no alcanza para atribuir la desviacion a esta hipotesis."
+    return hypotheses
+
+
 def generate_hypotheses(investigation_type: InvestigationType, evidence: list[EvidenceItem]) -> list[OperationalHypothesis]:
     if investigation_type == InvestigationType.PRODUCTION_DROP:
-        return _production_drop_hypotheses(evidence)
+        return assess_causality(_production_drop_hypotheses(evidence))
     if investigation_type == InvestigationType.CYCLE_TIME_INCREASE:
-        return _cycle_time_hypotheses(evidence)
+        return assess_causality(_cycle_time_hypotheses(evidence))
     if investigation_type == InvestigationType.LOADING_UNIT_UNDERPERFORMANCE:
-        return _loading_underperformance_hypotheses(evidence)
+        return assess_causality(_loading_underperformance_hypotheses(evidence))
     return []  # shift_summary no genera hipotesis: es un resumen, no una investigacion de causa.
 
 

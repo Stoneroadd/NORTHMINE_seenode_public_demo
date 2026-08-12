@@ -16,14 +16,14 @@ interface Props {
  */
 export function MicOnboardingModal({ requesting, onActivate, onDismiss }: Props) {
   return (
-    <div className="ai-mic-onboarding-overlay" role="dialog" aria-modal="true" aria-label="Activar Modo JARVIS">
+    <div className="ai-mic-onboarding-overlay" role="dialog" aria-modal="true" aria-label="Activar conversación por voz">
       <div className="ai-mic-onboarding-backdrop" onClick={requesting ? undefined : onDismiss} />
       <div className="ai-mic-onboarding-card">
         <button type="button" className="ai-mic-onboarding-close" onClick={onDismiss} aria-label="Cerrar" disabled={requesting}>
           <X size={14} />
         </button>
         <div className="ai-mic-onboarding-icon"><Mic size={20} /></div>
-        <h3>Activar Modo JARVIS</h3>
+        <h3>Activar NORTHMINE AI</h3>
         <p>NORTHMINE necesita acceso al micrófono para conversación por voz.</p>
         <div className="ai-mic-onboarding-actions">
           <button type="button" className="ai-mic-onboarding-later" onClick={onDismiss} disabled={requesting}>

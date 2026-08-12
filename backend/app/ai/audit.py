@@ -140,12 +140,12 @@ def record_session_event(
 
 
 def record_command(
-    *, usuario: str, ip: str, session_id: str, command_type: str, confidence: str,
+    *, usuario: str, ip: str, session_id: str, command_type: str, confidence: str, source: str = "conversation",
 ) -> None:
     log_event(
         usuario=usuario, ip=ip, accion="agent_runtime_command", resultado="ok",
         metodo="WS", endpoint="/api/ai-agent/ws",
-        detalle={"session_id": session_id, "command_type": command_type, "confidence": confidence},
+        detalle={"session_id": session_id, "command_type": command_type, "confidence": confidence, "source": source},
     )
 
 

@@ -140,6 +140,7 @@ async def _execute_plan_events(
 
     hyps = hypotheses_module.generate_hypotheses(investigation_type, evidence)
     conclusion = conclusion_module.build_conclusion(plan, evidence, verification, hyps)
+    operational = conclusion_module.build_operational_investigation(plan, evidence, verification, hyps, conclusion)
 
     for step in plan.steps:
         if step.kind != "ui_action":
@@ -153,7 +154,10 @@ async def _execute_plan_events(
             widgetId=capability.widget_id if capability else None,
         )
 
-    result = InvestigationResult(plan=plan, evidence=evidence, verification=verification, hypotheses=hyps, conclusion=conclusion)
+    result = InvestigationResult(
+        plan=plan, evidence=evidence, verification=verification, hypotheses=hyps,
+        conclusion=conclusion, operational_investigation=operational,
+    )
     save_investigation(result, created_by=str(user.get("sub") or "anon"), role=role)
     record_investigation(
         usuario=str(user.get("sub") or "anon"),

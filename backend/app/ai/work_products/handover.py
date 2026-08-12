@@ -10,8 +10,7 @@ from app.services import averias_import_service
 automaticamente produccion/flota/carguio/averias/alertas/investigaciones/
 tareas/watches - todo desde fuentes reales ya existentes (TOOL_REGISTRY,
 averias_import_service, memoria de trabajo/episodica, proactividad). Nunca
-se envia solo: siempre queda como WorkProduct pendiente de aprobacion
-(seccion 22: 'BORRADOR IA - REQUIERE VALIDACION').
+se envia solo: siempre queda como WorkProduct pendiente de validacion humana.
 """
 
 
