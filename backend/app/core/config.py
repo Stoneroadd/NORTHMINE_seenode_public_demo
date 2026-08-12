@@ -204,10 +204,27 @@ class Settings:
     agent_initiative_voice_minimum_severity: str
     agent_event_monitor_interval_seconds: float
     agent_event_monitor_enabled: bool
+    # OpenAI Realtime (Modo JARVIS full-duplex) - la API key NUNCA sale del
+    # backend, igual que ElevenLabs. Limites de costo son valores iniciales
+    # de NORTHMINE (configurables via entorno), no techos impuestos por
+    # OpenAI - ver auditoria previa a la implementacion.
+    openai_realtime_enabled: bool
+    openai_api_key: str
+    openai_realtime_model: str
+    openai_realtime_max_session_seconds: int
+    openai_realtime_max_concurrent_sessions: int
+    openai_realtime_max_concurrent_sessions_per_user: int
+    openai_realtime_rate_limit_per_user_per_hour: int
+    openai_realtime_inactivity_timeout_seconds: int
+    openai_realtime_max_output_tokens: int
 
     @property
     def elevenlabs_available(self) -> bool:
         return self.elevenlabs_enabled and bool(self.elevenlabs_api_key.strip())
+
+    @property
+    def openai_realtime_available(self) -> bool:
+        return self.openai_realtime_enabled and bool(self.openai_api_key.strip()) and bool(self.openai_realtime_model.strip())
 
     @property
     def vision_available(self) -> bool:
@@ -474,4 +491,13 @@ def get_settings() -> Settings:
         agent_initiative_voice_minimum_severity=os.getenv("NORTHMINE_AGENT_INITIATIVE_VOICE_MINIMUM_SEVERITY", "high").strip().lower(),
         agent_event_monitor_interval_seconds=float(os.getenv("NORTHMINE_AGENT_EVENT_MONITOR_INTERVAL_SECONDS", "60")),
         agent_event_monitor_enabled=os.getenv("NORTHMINE_AGENT_EVENT_MONITOR_ENABLED", "true").strip().lower() == "true",
+        openai_realtime_enabled=os.getenv("OPENAI_REALTIME_ENABLED", "false").strip().lower() == "true",
+        openai_api_key=os.getenv("OPENAI_API_KEY", "").strip(),
+        openai_realtime_model=os.getenv("OPENAI_REALTIME_MODEL", "").strip(),
+        openai_realtime_max_session_seconds=int(os.getenv("OPENAI_REALTIME_MAX_SESSION_SECONDS", "1800")),
+        openai_realtime_max_concurrent_sessions=int(os.getenv("OPENAI_REALTIME_MAX_CONCURRENT_SESSIONS", "2")),
+        openai_realtime_max_concurrent_sessions_per_user=int(os.getenv("OPENAI_REALTIME_MAX_CONCURRENT_SESSIONS_PER_USER", "1")),
+        openai_realtime_rate_limit_per_user_per_hour=int(os.getenv("OPENAI_REALTIME_RATE_LIMIT_PER_USER_PER_HOUR", "10")),
+        openai_realtime_inactivity_timeout_seconds=int(os.getenv("OPENAI_REALTIME_INACTIVITY_TIMEOUT_SECONDS", "120")),
+        openai_realtime_max_output_tokens=int(os.getenv("OPENAI_REALTIME_MAX_OUTPUT_TOKENS", "2048")),
     )
