@@ -1536,3 +1536,226 @@
     transition: none !important;
   }
 }
+
+/* ========================================================================
+ * JARVIS / COMMAND CENTER INTEGRATION
+ * Superficie neutra y translúcida; el dashboard permanece legible y activo.
+ * ======================================================================== */
+.ai-copilot-overlay {
+  --jarvis-ink: color-mix(in srgb, var(--bg-deep) 90%, transparent);
+  --jarvis-surface: color-mix(in srgb, var(--bg-panel) 82%, transparent);
+  --jarvis-surface-raised: color-mix(in srgb, var(--bg-elevated) 72%, transparent);
+  --jarvis-brass: var(--data-cyan);
+  --jarvis-brass-bright: color-mix(in srgb, var(--data-cyan) 72%, var(--text-primary));
+  --jarvis-text: var(--text-primary);
+  --jarvis-muted: var(--text-secondary);
+  --jarvis-rule: color-mix(in srgb, var(--border-mid) 62%, transparent);
+  background: transparent;
+}
+
+.ai-copilot-backdrop {
+  background: rgba(2, 5, 8, 0.22);
+  backdrop-filter: blur(1px) saturate(0.86);
+  -webkit-backdrop-filter: blur(1px) saturate(0.86);
+}
+
+.ai-copilot-panel {
+  width: min(540px, 100vw);
+  background: var(--jarvis-ink);
+  border-left-color: color-mix(in srgb, var(--data-cyan) 24%, var(--border-mid));
+  box-shadow: -18px 0 52px rgba(0, 0, 0, 0.34);
+  backdrop-filter: blur(18px) saturate(0.82);
+  -webkit-backdrop-filter: blur(18px) saturate(0.82);
+}
+
+.ai-copilot-panel::before { display: none; }
+
+.ai-copilot-header {
+  min-height: 80px;
+  padding: 16px 18px 14px 22px;
+  gap: 14px;
+  background: color-mix(in srgb, var(--bg-panel) 62%, transparent);
+}
+
+.ai-copilot-header-identity { grid-template-columns: 1fr; gap: 0; }
+.ai-copilot-header-index { display: none; }
+
+.ai-copilot-header h2 {
+  font-size: 27px;
+  font-weight: 590;
+  letter-spacing: -0.025em;
+}
+
+.ai-copilot-subtitle { margin-top: 5px; color: var(--text-tertiary); }
+.ai-copilot-header-state { color: var(--jarvis-phase); }
+.ai-copilot-header-state > span { border-radius: 50%; box-shadow: 0 0 12px color-mix(in srgb, currentColor 44%, transparent); }
+
+.ai-copilot-close {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--bg-elevated) 48%, transparent);
+}
+
+.ai-copilot-context-bar {
+  grid-template-columns: 1.5fr 0.8fr 1fr;
+  padding: 0 18px 0 22px;
+  background: color-mix(in srgb, var(--bg-deep) 60%, transparent);
+}
+
+.ai-copilot-context-bar > div { padding-block: 9px 10px; }
+.ai-copilot-context-bar > div:nth-child(2),
+.ai-copilot-context-bar > div:nth-child(5) { display: none; }
+.ai-copilot-context-role dd { color: var(--text-secondary); }
+
+.ai-copilot-engine-status,
+.ai-copilot-degraded-banner {
+  min-height: 26px;
+  padding: 5px 18px 5px 22px;
+  background: color-mix(in srgb, var(--bg-deep) 58%, transparent);
+}
+
+.ai-agent-transcript {
+  grid-template-columns: 92px minmax(0, 1fr);
+  gap: 18px;
+  min-height: 82px;
+  padding: 13px 18px 13px 22px;
+  background: color-mix(in srgb, var(--bg-elevated) 54%, transparent);
+}
+
+.ai-agent-transcript-waveform { gap: 3px; height: 34px; }
+.ai-agent-transcript-channel { display: none; }
+.ai-agent-transcript-code { display: none; }
+.ai-agent-transcript-state { grid-template-columns: 1fr; gap: 0; }
+.ai-agent-transcript-label { font-size: 14px; font-weight: 560; }
+.ai-agent-transcript-text { margin-top: 4px; font-size: 11px; }
+
+.ai-copilot-body { padding-inline: 22px 18px; background: transparent; }
+.ai-copilot-empty { min-height: 226px; gap: 18px; padding: 28px 0; }
+.ai-copilot-empty-code { display: none; }
+.ai-copilot-empty-copy strong { font-size: 35px; font-weight: 520; }
+.ai-copilot-empty-copy p { margin-top: 9px; font-size: 14px; }
+.ai-copilot-empty-verbs { display: none; }
+
+.ai-copilot-message { padding-block: 17px; border-bottom-color: var(--jarvis-rule); }
+.ai-copilot-message.is-user { grid-template-columns: 62px minmax(0, 1fr); gap: 12px; }
+.ai-copilot-message-text { font-size: 13px; }
+.ai-copilot-block { grid-template-columns: 112px minmax(0, 1fr); }
+
+.ai-agent-voice-controls {
+  min-height: 56px;
+  padding-inline: 22px 18px;
+  background: color-mix(in srgb, var(--bg-panel) 66%, transparent);
+}
+
+.ai-agent-mic-button {
+  min-width: 134px;
+  height: 40px;
+  padding-inline: 12px;
+  border-radius: 12px;
+  border-color: color-mix(in srgb, var(--data-cyan) 36%, var(--border-mid));
+  color: var(--jarvis-brass-bright);
+}
+
+.ai-agent-mic-button.is-listening {
+  color: var(--bg-void);
+  background: var(--data-cyan);
+  border-color: var(--data-cyan);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--data-cyan) 28%, transparent);
+}
+
+.ai-agent-mute-button,
+.ai-agent-interrupt-button { height: 40px; min-height: 40px; border-radius: 12px; }
+
+.ai-copilot-composer {
+  gap: 8px;
+  padding: 0 18px 11px 22px;
+  background: color-mix(in srgb, var(--bg-panel) 66%, transparent);
+}
+
+.ai-copilot-quick-actions { border-color: var(--jarvis-rule); }
+.ai-copilot-quick-actions button { min-height: 36px; padding: 7px 10px; font-size: 8px; }
+.ai-copilot-composer-input { border-color: color-mix(in srgb, var(--data-cyan) 34%, var(--border-mid)); }
+.ai-copilot-composer-input textarea { min-height: 48px; }
+.ai-copilot-composer-input button { width: 42px; height: 42px; border-radius: 12px; background: var(--data-cyan); }
+.ai-copilot-disclaimer { padding: 7px 18px 9px 22px; background: color-mix(in srgb, var(--bg-deep) 78%, transparent); }
+
+.ai-copilot-report-card {
+  border-color: color-mix(in srgb, var(--data-cyan) 22%, var(--border-mid));
+  background: color-mix(in srgb, var(--bg-elevated) 58%, transparent);
+}
+
+.ai-copilot-report-manifest {
+  width: 100%;
+  margin: 10px 0 12px;
+  border-collapse: collapse;
+  color: var(--text-secondary);
+  font-size: 10px;
+}
+
+.ai-copilot-report-manifest th,
+.ai-copilot-report-manifest td {
+  padding: 7px 8px;
+  border-bottom: 1px solid var(--jarvis-rule);
+  text-align: left;
+}
+
+.ai-copilot-report-manifest th {
+  color: var(--text-tertiary);
+  font-size: 8px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ai-copilot-report-manifest th:last-child,
+.ai-copilot-report-manifest td:last-child { width: 72px; color: var(--op-green); }
+.ai-copilot-report-content button { border-radius: 10px; }
+.ai-copilot-report-error { color: var(--danger-red) !important; }
+
+/* La guía pertenece al dashboard, no al panel: un único pulso por fuente. */
+.ai-agent-guided-highlight {
+  position: relative;
+  z-index: 12;
+  outline: 1px solid color-mix(in srgb, var(--data-cyan) 78%, white) !important;
+  outline-offset: 5px;
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--data-cyan) 9%, transparent),
+    0 0 34px color-mix(in srgb, var(--data-cyan) 24%, transparent) !important;
+  filter: brightness(1.1) saturate(1.08);
+  animation: ai-agent-guidance-pulse 1.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.ai-agent-guided-highlight::after {
+  content: attr(data-agent-cue);
+  position: absolute;
+  z-index: 20;
+  top: 10px;
+  right: calc(min(540px, 100vw) + 18px);
+  max-width: min(360px, 74%);
+  padding: 7px 9px;
+  border: 1px solid color-mix(in srgb, var(--data-cyan) 46%, var(--border-mid));
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--bg-deep) 88%, transparent);
+  color: var(--text-primary);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.28);
+  font: 500 10px/1.35 'IBM Plex Mono', monospace;
+  pointer-events: none;
+}
+
+@keyframes ai-agent-guidance-pulse {
+  0% { outline-color: transparent; filter: brightness(1); }
+  24% { outline-color: color-mix(in srgb, var(--data-cyan) 88%, white); filter: brightness(1.12); }
+  100% { outline-color: color-mix(in srgb, var(--data-cyan) 58%, transparent); filter: brightness(1.04); }
+}
+
+@media (max-width: 720px) {
+  .ai-copilot-panel { width: 100vw; }
+  .ai-copilot-context-bar { grid-template-columns: 1.4fr 0.8fr 1fr; padding-left: 18px; }
+  .ai-copilot-body { padding-inline: 18px; }
+  .ai-copilot-block { grid-template-columns: 1fr; }
+  .ai-agent-guided-highlight::after { right: 10px; max-width: calc(100% - 20px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ai-agent-guided-highlight { animation: none !important; }
+}

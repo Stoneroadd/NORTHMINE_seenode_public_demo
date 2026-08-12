@@ -477,16 +477,27 @@ def _run_local_operational_turn(
     ui_actions = _local_ui_actions(message, str(user.get("rol") or ""))
     report_drafts: list[ReportDraft] = []
     if wants_report and facts:
-        title = f"Reporte operacional {context.selected_date or 'turno actual'}"
+        wants_executive_report = any(word in text for word in ("ejecutivo", "gerencia", "gerencial", "cockpit", "resumen ejecutivo"))
+        report_kind = "cockpit_executive" if wants_executive_report else "shift_operational"
+        title = (
+            f"Informe ejecutivo de Cockpit · {context.selected_date or 'turno actual'}"
+            if wants_executive_report
+            else f"Informe operacional de turno · {context.selected_date or 'turno actual'}"
+        )
         sections = {
             "Alcance": f"{context.mine or 'MINA CHILE DEMO'} · turno {context.shift or 'actual'} · datos sintéticos de demostración.",
             "Resumen ejecutivo": "\n".join(facts),
             "Inferencias": "\n".join(inferences) or "No se generaron inferencias adicionales.",
             "Recomendaciones": "\n".join(recommendations) or "Mantener monitoreo y validar las decisiones con un usuario autorizado.",
+            "Tablas incluidas": (
+                "Resumen y cumplimiento; riesgos y decisiones; equipos, demoras, alertas y plan de acción."
+                if wants_executive_report
+                else "Producción y ciclos; detalle CAEX y carguío; orígenes, destinos, alertas y distribución operacional."
+            ),
             "Limitaciones": "\n".join(limitations) or "Este reporte usa datos disponibles en la demo pública y no está conectado a SQL/WENCO.",
         }
         record = repository.create_report_draft(
-            conversation_id=conversation_id, kind="operational_shift", title=title,
+            conversation_id=conversation_id, kind=report_kind, title=title,
             sections=sections, created_by=str(user.get("sub") or "anon"),
         )
         report_drafts.append(ReportDraft(**record))
@@ -497,7 +508,7 @@ def _run_local_operational_turn(
         message_text = "Puedo conversar, navegar por NORTHMINE, analizar el turno y generar reportes, pero este rol no tiene una fuente autorizada para esa consulta."
         limitations.append("No hay herramientas de datos autorizadas para el rol actual.")
     elif wants_report:
-        message_text = "Generé un borrador de reporte PDF con la evidencia disponible. Puedes revisarlo y descargarlo desde esta conversación."
+        message_text = "Preparé un informe completo con tablas operacionales usando el generador validado de NORTHMINE. Está listo para descargar y revisión humana."
     elif ui_actions:
         message_text = "Entendido. Abriré el módulo solicitado y mantendré esta conversación disponible."
     else:

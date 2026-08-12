@@ -469,7 +469,7 @@ export function DecisionCockpit() {
       supportedActions: ['focus_widget'],
     })
   }
-  useAgentWidget({
+  const productionSummaryWidget = useAgentWidget({
     id: 'cockpit-production-summary',
     moduleId: 'cockpit',
     type: 'kpi',
@@ -617,7 +617,7 @@ export function DecisionCockpit() {
             comparison={shiftComparisonQuery.data}
           />
 
-          <section id="sec-turno" aria-label={t.kpi_grid_aria}>
+          <section id="sec-turno" ref={productionSummaryWidget.ref} aria-label={t.kpi_grid_aria}>
             <KpiHero
               label={t.kpi_produccion_actual_label}
               value={formatTons(data.actualTonnes)}

@@ -65,6 +65,89 @@ function waitFor(check: () => boolean, timeoutMs = 500, intervalMs = 30): Promis
   })
 }
 
+const TOOL_GUIDANCE_TARGETS: Record<string, { widgetIds: string[]; label: string }> = {
+  get_current_shift_summary: { widgetIds: ['cockpit-production-summary', 'shift-summary'], label: 'Lectura del turno' },
+  get_production_kpis: { widgetIds: ['cockpit-production-summary', 'production-plan-compliance', 'production-hourly-chart'], label: 'Producción y meta' },
+  get_fleet_status: { widgetIds: ['sec-flota', 'fleet-status-table'], label: 'Estado de flota' },
+  get_alerts: { widgetIds: ['sec-decisiones', 'alerts-priority-list'], label: 'Riesgos activos' },
+  get_data_quality_status: { widgetIds: ['cockpit-production-summary', 'reportes-turno-actual'], label: 'Calidad del dato' },
+}
+
+let guidanceSequence: Promise<void> = Promise.resolve()
+let guidanceEpoch = 0
+const queuedGuidanceTargets = new Set<string>()
+
+function guidanceElement(widgetIds: string[]): HTMLElement | null {
+  for (const widgetId of widgetIds) {
+    const element = document.getElementById(widgetId)
+      ?? document.querySelector<HTMLElement>(`[data-agent-widget-id="${widgetId}"]`)
+    if (element) return element
+  }
+  return null
+}
+
+function guidanceCopy(target: { widgetIds: string[]; label: string }, fallback: string): string {
+  for (const widgetId of target.widgetIds) {
+    const snapshot = agentWidgetRegistry.snapshot(widgetId)
+    if (!snapshot || snapshot.value === undefined || snapshot.value === null) continue
+    const unit = typeof snapshot.unit === 'string' && snapshot.unit ? ` ${snapshot.unit}` : ''
+    return `${target.label} · ${snapshot.label}: ${String(snapshot.value)}${unit}`
+  }
+  return `${target.label} · ${fallback}`
+}
+
+async function showGuidance(
+  epoch: number,
+  target: { widgetIds: string[]; label: string },
+  summary: string,
+): Promise<void> {
+  if (epoch !== guidanceEpoch) return
+  const found = await waitFor(() => Boolean(guidanceElement(target.widgetIds)), 900)
+  if (!found || epoch !== guidanceEpoch) return
+  const element = guidanceElement(target.widgetIds)
+  if (!element) return
+
+  const widgetId = target.widgetIds.find((id) => element.id === id || element.dataset.agentWidgetId === id)
+  if (widgetId) agentWidgetRegistry.setFocusedWidget(widgetId)
+  const rect = element.getBoundingClientRect()
+  if (rect.top < 80 || rect.bottom > window.innerHeight - 80) {
+    element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    await new Promise((resolve) => window.setTimeout(resolve, 320))
+  }
+  if (epoch !== guidanceEpoch) return
+
+  element.dataset.agentCue = guidanceCopy(target, summary).slice(0, 150)
+  element.classList.add('ai-agent-guided-highlight')
+  await new Promise((resolve) => window.setTimeout(resolve, 1800))
+  element.classList.remove('ai-agent-guided-highlight')
+  delete element.dataset.agentCue
+}
+
+/** Guía visual en vivo: conecta cada fuente consultada con su panel real. */
+export function guideAgentTool(toolName: string, summary?: string | null): string | null {
+  const target = TOOL_GUIDANCE_TARGETS[toolName]
+  if (!target) return null
+  const targetKey = target.widgetIds.join('|')
+  const copy = guidanceCopy(target, summary?.trim() || 'Consultando el parámetro visible')
+  if (queuedGuidanceTargets.has(targetKey)) return copy
+  queuedGuidanceTargets.add(targetKey)
+  const epoch = guidanceEpoch
+  guidanceSequence = guidanceSequence
+    .then(() => showGuidance(epoch, target, summary?.trim() || 'Consultando el parámetro visible'))
+    .finally(() => queuedGuidanceTargets.delete(targetKey))
+  return copy
+}
+
+export function cancelAgentGuidance(): void {
+  guidanceEpoch += 1
+  guidanceSequence = Promise.resolve()
+  queuedGuidanceTargets.clear()
+  document.querySelectorAll<HTMLElement>('.ai-agent-guided-highlight').forEach((element) => {
+    element.classList.remove('ai-agent-guided-highlight')
+    delete element.dataset.agentCue
+  })
+}
+
 function navigateToPath(path: string): void {
   if (window.location.pathname !== path) {
     window.history.pushState(null, '', path)

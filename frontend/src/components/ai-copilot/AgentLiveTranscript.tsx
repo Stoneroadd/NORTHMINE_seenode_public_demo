@@ -2,10 +2,11 @@ interface Props {
   phase: 'idle' | 'listening' | 'speaking' | 'analyzing'
   interimText: string
   audioLevel: number
+  focusText?: string | null
 }
 
 /** Instrumento de señal: nivel real del micrófono y estado del canal JARVIS. */
-export function AgentLiveTranscript({ phase, interimText, audioLevel }: Props) {
+export function AgentLiveTranscript({ phase, interimText, audioLevel, focusText }: Props) {
   const bars = Array.from({ length: 9 }, (_, index) => {
     const wobble = Math.sin(Date.now() / 110 + index * 0.72) * 0.18
     return Math.max(0.12, Math.min(1, audioLevel + wobble))
@@ -30,7 +31,7 @@ export function AgentLiveTranscript({ phase, interimText, audioLevel }: Props) {
         <span className="ai-agent-transcript-code">{state.code}</span>
         <div>
           <strong className="ai-agent-transcript-label">{state.label}</strong>
-          <p className="ai-agent-transcript-text">{state.detail}</p>
+          <p className="ai-agent-transcript-text">{focusText || state.detail}</p>
         </div>
       </div>
       <span className="ai-agent-transcript-channel" aria-hidden="true">CH / 01</span>

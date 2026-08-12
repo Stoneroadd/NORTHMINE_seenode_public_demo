@@ -1,67 +1,75 @@
-import { Download, FileText } from 'lucide-react'
-import { jsPDF } from 'jspdf'
-import type { CopilotReportDraft } from '../../lib/aiCopilot'
+import { useState } from 'react'
+import { Download, FileText, Loader2 } from 'lucide-react'
+import type { CopilotContext, CopilotReportDraft } from '../../lib/aiCopilot'
+import { secureApi } from '../../lib/secureApi'
 
 function safeFilename(value: string): string {
   return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9_-]+/g, '-').replace(/^-+|-+$/g, '').toLowerCase()
 }
 
-function downloadPdf(report: CopilotReportDraft): void {
-  const pdf = new jsPDF({ unit: 'mm', format: 'a4' })
-  const margin = 18
-  const contentWidth = 210 - margin * 2
-  let y = 20
-  pdf.setTextColor(9, 27, 36)
-  pdf.setFont('helvetica', 'bold')
-  pdf.setFontSize(17)
-  pdf.text('NORTHMINE · JARVIS', margin, y)
-  y += 9
-  pdf.setFontSize(13)
-  pdf.text(pdf.splitTextToSize(report.title, contentWidth), margin, y)
-  y += 12
-  pdf.setFont('helvetica', 'normal')
-  pdf.setFontSize(8)
-  pdf.setTextColor(78, 91, 99)
-  pdf.text('BORRADOR · DATOS SINTETICOS DE DEMOSTRACION · REQUIERE VALIDACION HUMANA', margin, y)
-  y += 10
-
-  for (const [heading, body] of Object.entries(report.sections)) {
-    const bodyLines = pdf.splitTextToSize(body, contentWidth)
-    if (y + 9 + bodyLines.length * 4.6 > 280) {
-      pdf.addPage()
-      y = 20
-    }
-    pdf.setTextColor(9, 100, 122)
-    pdf.setFont('helvetica', 'bold')
-    pdf.setFontSize(10)
-    pdf.text(heading.toUpperCase(), margin, y)
-    y += 6
-    pdf.setTextColor(22, 32, 38)
-    pdf.setFont('helvetica', 'normal')
-    pdf.setFontSize(9)
-    pdf.text(bodyLines, margin, y)
-    y += bodyLines.length * 4.6 + 7
-  }
-
-  const pages = pdf.getNumberOfPages()
-  for (let page = 1; page <= pages; page += 1) {
-    pdf.setPage(page)
-    pdf.setFontSize(8)
-    pdf.setTextColor(110, 120, 126)
-    pdf.text(`Generado por JARVIS · ${new Date().toLocaleString('es-CL')} · Pagina ${page}/${pages}`, margin, 291)
-  }
-  pdf.save(`${safeFilename(report.title) || 'reporte-jarvis'}.pdf`)
+function reportManifest(executive: boolean): string[] {
+  return executive
+    ? ['Resumen ejecutivo y cumplimiento', 'Riesgos, alertas y decisiones', 'Equipos, demoras y acciones']
+    : ['Producción, meta y ciclos', 'Detalle CAEX y unidades de carguío', 'Orígenes, destinos y distribución']
 }
 
-export function AIReportDraftCard({ report }: { report: CopilotReportDraft }) {
+export function AIReportDraftCard({ report, context }: { report: CopilotReportDraft; context: CopilotContext }) {
+  const [downloading, setDownloading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const executive = report.kind.includes('executive')
+  const manifest = reportManifest(executive)
+
+  const downloadReport = async () => {
+    if (downloading) return
+    setDownloading(true)
+    setError(null)
+    try {
+      const endpoint = executive ? '/api/report/cockpit-executive-pdf' : '/api/report/shift-pdf'
+      const params = new URLSearchParams()
+      if (context.selected_date) params.set('fecha', context.selected_date)
+      if (context.shift) params.set('turno', context.shift)
+      const response = await secureApi.get<Blob>(`${endpoint}${params.size ? `?${params.toString()}` : ''}`, {
+        responseType: 'blob',
+        timeout: 60_000,
+        headers: { Accept: 'application/pdf' },
+      })
+      if (!(response.data instanceof Blob) || response.data.size === 0) {
+        throw new Error('El servidor no entregó un PDF válido.')
+      }
+      const url = URL.createObjectURL(response.data)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `${safeFilename(report.title) || 'informe-jarvis'}.pdf`
+      link.style.display = 'none'
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      window.setTimeout(() => URL.revokeObjectURL(url), 1_000)
+    } catch (downloadError) {
+      setError(downloadError instanceof Error ? downloadError.message : 'No se pudo generar el informe completo.')
+    } finally {
+      setDownloading(false)
+    }
+  }
+
   return (
     <article className="ai-copilot-report-card">
       <div className="ai-copilot-report-icon" aria-hidden="true"><FileText size={18} /></div>
       <div className="ai-copilot-report-content">
-        <span className="ai-copilot-report-status">Borrador generado</span>
+        <span className="ai-copilot-report-status">Informe completo preparado</span>
         <h3>{report.title}</h3>
-        <p>{Object.keys(report.sections).length} secciones · PDF local · datos de demostracion</p>
-        <button type="button" onClick={() => downloadPdf(report)}><Download size={14} /> Descargar PDF</button>
+        <p>{executive ? 'Formato ejecutivo de Cockpit' : 'Formato operacional de turno'} · PDF A4 · requiere validación humana</p>
+        <table className="ai-copilot-report-manifest">
+          <thead><tr><th>Tablas incluidas</th><th>Estado</th></tr></thead>
+          <tbody>
+            {manifest.map((item) => <tr key={item}><td>{item}</td><td>Incluido</td></tr>)}
+          </tbody>
+        </table>
+        <button type="button" onClick={() => void downloadReport()} disabled={downloading}>
+          {downloading ? <Loader2 size={14} className="ai-copilot-spin" /> : <Download size={14} />}
+          {downloading ? 'Generando informe…' : 'Descargar informe completo'}
+        </button>
+        {error && <p className="ai-copilot-report-error" role="alert">{error} Inténtelo nuevamente.</p>}
       </div>
     </article>
   )

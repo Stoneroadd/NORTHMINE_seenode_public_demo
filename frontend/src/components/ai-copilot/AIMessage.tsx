@@ -4,6 +4,7 @@ import { AIEvidencePanel } from './AIEvidencePanel'
 import { AIChartRenderer } from './AIChartRenderer'
 import { AITaskDraftCard } from './AITaskDraftCard'
 import { AIReportDraftCard } from './AIReportDraftCard'
+import type { CopilotContext } from '../../lib/aiCopilot'
 import type { ChatTurn } from './types'
 
 const RESPONSE_TYPE_LABEL: Record<string, string> = {
@@ -18,7 +19,7 @@ const RESPONSE_TYPE_LABEL: Record<string, string> = {
   error: 'Error controlado',
 }
 
-export function AIMessage({ turn, canApprove }: { turn: ChatTurn; canApprove: boolean }) {
+export function AIMessage({ turn, canApprove, context }: { turn: ChatTurn; canApprove: boolean; context: CopilotContext }) {
   if (turn.role === 'user') {
     return (
       <div className="ai-copilot-message is-user">
@@ -99,7 +100,7 @@ export function AIMessage({ turn, canApprove }: { turn: ChatTurn; canApprove: bo
         ))}
 
         {response.report_drafts.map((report) => (
-          <AIReportDraftCard key={report.id} report={report} />
+          <AIReportDraftCard key={report.id} report={report} context={context} />
         ))}
 
         <AIEvidencePanel evidence={response.evidence} />

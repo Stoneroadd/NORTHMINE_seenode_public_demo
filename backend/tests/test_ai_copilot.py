@@ -279,9 +279,33 @@ def test_local_operational_engine_generates_a_report_draft(client, login_as_oper
     assert final["degraded"] is False
     assert final["report_drafts"]
     assert final["report_drafts"][0]["status"] == "draft"
+    assert final["report_drafts"][0]["kind"] == "shift_operational"
     assert final["report_drafts"][0]["sections"]["Alcance"]
+    assert final["report_drafts"][0]["sections"]["Tablas incluidas"]
     assert any(action["action"] == "navigate" and action["route"] == "reportes" for action in final["ui_actions"])
     assert final["tool_executions"]
+
+
+def test_local_operational_engine_selects_existing_executive_report(client, login_as_operador, monkeypatch):
+    from app.ai.providers import LocalOperationalProvider
+    from app.services.data_provider import _demo_dataset
+
+    monkeypatch.setattr("app.ai.orchestrator.get_provider", lambda _settings: LocalOperationalProvider())
+    monkeypatch.setattr("app.ai.tools.provider_get_dataset", lambda fecha=None: _demo_dataset(fecha, 1))
+    response = client.post(
+        "/api/ai-copilot/chat",
+        headers=auth_header(login_as_operador),
+        json={
+            "message": "Genera un informe ejecutivo de cockpit para gerencia",
+            "context": {"section": "cockpit", "mine": "MINA CHILE DEMO", "shift": "NOCHE"},
+        },
+    )
+
+    assert response.status_code == 200
+    events = [json.loads(line) for line in response.text.strip().splitlines() if line.strip()]
+    final = [event for event in events if event["type"] == "final"][-1]["response"]
+    assert final["report_drafts"][0]["kind"] == "cockpit_executive"
+    assert "riesgos" in final["report_drafts"][0]["sections"]["Tablas incluidas"].lower()
 
 
 def test_local_engine_explains_its_data_and_reasoning_truthfully(client, login_as_operador, monkeypatch):

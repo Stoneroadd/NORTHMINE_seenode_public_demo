@@ -1,8 +1,9 @@
 import { useEffect, useRef } from 'react'
 import { AIMessage } from './AIMessage'
+import type { CopilotContext } from '../../lib/aiCopilot'
 import type { ChatTurn } from './types'
 
-export function AIConversation({ turns, canApprove }: { turns: ChatTurn[]; canApprove: boolean }) {
+export function AIConversation({ turns, canApprove, context }: { turns: ChatTurn[]; canApprove: boolean; context: CopilotContext }) {
   const bottomRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
@@ -27,7 +28,7 @@ export function AIConversation({ turns, canApprove }: { turns: ChatTurn[]; canAp
   return (
     <div className="ai-copilot-conversation">
       {turns.map((turn) => (
-        <AIMessage key={turn.id} turn={turn} canApprove={canApprove} />
+        <AIMessage key={turn.id} turn={turn} canApprove={canApprove} context={context} />
       ))}
       <div ref={bottomRef} />
     </div>

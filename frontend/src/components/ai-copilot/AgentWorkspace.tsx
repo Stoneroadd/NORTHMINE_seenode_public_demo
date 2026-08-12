@@ -9,7 +9,7 @@ import { AgentLiveTranscript } from './AgentLiveTranscript'
 import { AgentVoiceControls } from './AgentVoiceControls'
 import { AgentActionOverlay } from './AgentActionOverlay'
 import { useVoiceSession } from './useVoiceSession'
-import { enqueueAgentAction } from './agentActionExecutor'
+import { cancelAgentGuidance, enqueueAgentAction, guideAgentTool } from './agentActionExecutor'
 import type { AgentActionResult } from '../../lib/agentRegistry/types'
 import type { ChatTurn } from './types'
 
@@ -49,11 +49,25 @@ function conciseSpeech(text: string): string {
 }
 
 function spokenResponse(response: CopilotResponse): string {
+  if (response.report_drafts.length > 0) {
+    return 'El informe completo está listo. Incluye tablas operacionales y puede descargarlo desde la tarjeta en pantalla.'
+  }
   const message = response.message.trim()
   const messageIsGeneric = /^revis[eé] los datos disponibles/i.test(message)
-  const operationalAnswer = response.recommendations[0]
-    ?? response.facts[0]
-    ?? message
+  const priority = response.recommendations.find((item) => /alerta|riesgo|critic/i.test(item))
+    ?? response.recommendations[0]
+  const productionFact = response.facts.find((item) => /vs meta/i.test(item))
+  const complianceMatch = productionFact?.match(/\(([\d.,]+)%\)/)
+  const compliance = complianceMatch ? Number(complianceMatch[1].replace(',', '.')) : null
+  const position = compliance === null || Number.isNaN(compliance)
+    ? ''
+    : compliance >= 100 ? 'El turno está sobre la meta.' : 'El turno está bajo la meta.'
+  const priorityCopy = priority
+    ? priority.replace(/^Priorizar\s+/i, 'La prioridad es ').replace(/^Evaluar\s+/i, 'Conviene evaluar ')
+    : ''
+  const operationalAnswer = [position, priorityCopy, 'Los valores exactos están resaltados en pantalla.']
+    .filter(Boolean)
+    .join(' ')
   const selected = messageIsGeneric ? operationalAnswer : message
   return conciseSpeech(selected || 'Respuesta lista en pantalla.')
 }
@@ -72,8 +86,10 @@ export function AgentWorkspace({ open, onClose, context, role, canApprove }: Pro
   const [status, setStatus] = useState<CopilotStatus | null>(null)
   const [voiceOutputEnabled, setVoiceOutputEnabled] = useState(true)
   const [executedActions, setExecutedActions] = useState<AgentActionResult[]>([])
+  const [guidanceText, setGuidanceText] = useState<string | null>(null)
   const conversationIdRef = useRef<string | null>(null)
   const abortRef = useRef<AbortController | null>(null)
+  const guidanceCompletionTimerRef = useRef<number | null>(null)
   const contextRef = useRef(context)
   contextRef.current = context
   const closeButtonRef = useRef<HTMLButtonElement | null>(null)
@@ -163,6 +179,8 @@ export function AgentWorkspace({ open, onClose, context, role, canApprove }: Pro
             if (event.type === 'status') {
               updateTurn(assistantId, (turn) => (turn.role === 'assistant' && turn.status === 'streaming' ? { ...turn, phase: event.phase } : turn))
             } else if (event.type === 'tool_execution') {
+              const guidanceCopy = guideAgentTool(event.name, event.summary)
+              if (guidanceCopy) setGuidanceText(guidanceCopy)
               updateTurn(assistantId, (turn) =>
                 turn.role === 'assistant' && turn.status === 'streaming'
                   ? { ...turn, toolExecutions: [...turn.toolExecutions, { name: event.name, args: {}, status: event.status as 'ok' | 'error' | 'denied', duration_ms: event.duration_ms, summary: event.summary }] }
@@ -176,6 +194,11 @@ export function AgentWorkspace({ open, onClose, context, role, canApprove }: Pro
               updateTurn(assistantId, (turn) => (turn.role === 'assistant' && turn.status === 'streaming' ? { ...turn, text: turn.text + event.text } : turn))
             } else if (event.type === 'final') {
               conversationIdRef.current = event.response.conversation_id
+              if (guidanceCompletionTimerRef.current) window.clearTimeout(guidanceCompletionTimerRef.current)
+              guidanceCompletionTimerRef.current = window.setTimeout(
+                () => setGuidanceText('Lectura completa. Evidencia y recomendación disponibles.'),
+                5_400,
+              )
               updateTurn(assistantId, () => ({ id: assistantId, role: 'assistant', status: 'done', response: event.response }))
               if (voiceOutputEnabledRef.current) {
                 voice.speak(spokenResponse(event.response), () => {
@@ -240,6 +263,9 @@ export function AgentWorkspace({ open, onClose, context, role, canApprove }: Pro
   useEffect(() => {
     if (!open) {
       abortRef.current?.abort()
+      if (guidanceCompletionTimerRef.current) window.clearTimeout(guidanceCompletionTimerRef.current)
+      cancelAgentGuidance()
+      setGuidanceText(null)
       voice.cancelListening()
       voice.stopSpeaking()
     }
@@ -304,7 +330,7 @@ export function AgentWorkspace({ open, onClose, context, role, canApprove }: Pro
           </div>
         )}
 
-        <AgentLiveTranscript phase={agentPhase} interimText={voice.interimTranscript} audioLevel={voice.audioLevel} />
+        <AgentLiveTranscript phase={agentPhase} interimText={voice.interimTranscript} audioLevel={voice.audioLevel} focusText={guidanceText} />
         {voice.micError && (
           <div id="jarvis-mic-feedback" className="ai-agent-mic-error" role="alert">
             <AlertTriangle size={15} aria-hidden="true" />
@@ -316,7 +342,7 @@ export function AgentWorkspace({ open, onClose, context, role, canApprove }: Pro
         )}
 
         <div className="ai-copilot-body">
-          <AIConversation turns={turns} canApprove={canApprove} />
+          <AIConversation turns={turns} canApprove={canApprove} context={context} />
         </div>
 
         <AgentActionOverlay actions={executedActions} />

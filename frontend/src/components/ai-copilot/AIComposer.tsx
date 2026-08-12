@@ -2,11 +2,9 @@ import { useState, type KeyboardEvent } from 'react'
 import { Send } from 'lucide-react'
 
 const QUICK_ACTIONS = [
-  'Analiza el desempeno del turno actual',
-  'Genera un reporte PDF del turno',
+  'Analiza el turno actual',
+  'Genera un informe completo del turno',
   'Abre el modulo de reportes',
-  'Muestra un grafico del turno',
-  'Explica la calidad de los datos',
 ]
 
 interface Props {
