@@ -23,7 +23,7 @@ Program progress: 14 stages; 0 accepted; 11 merged; 1 partial; 1 current
 | Microphone Onboarding | MERGED | `7cc01d8`, `1d32f03`, merge `34f690a` | DEVICE MATRIX PENDING |
 | Realtime Speech-to-Speech | PARTIAL | arquitectura vigente | ENTITLEMENT/LIVE PENDING |
 | Operational Agent Hardening | IN_PROGRESS | checkpoint local `31712a6`, base `34f690a` | NOT DEPLOYED |
-| NORTHMINE Agent Demo Tour | VERIFIED | cambios locales sobre `c4cd431` | DEMO_ACCEPTED LOCAL; no acredita aceptación física ni producción |
+| NORTHMINE Agent Demo Tour | VERIFIED | `d3f9a83`, base `c4cd431` | DEMO_ACCEPTED LOCAL; no acredita aceptación física ni producción |
 
 Estados sincronizados de requisitos históricos:
 
