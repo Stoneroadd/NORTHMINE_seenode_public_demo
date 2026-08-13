@@ -4,7 +4,7 @@ from typing import Any
 
 from app.ai import verifier
 from app.ai.investigation_repository import get_investigation
-from app.ai.investigation_schemas import EvidenceItem, InvestigationResult, new_id, now_iso
+from app.ai.investigation_schemas import EvidenceItem, InvestigationConclusion, InvestigationResult, new_id, now_iso
 from app.ai.tools import TOOL_REGISTRY
 from app.ai.work_products import templates
 from app.ai.work_products.models import Audience, ReportDraft, ReportScope, ReportSection, ReportType
@@ -65,7 +65,7 @@ def _fmt_pct(value: Any) -> str:
 
 def gather_evidence(
     *, report_type: ReportType, scope: ReportScope, investigation_id: str | None = None,
-) -> tuple[list[EvidenceItem], list[str]]:
+) -> tuple[list[EvidenceItem], list[str], InvestigationConclusion | None]:
     evidence: list[EvidenceItem] = []
     investigation_ids: list[str] = []
     args: dict[str, Any] = {"shift": scope.shift} if scope.shift else {}
@@ -76,7 +76,8 @@ def gather_evidence(
             result = InvestigationResult.model_validate_json(row["result_json"])
             evidence.extend(result.evidence)
             investigation_ids.append(investigation_id)
-        return evidence, investigation_ids
+            return evidence, investigation_ids, result.conclusion
+        return evidence, investigation_ids, None
 
     if report_type in ("SHIFT_REPORT", "EXECUTIVE_SUMMARY", "PRODUCTION_REPORT"):
         result = _run_tool("get_production_kpis", args)
@@ -99,7 +100,7 @@ def gather_evidence(
     if result:
         evidence.append(_evidence_from_result("get_data_quality_status", result, []))
 
-    return evidence, investigation_ids
+    return evidence, investigation_ids, None
 
 
 def _section(section_id: str, title: str, content: str, evidence_ids: list[str] | None = None) -> ReportSection:
@@ -215,7 +216,26 @@ _SECTION_BUILDERS = {
 }
 
 
-def _static_section(title: str, scope: ReportScope, report_type: ReportType) -> ReportSection:
+def _causas_probables(section_id: str, title: str, conclusion: InvestigationConclusion | None) -> ReportSection:
+    # C4: si hay una InvestigationConclusion real, el reporte cita sus
+    # probable_causes reales (con los evidence_ids que ya las respaldan) en
+    # vez de un texto generico que ignora lo que la investigacion concluyo.
+    if conclusion is not None and conclusion.probable_causes:
+        content = " ".join(conclusion.probable_causes)
+        return _section(section_id, title, content, list(conclusion.supporting_evidence_ids))
+    return _section(section_id, title, "Ver sección Desviaciones y evidencia asociada — no se infieren causas sin evidencia que las respalde.")
+
+
+def _evidencia_contradictoria(section_id: str, title: str, conclusion: InvestigationConclusion | None) -> ReportSection:
+    if conclusion is not None and conclusion.contradictions:
+        content = " ".join(conclusion.contradictions)
+        return _section(section_id, title, content, list(conclusion.contradicting_evidence_ids))
+    return _section(section_id, title, "No se detectaron contradicciones entre fuentes de evidencia en este alcance.")
+
+
+def _static_section(
+    title: str, scope: ReportScope, report_type: ReportType, conclusion: InvestigationConclusion | None = None,
+) -> ReportSection:
     section_id = title.lower().replace(" ", "_").replace("ó", "o").replace("é", "e")
     if title == "Objetivo":
         return _section(section_id, title, f"Reportar el estado operacional relevante para {templates.audience_label(scope.audience)}.")
@@ -227,9 +247,9 @@ def _static_section(title: str, scope: ReportScope, report_type: ReportType) -> 
             return _section(section_id, title, f"Del {scope.date_range.from_} al {scope.date_range.to}.")
         return _section(section_id, title, f"Turno: {scope.shift or 'no especificado'}.")
     if title == "Causas probables":
-        return _section(section_id, title, "Ver sección Desviaciones y evidencia asociada — no se infieren causas sin evidencia que las respalde.")
+        return _causas_probables(section_id, title, conclusion)
     if title == "Evidencia contradictoria":
-        return _section(section_id, title, "No se detectaron contradicciones entre fuentes de evidencia en este alcance.")
+        return _evidencia_contradictoria(section_id, title, conclusion)
     if title == "Recomendaciones":
         return _section(section_id, title, "Revisar las desviaciones listadas y evaluar apertura de investigación o tarea de seguimiento si corresponde.")
     if title == "Acciones propuestas":
@@ -243,11 +263,13 @@ def build_report(
     *, report_type: ReportType, scope: ReportScope, generated_by: str, company_id: str | None, site_id: str | None,
     investigation_id: str | None = None, title: str | None = None,
 ) -> ReportDraft:
-    evidence, investigation_ids = gather_evidence(report_type=report_type, scope=scope, investigation_id=investigation_id)
+    evidence, investigation_ids, conclusion = gather_evidence(
+        report_type=report_type, scope=scope, investigation_id=investigation_id,
+    )
     sections: list[ReportSection] = []
     for section_title in templates.sections_for(report_type):
         builder = _SECTION_BUILDERS.get(section_title)
-        sections.append(builder(evidence, scope.audience) if builder else _static_section(section_title, scope, report_type))
+        sections.append(builder(evidence, scope.audience) if builder else _static_section(section_title, scope, report_type, conclusion))
 
     draft = ReportDraft(
         report_type=report_type,

@@ -38,7 +38,7 @@ def _breakdowns_section() -> tuple[HandoverSection, list[str]]:
 
 def build_handover(*, generated_by: str, company_id: str | None, site_id: str | None, shift: str | None) -> ShiftHandoverDraft:
     scope = ReportScope(shift=shift, audience="supervisor")
-    evidence, _ = reports.gather_evidence(report_type="SHIFT_REPORT", scope=scope)
+    evidence, _, _ = reports.gather_evidence(report_type="SHIFT_REPORT", scope=scope)
     prod = next((e for e in evidence if e.capability_id == "get_production_kpis"), None)
     fleet = next((e for e in evidence if e.capability_id == "get_fleet_status"), None)
     loading = next((e for e in evidence if e.capability_id == "get_loading_performance"), None)

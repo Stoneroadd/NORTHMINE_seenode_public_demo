@@ -310,6 +310,165 @@ def test_hypothesis_score_is_never_serialized_as_a_probability_field_name():
     assert 0.0 <= dumped["score"] <= 1.0
 
 
+# ── C4: Evidence Traceability (tool result -> EvidenceItem -> Hypothesis ->
+#        Conclusion -> Report), con IDs reales, nunca strings sueltos ──────
+
+def test_evidence_id_survives_from_tool_result_into_supporting_hypothesis():
+    evidence = [
+        EvidenceItem(
+            evidence_id="ev-fleet-1", source_type="backend_tool", capability_id="get_fleet_status",
+            label="get_fleet_status", value={"disponibilidad_pct": 55}, freshness_status="current", quality_status="high",
+        ),
+    ]
+    hyps = hypotheses_module.generate_hypotheses(InvestigationType.PRODUCTION_DROP, evidence)
+    fleet_hyp = next(h for h in hyps if h.label == "Menor disponibilidad de camiones")
+
+    assert fleet_hyp.status == "probable"  # disponibilidad 55% -> score alto
+    assert fleet_hyp.supporting_evidence_ids == ["ev-fleet-1"]
+    assert fleet_hyp.contradicting_evidence_ids == []
+
+
+def test_evidence_id_survives_into_contradicting_hypothesis_when_unsupported():
+    evidence = [
+        EvidenceItem(
+            evidence_id="ev-fleet-2", source_type="backend_tool", capability_id="get_fleet_status",
+            label="get_fleet_status", value={"disponibilidad_pct": 98}, freshness_status="current", quality_status="high",
+        ),
+    ]
+    hyps = hypotheses_module.generate_hypotheses(InvestigationType.PRODUCTION_DROP, evidence)
+    fleet_hyp = next(h for h in hyps if h.label == "Menor disponibilidad de camiones")
+
+    assert fleet_hyp.status == "unsupported"  # disponibilidad 98% -> score bajo
+    assert fleet_hyp.contradicting_evidence_ids == ["ev-fleet-2"]
+    assert fleet_hyp.supporting_evidence_ids == []
+
+
+def test_hypothesis_evidence_ids_never_overlap_between_supporting_and_contradicting():
+    evidence = [
+        EvidenceItem(
+            evidence_id="ev-fleet-3", source_type="backend_tool", capability_id="get_fleet_status",
+            label="get_fleet_status", value={"disponibilidad_pct": 70, "equipos_en_demora": 2, "total_equipos": 10}, freshness_status="current", quality_status="high",
+        ),
+        EvidenceItem(
+            evidence_id="ev-loading-1", source_type="backend_tool", capability_id="get_loading_performance",
+            label="get_loading_performance", value={"unidades": [{"variacion_pct": -25}]}, freshness_status="current", quality_status="high",
+        ),
+    ]
+    for h in hypotheses_module.generate_hypotheses(InvestigationType.PRODUCTION_DROP, evidence):
+        assert not (set(h.supporting_evidence_ids) & set(h.contradicting_evidence_ids))
+
+
+def test_conclusion_supporting_evidence_ids_trace_back_to_the_evidence_that_backed_the_probable_hypothesis():
+    plan = planner.build_plan(InvestigationType.PRODUCTION_DROP, InvestigationScope(), "operador")
+    fleet_evidence = EvidenceItem(
+        evidence_id="ev-fleet-4", source_type="backend_tool", capability_id="get_fleet_status",
+        label="get_fleet_status", value={"disponibilidad_pct": 55}, freshness_status="current", quality_status="high",
+        verification_status="verified",
+    )
+    verification = VerificationResult(status="verified", accepted_evidence_ids=["ev-fleet-4"])
+    hyps = hypotheses_module.generate_hypotheses(InvestigationType.PRODUCTION_DROP, [fleet_evidence])
+
+    result = conclusion_module.build_conclusion(plan, [fleet_evidence], verification, hyps)
+
+    assert result.confidence.level == "high"
+    assert "ev-fleet-4" in result.supporting_evidence_ids
+
+
+def test_rejected_evidence_never_appears_as_a_fact_or_a_supporting_evidence_id():
+    accepted = EvidenceItem(
+        evidence_id="ev-ok", source_type="backend_tool", capability_id="get_production_kpis",
+        label="get_production_kpis", value={"cumplimiento_pct": 80, "brecha_ton": -500}, freshness_status="current", quality_status="high",
+    )
+    rejected = EvidenceItem(
+        evidence_id="ev-rejected", source_type="backend_tool", capability_id="get_fleet_status",
+        label="get_fleet_status", value={"status": "EMPTY"}, freshness_status="unknown", quality_status="unknown",
+    )
+    verification = verifier.verify_evidence([accepted, rejected])
+    assert rejected.verification_status == "rejected"
+
+    plan = planner.build_plan(InvestigationType.PRODUCTION_DROP, InvestigationScope(), "operador")
+    result = conclusion_module.build_conclusion(plan, [accepted, rejected], verification, [])
+
+    assert "ev-rejected" not in result.supporting_evidence_ids
+    assert not any("ev-rejected" in fact for fact in result.facts)
+
+
+def test_get_evidence_for_conclusion_resolves_real_items_and_never_fabricates_missing_ones(caplog):
+    from app.ai.investigation_schemas import InvestigationResult
+
+    plan = planner.build_plan(InvestigationType.PRODUCTION_DROP, InvestigationScope(), "operador")
+    real_item = EvidenceItem(
+        evidence_id="ev-real", source_type="backend_tool", capability_id="get_alerts",
+        label="get_alerts", value={"count": 3}, freshness_status="current", quality_status="high",
+    )
+    conclusion = conclusion_module.build_conclusion(
+        plan, [real_item], VerificationResult(status="verified", accepted_evidence_ids=["ev-real"]), [],
+    )
+    # Se inyecta a proposito un id que nunca existio, simulando corrupcion/bug.
+    conclusion = conclusion.model_copy(update={"supporting_evidence_ids": [*conclusion.supporting_evidence_ids, "ev-fantasma"]})
+    result = InvestigationResult(plan=plan, evidence=[real_item], verification=VerificationResult(status="verified"), hypotheses=[], conclusion=conclusion)
+
+    with caplog.at_level("WARNING"):
+        resolved = conclusion_module.get_evidence_for_conclusion(result)
+
+    assert [e.evidence_id for e in resolved] == ["ev-real"]  # nunca se fabrica un EvidenceItem para "ev-fantasma"
+    assert any("ev-fantasma" in r.message for r in caplog.records)
+
+
+def test_investigation_result_round_trip_preserves_evidence_lineage():
+    from app.ai.investigation_schemas import InvestigationResult
+
+    plan = planner.build_plan(InvestigationType.PRODUCTION_DROP, InvestigationScope(), "operador")
+    fleet_evidence = EvidenceItem(
+        evidence_id="ev-rt-1", source_type="backend_tool", capability_id="get_fleet_status",
+        label="get_fleet_status", value={"disponibilidad_pct": 55}, freshness_status="current", quality_status="high",
+        verification_status="verified",
+    )
+    verification = VerificationResult(status="verified", accepted_evidence_ids=["ev-rt-1"])
+    hyps = hypotheses_module.generate_hypotheses(InvestigationType.PRODUCTION_DROP, [fleet_evidence])
+    conclusion = conclusion_module.build_conclusion(plan, [fleet_evidence], verification, hyps)
+    result = InvestigationResult(plan=plan, evidence=[fleet_evidence], verification=verification, hypotheses=hyps, conclusion=conclusion)
+
+    rehydrated = InvestigationResult.model_validate_json(result.model_dump_json())
+
+    assert rehydrated.conclusion.supporting_evidence_ids == conclusion.supporting_evidence_ids
+    assert [h.supporting_evidence_ids for h in rehydrated.hypotheses] == [h.supporting_evidence_ids for h in hyps]
+
+
+def test_investigation_conclusion_persisted_before_c4_still_parses_without_the_new_fields():
+    # Contrato antiguo: filas ya guardadas en ai_investigations.result_json
+    # antes de este cambio no tienen supporting_evidence_ids/
+    # contradicting_evidence_ids - deben seguir parseando (defaults a []).
+    old_json = json.dumps({
+        "summary": "s", "facts": ["f1"], "probable_causes": [], "contradictions": [],
+        "recommendations": [], "limitations": [], "confidence": {"level": "low", "calculated_by": "backend_rules"},
+        "decision_authority": "human", "requires_human_approval": True,
+    })
+    parsed = conclusion_module.InvestigationConclusion.model_validate_json(old_json)
+    assert parsed.supporting_evidence_ids == []
+    assert parsed.contradicting_evidence_ids == []
+
+
+def test_end_to_end_lineage_tool_result_to_evidence_to_hypothesis_to_conclusion_without_text_search():
+    """tool result -> E1 -> H1 -> C1: navega la relacion por id, nunca
+    reconstruyendola con `in`/regex sobre texto."""
+    plan = planner.build_plan(InvestigationType.PRODUCTION_DROP, InvestigationScope(), "operador")
+    e1 = EvidenceItem(
+        evidence_id="ev-e2e-1", source_type="backend_tool", capability_id="get_fleet_status",
+        label="get_fleet_status", value={"disponibilidad_pct": 50}, freshness_status="current", quality_status="high",
+        verification_status="verified",
+    )
+    verification = VerificationResult(status="verified", accepted_evidence_ids=["ev-e2e-1"])
+    hyps = hypotheses_module.generate_hypotheses(InvestigationType.PRODUCTION_DROP, [e1])
+    h1 = next(h for h in hyps if h.label == "Menor disponibilidad de camiones")
+    c1 = conclusion_module.build_conclusion(plan, [e1], verification, hyps)
+
+    # C1 -> H1: la conclusion cita el mismo evidence_id que ya sustentaba H1.
+    assert set(h1.supporting_evidence_ids) <= set(c1.supporting_evidence_ids)
+    # H1 -> E1: navegacion por id, no por busqueda de texto en el label.
+    assert h1.supporting_evidence_ids == [e1.evidence_id]
+
+
 # ── Endpoints HTTP: modo Automatico, modo Guiado, RBAC, no-LLM ────────────
 
 def _events(response) -> list[dict]:

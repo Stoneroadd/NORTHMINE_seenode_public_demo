@@ -4,7 +4,17 @@ import uuid
 
 import pytest
 
-from app.ai import verifier
+from app.ai import conclusion as conclusion_module
+from app.ai import hypotheses as hypotheses_module
+from app.ai import planner, verifier
+from app.ai.investigation_repository import init_investigation_db, save_investigation
+from app.ai.investigation_schemas import (
+    EvidenceItem,
+    InvestigationResult,
+    InvestigationScope,
+    InvestigationType,
+    VerificationResult,
+)
 from app.ai.memory import episodic_memory, retention, working_memory
 from app.ai.memory.models import new_working_memory_entity_id
 from app.ai.memory.persistence import init_memory_db
@@ -37,6 +47,7 @@ def _init_etapa6_dbs():
     init_memory_db()
     init_proactivity_db()
     init_work_products_db()
+    init_investigation_db()
 
 
 def _uid() -> str:
@@ -456,6 +467,97 @@ def test_report_rejection_records_reason(client, login_as_supervisor):
     body = resp.json()
     assert body["status"] == "rejected"
     assert body["rejection_reason"] == "Faltan datos de flota"
+
+
+# ── C4: Evidence Traceability hasta el reporte ─────────────────────────────
+
+def _saved_investigation_with_probable_cause(investigation_id: str) -> InvestigationResult:
+    plan = planner.build_plan(InvestigationType.PRODUCTION_DROP, InvestigationScope(), "operador")
+    plan.investigation_id = investigation_id
+    evidence = EvidenceItem(
+        evidence_id=f"ev-{investigation_id}", source_type="backend_tool", capability_id="get_fleet_status",
+        label="get_fleet_status", value={"disponibilidad_pct": 50}, freshness_status="current", quality_status="high",
+        verification_status="verified",
+    )
+    verification = VerificationResult(status="verified", accepted_evidence_ids=[evidence.evidence_id])
+    hyps = hypotheses_module.generate_hypotheses(InvestigationType.PRODUCTION_DROP, [evidence])
+    conclusion = conclusion_module.build_conclusion(plan, [evidence], verification, hyps)
+    result = InvestigationResult(plan=plan, evidence=[evidence], verification=verification, hypotheses=hyps, conclusion=conclusion)
+    save_investigation(result, created_by="tester", role="operador")
+    return result
+
+
+def test_investigation_report_cites_the_real_probable_causes_and_their_evidence_ids():
+    investigation_id = f"inv-c4-{_uid()}"
+    saved = _saved_investigation_with_probable_cause(investigation_id)
+    assert saved.conclusion.probable_causes  # precondicion: hay una causa probable real
+
+    report = reports_module.build_report(
+        report_type="INVESTIGATION_REPORT", scope=ReportScope(audience="supervisor"),
+        generated_by="tester", company_id=None, site_id=None, investigation_id=investigation_id,
+    )
+    causas = next(s for s in report.sections if s.title == "Causas probables")
+
+    assert causas.content != "Ver sección Desviaciones y evidencia asociada — no se infieren causas sin evidencia que las respalde."
+    assert any(cause in causas.content for cause in saved.conclusion.probable_causes)
+    assert set(causas.evidence_ids) == set(saved.conclusion.supporting_evidence_ids)
+    assert set(causas.evidence_ids) <= set(report.evidence_ids)  # nunca una cita colgante
+
+
+def test_investigation_report_without_a_probable_cause_keeps_the_honest_generic_text():
+    investigation_id = f"inv-c4-none-{_uid()}"
+    plan = planner.build_plan(InvestigationType.SHIFT_SUMMARY, InvestigationScope(), "operador")
+    plan.investigation_id = investigation_id
+    verification = VerificationResult(status="insufficient_data")
+    conclusion = conclusion_module.build_conclusion(plan, [], verification, [])
+    result = InvestigationResult(plan=plan, evidence=[], verification=verification, hypotheses=[], conclusion=conclusion)
+    save_investigation(result, created_by="tester", role="operador")
+
+    report = reports_module.build_report(
+        report_type="INVESTIGATION_REPORT", scope=ReportScope(audience="supervisor"),
+        generated_by="tester", company_id=None, site_id=None, investigation_id=investigation_id,
+    )
+    causas = next(s for s in report.sections if s.title == "Causas probables")
+    assert causas.content == "Ver sección Desviaciones y evidencia asociada — no se infieren causas sin evidencia que las respalde."
+    assert causas.evidence_ids == []
+
+
+def test_report_visible_content_never_leaks_raw_evidence_id_strings():
+    investigation_id = f"inv-c4-clean-{_uid()}"
+    _saved_investigation_with_probable_cause(investigation_id)
+    report = reports_module.build_report(
+        report_type="INVESTIGATION_REPORT", scope=ReportScope(audience="executive"),
+        generated_by="tester", company_id=None, site_id=None, investigation_id=investigation_id,
+    )
+    # La trazabilidad vive en evidence_ids (metadata), nunca impresa dentro
+    # del texto narrativo que ve un ejecutivo - "no llenar de IDs tecnicos".
+    for section in report.sections:
+        for evidence_id in section.evidence_ids:
+            assert evidence_id not in section.content
+
+
+def test_end_to_end_lineage_from_report_to_conclusion_to_hypothesis_to_evidence_without_text_search():
+    """R1 -> C1 -> H1 -> E1, navegado por id en cada salto."""
+    investigation_id = f"inv-c4-e2e-{_uid()}"
+    saved = _saved_investigation_with_probable_cause(investigation_id)
+    h1 = next(h for h in saved.hypotheses if h.status == "probable")
+    e1 = saved.evidence[0]
+
+    r1 = reports_module.build_report(
+        report_type="INVESTIGATION_REPORT", scope=ReportScope(audience="supervisor"),
+        generated_by="tester", company_id=None, site_id=None, investigation_id=investigation_id,
+    )
+    causas_section = next(s for s in r1.sections if s.title == "Causas probables")
+
+    # R1 -> C1: el id citado en la seccion del reporte es el mismo que la
+    # conclusion ya traia (misma lista, no una reconstruccion aparte).
+    assert set(causas_section.evidence_ids) == set(saved.conclusion.supporting_evidence_ids)
+    # C1 -> H1: ese mismo id ya sustentaba la hipotesis probable.
+    assert h1.supporting_evidence_ids[0] in causas_section.evidence_ids
+    # H1 -> E1: navegacion directa por evidence_id, sin buscar texto.
+    resolved = next(e for e in saved.evidence if e.evidence_id == h1.supporting_evidence_ids[0])
+    assert resolved.evidence_id == e1.evidence_id
+    assert resolved is e1
 
 
 # ── Tasks ───────────────────────────────────────────────────────────────

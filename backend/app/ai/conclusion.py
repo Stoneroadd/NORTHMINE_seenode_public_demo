@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+import logging
+
 from app.ai.investigation_schemas import (
     EvidenceItem,
     InvestigationConfidence,
     InvestigationConclusion,
     InvestigationPlan,
+    InvestigationResult,
     InvestigationType,
     OperationalHypothesis,
     VerificationResult,
@@ -16,7 +19,15 @@ modelo: separa hechos/hipotesis/contradicciones/limitaciones/recomendaciones
 a partir de lo que el Executor y el Verifier ya calcularon. decisionAuthority
 y requiresHumanApproval quedan fijos por el tipo del schema (Literal), el
 codigo no puede cambiarlos aunque quisiera - ver InvestigationConclusion.
+
+C4 (trazabilidad): ademas de facts/contradictions en texto, la conclusion
+conserva supporting_evidence_ids/contradicting_evidence_ids - IDs reales
+tomados de EvidenceItem/OperationalHypothesis, nunca fabricados. Ver
+get_evidence_for_conclusion mas abajo para resolverlos contra la evidencia
+real de una investigacion sin reconstruir la relacion por texto.
 """
+
+logger = logging.getLogger("northmine.ai.conclusion")
 
 
 def _summary_sentence(plan: InvestigationPlan, evidence: list[EvidenceItem]) -> str:
@@ -53,12 +64,21 @@ def build_conclusion(
     hypotheses: list[OperationalHypothesis],
 ) -> InvestigationConclusion:
     accepted_evidence = [e for e in evidence if e.evidence_id in set(verification.accepted_evidence_ids)]
-    facts = [summarize_tool_result(e.capability_id, e.value) for e in accepted_evidence if isinstance(e.value, dict)]
+    fact_evidence = [e for e in accepted_evidence if isinstance(e.value, dict)]
+    facts = [summarize_tool_result(e.capability_id, e.value) for e in fact_evidence]
 
-    probable = [h.label for h in hypotheses if h.status == "probable"]
-    possible = [h.label for h in hypotheses if h.status == "possible"]
+    probable_hypotheses = [h for h in hypotheses if h.status == "probable"]
+    possible_hypotheses = [h for h in hypotheses if h.status == "possible"]
+    probable = [h.label for h in probable_hypotheses]
+    possible = [h.label for h in possible_hypotheses]
     probable_causes = probable if probable else [f"Posible (no confirmado): {label}" for label in possible]
-    contradictions = [h.label for h in hypotheses if h.status == "unsupported"]
+    # facts/probable_causes citan la misma evidencia que ya los sustenta -
+    # si no hay hipotesis probable se usa la evidencia de las "possible"
+    # (mismo fallback que probable_causes en texto, linea de arriba).
+    cause_hypotheses = probable_hypotheses if probable_hypotheses else possible_hypotheses
+
+    unsupported_hypotheses = [h for h in hypotheses if h.status == "unsupported"]
+    contradictions = [h.label for h in unsupported_hypotheses]
 
     limitations = list(verification.limitations)
     for missing in plan.missing_capabilities:
@@ -73,6 +93,14 @@ def build_conclusion(
     else:
         confidence_level = "low"
 
+    supporting_evidence_ids = sorted({
+        *(e.evidence_id for e in fact_evidence),
+        *(eid for h in cause_hypotheses for eid in h.supporting_evidence_ids),
+    })
+    contradicting_evidence_ids = sorted({
+        eid for h in unsupported_hypotheses for eid in h.contradicting_evidence_ids
+    })
+
     return InvestigationConclusion(
         summary=_summary_sentence(plan, evidence),
         facts=facts,
@@ -81,4 +109,34 @@ def build_conclusion(
         recommendations=_recommendations_for(plan.type, hypotheses),
         limitations=limitations,
         confidence=InvestigationConfidence(level=confidence_level),
+        supporting_evidence_ids=supporting_evidence_ids,
+        contradicting_evidence_ids=contradicting_evidence_ids,
     )
+
+
+def get_evidence_for_conclusion(result: InvestigationResult) -> list[EvidenceItem]:
+    """Resuelve InvestigationConclusion.supporting_evidence_ids contra la
+    evidencia real de la investigacion (result.evidence) - permite responder
+    "que evidencia respalda esta conclusion" sin reconstruir la relacion por
+    busqueda de texto. Nunca fabrica un EvidenceItem para un id que no
+    exista: si algun id no resuelve, se omite y se reporta por logger."""
+    if result.conclusion is None:
+        return []
+    by_id = {e.evidence_id: e for e in result.evidence}
+    missing = [eid for eid in result.conclusion.supporting_evidence_ids if eid not in by_id]
+    if missing:
+        logger.warning("Conclusion cita evidence_id inexistente en supporting_evidence_ids: %s", missing)
+    return [by_id[eid] for eid in result.conclusion.supporting_evidence_ids if eid in by_id]
+
+
+def get_contradicting_evidence_for_conclusion(result: InvestigationResult) -> list[EvidenceItem]:
+    """Misma resolucion que get_evidence_for_conclusion, para
+    contradicting_evidence_ids - responde "que evidencia contradice esta
+    conclusion/hipotesis"."""
+    if result.conclusion is None:
+        return []
+    by_id = {e.evidence_id: e for e in result.evidence}
+    missing = [eid for eid in result.conclusion.contradicting_evidence_ids if eid not in by_id]
+    if missing:
+        logger.warning("Conclusion cita evidence_id inexistente en contradicting_evidence_ids: %s", missing)
+    return [by_id[eid] for eid in result.conclusion.contradicting_evidence_ids if eid in by_id]

@@ -117,6 +117,11 @@ export interface InvestigationConclusion {
   recommendations: string[]
   limitations: string[]
   confidence: InvestigationConfidence
+  /** IDs reales de EvidenceItem que respaldan facts/probable_causes — ver
+   * conclusion.py::build_conclusion. Nunca se fabrican. */
+  supporting_evidence_ids: string[]
+  /** IDs reales de EvidenceItem detrás de `contradictions`. */
+  contradicting_evidence_ids: string[]
   decision_authority: 'human'
   requires_human_approval: true
 }

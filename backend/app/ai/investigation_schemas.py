@@ -141,12 +141,20 @@ class InvestigationConfidence(BaseModel):
 
 class InvestigationConclusion(BaseModel):
     summary: str
+    # Human readable (seccion 13, sin cambios de comportamiento).
     facts: list[str] = Field(default_factory=list)
     probable_causes: list[str] = Field(default_factory=list)
     contradictions: list[str] = Field(default_factory=list)
     recommendations: list[str] = Field(default_factory=list)
     limitations: list[str] = Field(default_factory=list)
     confidence: InvestigationConfidence
+    # Machine traceable (C4): evidence_ids reales que ya sustentaban facts/
+    # probable_causes (supporting) y contradictions (contradicting) - nunca
+    # se fabrica un id, solo se preservan los que EvidenceItem/
+    # OperationalHypothesis ya traian. Ver conclusion.py::build_conclusion y
+    # get_evidence_for_conclusion.
+    supporting_evidence_ids: list[str] = Field(default_factory=list)
+    contradicting_evidence_ids: list[str] = Field(default_factory=list)
     # Impuestos por el backend, el modelo no los puede tocar (seccion 13).
     decision_authority: Literal["human"] = "human"
     requires_human_approval: Literal[True] = True
