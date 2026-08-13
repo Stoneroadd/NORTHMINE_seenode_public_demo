@@ -74,6 +74,10 @@ def init_runtime_db() -> None:
             """
         )
         conn.execute("CREATE INDEX IF NOT EXISTS idx_agent_events_session ON agent_events(session_id, sequence)")
+        # C6: el trace de una investigacion/turno se reconstruye filtrando
+        # por correlation_id (ver runtime/execution_trace.py) - sin este
+        # indice esa consulta escanearia la tabla completa a medida que crece.
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_agent_events_correlation ON agent_events(session_id, correlation_id)")
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS agent_findings (
@@ -151,6 +155,21 @@ def get_events_since(session_id: str, since_sequence: int) -> list[dict[str, Any
         rows = conn.execute(
             "SELECT * FROM agent_events WHERE session_id = ? AND sequence > ? ORDER BY sequence ASC",
             (session_id, since_sequence),
+        ).fetchall()
+        return [dict(row) for row in rows]
+
+
+def get_events_by_correlation(session_id: str, correlation_id: str) -> list[dict[str, Any]]:
+    """C6: todos los eventos (cliente y servidor) de un unico turno/comando -
+    correlation_id ya se propaga desde el evento disparador hasta el ultimo
+    evento de la investigacion (ver runtime.py::dispatch_command y toda la
+    cadena de _run_investigation), asi que esta consulta reconstruye el
+    trace completo sin buscar texto ni reimplementar la correlacion."""
+    with _lock:
+        conn = _connection()
+        rows = conn.execute(
+            "SELECT * FROM agent_events WHERE session_id = ? AND correlation_id = ? ORDER BY sequence ASC",
+            (session_id, correlation_id),
         ).fetchall()
         return [dict(row) for row in rows]
 
