@@ -18,7 +18,7 @@ significativos (severity != informational, o la primera hipotesis
 probable) - "no todos los hallazgos deben hablarse" (seccion 23).
 """
 
-Severity = Literal["informational", "warning", "critical"]
+FindingSeverity = Literal["informational", "warning", "critical"]
 
 
 class InvestigationFinding(BaseModel):
@@ -26,7 +26,7 @@ class InvestigationFinding(BaseModel):
     investigation_id: str
     label: str
     summary: str
-    severity: Severity
+    severity: FindingSeverity
     evidence_ids: list[str]
     created_at: datetime
     speak: bool
@@ -50,7 +50,7 @@ def finding_from_evidence(investigation_id: str, item: EvidenceItem) -> Investig
         return None
 
     rule = _DEVIATION_KEYS.get(item.capability_id)
-    severity: Severity = "informational"
+    severity: FindingSeverity = "informational"
     if rule:
         key, threshold, sev = rule
         value = item.value.get(key)
@@ -80,7 +80,7 @@ def finding_from_evidence(investigation_id: str, item: EvidenceItem) -> Investig
 def finding_from_hypothesis(investigation_id: str, hypothesis: OperationalHypothesis, is_first_probable: bool) -> InvestigationFinding | None:
     if hypothesis.status not in ("probable", "possible"):
         return None
-    severity: Severity = "warning" if hypothesis.status == "probable" else "informational"
+    severity: FindingSeverity = "warning" if hypothesis.status == "probable" else "informational"
     return InvestigationFinding(
         finding_id=new_finding_id(),
         investigation_id=investigation_id,

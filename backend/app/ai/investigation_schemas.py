@@ -120,12 +120,21 @@ class OperationalHypothesis(BaseModel):
     status: HypothesisStatus
     supporting_evidence_ids: list[str] = Field(default_factory=list)
     contradicting_evidence_ids: list[str] = Field(default_factory=list)
+    # Desempate heuristico interno documentado por regla (ver hypotheses.py),
+    # NUNCA una probabilidad estadistica - el status de arriba es lo que
+    # realmente expresa certeza operacional.
     score: float | None = None
 
 
 # ── Conclusion (seccion 13) ──────────────────────────────────────────────
 
-class ConfidenceInfo(BaseModel):
+class InvestigationConfidence(BaseModel):
+    """Confianza de una InvestigationConclusion, derivada 100% de
+    VerificationResult.status y de si hay una hipotesis 'probable' (ver
+    conclusion.py::build_conclusion) - nunca del score heuristico de una
+    hipotesis individual. Dominio distinto de ResponseConfidence
+    (schemas.py), que resume la confianza de un turno de chat."""
+
     level: Literal["low", "medium", "high"]
     calculated_by: Literal["backend_rules"] = "backend_rules"
 
@@ -137,7 +146,7 @@ class InvestigationConclusion(BaseModel):
     contradictions: list[str] = Field(default_factory=list)
     recommendations: list[str] = Field(default_factory=list)
     limitations: list[str] = Field(default_factory=list)
-    confidence: ConfidenceInfo
+    confidence: InvestigationConfidence
     # Impuestos por el backend, el modelo no los puede tocar (seccion 13).
     decision_authority: Literal["human"] = "human"
     requires_human_approval: Literal[True] = True

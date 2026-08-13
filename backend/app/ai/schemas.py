@@ -92,7 +92,13 @@ class Evidence(BaseModel):
     generated_at: str | None = None
 
 
-class ConfidenceInfo(BaseModel):
+class ResponseConfidence(BaseModel):
+    """Confianza de un turno de chat (CopilotResponse), calculada como el
+    peor nivel entre las tools invocadas (ver
+    orchestrator.py::_combine_confidence) - agregacion heuristica sobre un
+    turno abierto, no las reglas deterministas de InvestigationConfidence
+    (investigation_schemas.py), que es un dominio distinto."""
+
     level: ConfidenceLevel
     reasons: list[str] = Field(default_factory=list)
 
@@ -222,7 +228,7 @@ class CopilotResponse(BaseModel):
     task_drafts: list[TaskDraft] = Field(default_factory=list)
     report_drafts: list[ReportDraft] = Field(default_factory=list)
     ui_actions: list[UIAction] = Field(default_factory=list)
-    confidence: ConfidenceInfo
+    confidence: ResponseConfidence
     data_freshness: DataFreshness
     requires_human_approval: bool = True
     limitations: list[str] = Field(default_factory=list)

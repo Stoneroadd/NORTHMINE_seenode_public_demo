@@ -94,7 +94,19 @@ export interface OperationalHypothesis {
   status: HypothesisStatus
   supporting_evidence_ids: string[]
   contradicting_evidence_ids: string[]
+  /** Desempate heurístico interno documentado por regla, NUNCA una
+   * probabilidad estadística — `status` es lo que expresa certeza real. */
   score: number | null
+}
+
+/** Confianza de una InvestigationConclusion — derivada 100% de
+ * VerificationResult.status y de si hay una hipótesis 'probable', nunca del
+ * `score` heurístico de una hipótesis individual. Dominio distinto de
+ * CopilotConfidence (aiCopilot.ts), que resume la confianza de un turno de
+ * chat con otra agregación y otro vocabulario de niveles. */
+export interface InvestigationConfidence {
+  level: 'low' | 'medium' | 'high'
+  calculated_by: 'backend_rules'
 }
 
 export interface InvestigationConclusion {
@@ -104,7 +116,7 @@ export interface InvestigationConclusion {
   contradictions: string[]
   recommendations: string[]
   limitations: string[]
-  confidence: { level: 'low' | 'medium' | 'high'; calculated_by: 'backend_rules' }
+  confidence: InvestigationConfidence
   decision_authority: 'human'
   requires_human_approval: true
 }

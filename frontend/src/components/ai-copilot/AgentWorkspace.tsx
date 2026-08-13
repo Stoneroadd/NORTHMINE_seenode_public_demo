@@ -53,6 +53,14 @@ const STEP_STATUS_LABELS: Record<string, string> = {
 }
 
 const CONFIDENCE_LABELS: Record<string, string> = { high: 'alta', medium: 'media', low: 'baja' }
+const QUALITY_LABELS: Record<string, string> = { high: 'alta', medium: 'media', low: 'baja', unknown: 'desconocida' }
+const FRESHNESS_LABELS: Record<string, string> = { current: 'vigente', stale: 'desactualizada', unknown: 'desconocida' }
+const VERIFICATION_LABELS: Record<string, string> = {
+  verified: 'verificada', partial: 'parcial', rejected: 'rechazada', insufficient_data: 'datos insuficientes',
+}
+const SEVERITY_LABELS: Record<string, string> = {
+  informational: 'informativo', warning: 'atención', high: 'alta', critical: 'crítico',
+}
 
 const ENTITY_STATUS_LABELS: Record<string, string> = {
   new: 'nuevo', ongoing: 'en curso', worsening: 'empeorando', improving: 'mejorando', resolved: 'resuelto',
@@ -484,15 +492,26 @@ export function AgentWorkspace({ open, onClose, context, role: _role, canApprove
             </div>
           )}
           {evidenceOpen && runtime.lastResult && (
-            <ul className="ai-copilot-evidence-list">
-              {((runtime.lastResult.evidence as any[]) ?? []).map((item) => (
-                <li key={item.evidence_id}>
-                  <span className="ai-copilot-evidence-source">{item.capability_id}</span>
-                  <span className={`ai-copilot-badge ai-copilot-badge--freshness is-${item.freshness_status}`}>{item.freshness_status}</span>
-                  <span className="ai-copilot-badge">calidad {item.quality_status}</span>
-                </li>
-              ))}
-            </ul>
+            <>
+              {runtime.verification && (
+                <p className="ai-inv-verification">
+                  Verificación: {VERIFICATION_LABELS[runtime.verification.status] ?? runtime.verification.status}
+                </p>
+              )}
+              <ul className="ai-copilot-evidence-list">
+                {((runtime.lastResult.evidence as any[]) ?? []).map((item) => (
+                  <li key={item.evidence_id}>
+                    <span className="ai-copilot-evidence-source">{item.capability_id}</span>
+                    <span className={`ai-copilot-badge ai-copilot-badge--freshness is-${item.freshness_status}`}>
+                      Frescura: {FRESHNESS_LABELS[item.freshness_status] ?? item.freshness_status}
+                    </span>
+                    <span className={`ai-copilot-badge is-${item.quality_status}`}>
+                      Calidad: {QUALITY_LABELS[item.quality_status] ?? item.quality_status}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </>
           )}
 
           {runtime.hypotheses.length > 0 && (
@@ -507,7 +526,14 @@ export function AgentWorkspace({ open, onClose, context, role: _role, canApprove
                     <span className="ai-inv-hypothesis-group-label">{label}</span>
                     <ul>
                       {items.map((h) => (
-                        <li key={h.hypothesis_id}>{h.label}{h.score != null && <span className="ai-inv-hypothesis-score">{Math.round(h.score * 100)}%</span>}</li>
+                        <li key={h.hypothesis_id}>
+                          {h.label}
+                          {h.score != null && (
+                            <span className="ai-inv-hypothesis-score" title="Ranking heurístico interno, no es una probabilidad">
+                              ranking {h.score.toFixed(2)}
+                            </span>
+                          )}
+                        </li>
                       ))}
                     </ul>
                   </div>
@@ -521,6 +547,11 @@ export function AgentWorkspace({ open, onClose, context, role: _role, canApprove
             <div className="ai-inv-conclusion">
               <p className="ai-copilot-block-title">Resultado</p>
               <p className="ai-inv-summary">{conclusion.summary}</p>
+              {conclusion.confidence && (
+                <p className="ai-inv-confidence">
+                  Confianza: {CONFIDENCE_LABELS[conclusion.confidence.level] ?? conclusion.confidence.level}
+                </p>
+              )}
               {conclusion.probable_causes.length > 0 && (
                 <div className="ai-copilot-block">
                   <span className="ai-copilot-block-title">Causas probables</span>
@@ -695,7 +726,7 @@ export function AgentWorkspace({ open, onClose, context, role: _role, canApprove
                     <ul>
                       {runtime.proactiveEvents.slice(0, 5).map((ev) => (
                         <li key={ev.proactive_event_id}>
-                          <span className={`ai-copilot-badge is-${ev.severity}`}>{ev.severity}</span> {ev.title}
+                          <span className={`ai-copilot-badge is-${ev.severity}`}>{SEVERITY_LABELS[ev.severity] ?? ev.severity}</span> {ev.title}
                         </li>
                       ))}
                     </ul>

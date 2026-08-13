@@ -10,11 +10,15 @@ from app.ai import executor, hypotheses as hypotheses_module, planner, verifier
 from app.ai.investigation_repository import get_investigation
 from app.ai.investigation_schemas import (
     EvidenceItem,
+    InvestigationConfidence,
     InvestigationScope,
     InvestigationType,
+    OperationalHypothesis,
     OUT_OF_SCOPE_MESSAGE,
+    VerificationResult,
 )
 from app.ai.planner import PlannerRejection
+from app.ai.schemas import ResponseConfidence
 from tests.conftest import auth_header
 
 """Tests del motor de investigacion Planner-Executor-Verifier (Etapa 3).
@@ -220,6 +224,90 @@ def test_conclusion_always_requires_human_approval_and_cannot_be_overridden():
     # Ni siquiera pasando kwargs explicitos se puede cambiar - son Literal fijos.
     with pytest.raises(Exception):
         type(result)(**{**result.model_dump(), "decision_authority": "model"})
+
+
+# ── C3: semantica de confianza (Evidence Quality / Verification /
+#        Hypothesis Score / Assessment Confidence) ─────────────────────────
+
+def _probable_hypothesis() -> OperationalHypothesis:
+    return OperationalHypothesis(
+        hypothesis_id="hyp-1", label="Disponibilidad de flota baja", status="probable",
+        supporting_evidence_ids=["ev-1"], score=0.82,
+    )
+
+
+def test_investigation_confidence_and_response_confidence_are_distinct_types():
+    # No deben compartir nombre ni vocabulario de niveles: son dos dominios
+    # (investigacion determinista vs. agregacion heuristica de un turno de
+    # chat), calculados por caminos de codigo completamente distintos.
+    assert InvestigationConfidence is not ResponseConfidence
+    assert InvestigationConfidence.model_fields["level"].annotation != ResponseConfidence.model_fields["level"].annotation
+    assert InvestigationConfidence(level="high").level == "high"
+    assert ResponseConfidence(level="alta").level == "alta"
+
+
+def test_investigation_confidence_keeps_the_same_wire_shape_after_the_rename():
+    # El rename ConfidenceInfo -> InvestigationConfidence es interno; el
+    # contrato JSON que ya consume el frontend no debe cambiar de forma.
+    dumped = InvestigationConfidence(level="medium").model_dump()
+    assert dumped == {"level": "medium", "calculated_by": "backend_rules"}
+
+
+def test_conclusion_confidence_depends_only_on_verification_status_and_hypotheses():
+    # Severity (findings.py) es un concepto de otro modulo, nunca importado
+    # por conclusion.py - confirma que no puede modificar la confianza.
+    plan = planner.build_plan(InvestigationType.PRODUCTION_DROP, InvestigationScope(), "operador")
+    evidence = [
+        EvidenceItem(
+            evidence_id="ev-1", source_type="backend_tool", capability_id="get_fleet_status",
+            label="get_fleet_status", value={"disponibilidad_pct": 60}, freshness_status="current", quality_status="high",
+            verification_status="verified",
+        ),
+    ]
+    verification = VerificationResult(status="verified", accepted_evidence_ids=["ev-1"])
+
+    result = conclusion_module.build_conclusion(plan, evidence, verification, [_probable_hypothesis()])
+    assert result.confidence.level == "high"
+
+
+def test_low_quality_evidence_never_reaches_verified_status_and_caps_confidence_at_medium():
+    low_quality = EvidenceItem(
+        evidence_id="ev-1", source_type="backend_tool", capability_id="get_fleet_status",
+        label="get_fleet_status", value={"disponibilidad_pct": 60}, freshness_status="current", quality_status="low",
+    )
+    verification = verifier.verify_evidence([low_quality])
+
+    assert low_quality.verification_status == "partial"
+    assert verification.status == "partial"  # nunca "verified" con evidencia de baja calidad
+
+    plan = planner.build_plan(InvestigationType.PRODUCTION_DROP, InvestigationScope(), "operador")
+    result = conclusion_module.build_conclusion(plan, [low_quality], verification, [_probable_hypothesis()])
+    # Aunque haya una hipotesis probable, la calidad baja impide "high".
+    assert result.confidence.level == "medium"
+
+
+def test_rejected_verification_never_produces_high_confidence_even_with_a_probable_hypothesis():
+    rejected_item = EvidenceItem(
+        evidence_id="ev-1", source_type="backend_tool", capability_id="get_fleet_status",
+        label="get_fleet_status", value={"status": "EMPTY"}, freshness_status="unknown", quality_status="unknown",
+    )
+    verification = verifier.verify_evidence([rejected_item])
+    assert verification.status == "rejected"
+
+    plan = planner.build_plan(InvestigationType.PRODUCTION_DROP, InvestigationScope(), "operador")
+    result = conclusion_module.build_conclusion(plan, [rejected_item], verification, [_probable_hypothesis()])
+    assert result.confidence.level == "low"
+
+
+def test_hypothesis_score_is_never_serialized_as_a_probability_field_name():
+    # El campo se sigue llamando "score" (no "probability"/"confidence") en
+    # el contrato publico - la Guia Maestra y el frontend dependen de que
+    # este nombre no cambie de significado.
+    hyp = _probable_hypothesis()
+    dumped = hyp.model_dump()
+    assert "score" in dumped
+    assert "probability" not in dumped
+    assert 0.0 <= dumped["score"] <= 1.0
 
 
 # ── Endpoints HTTP: modo Automatico, modo Guiado, RBAC, no-LLM ────────────

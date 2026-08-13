@@ -14,13 +14,13 @@ from app.ai.schemas import (
     ChartSpec,
     ChatContext,
     ClearFilterAction,
-    ConfidenceInfo,
     CopilotResponse,
     DataFreshness,
     Evidence,
     FocusWidgetAction,
     NavigateAction,
     OpenEntityAction,
+    ResponseConfidence,
     SelectEntityAction,
     SetFilterAction,
     TaskDraft,
@@ -157,16 +157,16 @@ def _build_system_prompt(role: str, context: ChatContext, allowed_tools: frozens
 _summarize_tool_result = summarize_tool_result
 
 
-def _combine_confidence(entries: list[dict[str, Any]]) -> ConfidenceInfo:
+def _combine_confidence(entries: list[dict[str, Any]]) -> ResponseConfidence:
     if not entries:
-        return ConfidenceInfo(level="insuficiente", reasons=["No se consultaron datos operacionales para esta respuesta."])
+        return ResponseConfidence(level="insuficiente", reasons=["No se consultaron datos operacionales para esta respuesta."])
     worst = min(entries, key=lambda item: _CONFIDENCE_ORDER.get(item.get("level"), 0))
     reasons: list[str] = []
     for entry in entries:
         for reason in entry.get("reasons", []):
             if reason not in reasons:
                 reasons.append(reason)
-    return ConfidenceInfo(level=worst.get("level", "baja"), reasons=reasons[:5])
+    return ResponseConfidence(level=worst.get("level", "baja"), reasons=reasons[:5])
 
 
 def _combine_freshness(entries: list[dict[str, Any]]) -> DataFreshness:
@@ -276,7 +276,7 @@ def _degraded_response(conversation_id: str, reason: str) -> CopilotResponse:
         message=policies.DEGRADED_MODE_NOTICE,
         response_type="information_insufficient",
         limitations=[reason],
-        confidence=ConfidenceInfo(level="insuficiente", reasons=[reason]),
+        confidence=ResponseConfidence(level="insuficiente", reasons=[reason]),
         data_freshness=DataFreshness(status="unknown"),
         requires_human_approval=False,
         degraded=True,

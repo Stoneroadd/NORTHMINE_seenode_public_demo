@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 from app.ai.investigation_schemas import (
-    ConfidenceInfo,
     EvidenceItem,
+    InvestigationConfidence,
     InvestigationConclusion,
     InvestigationPlan,
     InvestigationType,
@@ -80,5 +80,5 @@ def build_conclusion(
         contradictions=contradictions,
         recommendations=_recommendations_for(plan.type, hypotheses),
         limitations=limitations,
-        confidence=ConfidenceInfo(level=confidence_level),
+        confidence=InvestigationConfidence(level=confidence_level),
     )
