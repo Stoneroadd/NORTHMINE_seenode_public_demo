@@ -7,7 +7,7 @@ Registro de hallazgos de una auditoría de 3 frentes (backend `backend/app`, doc
 
 **Actualización 2026-07-29 (mismo día):** al preparar la publicación del demo en `NORTHMINE_seenode_public_demo` se encontró que ese repo ya tenía una implementación independiente, más madura, de gran parte de la Oleada 2/3 — rotación de refresh token de un solo uso con detección de reintento (tabla `refresh_sessions`), invalidación por `auth_version` (un contador por usuario que revoca todos los tokens vigentes en logout/cambio de password/cambio de rol/desactivación), rate limiting y brute-force lockout respaldados por Redis con fallback seguro a memoria, y una corrección real de bypass de MFA no catalogada antes (ver V-24). Esa implementación se portó hacia `NORTHREACT_actualizado` y `C:\NORTHREACT`, verificada de punta a punta (login → refresh → reintento del refresh viejo → logout → token viejo rechazado → MFA con código incorrecto rechazado).
 
-Ver también: `docs/archive/DEVOPS_QA_TIERS.md` (gates de tier y registro de riesgos operacionales/arquitectónicos — no se duplica acá) y `ARCHITECTURE.md` §6 / `docs/DIAGNOSTICO_ARQUITECTURA_2026-07.md` (deuda y backlog de Épicas).
+Ver también: `docs/archive/DEVOPS_QA_TIERS.md` (gates de tier y registro de riesgos operacionales/arquitectónicos — no se duplica acá). La deuda técnica y el backlog de Épicas referenciados originalmente en `ARCHITECTURE.md` §6 / `docs/DIAGNOSTICO_ARQUITECTURA_2026-07.md` pertenecen al repositorio canónico `NORTHREACT` y no están incluidos en este repositorio público.
 
 Convención de estado: ✅ Resuelto · 🔶 Pendiente.
 
@@ -67,12 +67,12 @@ Al correr la suite completa de tests para verificar estos 4 cierres, aparecieron
 
 Tras estas correcciones: **114/127 tests pasan** (antes: 0/127, la suite ni siquiera podía recolectar tests). Los 13 restantes son los dos hallazgos nuevos de arriba.
 
-## Oleada 4 — estructural (ya trackeado en el diagnóstico arquitectónico, solo referenciado acá)
+## Oleada 4 — estructural (trackeado en el diagnóstico arquitectónico del repositorio canónico `NORTHREACT`, no incluido en este repositorio público — solo referenciado acá)
 
-- Fuga de datos ficticios en modo "real" SQL — ver `ARCHITECTURE.md` §2.4.2 y Épica 11 de `docs/DIAGNOSTICO_ARQUITECTURA_2026-07.md`.
-- Aislamiento multi-tenant (`faena`/`empresa`) no forzado — ver `ARCHITECTURE.md` §2.5 y Épica 10 (HU-10.5: auditoría de acceso cruzado entre tenants, propuesta, no implementada).
-- Cumplimiento regulatorio (SERNAGEOMIN, logs inmutables) — mencionado una vez en `ROADMAP_OPERACIONAL.md` línea 184, puramente aspiracional, sin diseño.
-- 0 tests de frontend — `ARCHITECTURE.md` §5/§6 debt #8, DIAG-7 en `docs/archive/DEVOPS_QA_TIERS.md`.
+- Fuga de datos ficticios en modo "real" SQL — Épica 11 del diagnóstico arquitectónico (repositorio canónico `NORTHREACT`).
+- Aislamiento multi-tenant (`faena`/`empresa`) no forzado — Épica 10 (HU-10.5: auditoría de acceso cruzado entre tenants, propuesta, no implementada; repositorio canónico `NORTHREACT`).
+- Cumplimiento regulatorio (SERNAGEOMIN, logs inmutables) — mencionado en el roadmap operacional del repositorio canónico `NORTHREACT`, puramente aspiracional, sin diseño.
+- 0 tests de frontend — debt #8 del diagnóstico arquitectónico (repositorio canónico `NORTHREACT`), DIAG-7 en `docs/archive/DEVOPS_QA_TIERS.md`.
 
 ---
 
