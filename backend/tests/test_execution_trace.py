@@ -75,6 +75,11 @@ def test_a_full_investigation_turn_correlates_end_to_end_via_ids_not_text_search
             events.append(event)
             if event["event_type"] == "investigation.completed":
                 break
+        # C7: tras investigation.completed, _run_investigation todavia emite
+        # UN evento mas (agent.state.changed -> idle, el fix del turno que se
+        # quedaba trabado en 'speaking') - se lee tambien para que el trace
+        # completo en DB coincida con lo efectivamente emitido.
+        events.append(ws.receive_json())
 
     correlation_id = sent["correlation_id"]
     trace = et.build_execution_trace(session_id, correlation_id)
@@ -88,7 +93,8 @@ def test_a_full_investigation_turn_correlates_end_to_end_via_ids_not_text_search
     # confirmado reconstruyendo por filtro de ID, no por buscar texto.
     assert all(e["correlation_id"] == correlation_id for e in events)
 
-    conclusion_payload = events[-1]["payload"]["result"]["conclusion"]
+    completed_event = next(e for e in events if e["event_type"] == "investigation.completed")
+    conclusion_payload = completed_event["payload"]["result"]["conclusion"]
     assert conclusion_payload["decision_authority"] == "human"
     # C4 -> C6: la conclusion persistida sigue trayendo los evidence_ids
     # estructurados dentro del mismo trace reconstruido por ID.
