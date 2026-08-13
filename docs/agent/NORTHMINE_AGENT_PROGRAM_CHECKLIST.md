@@ -4,7 +4,7 @@ Este documento es la vista humana de `NORTHMINE_AGENT_PROGRAM_CHECKLIST.json`. G
 
 Phase progress: 40 requirements; 0 accepted; 12 verified; 16 implemented; 8 partial; 2 planned
 
-Program progress: 14 stages; 0 accepted; 11 merged; 1 partial; 1 current
+Program progress: 14 stages; 0 accepted; 11 merged; 0 partial; 1 current
 
 ## Historia reconstruida
 
@@ -21,7 +21,7 @@ Program progress: 14 stages; 0 accepted; 11 merged; 1 partial; 1 current
 | Realtime Conversation | MERGED | `33eaec2`, `1b7b3a7` | LIVE ACCEPTANCE PENDING |
 | Production Reconciliation | MERGED | `311a9d1`, `075c111`, `8cc8a00`, `8419e1`, `34f690a` | NOT VERIFIED |
 | Microphone Onboarding | MERGED | `7cc01d8`, `1d32f03`, merge `34f690a` | DEVICE MATRIX PENDING |
-| Realtime Speech-to-Speech | PARTIAL | arquitectura vigente | ENTITLEMENT/LIVE PENDING |
+| Realtime Speech-to-Speech | IMPLEMENTED / OPTIONAL | `7d1d056`; WebRTC + sideband conservados y apagados por defecto | OPTIONAL_NOT_CONFIGURED; no bloquea producto |
 | Operational Agent Hardening | IN_PROGRESS | checkpoint local `31712a6`, base `34f690a` | NOT DEPLOYED |
 | NORTHMINE Agent Demo Tour | VERIFIED | `d3f9a83`, pacing `9d7d0bf`, base `c4cd431` | DEMO_ACCEPTED LOCAL; no acredita aceptación física ni producción |
 
@@ -88,8 +88,8 @@ Estados sincronizados de requisitos históricos:
 | Automated Chrome E2E | BLOCKED_BY_TOOLING | extensión/puente nativo ausentes; no bloquea funcionalidad del producto |
 | Automated visual regression | BLOCKED_BY_TOOLING | depende del mismo bridge de automatización |
 | Physical Chrome acceptance | PENDING | protocolo en `PHYSICAL_ACCEPTANCE.md` |
-| OpenAI Realtime LIVE | IMPLEMENTED / NOT_CONFIGURED | WebRTC, endpoint SDP unificado y sideband → Runtime implementados; `REALTIME_LIVE_READY=false` hasta configurar y ejecutar smoke real |
-| Product functionality | NOT BLOCKED BY EXTENSION | pruebas lógicas pasan; experiencia física pendiente |
+| OpenAI Realtime LIVE | OPTIONAL_NOT_CONFIGURED | `REALTIME_LIVE_IMPLEMENTED=true`; WebRTC, endpoint SDP y sideband conservados; `OPENAI_REALTIME_ENABLED=false`; no bloquea Runtime, harness, demo ni despliegue |
+| Product functionality | NOT BLOCKED | Runtime y voz actual son la ruta operativa; experiencia física pendiente |
 | Seenode | NOT_DEPLOYED | no existe push ni despliegue de esta fase |
 
 Estados sincronizados de la fase:
@@ -134,6 +134,21 @@ Estados sincronizados de la fase:
 <!-- oah-full-tests:IN_PROGRESS -->
 <!-- oah-live-acceptance:PLANNED -->
 <!-- oah-seenode:PLANNED -->
+
+Estado de la capacidad conversacional opcional:
+
+```text
+OPENAI_REALTIME_ENABLED=false
+REALTIME_LIVE_IMPLEMENTED=true
+REALTIME_LIVE_CONFIGURED=false
+REALTIME_LIVE_READY=false
+REALTIME_LIVE_STATUS=OPTIONAL_NOT_CONFIGURED
+```
+
+OpenAI Realtime no es dependencia de cierre para Runtime, Planner, Executor,
+Verifier, memoria, percepción, UI Actions, reportes, harness, demo ni despliegue.
+La ruta operativa permanece `micrófono → STT navegador → Runtime → TTS actual`.
+La experiencia física de esa ruta continúa pendiente de aceptación humana.
 
 ## Dependency graph
 
@@ -190,14 +205,14 @@ Realtime Conversation
 ## Known issues y release acceptance
 
 - ENVIRONMENT: WENCO SQL/pyodbc no está disponible en el entorno local de pruebas.
-- RESOLVED LOCAL: `npm ci`, typecheck, 97/97 unit y build pasaron el 2026-08-12.
+- RESOLVED LOCAL: `npm ci`, typecheck, 98/98 unit y build pasaron el 2026-08-12.
 - AUTOMATION_TOOLING_BLOCKER: Chrome está instalado y abierto, pero la ChatGPT Chrome Extension y el puente nativo no están instalados. Solo bloquea E2E/visual automatizados; NORTHMINE no depende de esa extensión para funcionar.
 - 13 × `PREEXISTING / ENVIRONMENT / SQL-WENCO`: WENCO/`pyodbc` no disponible localmente. Regresión: NO.
 - 1 × `PREEXISTING / SUPERSEDED_TEST / NON_REGRESSION`: `test_security_hardening` llama `/api/demo/summary`, retirado con 410; reemplazado por `/api/summary`.
-- Suite backend completa: 341/355. Runtime + Demo Tour focalizado: 49/49 PASS.
-- `REALTIME_LIVE_IMPLEMENTED=true`, `REALTIME_LIVE_READY=false`: el camino WebRTC + endpoint SDP + sideband Runtime está implementado y probado con dobles; falta configuración y smoke real. No se leyó ni expuso ningún secreto.
+- Suite backend completa histórica: 341/355. Gate operacional actual sin WENCO: 102/102 PASS. Los 2 controles `test_shift_report` ejecutados en este cierre quedaron `PREEXISTING / ENVIRONMENT / SQL-WENCO` por ausencia de `pyodbc`.
+- `REALTIME_LIVE_STATUS=OPTIONAL_NOT_CONFIGURED`: WebRTC + endpoint SDP + sideband Runtime están implementados y probados con dobles, pero apagados por defecto. Su configuración y smoke real son opcionales y no bloquean NORTHMINE. No se leyó ni expuso ningún secreto.
 - RESOLVED TEST ORACLE: barge-in corta audio localmente y la confirmación backend conserva FIFO/replay. Agent Runtime: 43/43 PASS.
-- La fase actual no está desplegada. Backend health, frontend health, WebSocket, Realtime, Chrome console, mobile/tablet y rollback siguen `NOT VERIFIED` para el commit final.
+- La fase actual no está desplegada. Health local backend/frontend: PASS (`/`, `/health`, `/api/health` HTTP 200). WebSocket físico, voz física, Chrome console, mobile/tablet y rollback siguen `NOT VERIFIED` para el commit final. OpenAI Realtime permanece opcional y fuera de estos gates.
 
 ## Architecture decisions vigentes
 
