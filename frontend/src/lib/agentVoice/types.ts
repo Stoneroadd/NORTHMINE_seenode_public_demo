@@ -28,7 +28,7 @@ export interface AgentSpeechInput {
   isSupported(): boolean
 }
 
-export type VoiceOutputProviderName = 'elevenlabs' | 'browser' | 'text_only'
+export type VoiceOutputProviderName = 'openai_realtime' | 'elevenlabs' | 'browser' | 'text_only'
 
 export interface AgentSpeechOutput {
   readonly providerName: VoiceOutputProviderName

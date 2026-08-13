@@ -12,6 +12,7 @@ from app.ai.voice.router import router as ai_agent_voice_router
 from app.ai.vision.router import router as ai_agent_vision_router
 from app.ai.work_products.router import router as ai_agent_work_products_router
 from app.ai.demo_tour import router as ai_agent_demo_router
+from app.ai.realtime.router import router as ai_agent_realtime_router
 from app.api.operational import router as operational_router
 from app.core.audit import (
     blacklist_token,
@@ -121,6 +122,7 @@ router.include_router(ai_agent_vision_router)
 router.include_router(ai_agent_work_products_router)
 router.include_router(ai_agent_ws_router)
 router.include_router(ai_agent_demo_router)
+router.include_router(ai_agent_realtime_router)
 
 
 def _filters(request: Request) -> dict[str, str]:

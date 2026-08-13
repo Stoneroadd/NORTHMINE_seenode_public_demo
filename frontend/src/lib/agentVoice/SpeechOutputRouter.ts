@@ -21,6 +21,7 @@ export class SpeechOutputRouter {
   private activeProvider: AgentSpeechOutput | null = null
   private muted = false
   private forcedTextOnly = false
+  private externalRealtimeActive = false
   private elevenLabsDegraded = false
   private processing = false
   private stopRequested = false
@@ -78,6 +79,17 @@ export class SpeechOutputRouter {
     }
   }
 
+  /** OpenAI Realtime renders the same Runtime speech over WebRTC. While it
+   * is active, acknowledge Runtime speech segments without replaying them
+   * through ElevenLabs/browser speech (which would create duplicate audio). */
+  setExternalRealtimeActive(enabled: boolean): void {
+    this.externalRealtimeActive = enabled
+    if (enabled) {
+      this.stop()
+      this.providerHandler?.('openai_realtime')
+    }
+  }
+
   clearQueue(): void {
     this.queue = []
   }
@@ -95,6 +107,18 @@ export class SpeechOutputRouter {
     if (this.muted) return
     if (this.seenSegmentIds.has(segment.segmentId)) return
     this.seenSegmentIds.add(segment.segmentId)
+    if (this.externalRealtimeActive) {
+      this.providerHandler?.('openai_realtime')
+      this.resultHandler?.({
+        segmentId: segment.segmentId,
+        provider: 'openai_realtime',
+        result: 'completed',
+        latencyMs: 0,
+        textLength: segment.text.length,
+        priority: segment.priority,
+      })
+      return
+    }
 
     if (segment.priority === 'warning' && this.isSpeaking()) {
       // Una advertencia interrumpe lo que se este diciendo (seccion 19).

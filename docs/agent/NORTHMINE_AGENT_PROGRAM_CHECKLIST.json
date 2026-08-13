@@ -78,7 +78,7 @@
     "physical_browser_acceptance": {"status":"PLANNED","classification":"PENDING","product_blocker":true,"evidence":["docs/agent/PHYSICAL_ACCEPTANCE.md"]},
     "product_functionality": {"status":"IN_PROGRESS","classification":"NOT_BLOCKED_BY_EXTENSION","product_blocker":false,"evidence":["49/49 focused Runtime + Demo Tour backend","97/97 frontend","20/20 harness"]},
     "seenode": {"status":"PLANNED","classification":"NOT_DEPLOYED","product_blocker":false,"evidence":[]},
-    "realtime_live": {"status":"BLOCKED","classification":"NOT_CONFIGURED","product_blocker":true,"evidence":["REALTIME_LIVE_READY=false","docs/agent/LIVE_REALTIME_GATE.md","current voice path is SpeechRecognition + speechSynthesis"]}
+    "realtime_live": {"status":"IMPLEMENTED","classification":"IMPLEMENTED_NOT_CONFIGURED","product_blocker":true,"evidence":["REALTIME_LIVE_IMPLEMENTED=true","REALTIME_LIVE_READY=false","WebRTC client + authenticated unified SDP endpoint + server-side sideband to existing Runtime","8 backend tests and 9 SpeechOutputRouter tests PASS","docs/agent/LIVE_REALTIME_GATE.md"]}
     ,"automated_agent_demo": {"status":"VERIFIED","classification":"DEMO_ACCEPTED","product_blocker":false,"evidence":["full_operational_demo Chrome PASS","report_demo Chrome PASS","physical browser acceptance remains separate"]}
   },
   "capability_matrix": [

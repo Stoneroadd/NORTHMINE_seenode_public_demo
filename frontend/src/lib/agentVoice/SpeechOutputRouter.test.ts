@@ -205,4 +205,24 @@ describe('SpeechOutputRouter', () => {
     await flushMicrotasks()
     expect(results[0]).toMatchObject({ segmentId: 'demo-text', provider: 'text_only', result: 'completed' })
   })
+
+  it('OpenAI Realtime evita audio duplicado y conserva el ACK del Runtime', async () => {
+    const eleven = new ControllableFakeOutput('elevenlabs')
+    const browser = new ControllableFakeOutput('browser')
+    const textOnly = new ControllableFakeOutput('text_only')
+    const router = new SpeechOutputRouter(eleven, browser, textOnly)
+    const results: SpeechPlaybackResult[] = []
+    router.onPlaybackResult((result) => results.push(result))
+    router.setExternalRealtimeActive(true)
+
+    router.enqueue(makeSegment({ segmentId: 'realtime-segment' }))
+    await flushMicrotasks()
+
+    expect(eleven.calls).toHaveLength(0)
+    expect(browser.calls).toHaveLength(0)
+    expect(textOnly.calls).toHaveLength(0)
+    expect(results[0]).toMatchObject({
+      segmentId: 'realtime-segment', provider: 'openai_realtime', result: 'completed',
+    })
+  })
 })

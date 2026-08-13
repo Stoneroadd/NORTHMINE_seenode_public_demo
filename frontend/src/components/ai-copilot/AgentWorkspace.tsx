@@ -7,6 +7,7 @@ import {
 import { agentSessionClient } from '../../lib/agentRuntime/AgentSessionClient'
 import { useAgentRuntimeStore } from '../../lib/agentRuntime/runtimeStore'
 import { conversationTurnManager } from '../../lib/agentRealtime/ConversationTurnManager'
+import { openAIRealtimeSession } from '../../lib/agentRealtime/OpenAIRealtimeSession'
 import type { ConversationTurn } from '../../lib/agentRealtime/contracts'
 import { classifyMicRequestError, queryMicPermissionState, requestMicrophoneStream } from '../../lib/agentRealtime/micPermission'
 import { speechOutputRouter } from '../../lib/agentVoice/SpeechOutputRouter'
@@ -40,7 +41,7 @@ const STATE_LABELS: Record<string, string> = {
 }
 
 const VOICE_LABELS: Record<VoiceOutputProviderName, string> = {
-  elevenlabs: 'Voz NORTHMINE', browser: 'Voz local de respaldo', text_only: 'Solo texto',
+  openai_realtime: 'OpenAI Realtime LIVE', elevenlabs: 'Voz NORTHMINE', browser: 'Voz local de respaldo', text_only: 'Solo texto',
 }
 
 const STEP_STATUS_LABELS: Record<string, string> = {
@@ -133,6 +134,18 @@ export function AgentWorkspace({ open, onClose, context, role: _role, canApprove
     }
     window.addEventListener(AGENT_DEMO_WORK_PRODUCT_FOCUS, focusWorkProduct)
     return () => window.removeEventListener(AGENT_DEMO_WORK_PRODUCT_FOCUS, focusWorkProduct)
+  }, [])
+
+  useEffect(() => {
+    const unsubState = openAIRealtimeSession.onState((state) => {
+      setListening(!['idle', 'error'].includes(state))
+      if (state === 'error') setMicError('La conversación OpenAI Realtime se interrumpió.')
+    })
+    const unsubLevel = openAIRealtimeSession.onInputLevel(setMicLevel)
+    return () => {
+      unsubState()
+      unsubLevel()
+    }
   }, [])
 
   useEffect(() => {
@@ -312,12 +325,32 @@ export function AgentWorkspace({ open, onClose, context, role: _role, canApprove
 
   async function activateWithStream(stream: MediaStream) {
     try {
-      await conversationTurnManager.activate(stream)
+      let availability = null
+      if (openAIRealtimeSession.isSupported()) {
+        try {
+          availability = await openAIRealtimeSession.availability()
+        } catch {
+          // A status/network failure cannot be presented as LIVE. The local
+          // pipeline remains an explicit fallback so voice does not disappear.
+        }
+      }
+      if (availability?.ready) {
+        await openAIRealtimeSession.activate(stream)
+        setVoiceProvider('openai_realtime')
+      } else {
+        await conversationTurnManager.activate(stream)
+        if (availability && !availability.ready) {
+          setMicError(`OpenAI Realtime LIVE no está configurado (${availability.missing.join(', ')}). Voz local activa.`)
+        } else if (!availability) {
+          setMicError('No se pudo verificar OpenAI Realtime LIVE. Voz local de respaldo activa.')
+        }
+      }
       setListening(true)
       setMicState('idle')
-      setMicError(null)
+      if (availability?.ready) setMicError(null)
     } catch {
-      setMicError('No se pudo iniciar el reconocimiento de voz.')
+      stream.getTracks().forEach((track) => track.stop())
+      setMicError('No se pudo iniciar la conversación OpenAI Realtime.')
       setMicState('idle')
     } finally {
       setMicOnboardingOpen(false)
@@ -343,12 +376,13 @@ export function AgentWorkspace({ open, onClose, context, role: _role, canApprove
   }
 
   async function toggleMic() {
-    if (!conversationTurnManager.isSupported()) {
+    if (!openAIRealtimeSession.isSupported() && !conversationTurnManager.isSupported()) {
       setMicError('Reconocimiento de voz no disponible en este navegador.')
       return
     }
     if (listening) {
-      conversationTurnManager.deactivate()
+      if (openAIRealtimeSession.isActive()) openAIRealtimeSession.deactivate()
+      else conversationTurnManager.deactivate()
       setListening(false)
       setMicState('idle')
       return
@@ -391,11 +425,15 @@ export function AgentWorkspace({ open, onClose, context, role: _role, canApprove
     const next = !muted
     setMuted(next)
     speechOutputRouter.setMuted(next)
+    openAIRealtimeSession.setMuted(next)
   }
 
   function bargeIn() {
-    speechOutputRouter.stop()
-    agentSessionClient.send('agent.interrupt', {})
+    if (openAIRealtimeSession.isActive()) openAIRealtimeSession.interrupt()
+    else {
+      speechOutputRouter.stop()
+      agentSessionClient.send('agent.interrupt', {})
+    }
   }
 
   function openFocusedWidget() {

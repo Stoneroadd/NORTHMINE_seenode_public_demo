@@ -139,6 +139,21 @@ def record_session_event(
     )
 
 
+def record_realtime_event(
+    *, usuario: str, ip: str, session_id: str, event: str, status: str,
+) -> None:
+    """Audit only non-sensitive Realtime lifecycle metadata."""
+    log_event(
+        usuario=usuario,
+        ip=ip,
+        accion="agent_realtime_session",
+        resultado=status,
+        metodo="POST",
+        endpoint="/api/ai-agent/realtime/session",
+        detalle={"session_id": session_id, "event": event},
+    )
+
+
 def record_command(
     *, usuario: str, ip: str, session_id: str, command_type: str, confidence: str, source: str = "conversation",
 ) -> None:
