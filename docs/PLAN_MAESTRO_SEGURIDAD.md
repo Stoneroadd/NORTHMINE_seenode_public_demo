@@ -1,10 +1,13 @@
 # Plan Maestro de Seguridad — NORTHMINE/NORTHREACT
 
+> **Documento histórico de seguridad. Los hallazgos y estados deben validarse
+> contra el código actual antes de utilizarse como referencia operativa.**
+
 Registro de hallazgos de una auditoría de 3 frentes (backend `backend/app`, documentación de gobernanza, frontend `frontend/src`) realizada 2026-07-29. Cada hallazgo tiene severidad, evidencia (archivo:línea) y una acción concreta. Organizado en oleadas de remediación; Oleada 1 ya se aplicó en esta misma pasada, el resto queda como hoja de ruta.
 
 **Actualización 2026-07-29 (mismo día):** al preparar la publicación del demo en `NORTHMINE_seenode_public_demo` se encontró que ese repo ya tenía una implementación independiente, más madura, de gran parte de la Oleada 2/3 — rotación de refresh token de un solo uso con detección de reintento (tabla `refresh_sessions`), invalidación por `auth_version` (un contador por usuario que revoca todos los tokens vigentes en logout/cambio de password/cambio de rol/desactivación), rate limiting y brute-force lockout respaldados por Redis con fallback seguro a memoria, y una corrección real de bypass de MFA no catalogada antes (ver V-24). Esa implementación se portó hacia `NORTHREACT_actualizado` y `C:\NORTHREACT`, verificada de punta a punta (login → refresh → reintento del refresh viejo → logout → token viejo rechazado → MFA con código incorrecto rechazado).
 
-Ver también: `docs/DEVOPS_QA_TIERS.md` (gates de tier y registro de riesgos operacionales/arquitectónicos — no se duplica acá) y `ARCHITECTURE.md` §6 / `docs/DIAGNOSTICO_ARQUITECTURA_2026-07.md` (deuda y backlog de Épicas).
+Ver también: `docs/archive/DEVOPS_QA_TIERS.md` (gates de tier y registro de riesgos operacionales/arquitectónicos — no se duplica acá) y `ARCHITECTURE.md` §6 / `docs/DIAGNOSTICO_ARQUITECTURA_2026-07.md` (deuda y backlog de Épicas).
 
 Convención de estado: ✅ Resuelto · 🔶 Pendiente.
 
@@ -48,8 +51,8 @@ Convención de estado: ✅ Resuelto · 🔶 Pendiente.
 | V-17 | `mfa.py` hardcodea `Path("northmine_audit.db")` ignorando `NORTHMINE_AUDIT_DB`, que todo el resto de la app sí respeta — si se reubica la DB de auditoría vía env var, MFA seguiría leyendo/escribiendo en la ruta relativa por defecto. | `backend/app/core/mfa.py:13` | Ahora lee `os.environ.get("NORTHMINE_AUDIT_DB", "northmine_audit.db")`, igual que `core/audit.py` y `core/database.py`. | ✅ Resuelto |
 | V-18 | `webhooks.py` lee `ENVIRONMENT` directo de `os.environ` al importar el módulo, en vez de pasar por `Settings`/`get_settings()` — riesgo de drift si algún día difieren. | `backend/app/core/webhooks.py:8,20` | Reemplazar por `get_settings().is_development`. | 🔶 Pendiente |
 | V-19 | `is_token_blacklisted` falla abierto (devuelve `False`, "no está blacklisteado") si la DB de auditoría no responde — un token revocado seguiría siendo válido durante una caída de esa DB. | `backend/app/core/audit.py` | Ahora levanta `AuditStoreUnavailable` en vez de devolver `False` silenciosamente. `dependencies.py` la captura y devuelve 503 explícito; `main.py` tiene un handler global de respaldo para cualquier otro punto donde se levante. Mismo patrón aplicado a `blacklist_token`, `register_refresh_session`, `rotate_refresh_session`, `save_password_history`, `get_password_history` — todas fallan cerrado ahora en vez de silencioso. | ✅ Resuelto |
-| V-20 | Sin escaneo automático de dependencias — no hay `pip-audit`/`bandit` en `requirements-dev.txt` ni `npm audit` en el flujo de trabajo del frontend. | `backend/requirements-dev.txt` | Correr `pip-audit` y `npm audit` manualmente antes de cada deploy (ver cadencia en `docs/DEVOPS_QA_TIERS.md` §4); considerar agregarlos a `requirements-dev.txt`. | 🔶 Pendiente |
-| V-21 | Sin CI/CD — todos los gates (`docs/DEVOPS_QA_TIERS.md` §3) son manuales. Ya identificado como R-P1-05. | — | Automatizar en GitHub Actions (o similar) cuando el proyecto lo justifique; no se monta en este pase. | 🔶 Pendiente |
+| V-20 | Sin escaneo automático de dependencias — no hay `pip-audit`/`bandit` en `requirements-dev.txt` ni `npm audit` en el flujo de trabajo del frontend. | `backend/requirements-dev.txt` | Correr `pip-audit` y `npm audit` manualmente antes de cada deploy (ver cadencia en `docs/archive/DEVOPS_QA_TIERS.md` §4); considerar agregarlos a `requirements-dev.txt`. | 🔶 Pendiente |
+| V-21 | Sin CI/CD — todos los gates (`docs/archive/DEVOPS_QA_TIERS.md` §3) son manuales. Ya identificado como R-P1-05. | — | Automatizar en GitHub Actions (o similar) cuando el proyecto lo justifique; no se monta en este pase. | 🔶 Pendiente |
 | V-22 | Anomalías de versión en el frontend: `axios` resuelto en `1.18.1` vs declarado `^1.7.2` en `package.json` (salto mayor no explicado por el rango); `@types/node` declarado `^26.1.0` (no existe esa versión de Node). | `frontend/package.json`, `frontend/package-lock.json` | Revisar y corregir el rango de `axios` y el pin de `@types/node`, luego `npm install` para regenerar el lockfile de forma consistente. | 🔶 Pendiente |
 | V-23 | `/admin/system` (solo ADMIN) devuelve hasta 240 caracteres crudos de líneas de log que contengan "ERROR"/"TRACEBACK"/"EXCEPTION" — si algún log llega a incluir datos sensibles, se expone tal cual en la respuesta de la API. | `backend/app/core/monitoring.py:29-47` | Buena práctica de higiene de logs a futuro: evitar loguear datos sensibles en primer lugar; de lo contrario, redactar antes de exponer por API. | 🔶 Pendiente |
 
@@ -69,10 +72,23 @@ Tras estas correcciones: **114/127 tests pasan** (antes: 0/127, la suite ni siqu
 - Fuga de datos ficticios en modo "real" SQL — ver `ARCHITECTURE.md` §2.4.2 y Épica 11 de `docs/DIAGNOSTICO_ARQUITECTURA_2026-07.md`.
 - Aislamiento multi-tenant (`faena`/`empresa`) no forzado — ver `ARCHITECTURE.md` §2.5 y Épica 10 (HU-10.5: auditoría de acceso cruzado entre tenants, propuesta, no implementada).
 - Cumplimiento regulatorio (SERNAGEOMIN, logs inmutables) — mencionado una vez en `ROADMAP_OPERACIONAL.md` línea 184, puramente aspiracional, sin diseño.
-- 0 tests de frontend — `ARCHITECTURE.md` §5/§6 debt #8, DIAG-7 en `docs/DEVOPS_QA_TIERS.md`.
+- 0 tests de frontend — `ARCHITECTURE.md` §5/§6 debt #8, DIAG-7 en `docs/archive/DEVOPS_QA_TIERS.md`.
 
 ---
 
+## Referencia — endpoints de gestión de sesión y seguridad
+
+Endpoints introducidos por el hardening de sesión/password (confirmados
+vigentes en `backend/app/api/routes.py`, no forman parte de la numeración
+V-NN de hallazgos):
+
+| Método | Ruta | Rol | Descripción |
+|---|---|---|---|
+| POST | `/api/auth/logout` | Cualquiera | Blacklistea el token e invalida `auth_version` del usuario. |
+| POST | `/api/auth/change-password` | Cualquiera | Cambia password validando historial y fortaleza. |
+| POST | `/api/admin/revoke-user-tokens/{user_id}` | Admin | Revoca todos los tokens de un usuario. |
+| GET | `/api/admin/metrics` | Admin | Métricas de seguridad. |
+
 ## Cadencia de auditoría
 
-Ver `docs/DEVOPS_QA_TIERS.md` §4 — no se duplica acá. En resumen: gate pre-deploy obligatorio (sección 3 de ese documento), re-auditoría de 3 frentes antes de cada hito mayor (piloto/producción), y escaneo de dependencias manual al agregar una librería nueva.
+Ver `docs/archive/DEVOPS_QA_TIERS.md` §4 — no se duplica acá. En resumen: gate pre-deploy obligatorio (sección 3 de ese documento), re-auditoría de 3 frentes antes de cada hito mayor (piloto/producción), y escaneo de dependencias manual al agregar una librería nueva.

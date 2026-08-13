@@ -2,6 +2,32 @@
 
 Esta carpeta esta preparada para publicar NORTHMINE como demo publica sin subir datos locales ni credenciales.
 
+## Origen de este repositorio
+
+Este repositorio es el derivado público desplegable del repositorio de producto
+canónico `Stoneroadd/NORTHREACT`.
+
+- Fuente canónica del producto: `NORTHREACT_actualizado`.
+- Derivado público Seenode: este repositorio.
+- Snapshot archivado: `NORTHREACT-NORTHMINE_DEMO` (2026-07-28).
+
+Mejoras de producto compartidas deben commitearse primero en `NORTHREACT`, y
+luego portarse aquí en un commit separado y validado.
+
+### Archivos propios de este derivado
+
+No sobrescribir estos archivos durante una sincronización desde la fuente:
+
+- `frontend/src/demo/fastDemo.ts`
+- `scripts/build_public_demo.mjs`
+- `scripts/start_public_demo.mjs`
+- `frontend/server.mjs`
+- configuración pública de autenticación y despliegue de servicio único
+
+El derivado público puede usar datos sintéticos locales por velocidad, pero la
+UI debe etiquetarlos como DEMO. No debe afirmar que hay conexión a WENCO o a
+una base de datos real.
+
 ## Arquitectura recomendada
 
 Usar un solo Web Service en Seenode desde la raiz del repo. En este modo FastAPI
