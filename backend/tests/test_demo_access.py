@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import logging
 from collections.abc import Generator
 from dataclasses import replace
@@ -10,7 +11,7 @@ from fastapi.testclient import TestClient
 
 from app.core.audit import query_audit_log
 from app.core.config import get_settings
-from app.core.health import build_health_response
+from app.core.health import build_health_response, build_liveness_response, build_readiness_response
 from app.core.rate_limit import limiter
 from app.main import app
 from app.repositories.demo_access_postgres_repository import (
@@ -423,6 +424,63 @@ def test_health_reports_demo_access_persistence_state(monkeypatch) -> None:
     assert health["status"] == "degraded"
     assert health["demo_access_persistence"] == "unavailable"
     assert health["checks"]["demo_access"]["configured"] is False
+
+
+def test_liveness_stays_healthy_when_readiness_dependency_is_unavailable(monkeypatch) -> None:
+    repository = UnavailableDemoAccessRepository("durable_store_not_configured")
+    monkeypatch.setattr("app.core.health.get_demo_access_repository", lambda: repository)
+
+    live = build_liveness_response()
+    readiness, status_code = build_readiness_response()
+
+    assert live["status"] == "ok"
+    assert live["live"] is True
+    assert readiness["ready"] is False
+    assert status_code == 503
+    assert readiness["failed_checks"] >= 1
+
+
+def test_health_checks_expose_non_negative_probe_latency() -> None:
+    health = build_health_response()
+
+    for check in ("audit_store", "users", "demo_access"):
+        assert health["checks"][check]["latency_ms"] >= 0
+
+
+def test_readiness_does_not_expose_internal_paths_or_secret_configuration() -> None:
+    health, _ = build_readiness_response()
+    serialized = json.dumps(health).lower()
+
+    assert "cors_origins" not in serialized
+    assert "production_errors\"" not in serialized
+    assert "audit_encryption_key" not in serialized
+    assert "sql_password" not in serialized
+    assert "\\\\users\\\\" not in serialized
+    assert "northmine_users.db" not in serialized
+
+
+def test_demo_readiness_declares_wenco_unavailable_without_blocking_demo(monkeypatch) -> None:
+    monkeypatch.setenv("ENVIRONMENT", "demo")
+    get_settings.cache_clear()
+    try:
+        health, status_code = build_readiness_response()
+    finally:
+        get_settings.cache_clear()
+
+    assert status_code == 200
+    assert health["ready"] is True
+    assert health["sql_available"] is False
+
+
+def test_readiness_endpoints_match_root_and_api_contract(client) -> None:
+    root = client.get("/health/ready")
+    api = client.get("/api/health/ready")
+    live = client.get("/health/live")
+
+    assert root.status_code == api.status_code
+    assert root.json()["ready"] == api.json()["ready"]
+    assert live.status_code == 200
+    assert live.json()["live"] is True
 
 
 def test_postgresql_adapter_builds_schema_and_parameterizes_crud() -> None:

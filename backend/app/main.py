@@ -25,7 +25,7 @@ from app.core.audit import AuditStoreUnavailable, init_audit_db, init_security_t
 from app.core.audit_middleware import AuditMiddleware
 from app.core.config import get_settings
 from app.core.distributed import verify_shared_services
-from app.core.health import build_health_response
+from app.core.health import build_health_response, build_liveness_response, build_readiness_response
 from app.core.logging import configure_logging
 from app.core.mfa import init_mfa_table
 from app.core.rate_limit import limiter
@@ -183,6 +183,17 @@ def root():
 @app.get("/health")
 def health_root() -> dict:
     return build_health_response()
+
+
+@app.get("/health/live")
+def health_live() -> dict:
+    return build_liveness_response()
+
+
+@app.get("/health/ready")
+def health_ready() -> JSONResponse:
+    payload, status_code = build_readiness_response()
+    return JSONResponse(status_code=status_code, content=payload)
 
 
 @app.get("/{full_path:path}", include_in_schema=False)

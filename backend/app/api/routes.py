@@ -35,7 +35,7 @@ from app.core.config import get_settings
 from app.core.distributed import SyncAlreadyRunning
 from app.core.crypto import decrypt_sensitive_data
 from app.core.dependencies import RequireAdmin, RequireAny, RequireOperador, RequireSupervisor, get_current_user
-from app.core.health import build_health_response
+from app.core.health import build_health_response, build_liveness_response, build_readiness_response
 from app.core.monitoring import build_admin_system_status
 from app.core.mfa import (
     disable_mfa,
@@ -582,6 +582,17 @@ def mfa_status(user: dict = RequireAny) -> dict:
 @router.get("/health")
 def health() -> dict:
     return build_health_response()
+
+
+@router.get("/health/live")
+def health_live() -> dict:
+    return build_liveness_response()
+
+
+@router.get("/health/ready")
+def health_ready() -> JSONResponse:
+    payload, status_code = build_readiness_response()
+    return JSONResponse(status_code=status_code, content=payload)
 
 
 # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•

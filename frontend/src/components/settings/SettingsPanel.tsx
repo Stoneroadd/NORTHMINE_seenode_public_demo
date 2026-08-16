@@ -17,6 +17,7 @@ interface Props {
 
 // ── Theme previews (hardcoded, NOT using CSS vars of active theme) ─────────
 const THEME_PREVIEWS: Record<ThemeId, { bg: string; mid: string; accent: string; text: string }> = {
+  copper:      { bg: '#0C0B0A', mid: '#191613', accent: '#C58A58', text: 'rgba(244,238,230,0.94)' },
   dark:        { bg: '#050810', mid: '#0C1220', accent: '#00FF88', text: 'rgba(255,255,255,0.9)' },
   operational: { bg: '#050607', mid: '#17191C', accent: '#B8C0C8', text: 'rgba(245,247,250,0.94)' },
   light:       { bg: '#EEF1F5', mid: '#FFFFFF', accent: '#0052CC', text: 'rgba(0,0,0,0.87)' },
@@ -46,6 +47,7 @@ const EFFECT_ICONS = {
 
 function themeLabel(t: Translations, id: ThemeId): string {
   const map: Record<ThemeId, string> = {
+    copper: 'COBRE MATE',
     dark: t.settings.tema_dark, operational: 'OSCURO NEGRO', light: t.settings.tema_light, futuristic: t.settings.tema_futuristic,
     minimal: t.settings.tema_minimal, carbon: t.settings.tema_carbon,
   }
@@ -54,6 +56,7 @@ function themeLabel(t: Translations, id: ThemeId): string {
 
 function themeDesc(t: Translations, id: ThemeId): string {
   const map: Record<ThemeId, string> = {
+    copper: 'Grafito cálido, cobre y contraste operacional',
     dark: t.settings.tema_dark_desc, operational: 'Negro, gris y superficies transparentes', light: t.settings.tema_light_desc, futuristic: t.settings.tema_futuristic_desc,
     minimal: t.settings.tema_minimal_desc, carbon: t.settings.tema_carbon_desc,
   }
@@ -95,7 +98,7 @@ function PasswordStrengthBar({ password, t }: { password: string; t: Translation
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
       <div style={{ flex: 1, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.1)', overflow: 'hidden' }}>
-        <div style={{ width: `${pct}%`, height: '100%', background: color, borderRadius: 2, transition: 'width 200ms ease' }} />
+        <div style={{ width: '100%', height: '100%', background: color, borderRadius: 2, transform: `scaleX(${pct / 100})`, transformOrigin: 'left center', transition: 'transform 200ms ease' }} />
       </div>
       <span style={{ fontSize: 10, fontWeight: 700, color, letterSpacing: '0.06em' }}>{label}</span>
     </div>
@@ -540,7 +543,7 @@ export function SettingsPanel({ open, onClose }: Props) {
               background: 'transparent', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: 12,
             }}
             onClick={() => {
-              setTheme('dark')
+              setTheme('copper')
               resetEffects()
               setLang('es')
             }}
