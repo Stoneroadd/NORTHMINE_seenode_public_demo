@@ -35,6 +35,7 @@ def _scope(user: dict) -> tuple[str | None, str | None]:
 
 class RejectRequest(BaseModel):
     reason: str | None = None
+    expected_version: int | None = None
 
 
 # ── Memoria (seccion 30 del brief: solo memoria util, nunca conceptos
@@ -76,13 +77,14 @@ def get_report_versions(report_id: str, user: dict = RequireAny) -> list[ReportD
 
 
 @router.post("/reports/{report_id}/approve")
-def approve_report(report_id: str, request: Request, user: dict = RequireAny) -> ReportDraft:
+def approve_report(report_id: str, request: Request, expected_version: int | None = None, user: dict = RequireAny) -> ReportDraft:
     role = str(user.get("rol") or "")
     if not policies.can_approve(role):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Rol sin permiso de aprobación")
     report = persistence.get_latest_report(report_id)
     if not report:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Informe no encontrado")
+    _guard_report_decision(report, expected_version)
     approved = report.model_copy(update={"status": "approved", "approved_by": str(user.get("sub") or "anon"), "approved_at": _now()})
     persistence.save_report_version(approved)
     _record_report_episode(approved, human_decision="approved")
@@ -100,6 +102,7 @@ def reject_report(report_id: str, body: RejectRequest, request: Request, user: d
     report = persistence.get_latest_report(report_id)
     if not report:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Informe no encontrado")
+    _guard_report_decision(report, body.expected_version)
     rejected = report.model_copy(update={
         "status": "rejected", "approved_by": str(user.get("sub") or "anon"), "approved_at": _now(),
         "rejection_reason": body.reason,
@@ -127,6 +130,35 @@ def _now() -> str:
     return now_iso()
 
 
+def _guard_report_decision(report: ReportDraft, expected_version: int | None) -> None:
+    """C8 (Decision Authority): una vez que 'approved'/'rejected' ya se
+    tomo, es un estado terminal - ninguna de las dos operaciones puede
+    resucitarlo (aprobar un rechazo o rechazar una aprobacion ya emitida).
+    expected_version es opcional (compatibilidad hacia atras) pero, si se
+    envia, evita que se apruebe/rechace en silencio una version mas nueva
+    que la que el humano realmente reviso (seccion version safety)."""
+    if report.status not in ("draft", "review"):
+        decision = "aprobado" if report.status == "approved" else "rechazado"
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Este informe ya fue {decision}; no se puede modificar una decisión ya tomada.",
+        )
+    if expected_version is not None and expected_version != report.version:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"El informe cambió a la versión {report.version} desde que se cargó. Revisa la versión actual antes de decidir.",
+        )
+
+
+def _guard_handover_decision(handover: ShiftHandoverDraft) -> None:
+    if handover.status not in ("draft", "review"):
+        decision = "aprobado" if handover.status == "approved" else "rechazado"
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Este cambio de turno ya fue {decision}; no se puede modificar una decisión ya tomada.",
+        )
+
+
 # ── Handovers ────────────────────────────────────────────────────────────
 
 @router.get("/handovers")
@@ -151,6 +183,7 @@ def approve_handover(handover_id: str, request: Request, user: dict = RequireAny
     handover = persistence.get_handover(handover_id)
     if not handover:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cambio de turno no encontrado")
+    _guard_handover_decision(handover)
     approved = handover.model_copy(update={"status": "approved", "approved_by": str(user.get("sub") or "anon"), "approved_at": _now()})
     persistence.save_handover(approved)
     from app.ai.memory import episodic_memory
@@ -170,6 +203,7 @@ def reject_handover(handover_id: str, body: RejectRequest, request: Request, use
     handover = persistence.get_handover(handover_id)
     if not handover:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cambio de turno no encontrado")
+    _guard_handover_decision(handover)
     rejected = handover.model_copy(update={
         "status": "rejected", "approved_by": str(user.get("sub") or "anon"), "approved_at": _now(), "rejection_reason": body.reason,
     })

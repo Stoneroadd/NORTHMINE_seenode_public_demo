@@ -237,10 +237,16 @@ export const workProductsApi = {
     apiFetch<ReportDraft>(`${BASE}/reports/${encodeURIComponent(reportId)}${version ? `?version=${version}` : ''}`),
   getReportVersions: (reportId: string) =>
     apiFetch<ReportDraft[]>(`${BASE}/reports/${encodeURIComponent(reportId)}/versions`),
-  approveReport: (reportId: string) =>
-    apiFetch<ReportDraft>(`${BASE}/reports/${encodeURIComponent(reportId)}/approve`, { method: 'POST' }),
-  rejectReport: (reportId: string, reason?: string) =>
-    apiFetch<ReportDraft>(`${BASE}/reports/${encodeURIComponent(reportId)}/reject`, { method: 'POST', body: JSON.stringify({ reason }) }),
+  approveReport: (reportId: string, expectedVersion?: number) =>
+    apiFetch<ReportDraft>(
+      `${BASE}/reports/${encodeURIComponent(reportId)}/approve${expectedVersion ? `?expected_version=${expectedVersion}` : ''}`,
+      { method: 'POST' },
+    ),
+  rejectReport: (reportId: string, reason?: string, expectedVersion?: number) =>
+    apiFetch<ReportDraft>(`${BASE}/reports/${encodeURIComponent(reportId)}/reject`, {
+      method: 'POST',
+      body: JSON.stringify({ reason, expected_version: expectedVersion }),
+    }),
 
   listHandovers: () => apiFetch<ShiftHandoverDraft[]>(`${BASE}/handovers`),
   getHandover: (handoverId: string) => apiFetch<ShiftHandoverDraft>(`${BASE}/handovers/${encodeURIComponent(handoverId)}`),

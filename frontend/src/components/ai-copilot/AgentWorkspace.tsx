@@ -207,23 +207,41 @@ export function AgentWorkspace({ open, onClose, context, role: _role, canApprove
     }).catch(() => {})
   }, [open])
 
-  async function approveReport(reportId: string) {
+  async function approveReport(reportId: string, expectedVersion?: number) {
     setPendingActionId(reportId)
     try {
-      const updated = await workProductsApi.approveReport(reportId)
+      const updated = await workProductsApi.approveReport(reportId, expectedVersion)
       useAgentRuntimeStore.setState((s) => ({ reports: s.reports.map((r) => (r.report_id === reportId ? updated : r)) }))
+    } catch (error) {
+      // Conflicto (informe ya decidido, o cambio de version desde que se
+      // cargo): se resincroniza con el estado real del servidor en vez de
+      // dejar la tarjeta desactualizada mostrando una decision que no ocurrio.
+      await _resyncReport(reportId)
+      throw error
     } finally {
       setPendingActionId(null)
     }
   }
 
-  async function rejectReport(reportId: string) {
+  async function rejectReport(reportId: string, expectedVersion?: number) {
     setPendingActionId(reportId)
     try {
-      const updated = await workProductsApi.rejectReport(reportId)
+      const updated = await workProductsApi.rejectReport(reportId, undefined, expectedVersion)
       useAgentRuntimeStore.setState((s) => ({ reports: s.reports.map((r) => (r.report_id === reportId ? updated : r)) }))
+    } catch (error) {
+      await _resyncReport(reportId)
+      throw error
     } finally {
       setPendingActionId(null)
+    }
+  }
+
+  async function _resyncReport(reportId: string) {
+    try {
+      const current = await workProductsApi.getReport(reportId)
+      useAgentRuntimeStore.setState((s) => ({ reports: s.reports.map((r) => (r.report_id === reportId ? current : r)) }))
+    } catch {
+      // Sin conexion o informe eliminado: se deja el estado previo, no se fabrica uno.
     }
   }
 
@@ -769,8 +787,8 @@ export function AgentWorkspace({ open, onClose, context, role: _role, canApprove
                       )}
                       {canApprove && report.status === 'draft' && (
                         <div className="ai-work-item-actions">
-                          <button type="button" disabled={pendingActionId === report.report_id} onClick={() => approveReport(report.report_id)}><ThumbsUp size={12} /> Aprobar</button>
-                          <button type="button" disabled={pendingActionId === report.report_id} onClick={() => rejectReport(report.report_id)}><ThumbsDown size={12} /> Rechazar</button>
+                          <button type="button" disabled={pendingActionId === report.report_id} onClick={() => approveReport(report.report_id, report.version)}><ThumbsUp size={12} /> Aprobar</button>
+                          <button type="button" disabled={pendingActionId === report.report_id} onClick={() => rejectReport(report.report_id, report.version)}><ThumbsDown size={12} /> Rechazar</button>
                         </div>
                       )}
                     </div>

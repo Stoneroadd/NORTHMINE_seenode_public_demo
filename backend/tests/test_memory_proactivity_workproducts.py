@@ -469,6 +469,181 @@ def test_report_rejection_records_reason(client, login_as_supervisor):
     assert body["rejection_reason"] == "Faltan datos de flota"
 
 
+# ── C8: Decision Authority / Human-in-the-Loop / Operational Safety ───────
+# Ninguno de estos tests agrega un mecanismo nuevo: verifican que
+# aprobar/rechazar un work product respeta un estado terminal (una decision
+# ya tomada no puede resucitarse) y que aprobar "a ciegas" no pisa
+# silenciosamente una version que el humano nunca reviso.
+
+def _fresh_report():
+    from app.ai.work_products import persistence as wp_persistence
+    report = reports_module.build_report(
+        report_type="SHIFT_REPORT", scope=ReportScope(shift=None, audience="supervisor"),
+        generated_by="tester", company_id=None, site_id=None,
+    )
+    wp_persistence.save_report_version(report)
+    return report
+
+
+def test_report_cannot_be_approved_after_being_rejected(client, login_as_supervisor):
+    report = _fresh_report()
+    reject_resp = client.post(
+        f"/api/ai-agent/work-products/reports/{report.report_id}/reject",
+        json={"reason": "Datos insuficientes"}, headers=auth_header(login_as_supervisor),
+    )
+    assert reject_resp.status_code == 200 and reject_resp.json()["status"] == "rejected"
+
+    approve_resp = client.post(
+        f"/api/ai-agent/work-products/reports/{report.report_id}/approve",
+        headers=auth_header(login_as_supervisor),
+    )
+    assert approve_resp.status_code == 409
+    # el rechazo sigue vigente - la aprobacion tardia no lo resucito.
+    from app.ai.work_products import persistence as wp_persistence
+    assert wp_persistence.get_latest_report(report.report_id).status == "rejected"
+
+
+def test_report_cannot_be_rejected_after_being_approved(client, login_as_supervisor):
+    report = _fresh_report()
+    approve_resp = client.post(
+        f"/api/ai-agent/work-products/reports/{report.report_id}/approve",
+        headers=auth_header(login_as_supervisor),
+    )
+    assert approve_resp.status_code == 200 and approve_resp.json()["status"] == "approved"
+
+    reject_resp = client.post(
+        f"/api/ai-agent/work-products/reports/{report.report_id}/reject",
+        json={"reason": "cambio de opinion"}, headers=auth_header(login_as_supervisor),
+    )
+    assert reject_resp.status_code == 409
+    from app.ai.work_products import persistence as wp_persistence
+    assert wp_persistence.get_latest_report(report.report_id).status == "approved"
+
+
+def test_duplicate_report_approval_has_no_second_effect(client, login_as_supervisor):
+    report = _fresh_report()
+    first = client.post(f"/api/ai-agent/work-products/reports/{report.report_id}/approve", headers=auth_header(login_as_supervisor))
+    assert first.status_code == 200
+    first_approved_at = first.json()["approved_at"]
+
+    second = client.post(f"/api/ai-agent/work-products/reports/{report.report_id}/approve", headers=auth_header(login_as_supervisor))
+    assert second.status_code == 409
+    from app.ai.work_products import persistence as wp_persistence
+    # la duplicada no piso el timestamp/version de la primera decision real.
+    assert wp_persistence.get_latest_report(report.report_id).approved_at == first_approved_at
+
+
+def test_report_approve_rejects_stale_version_after_concurrent_modification(client, login_as_supervisor):
+    report = _fresh_report()
+    versions_module.apply_modification(report, modification_summary="hazlo mas ejecutivo", modified_by="otro-usuario")
+
+    # El aprobador cargo la v1 en su pantalla y no sabe que ya existe v2.
+    stale = client.post(
+        f"/api/ai-agent/work-products/reports/{report.report_id}/approve?expected_version=1",
+        headers=auth_header(login_as_supervisor),
+    )
+    assert stale.status_code == 409
+
+    current = client.post(
+        f"/api/ai-agent/work-products/reports/{report.report_id}/approve?expected_version=2",
+        headers=auth_header(login_as_supervisor),
+    )
+    assert current.status_code == 200
+    assert current.json()["version"] == 2
+
+
+def test_report_approve_without_expected_version_keeps_prior_behavior(client, login_as_supervisor):
+    """Cambio aditivo (seccion 5 de C8): un cliente que nunca mando
+    expected_version (compatibilidad hacia atras) sigue aprobando la
+    version mas reciente exactamente como antes de este cambio."""
+    report = _fresh_report()
+    resp = client.post(f"/api/ai-agent/work-products/reports/{report.report_id}/approve", headers=auth_header(login_as_supervisor))
+    assert resp.status_code == 200 and resp.json()["status"] == "approved"
+
+
+def test_handover_cannot_be_approved_after_being_rejected(client, login_as_supervisor):
+    handover = handover_module.build_handover(generated_by="tester", company_id=None, site_id=None, shift=None)
+    from app.ai.work_products import persistence as wp_persistence
+    wp_persistence.save_handover(handover)
+
+    reject_resp = client.post(
+        f"/api/ai-agent/work-products/handovers/{handover.handover_id}/reject",
+        json={"reason": "faltan datos"}, headers=auth_header(login_as_supervisor),
+    )
+    assert reject_resp.status_code == 200
+
+    approve_resp = client.post(
+        f"/api/ai-agent/work-products/handovers/{handover.handover_id}/approve",
+        headers=auth_header(login_as_supervisor),
+    )
+    assert approve_resp.status_code == 409
+
+
+def test_report_approval_by_unauthorized_role_is_rejected():
+    """No hay usuario demo/viewer sembrado para probar esto end-to-end via
+    login real (DEMO_USER_SEEDS solo trae admin/supervisor/operador) - se
+    prueba la misma puerta que approve_report/reject_report consultan
+    (policies.can_approve), que es la unica fuente de verdad real."""
+    from app.ai import policies
+    assert policies.can_approve("viewer") is False
+    assert policies.can_approve("demo") is False
+    assert policies.can_approve("") is False
+
+
+def test_report_frontend_cannot_fabricate_approval_via_payload(client, login_as_operador):
+    """Un payload que intenta declarar su propia 'aprobacion' (status,
+    approved_by falso) nunca se usa - approved_by siempre sale del JWT
+    autenticado, nunca del cuerpo de la peticion."""
+    report = _fresh_report()
+    resp = client.post(
+        f"/api/ai-agent/work-products/reports/{report.report_id}/approve",
+        json={"status": "approved", "approved_by": "atacante-anonimo"},
+        headers=auth_header(login_as_operador),
+    )
+    assert resp.status_code == 200
+    assert resp.json()["approved_by"] != "atacante-anonimo"
+
+
+# ── C8: PROHIBITED_ACTIONS nunca son alcanzables por ningun rol ────────────
+
+def test_no_role_can_ever_use_a_prohibited_action_as_a_tool():
+    """Simulacion de bypass (seccion 7 de C8): si un modelo, por prompt
+    injection o alucinacion, pidiera llamar 'execute_arbitrary_sql' o
+    cualquier otra accion de PROHIBITED_ACTIONS, is_tool_allowed la
+    rechaza para TODOS los roles - no es un filtro de texto, es que esos
+    nombres nunca estan en READ_ONLY_TOOLS."""
+    from app.ai import policies
+    for action_name in policies.PROHIBITED_ACTIONS:
+        for role in policies.TOOLS_BY_ROLE:
+            assert policies.is_tool_allowed(role, action_name) is False, f"{action_name} nunca deberia ser una tool permitida para {role}"
+
+
+def test_prohibited_action_names_have_no_registered_handler():
+    """Defensa en profundidad adicional: aunque is_tool_allowed fallara,
+    ninguna de esas acciones tiene un handler real que ejecutar."""
+    from app.ai import policies
+    from app.ai.tools import TOOL_REGISTRY
+    for action_name in policies.PROHIBITED_ACTIONS:
+        assert action_name not in TOOL_REGISTRY
+
+
+# ── C8: Watches nunca ejecutan, solo notifican ──────────────────────────────
+
+def test_watch_trigger_only_changes_notification_state_never_executes_anything():
+    user_id = f"user-{_uid()}"
+    watch = subscriptions.create_watch(
+        user_id=user_id, company_id=None, site_id=None, entity_ids=["PALA 09"], entity_label="PALA 09",
+        metric="disponibilidad_pct", condition="below", threshold=80.0,
+    )
+    triggered = subscriptions.mark_triggered(watch.watch_id)
+    assert triggered is not None
+    assert triggered.status == "triggered"
+    # "WATCH TRIGGERED != OPERACION EJECUTADA": mark_triggered solo puede
+    # dejar el AgentWatch en un estado de notificacion (nunca "approved",
+    # "completed" ni ningun estado que implique una accion operacional).
+    assert triggered.status in {"active", "triggered", "cancelled", "expired"}
+
+
 # ── C4: Evidence Traceability hasta el reporte ─────────────────────────────
 
 def _saved_investigation_with_probable_cause(investigation_id: str) -> InvestigationResult:
