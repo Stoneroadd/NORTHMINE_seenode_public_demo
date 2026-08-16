@@ -15,7 +15,6 @@ from app.ai.investigation_repository import init_investigation_db
 from app.ai.memory.persistence import init_memory_db
 from app.ai.proactivity import event_monitor
 from app.ai.proactivity.persistence import init_proactivity_db
-from app.ai.repository import init_ai_copilot_db
 from app.ai.runtime.persistence import init_runtime_db
 from app.ai.work_products.persistence import init_work_products_db
 from app.api.routes import router
@@ -106,7 +105,6 @@ async def startup() -> None:
     init_security_tables()
     init_mfa_table()
     init_user_repository()
-    init_ai_copilot_db()
     init_investigation_db()
     init_runtime_db()
     init_memory_db()

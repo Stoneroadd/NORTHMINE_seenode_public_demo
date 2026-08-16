@@ -101,33 +101,3 @@ def soften_language(text: str) -> str:
     for pattern, replacement in _AUTHORITY_PATTERNS:
         result = pattern.sub(replacement, result)
     return result
-
-
-# ── Riesgo de acciones de UI (seccion 18) ────────────────────────────────────
-# READ y NAVIGATE se ejecutan automaticamente (pero siempre visibles en el
-# overlay de accion); CONFIGURE_VIEW es automatica y reversible; EXPORT y
-# WRITE piden confirmacion; CRITICAL nunca se expone como accion posible.
-ActionRiskLevel = str  # Literal duplicado aqui rompe el import circular con schemas.py
-
-_AUTO_RISK_LEVELS = frozenset({"READ", "NAVIGATE", "CONFIGURE_VIEW", "CREATE_DRAFT"})
-_CONFIRMATION_RISK_LEVELS = frozenset({"EXPORT", "WRITE"})
-
-
-def requires_confirmation(risk_level: str) -> bool:
-    return risk_level in _CONFIRMATION_RISK_LEVELS
-
-
-def is_risk_prohibited(risk_level: str) -> bool:
-    return risk_level == "CRITICAL"
-
-
-NO_OFFICIAL_FORMULA_NOTICE = (
-    "No existe una formula oficial configurada para este indicador. Puedo "
-    "explicar una definicion general, pero no presentarla como la "
-    "metodologia oficial de NORTHMINE."
-)
-
-DEGRADED_MODE_NOTICE = (
-    "El asistente de inteligencia no esta disponible temporalmente. Los "
-    "datos y modulos operacionales de NORTHMINE continuan funcionando."
-)

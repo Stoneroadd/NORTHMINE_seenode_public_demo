@@ -1,12 +1,28 @@
 from __future__ import annotations
 
-import json
-
-from app.ai import navigation, policies, repository
-from app.ai.orchestrator import _validate_ui_actions
-from app.ai.providers import NullProvider
+from app.ai import navigation, policies
 from app.ai.tools import TOOL_REGISTRY
-from tests.conftest import auth_header
+
+
+# ── C9: el subsistema legacy (orchestrator.py, router.py, repository.py,
+# schemas.py, tabla ai_task_drafts - 0 consumidores reales confirmados) se
+# retiro por completo. Este test es la guarda de regresion: si algo lo vuelve
+# a montar por accidente, debe fallar aca antes que en produccion. GET usa el
+# fallback SPA de main.py (que rechaza explicitamente cualquier /api/* no
+# reconocido con 404); POST no tiene ese fallback en el verbo POST, asi que
+# Starlette resuelve "coincide el path pero no el metodo" como 405 - ambos
+# codigos prueban lo mismo: la ruta real ya no existe, nunca 401/403 (que
+# implicaria que la ruta sigue viva y solo le falta autenticacion). ─────────
+
+def test_legacy_ai_copilot_chat_and_task_endpoints_stay_removed(client):
+    assert client.get("/api/ai-copilot/chat").status_code == 404
+    assert client.get("/api/ai-copilot/status").status_code == 404
+    assert client.get("/api/ai-copilot/tasks").status_code == 404
+    assert client.get("/api/ai-copilot/feedback").status_code == 404
+
+    assert client.post("/api/ai-copilot/chat", json={"message": "hola", "context": {}}).status_code == 405
+    assert client.post("/api/ai-copilot/tasks/any-id/approve", json={}).status_code == 405
+    assert client.post("/api/ai-copilot/feedback", json={}).status_code == 405
 
 
 # ── Politica: allowlist de herramientas y acciones prohibidas ───────────────
@@ -55,95 +71,8 @@ def test_soften_language_rewrites_authority_phrases():
     assert "los datos sugieren" in softened.lower()
 
 
-# ── Endpoints: autenticacion y RBAC en el borde HTTP ─────────────────────────
-
-def test_chat_endpoint_requires_authentication(client):
-    resp = client.post("/api/ai-copilot/chat", json={"message": "hola", "context": {}})
-    assert resp.status_code == 401
-
-
-def test_task_approval_endpoints_require_authentication(client):
-    resp = client.post("/api/ai-copilot/tasks/task-does-not-exist/approve", json={})
-    assert resp.status_code == 401
-
-
-def test_copilot_status_endpoint_reports_availability(client, login_as_operador):
-    resp = client.get("/api/ai-copilot/status", headers=auth_header(login_as_operador))
-    assert resp.status_code == 200
-    body = resp.json()
-    assert "ai_enabled" in body
-    assert "available" in body
-
-
-# ── Modo degradado (seccion 19 del brief): sin proveedor, el chat sigue
-# respondiendo 200 con una respuesta segura, nunca rompe la plataforma ────
-
-def test_chat_degrades_gracefully_when_provider_is_unavailable(client, login_as_operador, monkeypatch):
-    # Fuerza modo degradado sin importar si el entorno real tiene una API key
-    # configurada - este test nunca debe llamar a la red.
-    monkeypatch.setattr("app.ai.orchestrator.get_provider", lambda _settings: NullProvider())
-
-    resp = client.post(
-        "/api/ai-copilot/chat",
-        headers=auth_header(login_as_operador),
-        json={"message": "Analiza el desempeno del turno actual", "context": {"section": "turno"}},
-    )
-    assert resp.status_code == 200
-
-    events = [json.loads(line) for line in resp.text.strip().splitlines() if line.strip()]
-    final_events = [event for event in events if event["type"] == "final"]
-    assert final_events, "el stream debe terminar con un evento 'final'"
-
-    final_response = final_events[-1]["response"]
-    assert final_response["degraded"] is True
-    assert final_response["requires_human_approval"] is False
-    assert final_response["confidence"]["level"] == "insuficiente"
-    assert "NORTHMINE Intelligence Copilot" in final_response["disclaimer"]
-
-
-# ── Human-in-the-loop: ciclo de vida de una tarea borrador ───────────────────
-
-def test_task_draft_requires_explicit_approval_before_it_is_official(client, login_as_operador):
-    draft = repository.create_task_draft(
-        conversation_id="conv-test",
-        title="Revisar asignacion de CAEX en Pala 03",
-        reason="La cola promedio aumento 18% en los ultimos 45 minutos.",
-        evidence=["Cola actual 7.4 min vs promedio de turno 6.2 min."],
-        priority="alta",
-        suggested_owner="Despacho",
-        linked_finding=None,
-        created_by="test-suite",
-    )
-    assert draft["status"] == "draft"
-
-    headers = auth_header(login_as_operador)
-
-    listing = client.get("/api/ai-copilot/tasks", headers=headers, params={"status_filter": "draft"})
-    assert listing.status_code == 200
-    assert any(item["id"] == draft["id"] for item in listing.json()["items"])
-
-    approve = client.post(f"/api/ai-copilot/tasks/{draft['id']}/approve", headers=headers, json={})
-    assert approve.status_code == 200
-    assert approve.json()["status"] == "approved"
-
-    # Una tarea ya aprobada no puede volver a aprobarse: la maquina de estados
-    # de repository.py rechaza la transicion en vez de aceptarla en silencio.
-    approve_again = client.post(f"/api/ai-copilot/tasks/{draft['id']}/approve", headers=headers, json={})
-    assert approve_again.status_code == 409
-
-
-def test_task_draft_not_found_returns_404(client, login_as_operador):
-    resp = client.post(
-        "/api/ai-copilot/tasks/task-nonexistent/approve",
-        headers=auth_header(login_as_operador),
-        json={},
-    )
-    assert resp.status_code == 404
-
-
-# ── Herramientas: nunca inventan datos, siempre calculan sobre un dataset real ─
-
-# ── Navegacion semantica y acciones de UI (Etapa 2 base) ─────────────────────
+# ── Navegacion semantica (Etapa 2 base, sigue vigente via planner.py/
+# capabilityActions.ts - Etapa 4 la reusa tal cual) ──────────────────────────
 
 def test_navigation_accepts_both_section_id_and_route():
     assert navigation.normalize_target("produccion") == "produccion"
@@ -184,114 +113,6 @@ def test_non_admin_sections_have_no_role_restriction():
     assert navigation.is_navigation_allowed("alertas", "supervisor") is True
 
 
-def test_every_ui_action_risk_is_auto_or_confirmable_never_critical():
-    from app.ai.schemas import UI_ACTION_RISK
-
-    for action_name, risk in UI_ACTION_RISK.items():
-        assert not policies.is_risk_prohibited(risk), f"{action_name} nunca deberia ser CRITICAL"
-
-
-def test_validate_ui_actions_drops_malformed_and_out_of_scope_actions():
-    # Exactamente 5 items a proposito: _validate_ui_actions tiene un tope de
-    # 5 acciones por turno (ver test_validate_ui_actions_caps_at_five_actions),
-    # y este test necesita que las 3 validas sobrevivan sin chocar con ese tope.
-    proposed = [
-        {"action": "navigate", "route": "produccion"},  # valida
-        {"action": "navigate", "route": "admin"},  # seccion restringida para operador
-        {"action": "navigate", "route": "/no-existe"},  # ruta invalida
-        {"action": "set_filter", "filter_id": "shift", "value": "DIA"},  # valida
-        {"action": "select_entity", "entity_type": "equipment", "entity_id": "CAEX-104"},  # valida
-    ]
-
-    validated = _validate_ui_actions(proposed, role="operador")
-
-    kinds = [type(item).__name__ for item in validated]
-    assert kinds == ["NavigateAction", "SetFilterAction", "SelectEntityAction"]
-    assert validated[0].route == "produccion"
-    assert validated[1].value == "DIA"
-    assert validated[2].entity_id == "CAEX-104"
-
-
-def test_validate_ui_actions_drops_closed_list_and_unknown_action_violations():
-    proposed = [
-        {"action": "set_filter", "filter_id": "sql_injection_attempt", "value": "x"},  # filter_id fuera de la lista cerrada
-        {"action": "delete_everything"},  # accion inexistente -> riesgo CRITICAL por default
-        "esto ni siquiera es un dict",
-    ]
-
-    assert _validate_ui_actions(proposed, role="operador") == []
-
-
-def test_validate_ui_actions_admin_navigation_rejected_even_for_admin_role():
-    validated = _validate_ui_actions([{"action": "navigate", "route": "admin"}], role="admin")
-    assert validated == []
-
-
-def test_validate_ui_actions_rejects_unknown_widget_id():
-    validated = _validate_ui_actions([{"action": "focus_widget", "widget_id": "widget-inventado"}], role="operador")
-    assert validated == []
-
-
-def test_validate_ui_actions_rejects_invalid_filter_value():
-    proposed = [
-        {"action": "set_filter", "filter_id": "shift", "value": "MEDIODIA"},
-        {"action": "set_filter", "filter_id": "start_date", "value": "no-es-una-fecha"},
-    ]
-    assert _validate_ui_actions(proposed, role="operador") == []
-
-
-def test_validate_ui_actions_accepts_known_widget_and_valid_filter_value():
-    proposed = [
-        {"action": "focus_widget", "widget_id": "production-hourly-chart"},
-        {"action": "set_filter", "filter_id": "shift", "value": "DIA"},
-    ]
-    validated = _validate_ui_actions(proposed, role="operador")
-    assert [type(item).__name__ for item in validated] == ["FocusWidgetAction", "SetFilterAction"]
-
-
-def test_validate_ui_actions_handles_non_list_input_gracefully():
-    assert _validate_ui_actions(None, role="operador") == []
-    assert _validate_ui_actions("not a list", role="operador") == []
-    assert _validate_ui_actions({"action": "navigate"}, role="operador") == []
-
-
-def test_validate_ui_actions_caps_at_five_actions():
-    proposed = [{"action": "set_filter", "filter_id": "shift", "value": "DIA"} for _ in range(20)]
-    validated = _validate_ui_actions(proposed, role="operador")
-    assert len(validated) == 5
-
-
-# ── open_entity y allowlist ampliada (Etapa 2.5) ─────────────────────────────
-
-def test_open_entity_accepts_valid_id_and_known_entity_type():
-    validated = _validate_ui_actions(
-        [{"action": "open_entity", "entity_type": "equipment", "entity_id": "CAEX-104"}], role="operador"
-    )
-    assert len(validated) == 1
-    assert validated[0].action == "open_entity"
-    assert validated[0].entity_id == "CAEX-104"
-
-
-def test_open_entity_rejects_malformed_id_defense_in_depth():
-    # El resolver de alias vive en el frontend (registry en vivo); esto es
-    # la ultima linea de defensa contra un ID con formato imposible o con
-    # intento de inyeccion, sin importar de donde vino.
-    proposed = [
-        {"action": "open_entity", "entity_type": "equipment", "entity_id": "CAEX-104; DROP TABLE"},
-        {"action": "open_entity", "entity_type": "equipment", "entity_id": ""},
-        {"action": "open_entity", "entity_type": "equipment", "entity_id": "a" * 41},
-    ]
-    assert _validate_ui_actions(proposed, role="operador") == []
-
-
-def test_open_entity_accepts_all_new_entity_types():
-    for entity_type in ("equipment", "loading_unit", "alert", "report", "task", "operator", "breakdown"):
-        validated = _validate_ui_actions(
-            [{"action": "open_entity", "entity_type": entity_type, "entity_id": "ID-1"}], role="operador"
-        )
-        assert len(validated) == 1, f"entity_type {entity_type} deberia validar"
-
-
 def test_newly_instrumented_widgets_are_in_the_backend_allowlist():
     for widget_id in (
         "shift-summary", "performance-summary", "performance-by-equipment",
@@ -300,6 +121,8 @@ def test_newly_instrumented_widgets_are_in_the_backend_allowlist():
     ):
         assert navigation.is_widget_known(widget_id), f"{widget_id} deberia estar en KNOWN_WIDGET_IDS"
 
+
+# ── Herramientas: nunca inventan datos, siempre calculan sobre un dataset real ─
 
 def test_get_alerts_tool_returns_deterministic_shape(monkeypatch):
     from app.ai import tools as tools_module

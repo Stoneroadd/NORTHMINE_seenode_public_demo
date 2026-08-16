@@ -15,7 +15,6 @@ RATE_LIMITS: dict[str, str] = {
     "/api/auth/mfa/verify": "10/minute",
     "/api/simulator/run": "5/minute",
     "/api/ai/analysis": "10/minute",
-    "/api/ai-copilot/chat": "15/minute",
     "/api/ai-copilot/investigations": "10/minute",
     "/api/ai-agent/speech": "30/minute",
     "/api/ai-agent/vision/analyze": "10/minute",

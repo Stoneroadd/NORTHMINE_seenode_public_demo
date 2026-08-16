@@ -18,7 +18,6 @@ from app.ai.investigation_schemas import (
     VerificationResult,
 )
 from app.ai.planner import PlannerRejection
-from app.ai.schemas import ResponseConfidence
 from tests.conftest import auth_header
 
 """Tests del motor de investigacion Planner-Executor-Verifier (Etapa 3).
@@ -234,16 +233,6 @@ def _probable_hypothesis() -> OperationalHypothesis:
         hypothesis_id="hyp-1", label="Disponibilidad de flota baja", status="probable",
         supporting_evidence_ids=["ev-1"], score=0.82,
     )
-
-
-def test_investigation_confidence_and_response_confidence_are_distinct_types():
-    # No deben compartir nombre ni vocabulario de niveles: son dos dominios
-    # (investigacion determinista vs. agregacion heuristica de un turno de
-    # chat), calculados por caminos de codigo completamente distintos.
-    assert InvestigationConfidence is not ResponseConfidence
-    assert InvestigationConfidence.model_fields["level"].annotation != ResponseConfidence.model_fields["level"].annotation
-    assert InvestigationConfidence(level="high").level == "high"
-    assert ResponseConfidence(level="alta").level == "alta"
 
 
 def test_investigation_confidence_keeps_the_same_wire_shape_after_the_rename():
