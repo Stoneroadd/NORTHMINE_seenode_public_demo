@@ -85,12 +85,15 @@ def approve_report(report_id: str, request: Request, expected_version: int | Non
     if not report:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Informe no encontrado")
     _guard_report_decision(report, expected_version)
-    # R2 §8 activa esta linea: hoy build_report() (reports.py) todavia no
-    # corre report_verifier.py, asi que ReportQualityGate.passed default a
-    # False para TODO informe - activarla ahora bloquearia cada aprobacion
-    # real, una regresion, no un endurecimiento. _guard_report_quality_gate
-    # ya existe y esta probada; falta solo que reports.py la haga veraz.
-    # _guard_report_quality_gate(report)
+    # R2 §8: build_report() (reports.py) ahora corre report_verifier.py de
+    # verdad - ReportQualityGate.passed refleja el contenido real del
+    # informe (evidence coverage, consistencia numerica, frescura, etc.),
+    # confirmado empiricamente antes de activar esto (un reporte bien
+    # evidenciado SI puede pasar - ver
+    # test_report_quality_gate_can_pass_for_a_well_evidenced_report). El
+    # gate SOLO puede bloquear, nunca aprobar - ver
+    # _guard_report_quality_gate y test_report_quality_gate_never_grants_approval_authority.
+    _guard_report_quality_gate(report)
     approved = report.model_copy(update={"status": "approved", "approved_by": str(user.get("sub") or "anon"), "approved_at": _now()})
     persistence.save_report_version(approved)
     _record_report_episode(approved, human_decision="approved")

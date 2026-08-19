@@ -6,8 +6,17 @@ from app.ai import verifier
 from app.ai.investigation_repository import get_investigation
 from app.ai.investigation_schemas import EvidenceItem, InvestigationConclusion, InvestigationResult, new_id, now_iso
 from app.ai.tools import TOOL_REGISTRY
-from app.ai.work_products import templates
-from app.ai.work_products.models import Audience, ReportDraft, ReportScope, ReportSection, ReportType
+from app.ai.work_products import report_verifier, templates
+from app.ai.work_products.models import (
+    Audience,
+    ReportChart,
+    ReportDraft,
+    ReportIdentification,
+    ReportScope,
+    ReportSection,
+    ReportTable,
+    ReportType,
+)
 
 """ReportComposer (Etapa 6, secciones 17-21 del brief).
 
@@ -204,6 +213,53 @@ def _fuentes(evidence: list[EvidenceItem]) -> ReportSection:
     return _section("fuentes", "Fuentes", ", ".join(sources) if sources else "Sin fuentes registradas.")
 
 
+def _report_tables(evidence: list[EvidenceItem]) -> list[ReportTable]:
+    """R2 §8 (integrado desde feature/operational-agent-hardening): tabla
+    derivada de get_loading_performance, con evidence_ids reales - nunca
+    fabrica filas, si no hay unidades no hay tabla."""
+    loading = _find(evidence, "get_loading_performance")
+    units = loading.value.get("unidades", []) if loading else []
+    if not loading or not units:
+        return []
+    rows = [{
+        "Equipo": unit.get("carguio_id"),
+        "Indicador": "Rendimiento de carguío",
+        "Real": unit.get("rendimiento_tph"),
+        "Desviación": unit.get("variacion_pct"),
+        "Estado": unit.get("estado"),
+    } for unit in units]
+    return [ReportTable(
+        table_id="rendimiento_carguio",
+        title="Rendimiento por unidad de carguío",
+        question="¿Qué unidad concentra la mayor desviación de carguío?",
+        columns=["Equipo", "Indicador", "Real", "Desviación", "Estado"],
+        rows=rows,
+        evidence_ids=[loading.evidence_id],
+    )]
+
+
+def _report_charts(evidence: list[EvidenceItem]) -> list[ReportChart]:
+    """R2 §8: grafico horario derivado de get_production_kpis, solo si el
+    dataset trae series por hora - nunca inventa puntos."""
+    production = _find(evidence, "get_production_kpis")
+    hourly = production.value.get("hourly", production.value.get("serie_horaria", [])) if production else []
+    if not production or not isinstance(hourly, list) or not hourly:
+        return []
+    y_fields = [field for field in ("real", "plan") if any(field in row for row in hourly)]
+    if not y_fields:
+        return []
+    return [ReportChart(
+        chart_id="produccion_hora",
+        title="Producción horaria",
+        question="¿En qué intervalo se concentra la desviación frente al plan?",
+        chart_type="line",
+        x_field="hora",
+        y_fields=y_fields,
+        data=hourly,
+        evidence_ids=[production.evidence_id],
+    )]
+
+
 _SECTION_BUILDERS = {
     "Resumen ejecutivo": lambda ev, aud: _resumen_ejecutivo(ev, aud),
     "Estado operacional": lambda ev, aud: _estado_operacional(ev),
@@ -276,6 +332,22 @@ def build_report(
         title=title or f"{templates.REPORT_TITLE_PREFIX} — {report_type.replace('_', ' ').title()}",
         scope=scope, sections=sections, evidence_ids=[e.evidence_id for e in evidence],
         investigation_ids=investigation_ids, company_id=company_id, site_id=site_id, generated_by=generated_by,
+        # R2 §8 (integrado desde feature/operational-agent-hardening):
+        # identification/tables/charts/evidence_snapshot/generation_metadata
+        # son presentacion y trazabilidad interna adicionales - ninguno
+        # reemplaza evidence_ids/investigation_ids/conclusion (C4), que
+        # siguen siendo la fuente real del lineage Capability->Evidence->
+        # Hypothesis->Conclusion->Report.
+        identification=ReportIdentification(
+            site=site_id,
+            shift=scope.shift,
+            date=scope.date_range.to if scope.date_range else None,
+            period=f"{scope.date_range.from_} — {scope.date_range.to}" if scope.date_range else None,
+        ),
+        tables=_report_tables(evidence),
+        charts=_report_charts(evidence),
+        evidence_snapshot=evidence,
+        generation_metadata={"composer": "northmine-report-composer", "traceability": "internal-audit-only"},
     )
 
     # Verifier (seccion 33): cualquier cita colgante o falta de evidencia se
@@ -288,5 +360,11 @@ def build_report(
                 for s in draft.sections
             ],
         })
+
+    # R2 §8: quality_gate real (report_verifier.py), calculado sobre el
+    # draft YA completo (secciones + tablas + evidencia) - informativo por
+    # ahora, ver router.py::_guard_report_quality_gate sobre por que
+    # todavia no bloquea approve_report en produccion.
+    draft = draft.model_copy(update={"quality_gate": report_verifier.verify_report(draft)})
 
     return draft

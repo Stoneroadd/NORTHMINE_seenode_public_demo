@@ -401,6 +401,103 @@ def test_verify_report_evidence_flags_missing_evidence_entirely():
     assert any("no tiene evidencia" in n for n in notes)
 
 
+# ── R2 §8: Codex report_verifier.quality_gate + ReportTable/ReportChart/
+# ReportIdentification, encima del lineage C4 - nunca reemplazandolo. ──────
+
+_FAKE_DATASET_WITH_EQUIPMENT = {
+    "source": "wenco-sql-live",
+    "data_source": "REAL",
+    "stale": False,
+    "today": "2026-07-12",
+    "plan": [{"date": "2026-07-12", "plan_tons": 3000}],
+    "cycles": [
+        {
+            "id": "c1", "datetime": "2026-07-12T08:10:00", "fecha_dia": "2026-07-12", "turno_calc": "DIA", "hora": 8,
+            "caex_id": "CAEX-01", "carguio_id": "EX-01", "tonelaje": 180, "destino": "CHANCADO", "origen": "F01",
+            "fase": "F01", "camion_modelo": "CAT793F", "pala_modelo": "EX5600", "tiempo_vacio_min": 10.0, "tiempo_cargado_min": 15.0,
+        },
+        {
+            "id": "c2", "datetime": "2026-07-12T09:10:00", "fecha_dia": "2026-07-12", "turno_calc": "DIA", "hora": 9,
+            "caex_id": "CAEX-01", "carguio_id": "EX-01", "tonelaje": 190, "destino": "CHANCADO", "origen": "F01",
+            "fase": "F01", "camion_modelo": "CAT793F", "pala_modelo": "EX5600", "tiempo_vacio_min": 9.5, "tiempo_cargado_min": 14.0,
+        },
+    ],
+}
+
+
+def test_report_quality_gate_does_not_false_fail_on_equipment_id_in_scope(monkeypatch):
+    """Regresion del bug real encontrado en R2 §8: report_verifier.py
+    eximia 'periodo' de la exigencia de evidence_ids pero no 'alcance' -
+    _NUMBER matchea el '104' de un ID de equipo como 'CAEX-104', asi que
+    CUALQUIER reporte enfocado a un equipo especifico fallaba el gate en
+    falso (numerical_consistency=0) solo por citar el ID en la seccion
+    Alcance, sin que hiciera falta ninguna cifra inventada."""
+    from app.ai import tools as tools_module
+
+    monkeypatch.setattr(tools_module, "provider_get_dataset", lambda fecha=None: _FAKE_DATASET_WITH_EQUIPMENT)
+    report = reports_module.build_report(
+        report_type="SHIFT_REPORT", scope=ReportScope(shift=None, audience="supervisor", equipment_ids=["CAEX-01"]),
+        generated_by="tester", company_id=None, site_id=None,
+    )
+    alcance = next(s for s in report.sections if s.section_id == "alcance")
+    assert "CAEX-01" in alcance.content  # el ID SI aparece en el texto (regresion real)
+    assert not any("Alcance" in error for error in report.quality_gate.errors)
+
+
+def test_report_quality_gate_can_pass_for_a_well_evidenced_report(monkeypatch):
+    """Prueba positiva: con datos reales (mock deterministico) y todas las
+    secciones citando su evidencia real, el gate SI puede dar passed=True -
+    no es un bloqueo permanente disfrazado de compuerta de calidad."""
+    from app.ai import tools as tools_module
+
+    monkeypatch.setattr(tools_module, "provider_get_dataset", lambda fecha=None: _FAKE_DATASET_WITH_EQUIPMENT)
+    report = reports_module.build_report(
+        report_type="SHIFT_REPORT", scope=ReportScope(shift=None, audience="supervisor"),
+        generated_by="tester", company_id=None, site_id=None,
+    )
+    assert report.quality_gate.passed is True, report.quality_gate.errors
+
+
+def test_report_evidence_lineage_survives_the_quality_gate_and_presentation_additions():
+    """C4 no se degrado: gather_evidence sigue siendo una 3-tupla con
+    conclusion real, causas_probables sigue citando supporting_evidence_ids
+    reales, y evidence_ids/investigation_ids siguen siendo la fuente de
+    lineage - quality_gate/tables/charts/identification son aditivos."""
+    investigation_id = f"inv-c8-{_uid()}"
+    saved = _saved_investigation_with_probable_cause(investigation_id)
+
+    report = reports_module.build_report(
+        report_type="INVESTIGATION_REPORT", scope=ReportScope(audience="supervisor"),
+        generated_by="tester", company_id=None, site_id=None, investigation_id=investigation_id,
+    )
+    causas = next(s for s in report.sections if s.title == "Causas probables")
+
+    # Lineage C4 real, navegable por ID, sin busqueda de texto:
+    assert set(causas.evidence_ids) == set(saved.conclusion.supporting_evidence_ids)
+    assert set(causas.evidence_ids) <= set(report.evidence_ids)
+    assert report.investigation_ids == [investigation_id]
+
+    # Presentacion §8 aditiva, no sustituye nada de lo anterior:
+    assert report.identification is not None
+    assert isinstance(report.tables, list)
+    assert isinstance(report.charts, list)
+    assert report.quality_gate is not None
+
+
+def test_report_quality_gate_never_grants_approval_authority():
+    """C8 + §5 + §8 juntos: pasar el quality_gate (evaluado aca de forma
+    aislada, sin approve_report) nunca toca decision_authority ni
+    requires_human_approval, que siguen fijos por schema sin importar el
+    resultado del gate."""
+    report = reports_module.build_report(
+        report_type="SHIFT_REPORT", scope=ReportScope(shift=None, audience="supervisor"),
+        generated_by="tester", company_id=None, site_id=None,
+    )
+    assert report.decision_authority == "human"
+    assert report.requires_human_approval is True
+    assert report.status == "draft"  # build_report nunca aprueba, sin importar el quality_gate
+
+
 def test_report_versioning_creates_new_version_with_change_log():
     report = reports_module.build_report(
         report_type="SHIFT_REPORT", scope=ReportScope(shift=None, audience="supervisor"),
@@ -434,12 +531,10 @@ def test_regenerate_with_executive_audience_changes_scope_not_facts():
 
 
 def test_report_approval_requires_permission(client, login_as_operador, login_as_supervisor):
-    report = reports_module.build_report(
-        report_type="SHIFT_REPORT", scope=ReportScope(shift=None, audience="supervisor"),
-        generated_by="tester", company_id=None, site_id=None,
-    )
-    from app.ai.work_products import persistence as wp_persistence
-    wp_persistence.save_report_version(report)
+    # RBAC es lo que este test verifica, no el contenido del reporte - se
+    # fuerza un quality_gate pasado (ver _fresh_report) para no acoplar
+    # esta prueba de permisos a la disponibilidad de evidencia real.
+    report = _fresh_report()
 
     # Ambos roles pueden aprobar (policies.APPROVAL_ROLES incluye operador) -
     # se prueba el flujo real de aprobacion end-to-end via REST.
@@ -477,11 +572,20 @@ def test_report_rejection_records_reason(client, login_as_supervisor):
 # silenciosamente una version que el humano nunca reviso.
 
 def _fresh_report():
+    """Fixture para tests de mecanica de aprobacion (estado terminal,
+    expected_version, RBAC) - deliberadamente NO ejercita WENCO real, asi
+    que build_report() produce quality_gate.passed=False por falta de
+    evidencia (correcto: no hay datos). Se fuerza passed=True aca porque
+    estos tests verifican otra cosa (C8), no el contenido del reporte - el
+    contenido/quality_gate real ya tiene su propia cobertura dedicada
+    (test_report_quality_gate_*)."""
     from app.ai.work_products import persistence as wp_persistence
+    from app.ai.work_products.models import ReportQualityGate
     report = reports_module.build_report(
         report_type="SHIFT_REPORT", scope=ReportScope(shift=None, audience="supervisor"),
         generated_by="tester", company_id=None, site_id=None,
     )
+    report = report.model_copy(update={"quality_gate": ReportQualityGate(passed=True, total_score=100)})
     wp_persistence.save_report_version(report)
     return report
 
@@ -516,6 +620,50 @@ def test_quality_gate_allows_approval_when_passed_but_never_grants_it():
     assert passing.decision_authority == "human"
     assert passing.requires_human_approval is True
     assert passing.status == "draft"  # el gate no cambia el status; solo approve_report lo hace
+
+
+def test_approve_report_endpoint_blocks_when_quality_gate_fails(client, login_as_supervisor):
+    """R2 §8: ahora que build_report() corre report_verifier.py de verdad,
+    esto prueba el bloqueo end-to-end via el endpoint real - no solo la
+    funcion guard en aislamiento. Un informe sin evidencia real (WENCO no
+    configurado en este entorno de tests) debe fallar el gate y el
+    endpoint debe rechazar la aprobacion con 409, nunca con 200."""
+    from app.ai.work_products import persistence as wp_persistence
+    report = reports_module.build_report(
+        report_type="SHIFT_REPORT", scope=ReportScope(shift=None, audience="supervisor"),
+        generated_by="tester", company_id=None, site_id=None,
+    )
+    assert report.quality_gate.passed is False  # precondicion: sin evidencia real, el gate falla
+    wp_persistence.save_report_version(report)
+
+    resp = client.post(
+        f"/api/ai-agent/work-products/reports/{report.report_id}/approve",
+        headers=auth_header(login_as_supervisor),
+    )
+    assert resp.status_code == 409
+    assert wp_persistence.get_latest_report(report.report_id).status == "draft"  # nunca quedo aprobado
+
+
+def test_approve_report_endpoint_succeeds_when_quality_gate_passes(client, login_as_supervisor, monkeypatch):
+    """Contraparte positiva: con evidencia real mockeada, el mismo endpoint
+    SI aprueba - el gate bloquea selectivamente, no es un veto ciego."""
+    from app.ai import tools as tools_module
+    from app.ai.work_products import persistence as wp_persistence
+
+    monkeypatch.setattr(tools_module, "provider_get_dataset", lambda fecha=None: _FAKE_DATASET_WITH_EQUIPMENT)
+    report = reports_module.build_report(
+        report_type="SHIFT_REPORT", scope=ReportScope(shift=None, audience="supervisor"),
+        generated_by="tester", company_id=None, site_id=None,
+    )
+    assert report.quality_gate.passed is True  # precondicion: evidencia real, el gate pasa
+    wp_persistence.save_report_version(report)
+
+    resp = client.post(
+        f"/api/ai-agent/work-products/reports/{report.report_id}/approve",
+        headers=auth_header(login_as_supervisor),
+    )
+    assert resp.status_code == 200
+    assert resp.json()["status"] == "approved"
 
 
 def test_report_cannot_be_approved_after_being_rejected(client, login_as_supervisor):
