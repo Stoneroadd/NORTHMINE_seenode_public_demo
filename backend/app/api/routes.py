@@ -5,6 +5,7 @@ from typing import Annotated
 from fastapi import APIRouter, BackgroundTasks, Cookie, Depends, File, HTTPException, Query, Request, Response, UploadFile, status
 from fastapi.responses import FileResponse, JSONResponse
 
+from app.ai.demo_tour import router as ai_agent_demo_router
 from app.ai.investigation_router import router as ai_investigations_router
 from app.ai.realtime.router import router as ai_agent_realtime_router
 from app.ai.runtime.ws_router import router as ai_agent_ws_router
@@ -119,6 +120,7 @@ router.include_router(ai_agent_vision_router)
 router.include_router(ai_agent_work_products_router)
 router.include_router(ai_agent_ws_router)
 router.include_router(ai_agent_realtime_router)
+router.include_router(ai_agent_demo_router)
 
 
 def _filters(request: Request) -> dict[str, str]:

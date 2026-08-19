@@ -12,6 +12,11 @@
     "build:frontend": "node scripts/build_public_demo.mjs",
     "start": "node scripts/start_public_demo.mjs",
     "start:api": "node scripts/start_public_demo.mjs",
-    "start:frontend": "node frontend/server.mjs"
+    "start:frontend": "node frontend/server.mjs",
+    "agent:harness": "node scripts/run_agent_harness.mjs",
+    "agent:harness:live": "node scripts/run_agent_harness_live.mjs",
+    "agent:checklist": "node scripts/validate_agent_checklist.mjs",
+    "agent:demo:harness": "node scripts/run_agent_demo_harness.mjs",
+    "agent:demo": "node scripts/run_agent_demo.mjs"
   }
 }

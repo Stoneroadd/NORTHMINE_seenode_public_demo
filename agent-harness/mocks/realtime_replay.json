@@ -1,0 +1,13 @@
+{
+  "events": [
+    {"type":"speech_started","turn":"turn-1"},
+    {"type":"speech_final","turn":"turn-1","text":"Revisa producción"},
+    {"type":"function_call","turn":"turn-1","name":"get_production_kpis"},
+    {"type":"tool_result","turn":"turn-1"},
+    {"type":"response_audio_started","turn":"turn-1"},
+    {"type":"interruption","turn":"turn-2","interrupts":"turn-1"},
+    {"type":"tool_result","turn":"turn-1","late":true},
+    {"type":"speech_final","turn":"turn-2","text":"No, revisa transporte"}
+  ],
+  "expected":{"stale_speech":false,"turn_owner":"turn-2","preserve_evidence_from":"turn-1","new_scope":"haulage"}
+}

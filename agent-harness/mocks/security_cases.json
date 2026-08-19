@@ -1,0 +1,9 @@
+[
+  {"case":"unauthorized_capability","allow":false,"audit":true},
+  {"case":"wrong_role","allow":false,"audit":true},
+  {"case":"wrong_site","allow":false,"audit":true},
+  {"case":"wrong_company","allow":false,"audit":true},
+  {"case":"expired_session","allow":false,"audit":true},
+  {"case":"forged_entity","allow":false,"audit":true},
+  {"case":"function_outside_allowlist","allow":false,"audit":true}
+]
