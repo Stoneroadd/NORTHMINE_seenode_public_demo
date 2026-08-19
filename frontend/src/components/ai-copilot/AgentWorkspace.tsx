@@ -7,6 +7,7 @@ import {
 import { agentSessionClient } from '../../lib/agentRuntime/AgentSessionClient'
 import { useAgentRuntimeStore } from '../../lib/agentRuntime/runtimeStore'
 import { conversationTurnManager } from '../../lib/agentRealtime/ConversationTurnManager'
+import { openAIRealtimeSession } from '../../lib/agentRealtime/OpenAIRealtimeSession'
 import type { ConversationTurn } from '../../lib/agentRealtime/contracts'
 import { classifyMicRequestError, queryMicPermissionState, requestMicrophoneStream } from '../../lib/agentRealtime/micPermission'
 import { speechOutputRouter } from '../../lib/agentVoice/SpeechOutputRouter'
@@ -22,6 +23,7 @@ import { agentWidgetRegistry } from '../../lib/agentRegistry/registry'
 import type { SemanticPerceptionSnapshot } from '../../lib/agentPerception/types'
 import { workProductsApi } from '../../lib/agentWorkProducts'
 import type { MemorySummary, ReportDraft, ShiftHandoverDraft, TaskDraft } from '../../lib/agentWorkProducts'
+import { AGENT_DEMO_WORK_PRODUCT_FOCUS, AGENT_DEMO_WORK_PRODUCT_READY } from '../../lib/agentDemo/events'
 
 interface Props {
   open: boolean
@@ -135,6 +137,40 @@ export function AgentWorkspace({ open, onClose, context, role: _role, canApprove
   const [workOpen, setWorkOpen] = useState(false)
   const [openReportId, setOpenReportId] = useState<string | null>(null)
   const [pendingActionId, setPendingActionId] = useState<string | null>(null)
+  const demoReportRef = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    const focusWorkProduct = (event: Event) => {
+      const reportId = (event as CustomEvent<{ reportId?: string }>).detail?.reportId
+      setWorkOpen(true)
+      if (reportId) setOpenReportId(reportId)
+    }
+    window.addEventListener(AGENT_DEMO_WORK_PRODUCT_FOCUS, focusWorkProduct)
+    return () => window.removeEventListener(AGENT_DEMO_WORK_PRODUCT_FOCUS, focusWorkProduct)
+  }, [])
+
+  useEffect(() => {
+    const unsubState = openAIRealtimeSession.onState((state) => {
+      setListening(!['idle', 'error'].includes(state))
+      if (state === 'error') setMicError('La conversación OpenAI Realtime se interrumpió.')
+    })
+    const unsubLevel = openAIRealtimeSession.onInputLevel(setMicLevel)
+    return () => {
+      unsubState()
+      unsubLevel()
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!open || !workOpen || !openReportId) return
+    const firstFrame = window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        demoReportRef.current?.scrollIntoView({ behavior: 'auto', block: 'center' })
+        window.dispatchEvent(new CustomEvent(AGENT_DEMO_WORK_PRODUCT_READY, { detail: { reportId: openReportId } }))
+      })
+    })
+    return () => window.cancelAnimationFrame(firstFrame)
+  }, [open, workOpen, openReportId])
 
   useEffect(() => {
     speechOutputRouter.onProviderChanged(setVoiceProvider)
@@ -311,12 +347,32 @@ export function AgentWorkspace({ open, onClose, context, role: _role, canApprove
 
   async function activateWithStream(stream: MediaStream) {
     try {
-      await conversationTurnManager.activate(stream)
+      let availability = null
+      if (openAIRealtimeSession.isSupported()) {
+        try {
+          availability = await openAIRealtimeSession.availability()
+        } catch {
+          // A status/network failure cannot be presented as LIVE. The local
+          // pipeline remains an explicit fallback so voice does not disappear.
+        }
+      }
+      if (availability?.ready) {
+        await openAIRealtimeSession.activate(stream)
+        setVoiceProvider('openai_realtime')
+      } else {
+        await conversationTurnManager.activate(stream)
+        if (availability && !availability.ready) {
+          setMicError(`OpenAI Realtime LIVE no está configurado (${availability.missing.join(', ')}). Voz local activa.`)
+        } else if (!availability) {
+          setMicError('No se pudo verificar OpenAI Realtime LIVE. Voz local de respaldo activa.')
+        }
+      }
       setListening(true)
       setMicState('idle')
-      setMicError(null)
+      if (availability?.ready) setMicError(null)
     } catch {
-      setMicError('No se pudo iniciar el reconocimiento de voz.')
+      stream.getTracks().forEach((track) => track.stop())
+      setMicError('No se pudo iniciar la conversación OpenAI Realtime.')
       setMicState('idle')
     } finally {
       setMicOnboardingOpen(false)
@@ -342,12 +398,13 @@ export function AgentWorkspace({ open, onClose, context, role: _role, canApprove
   }
 
   async function toggleMic() {
-    if (!conversationTurnManager.isSupported()) {
+    if (!openAIRealtimeSession.isSupported() && !conversationTurnManager.isSupported()) {
       setMicError('Reconocimiento de voz no disponible en este navegador.')
       return
     }
     if (listening) {
-      conversationTurnManager.deactivate()
+      if (openAIRealtimeSession.isActive()) openAIRealtimeSession.deactivate()
+      else conversationTurnManager.deactivate()
       setListening(false)
       setMicState('idle')
       return
@@ -390,11 +447,15 @@ export function AgentWorkspace({ open, onClose, context, role: _role, canApprove
     const next = !muted
     setMuted(next)
     speechOutputRouter.setMuted(next)
+    openAIRealtimeSession.setMuted(next)
   }
 
   function bargeIn() {
-    speechOutputRouter.stop()
-    agentSessionClient.send('agent.interrupt', {})
+    if (openAIRealtimeSession.isActive()) openAIRealtimeSession.interrupt()
+    else {
+      speechOutputRouter.stop()
+      agentSessionClient.send('agent.interrupt', {})
+    }
   }
 
   function openFocusedWidget() {
@@ -767,14 +828,20 @@ export function AgentWorkspace({ open, onClose, context, role: _role, canApprove
                 <div className="ai-work-block">
                   <span className="ai-copilot-block-title"><FileText size={11} /> Informes</span>
                   {runtime.reports.length ? runtime.reports.map((report: ReportDraft) => (
-                    <div key={report.report_id} className="ai-work-item">
+                    <div key={report.report_id} className="ai-work-item" ref={openReportId === report.report_id ? demoReportRef : undefined}>
                       <div className="ai-work-item-header">
                         <button type="button" className="ai-work-item-title" onClick={() => setOpenReportId((id) => (id === report.report_id ? null : report.report_id))}>
-                          {REPORT_TYPE_LABELS[report.report_type] ?? report.report_type} · v{report.version}
+                          {report.title || REPORT_TYPE_LABELS[report.report_type] || report.report_type} · v{report.version}
                         </button>
                         <span className={`ai-copilot-badge is-${report.status}`}>{WORK_PRODUCT_STATUS_LABELS[report.status] ?? report.status}</span>
                       </div>
-                      <p className="ai-work-item-meta">{report.generated_by} · {report.generated_at} · {report.scope.audience}</p>
+                      <p className="ai-work-item-meta">Estado: {report.status === 'draft' ? 'Pendiente de validación' : WORK_PRODUCT_STATUS_LABELS[report.status] ?? report.status} · {report.generated_at} · {report.scope.audience}</p>
+                      {/* R2 §8 activa el bloqueo real: report_verifier.py todavia no corre
+                          (ver router.py::_guard_report_quality_gate comentada), asi que esto
+                          hoy siempre muestra "pendiente" - informativo, nunca oculta Aprobar. */}
+                      <p className={`ai-work-quality is-${report.quality_gate?.passed ? 'passed' : 'failed'}`}>
+                        Verificación {report.quality_gate?.passed ? 'aprobada' : 'pendiente'} · {report.quality_gate?.total_score ?? 0}/100
+                      </p>
                       {openReportId === report.report_id && (
                         <div className="ai-work-item-detail">
                           {report.sections.map((s) => (
@@ -783,8 +850,25 @@ export function AgentWorkspace({ open, onClose, context, role: _role, canApprove
                               <p>{s.content}</p>
                             </div>
                           ))}
+                          {report.tables?.map((table) => (
+                            <div key={table.table_id} className="ai-work-report-table">
+                              <strong>{table.title}</strong><small>{table.question}</small>
+                              <div className="ai-work-report-table-scroll"><table><thead><tr>{table.columns.map((column) => <th key={column}>{column}</th>)}</tr></thead>
+                                <tbody>{table.rows.map((row, index) => <tr key={index}>{table.columns.map((column) => <td key={column}>{row[column] ?? '—'}</td>)}</tr>)}</tbody></table></div>
+                            </div>
+                          ))}
+                          {report.charts?.map((chart) => (
+                            <div key={chart.chart_id} className="ai-work-report-chart">
+                              <strong>{chart.title}</strong><small>{chart.question}</small>
+                              <p>{chart.data.length} puntos verificados · series: {chart.y_fields.join(', ')}</p>
+                            </div>
+                          ))}
+                          {report.conceptual_diff?.length > 0 && <div className="ai-work-report-diff"><strong>Cambios v{report.version}</strong><ul>{report.conceptual_diff.map((item) => <li key={item}>{item}</li>)}</ul></div>}
                         </div>
                       )}
+                      {/* canApprove + status "draft" siguen siendo la unica compuerta real
+                          (C8): quality_gate se muestra arriba mientras se prepara, pero NO
+                          condiciona este boton todavia - ver nota en router.py sobre por que. */}
                       {canApprove && report.status === 'draft' && (
                         <div className="ai-work-item-actions">
                           <button type="button" disabled={pendingActionId === report.report_id} onClick={() => approveReport(report.report_id, report.version)}><ThumbsUp size={12} /> Aprobar</button>
