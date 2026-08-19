@@ -10,6 +10,9 @@ import { Sidebar, type SectionId } from './Sidebar'
 import { Topbar } from './Topbar'
 import { useModuleT } from '../../i18n/useModuleT'
 import { layoutT } from '../../i18n/modules/layout'
+import { AgentGuidanceLayer } from '../ai-copilot/AgentGuidanceLayer'
+import { AgentCommandPalette } from '../ai-copilot/AgentCommandPalette'
+import { AgentContextMenu } from '../ai-copilot/AgentContextMenu'
 
 interface Props {
   session: AuthSession
@@ -97,6 +100,9 @@ export function AppShell({ session, onLogout, children }: Props) {
 
   return (
     <div className="app-shell">
+      <AgentGuidanceLayer />
+      <AgentCommandPalette />
+      <AgentContextMenu />
       {backgroundFxEnabled && <CommandCenterBackground />}
       <Sidebar
         active={section}
@@ -125,4 +131,3 @@ export function AppShell({ session, onLogout, children }: Props) {
     </div>
   )
 }
-
