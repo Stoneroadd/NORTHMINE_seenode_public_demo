@@ -113,6 +113,14 @@ class VerificationResult(BaseModel):
 
 HypothesisStatus = Literal["unsupported", "possible", "probable", "insufficient_data"]
 
+# R2 §4 (integrado desde feature/operational-agent-hardening): clasificacion
+# causal mas fina que HypothesisStatus, usada por build_operational_investigation
+# (conclusion.py) - complementa, no reemplaza, el status de arriba.
+CausalityAssessment = Literal[
+    "confirmed", "strongly_supported", "plausible", "weak",
+    "unsupported", "contradicted", "insufficient_data",
+]
+
 
 class OperationalHypothesis(BaseModel):
     hypothesis_id: str
@@ -124,6 +132,9 @@ class OperationalHypothesis(BaseModel):
     # NUNCA una probabilidad estadistica - el status de arriba es lo que
     # realmente expresa certeza operacional.
     score: float | None = None
+    missing_evidence: list[str] = Field(default_factory=list)
+    causal_status: CausalityAssessment = "insufficient_data"
+    rationale: str | None = None
 
 
 # ── Conclusion (seccion 13) ──────────────────────────────────────────────
@@ -160,12 +171,37 @@ class InvestigationConclusion(BaseModel):
     requires_human_approval: Literal[True] = True
 
 
+# R2 §4 (integrado desde feature/operational-agent-hardening): vista
+# operacional verificable derivada de un InvestigationResult ya construido -
+# nunca contiene razonamiento privado del modelo. confidence usa
+# InvestigationConfidence (no ConfidenceInfo, que C3 elimino por ambiguo) -
+# es el mismo dominio de confianza que InvestigationConclusion, nunca
+# ResponseConfidence (dominio de un turno de chat, retirado en C9).
+class OperationalInvestigation(BaseModel):
+    question: str
+    scope: InvestigationScope
+    entities: list[str] = Field(default_factory=list)
+    timeframe: DateRange | None = None
+    observations: list[str] = Field(default_factory=list)
+    deviations: list[str] = Field(default_factory=list)
+    hypotheses: list[OperationalHypothesis] = Field(default_factory=list)
+    supporting_evidence: list[EvidenceItem] = Field(default_factory=list)
+    contradicting_evidence: list[EvidenceItem] = Field(default_factory=list)
+    missing_evidence: list[str] = Field(default_factory=list)
+    verified_findings: list[str] = Field(default_factory=list)
+    conclusion: str
+    confidence: InvestigationConfidence
+    limitations: list[str] = Field(default_factory=list)
+    recommended_next_actions: list[str] = Field(default_factory=list)
+
+
 class InvestigationResult(BaseModel):
     plan: InvestigationPlan
     evidence: list[EvidenceItem] = Field(default_factory=list)
     verification: VerificationResult
     hypotheses: list[OperationalHypothesis] = Field(default_factory=list)
     conclusion: InvestigationConclusion | None = None
+    operational_investigation: OperationalInvestigation | None = None
 
 
 # ── Request/response de API ──────────────────────────────────────────────
