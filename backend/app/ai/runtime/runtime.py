@@ -60,13 +60,19 @@ async def _set_state(live: LiveSession, target: AgentRuntimeState, *, correlatio
     )
 
 
-async def handle_user_text(live: LiveSession, user: dict, text: str, correlation_id: str, ip: str) -> None:
+async def handle_user_text(
+    live: LiveSession, user: dict, text: str, correlation_id: str, ip: str,
+    *, source: str = "conversation",
+) -> None:
     """Punto de entrada principal para texto (o transcripcion final de voz) -
-    seccion 1: 'escucha por voz o recibe texto' -> Command Router -> plan."""
+    seccion 1: 'escucha por voz o recibe texto' -> Command Router -> plan.
+    `source` es solo para auditoria (de donde vino el comando: conversacion,
+    sideband de OpenAI Realtime, etc.) - nunca cambia la autorizacion ni el
+    camino de ejecucion, que siguen siendo exactamente los mismos."""
     command = command_router.classify(text, has_active_investigation=bool(live.session.active_investigation_id))
     runtime_audit.record_command(
         usuario=str(user.get("sub") or "anon"), ip=ip, session_id=live.session.session_id,
-        command_type=command.type.value, confidence=command.confidence,
+        command_type=command.type.value, confidence=command.confidence, source=source,
     )
     await dispatch_command(live, user, command, correlation_id, ip)
 

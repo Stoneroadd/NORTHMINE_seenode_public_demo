@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from typing import Any
 
 from app.ai.runtime.protocol import AgentEvent, build_server_event
@@ -43,6 +44,13 @@ async def emit(
         payload=payload,
     )
     persistence.save_event(event)
+    for observer in tuple(live.event_observers):
+        try:
+            observer.put_nowait(event)
+        except asyncio.QueueFull:
+            # An optional observer must never block the authoritative Runtime
+            # or the browser's event stream.
+            pass
     if deliver:
         await live.outbox.put(event)
     return event

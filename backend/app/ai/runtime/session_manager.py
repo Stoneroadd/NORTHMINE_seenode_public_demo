@@ -56,6 +56,7 @@ class LiveSession:
     __slots__ = (
         "session", "state_machine", "lock", "websocket", "last_seen", "next_sequence",
         "outbox", "seen_client_event_ids", "current_investigation_task", "pending_ui_acks",
+        "event_observers",
         "pause_event", "cancel_event", "interrupt_event", "focus_override", "perception",
         "memory", "quiet_mode", "current_turn_id",
     )
@@ -71,6 +72,10 @@ class LiveSession:
         self.seen_client_event_ids: list[str] = []
         self.current_investigation_task: asyncio.Task | None = None
         self.pending_ui_acks: dict[str, asyncio.Future] = {}
+        # Read-only taps for server-side transports (for example OpenAI
+        # Realtime sideband). Observers receive copies of public AgentEvents;
+        # they never drain the browser WebSocket outbox or bypass persistence.
+        self.event_observers: set[asyncio.Queue] = set()
         self.pause_event = asyncio.Event()
         self.cancel_event = asyncio.Event()
         self.interrupt_event = asyncio.Event()
