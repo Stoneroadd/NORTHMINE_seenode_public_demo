@@ -1,0 +1,43 @@
+name: NORTHMINE Agent Gates
+
+on:
+  pull_request:
+  push:
+    branches: [main, feature/operational-agent-hardening]
+
+jobs:
+  deterministic-agent-gates:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: backend/requirements-dev.txt
+      - name: Install backend
+        run: pip install -r backend/requirements-dev.txt
+      - name: Install frontend
+        run: npm ci --legacy-peer-deps --prefix frontend
+      - name: Checklist gate
+        run: npm run agent:checklist
+      - name: Agent harness
+        run: npm run agent:harness
+      - name: Agent demo contract
+        run: npm run agent:demo:harness -- --scenario=full_operational_demo
+      - name: Backend tests
+        run: python -m pytest backend/tests -q --basetemp=.pytest_tmp_ci
+      - name: Frontend tests
+        run: npm --prefix frontend run test:unit
+      - name: Typecheck
+        run: npm run lint
+      - name: Production build
+        run: npm run build

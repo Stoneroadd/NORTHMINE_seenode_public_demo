@@ -38,7 +38,7 @@ const STATE_LABELS: Record<string, string> = {
 }
 
 const VOICE_LABELS: Record<VoiceOutputProviderName, string> = {
-  elevenlabs: 'Voz NORTHMINE', browser: 'Voz local de respaldo', text_only: 'Solo texto',
+  openai_realtime: 'OpenAI Realtime LIVE', elevenlabs: 'Voz NORTHMINE', browser: 'Voz local de respaldo', text_only: 'Solo texto',
 }
 
 const QUICK_COMMANDS = [

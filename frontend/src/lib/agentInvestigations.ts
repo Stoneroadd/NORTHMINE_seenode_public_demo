@@ -97,6 +97,9 @@ export interface OperationalHypothesis {
   /** Desempate heurístico interno documentado por regla, NUNCA una
    * probabilidad estadística — `status` es lo que expresa certeza real. */
   score: number | null
+  causal_status?: 'confirmed' | 'strongly_supported' | 'plausible' | 'weak' | 'unsupported' | 'contradicted' | 'insufficient_data'
+  rationale?: string | null
+  missing_evidence?: string[]
 }
 
 /** Confianza de una InvestigationConclusion — derivada 100% de

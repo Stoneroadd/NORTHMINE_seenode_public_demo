@@ -16,6 +16,112 @@
 }
 
 /* ════════════════════════════════════════
+   TEMA COBRE MATE — control room mineral
+   Grafito cálido y cobre envejecido. El cobre indica foco y acción;
+   verde, ámbar y rojo conservan su significado operacional.
+   ════════════════════════════════════════ */
+html[data-theme="copper"] {
+  color-scheme: dark;
+  --bg-void:        #0c0b0a;
+  --bg-deep:        #12100e;
+  --bg-panel:       #171411;
+  --bg-card:        #1d1915;
+  --bg-elevated:    #25201b;
+  --bg-hover:       #2d2721;
+  --border-dim:     rgba(197, 138, 88, 0.10);
+  --border-mid:     rgba(197, 138, 88, 0.22);
+  --border-bright:  rgba(218, 164, 116, 0.54);
+  --op-green:       #79b88a;
+  --data-cyan:      #c58a58;
+  --vision-night:   #9e8a78;
+  --alert-orange:   #d9824b;
+  --warn-yellow:    #d2aa62;
+  --danger-red:     #d66f66;
+  --text-primary:   #f2ece4;
+  --text-secondary: #b8aea3;
+  --text-tertiary:  #80766c;
+  --text-disabled:  #514a43;
+  --shadow-card:    0 18px 46px rgba(0, 0, 0, 0.34), 0 2px 8px rgba(0, 0, 0, 0.22);
+  --cursor-color:   #c58a58;
+  --cursor-inner:   #dfb083;
+  --accent:         #c58a58;
+  --accent-rgb:     197,138,88;
+  --accent-pop:     #dfb083;
+  --font-display:   'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono:      'JetBrains Mono', 'IBM Plex Mono', monospace;
+  --font-label:     'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+html[data-theme="copper"] body {
+  background:
+    radial-gradient(ellipse 72% 34% at 52% -8%, rgba(197, 138, 88, 0.075), transparent 68%),
+    linear-gradient(180deg, #0d0c0b 0%, #090807 100%) !important;
+}
+
+html[data-theme="copper"] .sidebar,
+html[data-theme="copper"] .topbar {
+  background: rgba(14, 12, 10, 0.96) !important;
+  border-color: rgba(197, 138, 88, 0.16) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+html[data-theme="copper"] .panel,
+html[data-theme="copper"] .kpi-card,
+html[data-theme="copper"] .hero-panel,
+html[data-theme="copper"] .module-header,
+html[data-theme="copper"] .report-card,
+html[data-theme="copper"] .state-card,
+html[data-theme="copper"] .command-card,
+html[data-theme="copper"] .login-card,
+html[data-theme="copper"] .agent-command-palette__panel,
+html[data-theme="copper"] .agent-context-menu {
+  background: #171411 !important;
+  background-image: linear-gradient(145deg, rgba(197, 138, 88, 0.035), transparent 46%) !important;
+  border-color: rgba(197, 138, 88, 0.18) !important;
+  box-shadow: var(--shadow-card) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+html[data-theme="copper"] .nav-item.is-active,
+html[data-theme="copper"] [role='option']:hover,
+html[data-theme="copper"] [role='option']:focus-visible {
+  background: rgba(197, 138, 88, 0.10) !important;
+  border-color: rgba(197, 138, 88, 0.32) !important;
+}
+
+html[data-theme="copper"] :focus-visible {
+  outline: 2px solid #dfb083;
+  outline-offset: 2px;
+}
+
+html[data-theme="copper"] .primary-action {
+  background: #b97845 !important;
+  border-color: #d39a69 !important;
+  color: #110d09 !important;
+  box-shadow: 0 8px 22px rgba(93, 52, 24, 0.28) !important;
+}
+
+html[data-theme="copper"] .primary-action:hover {
+  background: #c98a55 !important;
+  border-color: #e1b084 !important;
+}
+
+html[data-theme="copper"] .agent-guidance-frame {
+  border-color: #dfb083;
+  box-shadow: 0 0 0 1px rgba(223, 176, 131, 0.22), 0 8px 24px rgba(97, 55, 28, 0.28);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme="copper"] *,
+  html[data-theme="copper"] *::before,
+  html[data-theme="copper"] *::after {
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ════════════════════════════════════════
    TEMA DARK — Startup Intelligence (default)
    ════════════════════════════════════════ */
 :root,
@@ -748,4 +854,30 @@ html[dir="rtl"] .app-shell {
   html[dir="rtl"] .sidebar.is-mobile-open {
     transform: translateX(0) !important;
   }
+}
+
+/* Copper is intentionally the quietest operational theme. These final
+   overrides sit after the shared runtime bridge so generic theme styling
+   cannot reintroduce glass blur or cyan-tinted elevation. */
+html[data-theme="copper"] .sidebar,
+html[data-theme="copper"] .topbar {
+  background: rgba(14, 12, 10, 0.96) !important;
+  border-color: rgba(197, 138, 88, 0.16) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+html[data-theme="copper"] .panel,
+html[data-theme="copper"] .kpi-card,
+html[data-theme="copper"] .hero-panel,
+html[data-theme="copper"] .module-header,
+html[data-theme="copper"] .report-card,
+html[data-theme="copper"] .state-card,
+html[data-theme="copper"] .command-card,
+html[data-theme="copper"] .compare-period-card,
+html[data-theme="copper"] .fleet-podium-card {
+  background: #171411 !important;
+  background-image: linear-gradient(145deg, rgba(197, 138, 88, 0.035), transparent 46%) !important;
+  border-color: rgba(197, 138, 88, 0.18) !important;
+  box-shadow: var(--shadow-card) !important;
 }

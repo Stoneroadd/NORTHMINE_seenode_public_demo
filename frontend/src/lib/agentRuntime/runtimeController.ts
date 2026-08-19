@@ -75,6 +75,11 @@ async function handleUiActionRequested(event: AgentEvent): Promise<void> {
     action = { action: 'navigate', route: String(payload.moduleId) }
   }
 
+  const requestedGuidance = payload.guidance
+  if (action && requestedGuidance && typeof requestedGuidance === 'object') {
+    action = { ...action, guidance: requestedGuidance as NonNullable<typeof action.guidance> }
+  }
+
   if (!action) {
     if (requirement === 'required') {
       agentSessionClient.send('ui_action.rejected', {

@@ -2,10 +2,14 @@
 // El chat sincronico "Fase B" que originalmente definia estos tipos (backend
 // app/ai/schemas.py, app/ai/orchestrator.py, app/ai/router.py) se retiro en
 // C9 por 0 consumidores reales - el runtime WS (Etapa 6) lo reemplazo por
-// completo. Estos dos tipos sobreviven porque siguen siendo contrato vivo:
-// CopilotContext lo usan AgentWorkspace.tsx/AgentPresence.tsx, CopilotUIAction
-// lo usan agentRegistry/capabilityActions.ts y agentActionExecutor.ts para
-// ejecutar los pasos ui_action que el Agent Runtime si sigue emitiendo hoy.
+// completo. CopilotContext y CopilotUIAction sobreviven porque siguen siendo
+// contrato vivo: CopilotContext lo usan AgentWorkspace.tsx/AgentPresence.tsx,
+// CopilotUIAction lo usan agentRegistry/capabilityActions.ts y
+// agentActionExecutor.ts para ejecutar los pasos ui_action que el Agent
+// Runtime si sigue emitiendo hoy. WidgetSemanticUIAction/AgentGuidanceIntent
+// (R2 §3, integrados desde feature/operational-agent-hardening) extienden
+// ese mismo contrato para el Agent Demo Tour y la capa de señalización
+// visual - nunca sustituyen las seis acciones originales.
 
 export interface CopilotContext {
   section?: string | null
@@ -57,10 +61,29 @@ export interface FocusWidgetUIAction {
   widget_id: string
 }
 
-export type CopilotUIAction =
+export interface WidgetSemanticUIAction {
+  action: 'widget_action'
+  widget_id: string
+  semantic_action: import('./agentRegistry/types').AgentActionType
+  args?: Record<string, unknown>
+}
+
+/** Señalización visual opcional (glow/pulse/spotlight/sweep/highlight) sobre
+ * el elemento afectado por una acción — ver agentGuidance/guidanceStore.ts.
+ * Puramente aditiva: una acción sin `guidance` sigue funcionando igual que
+ * antes, agentActionExecutor.ts decide un efecto por defecto si falta. */
+export interface AgentGuidanceIntent {
+  effect: 'glow' | 'pulse' | 'spotlight' | 'sweep' | 'highlight'
+  durationMs?: number
+  label?: string
+}
+
+export type CopilotUIAction = (
   | NavigateUIAction
   | SetFilterUIAction
   | ClearFilterUIAction
   | SelectEntityUIAction
   | OpenEntityUIAction
   | FocusWidgetUIAction
+  | WidgetSemanticUIAction
+) & { guidance?: AgentGuidanceIntent }

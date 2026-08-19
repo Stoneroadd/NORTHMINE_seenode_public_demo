@@ -7,7 +7,7 @@
  * (las orquesta con fallback automatico - ver seccion 21).
  */
 
-export type SpeechPriority = 'status' | 'finding' | 'warning' | 'result'
+export type SpeechPriority = 'status' | 'finding' | 'warning' | 'result' | 'question'
 
 export interface AgentSpeechSegment {
   segmentId: string
@@ -15,6 +15,8 @@ export interface AgentSpeechSegment {
   priority: SpeechPriority
   sequence: number
   interruptible: boolean
+  kind?: 'STATUS' | 'FINDING' | 'WARNING' | 'RESULT' | 'QUESTION'
+  turnId?: string | null
 }
 
 export interface AgentSpeechInput {
@@ -26,7 +28,7 @@ export interface AgentSpeechInput {
   isSupported(): boolean
 }
 
-export type VoiceOutputProviderName = 'elevenlabs' | 'browser' | 'text_only'
+export type VoiceOutputProviderName = 'openai_realtime' | 'elevenlabs' | 'browser' | 'text_only'
 
 export interface AgentSpeechOutput {
   readonly providerName: VoiceOutputProviderName

@@ -6,7 +6,7 @@ import type { LangId } from '../i18n/translations'
 export type Lang = LangId
 
 // ── TIPOS TEMA ─────────────────────────────────────────────────────────────
-export type ThemeId = 'dark' | 'operational' | 'light' | 'futuristic' | 'minimal' | 'carbon'
+export type ThemeId = 'copper' | 'dark' | 'operational' | 'light' | 'futuristic' | 'minimal' | 'carbon'
 
 export interface Effects {
   scanlines:  boolean
@@ -17,7 +17,7 @@ export interface Effects {
 }
 
 const DEFAULT_EFFECTS: Effects = {
-  scanlines: true, hexgrid: true, glow: true, cursor: true, animations: true,
+  scanlines: false, hexgrid: false, glow: false, cursor: false, animations: true,
 }
 
 // ── TIPOS ──────────────────────────────────────────────────────────────────
@@ -126,7 +126,7 @@ const filtroDefault: FiltroGlobal = {
 }
 
 const VALID_LANGS: LangId[] = ['es', 'en', 'fr', 'de', 'pt', 'zh', 'ar', 'ru']
-const VALID_THEMES: ThemeId[] = ['dark', 'operational', 'light', 'futuristic', 'minimal', 'carbon']
+const VALID_THEMES: ThemeId[] = ['copper', 'dark', 'operational', 'light', 'futuristic', 'minimal', 'carbon']
 const VALID_SHIFTS: TurnoId[] = ['DIA', 'NOCHE', 'AMBOS']
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -151,7 +151,7 @@ export const useAppStore = create<AppStore>()(
       toggleLang: () => set({ lang: get().lang === 'es' ? 'en' : 'es' }),
 
       // Tema
-      themeId: 'dark',
+      themeId: 'copper',
       setTheme: (id) => set({ themeId: id }),
 
       // Efectos
@@ -210,7 +210,21 @@ export const useAppStore = create<AppStore>()(
     }),
     {
       name: 'northmine-store',
-      version: 2,
+      version: 3,
+      migrate: (persistedState, version) => {
+        if (!isRecord(persistedState) || version >= 3) return persistedState
+        return {
+          ...persistedState,
+          themeId: persistedState.themeId === 'dark' ? 'copper' : persistedState.themeId,
+          effects: {
+            ...(isRecord(persistedState.effects) ? persistedState.effects : {}),
+            scanlines: false,
+            hexgrid: false,
+            glow: false,
+            cursor: false,
+          },
+        }
+      },
       merge: (persistedState, currentState) => {
         const persisted = isRecord(persistedState) ? persistedState : {}
         const storedEffects = isRecord(persisted.effects) ? persisted.effects : {}
