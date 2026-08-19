@@ -4,7 +4,7 @@ from datetime import datetime, timedelta, timezone
 
 from app.ai.investigation_schemas import now_iso
 from app.ai.proactivity import persistence
-from app.ai.proactivity.models import AgentWatch, TriggerCondition
+from app.ai.proactivity.models import AgentWatch, TriggerCondition, WatchStatus
 from app.core.config import get_settings
 
 """Watches (Etapa 6, seccion 12 del brief): 'Avisame si vuelve a empeorar'
@@ -24,6 +24,7 @@ def create_watch(
     *, user_id: str, company_id: str | None, site_id: str | None, entity_ids: list[str], entity_label: str | None,
     metric: str, condition: TriggerCondition, threshold: float | None = None, baseline_reference: str | None = None,
     source_investigation_id: str | None = None, ttl_hours: float | None = None,
+    status: WatchStatus = "active",
 ) -> AgentWatch:
     settings = get_settings()
     if persistence.count_active_watches(user_id) >= settings.agent_watch_limit_per_user:
@@ -37,7 +38,7 @@ def create_watch(
     watch = AgentWatch(
         user_id=user_id, company_id=company_id, site_id=site_id, entity_ids=entity_ids, entity_label=entity_label,
         metric=metric, condition=condition, threshold=threshold, baseline_reference=baseline_reference,
-        source_investigation_id=source_investigation_id, expires_at=expires_at,
+        source_investigation_id=source_investigation_id, expires_at=expires_at, status=status,
     )
     persistence.save_watch(watch)
     return watch

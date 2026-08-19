@@ -17,7 +17,7 @@ ocultos') - se crean via API/seed, nunca los produce el LLM.
 
 QuietMode = Literal["normal", "visual_only", "quiet", "critical_only"]
 ProactiveSeverity = Literal["informational", "warning", "high", "critical"]
-WatchStatus = Literal["active", "triggered", "expired", "cancelled"]
+WatchStatus = Literal["draft", "active", "triggered", "expired", "cancelled"]
 TriggerCondition = Literal["above", "below", "stale"]
 
 

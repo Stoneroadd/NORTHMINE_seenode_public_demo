@@ -51,6 +51,7 @@ class AgentCommandType(str, Enum):
     MODIFY_REPORT = "modify_report"
     CREATE_TASK_DRAFT = "create_task_draft"
     SHOW_PENDING_WORK = "show_pending_work"
+    CHECK_EXTERNAL_SOURCE = "check_external_source"
     UNKNOWN = "unknown"
 
 
@@ -67,6 +68,60 @@ class AgentCommand(BaseModel):
     quiet_duration_minutes: int | None = None
     report_modification: str | None = None
     task_description: str | None = None
+    # R2 §7: de donde vino este comando - solo auditoria, nunca autorizacion
+    # (eso sigue siendo policies.py/navigation.py en cada handler real).
+    source: Literal["text", "voice", "quick_action", "command_palette", "context_action"] = "text"
+
+
+class StructuredAgentIntent(BaseModel):
+    """R2 §7 (integrado desde feature/operational-agent-hardening): intent
+    tipado que Quick Actions/Command Palette envian via el evento WS
+    user.intent - command_from_intent() lo traduce a un AgentCommand comun
+    y ws_router.py lo entrega a runtime.handle_structured_intent(), que
+    llama al MISMO dispatch_command() que usa el texto/voz. No es un
+    runtime paralelo: es otra forma de producir el mismo AgentCommand."""
+
+    intent: Literal[
+        "ANALYZE_SHIFT", "INVESTIGATE_PRODUCTION_DROP", "WHAT_CHANGED", "FIND_DEVIATIONS",
+        "EXECUTIVE_SUMMARY", "PREPARE_REPORT", "SHIFT_HANDOVER", "CRITICAL_EQUIPMENT",
+        "PRODUCTION_IMPACT", "COMPARE_SHIFT", "FIND_WORST_HOUR", "ANALYZE_LOADING",
+        "ANALYZE_CYCLE", "NAVIGATE_MODULE", "CREATE_WATCH",
+    ]
+    scope: Literal["current_context", "current_shift", "selected_entity"] = "current_context"
+    module_id: str | None = None
+    entity_id: str | None = None
+    widget_id: str | None = None
+    source: Literal["quick_action", "command_palette", "context_action"] = "quick_action"
+
+
+def command_from_intent(intent: StructuredAgentIntent) -> AgentCommand:
+    mapping: dict[str, tuple[AgentCommandType, InvestigationType | None]] = {
+        "ANALYZE_SHIFT": (AgentCommandType.START_INVESTIGATION, InvestigationType.SHIFT_SUMMARY),
+        "INVESTIGATE_PRODUCTION_DROP": (AgentCommandType.START_INVESTIGATION, InvestigationType.PRODUCTION_DROP),
+        "WHAT_CHANGED": (AgentCommandType.COMPARE_WITH_MEMORY, None),
+        "FIND_DEVIATIONS": (AgentCommandType.START_INVESTIGATION, InvestigationType.SHIFT_SUMMARY),
+        "EXECUTIVE_SUMMARY": (AgentCommandType.START_INVESTIGATION, InvestigationType.SHIFT_SUMMARY),
+        "PREPARE_REPORT": (AgentCommandType.GENERATE_REPORT, None),
+        "SHIFT_HANDOVER": (AgentCommandType.GENERATE_HANDOVER, None),
+        "CRITICAL_EQUIPMENT": (AgentCommandType.START_INVESTIGATION, InvestigationType.LOADING_UNIT_UNDERPERFORMANCE),
+        "PRODUCTION_IMPACT": (AgentCommandType.START_INVESTIGATION, InvestigationType.PRODUCTION_DROP),
+        "COMPARE_SHIFT": (AgentCommandType.COMPARE_WITH_MEMORY, None),
+        "FIND_WORST_HOUR": (AgentCommandType.START_INVESTIGATION, InvestigationType.PRODUCTION_DROP),
+        "ANALYZE_LOADING": (AgentCommandType.START_INVESTIGATION, InvestigationType.LOADING_UNIT_UNDERPERFORMANCE),
+        "ANALYZE_CYCLE": (AgentCommandType.START_INVESTIGATION, InvestigationType.CYCLE_TIME_INCREASE),
+        "NAVIGATE_MODULE": (AgentCommandType.NAVIGATE, None),
+        "CREATE_WATCH": (AgentCommandType.CREATE_WATCH, None),
+    }
+    command_type, investigation_type = mapping[intent.intent]
+    return AgentCommand(
+        type=command_type,
+        raw_text=intent.intent,
+        investigation_type=investigation_type,
+        target_module=intent.module_id,
+        equipment_query=intent.entity_id,
+        widget_reference=intent.widget_id,
+        source=intent.source,
+    )
 
 
 LLMClassifier = Callable[[str], "AgentCommand | None"]
@@ -236,6 +291,11 @@ def classify(
 
     if _has(normalized, r"\bqu[eé] (?:tengo|hay) pendiente\b", r"\bmu[eé]strame las tareas\b", r"\btareas pendientes\b", r"\bseguimientos activos\b"):
         return AgentCommand(type=AgentCommandType.SHOW_PENDING_WORK, raw_text=text)
+
+    if _has(normalized, r"\bwenco\b", r"\bsql\b") and _has(
+        normalized, r"\bvalor exacto\b", r"\bfuente\b", r"\bverifica\b", r"\bobtenido\b",
+    ):
+        return AgentCommand(type=AgentCommandType.CHECK_EXTERNAL_SOURCE, raw_text=text)
 
     # ── Percepcion (Etapa 5, seccion 24) - siempre reglas primero, el
     # VisionProvider solo entra cuando la ejecucion real lo requiere ────────

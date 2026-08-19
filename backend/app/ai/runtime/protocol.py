@@ -24,7 +24,9 @@ CLIENT_EVENT_TYPES: frozenset[str] = frozenset(
         "session.resume",
         "session.heartbeat",
         "context.update",
+        "demo.start",
         "user.text",
+        "user.intent",
         "user.speech.partial",
         "user.speech.final",
         "agent.pause",
@@ -57,6 +59,7 @@ CLIENT_EVENT_TYPES: frozenset[str] = frozenset(
 SERVER_EVENT_TYPES: frozenset[str] = frozenset(
     {
         "session.ready",
+        "demo.ready",
         "agent.state.changed",
         "agent.plan.created",
         "agent.plan.updated",
