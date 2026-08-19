@@ -3,6 +3,7 @@ from __future__ import annotations
 import uuid
 
 import pytest
+from fastapi import HTTPException
 
 from app.ai import conclusion as conclusion_module
 from app.ai import hypotheses as hypotheses_module
@@ -483,6 +484,38 @@ def _fresh_report():
     )
     wp_persistence.save_report_version(report)
     return report
+
+
+# ── R2 §5: report_verifier.quality_gate coexiste con C8, nunca lo sustituye ─
+# _guard_report_quality_gate esta definida y probada aca a nivel unitario,
+# pero deliberadamente NO esta activa todavia en approve_report (ver
+# comentario en router.py): reports.py aun no corre report_verifier.py
+# (eso es R2 §8), asi que ReportQualityGate.passed default a False para
+# todo informe real - activarla ahora bloquearia cada aprobacion real.
+
+def test_quality_gate_blocks_approval_when_not_passed():
+    from app.ai.work_products.router import _guard_report_quality_gate
+    from app.ai.work_products.models import ReportQualityGate
+
+    report = _fresh_report()
+    failing = report.model_copy(update={"quality_gate": ReportQualityGate(passed=False, errors=["cifra sin evidencia"])})
+    with pytest.raises(HTTPException) as exc:
+        _guard_report_quality_gate(failing)
+    assert exc.value.status_code == 409
+
+
+def test_quality_gate_allows_approval_when_passed_but_never_grants_it():
+    from app.ai.work_products.router import _guard_report_quality_gate
+    from app.ai.work_products.models import ReportQualityGate
+
+    report = _fresh_report()
+    passing = report.model_copy(update={"quality_gate": ReportQualityGate(passed=True, total_score=95)})
+    _guard_report_quality_gate(passing)  # no lanza - solo bloquea, nunca aprueba
+    # Un quality_gate.passed=True no toca decision_authority/requires_human_approval,
+    # que siguen fijos por el schema (C8) - pasar el gate no es aprobacion humana.
+    assert passing.decision_authority == "human"
+    assert passing.requires_human_approval is True
+    assert passing.status == "draft"  # el gate no cambia el status; solo approve_report lo hace
 
 
 def test_report_cannot_be_approved_after_being_rejected(client, login_as_supervisor):

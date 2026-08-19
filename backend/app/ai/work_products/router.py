@@ -85,6 +85,12 @@ def approve_report(report_id: str, request: Request, expected_version: int | Non
     if not report:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Informe no encontrado")
     _guard_report_decision(report, expected_version)
+    # R2 §8 activa esta linea: hoy build_report() (reports.py) todavia no
+    # corre report_verifier.py, asi que ReportQualityGate.passed default a
+    # False para TODO informe - activarla ahora bloquearia cada aprobacion
+    # real, una regresion, no un endurecimiento. _guard_report_quality_gate
+    # ya existe y esta probada; falta solo que reports.py la haga veraz.
+    # _guard_report_quality_gate(report)
     approved = report.model_copy(update={"status": "approved", "approved_by": str(user.get("sub") or "anon"), "approved_at": _now()})
     persistence.save_report_version(approved)
     _record_report_episode(approved, human_decision="approved")
@@ -147,6 +153,27 @@ def _guard_report_decision(report: ReportDraft, expected_version: int | None) ->
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail=f"El informe cambió a la versión {report.version} desde que se cargó. Revisa la versión actual antes de decidir.",
+        )
+
+
+def _guard_report_quality_gate(report: ReportDraft) -> None:
+    """R2 §5 (integrado desde feature/operational-agent-hardening):
+    report_verifier.quality_gate (§8) es una compuerta ADICIONAL sobre la
+    autoridad humana de C8, nunca un sustituto - un informe que la pasa
+    igual requiere aprobación humana explícita (decision_authority="human",
+    requires_human_approval=True siguen fijos por schema, sin excepción).
+    Esta funcion solo puede BLOQUEAR una aprobación, jamas concederla: no
+    hay ningun camino en el que un quality_gate.passed=True dispense de
+    _guard_report_decision o de policies.can_approve, que ya se evaluaron
+    antes de llegar aca. Orden: authorization -> terminal state ->
+    expected_version -> quality gate -> approval -> audit."""
+    if not report.quality_gate.passed:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={
+                "message": "El ReportVerifier rechazó la aprobación.",
+                "quality_gate": report.quality_gate.model_dump(),
+            },
         )
 
 
