@@ -184,7 +184,7 @@
   border-left: 1px solid var(--nm-border);
   box-shadow: var(--shadow-card);
   color: var(--nm-text);
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: var(--font-industrial, 'IBM Plex Sans', system-ui, sans-serif);
 }
 
 .ai-copilot-header {
@@ -1315,6 +1315,18 @@
   color: var(--nm-text);
   white-space: pre-wrap;
 }
+
+/* R2 §3 (report_verifier / quality_gate + ReportTable/ReportChart,
+   integrados desde feature/operational-agent-hardening) */
+.ai-work-quality { margin: 5px 0 0; font-size: 11px; color: var(--nm-amber); }
+.ai-work-quality.is-passed { color: var(--nm-green); }
+.ai-work-report-table, .ai-work-report-chart, .ai-work-report-diff { display: grid; gap: 5px; margin-top: 12px; }
+.ai-work-report-table small, .ai-work-report-chart small { color: var(--nm-muted); }
+.ai-work-report-table-scroll { max-width: 100%; overflow-x: auto; }
+.ai-work-report-table table { width: 100%; border-collapse: collapse; font-size: 11px; }
+.ai-work-report-table th, .ai-work-report-table td { padding: 6px 8px; border-bottom: 1px solid var(--nm-border); text-align: left; white-space: nowrap; }
+.ai-work-report-table th { color: var(--nm-muted); font-weight: 600; }
+.ai-work-report-diff ul { margin: 0; padding-left: 18px; }
 
 .ai-work-item-actions {
   display: flex;
