@@ -12,5 +12,6 @@
 | ADR-008 Event lifecycle | Proposed | `OPERATIONAL_EVENT_CONTRACT.md` |
 | ADR-009 Temporal graph | Proposed | `OPERATIONAL_GRAPH_TEMPORAL_MODEL.md` |
 | ADR-010 Replay reconstruction | Proposed | `OPERATIONAL_REPLAY_CONTRACT.md` |
+| ADR-011 Navigation and shared context | Proposed for Phase 1 approval | `design/MISSION_CONTROL_INTERACTION_MODEL.md` |
 
 Records below state architectural decisions only; the linked root contracts are normative.

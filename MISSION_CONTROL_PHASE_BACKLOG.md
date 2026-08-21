@@ -16,6 +16,8 @@ Each phase begins from an approved SHA, preserves unrelated work, uses logical c
 
 ## Phase 1 — Product & Information Architecture
 
+**Status:** CONDITIONAL — Phase 1 artifacts completed on 2026-08-21; mining-user comprehension validation and explicit IA/ADR-011 approval remain open.
+
 - Define operational questions and role-specific journeys for NOW, OPERATION, HISTORY and SEARCH.
 - Define entity inspector, event detail and three disclosure levels.
 - Model stable, operational-event, recovering, data-delayed and software-error states.
@@ -186,4 +188,4 @@ Each scenario must define deterministic source records, clock, assignments, evid
 
 # STOP
 
-This backlog is not authorization to begin Phase 1.
+This backlog records Phase 1 as conditionally completed. It is not authorization to begin Phase 2.

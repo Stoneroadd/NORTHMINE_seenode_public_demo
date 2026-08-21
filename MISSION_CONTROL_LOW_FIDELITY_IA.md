@@ -1,5 +1,7 @@
 # NORTHMINE Mission Control — Low-Fidelity Information Architecture
 
+**Status:** Phase 1 structural prototype — EN VALIDACIÓN. Visual styling and production code remain deferred.
+
 These wireframes define hierarchy and interaction, not visual styling. Copper, typography, surfaces and motion are deliberately deferred until the information architecture is approved.
 
 ## Shared shell
@@ -197,15 +199,15 @@ Desktop owns full spatial/graph work. Tablet retains Flow with simplified groupi
 
 Mobile must not shrink the complete desktop graph or 3D scene into an unusable canvas.
 
-## Approval questions
+## Decisions encoded by the Phase 1 brief
 
-- Is the shared shell hierarchy correct before visual exploration?
-- Should stable NOW show only recovered conditions, or also one concise shift objective?
-- Which roles may acknowledge/action/close from Event Detail?
-- Is a true geospatial 3D mine view required for the first Mission Control release?
-- Which context fields are safe and useful to serialize in the URL?
-- Is the mobile simplification acceptable?
+- Shared shell hierarchy is the proposed Phase 1 direction; explicit user approval remains the gate.
+- Stable NOW shows no shift-objective filler; recently recovered conditions remain collapsed unless relevant.
+- Event authority follows the proposed role matrix and requires backend/security approval before implementation.
+- True geospatial 3D is not required for the first public-demo Mission Control slice; the current constellation remains labeled technical/legacy.
+- Only opaque site/shift/time/entity/event/view references may be serialized; authorization claims and personal data may not.
+- Mobile uses the simplified task-prioritized representation defined in the interaction model.
 
 # STOP
 
-These low-fidelity structures require review before Phase 1 or visual-system implementation.
+These low-fidelity structures require explicit review before Phase 2 or visual-system implementation.
