@@ -362,7 +362,7 @@ export function AgentWorkspace({ open, onClose, context, role: _role, canApprove
       } else {
         await conversationTurnManager.activate(stream)
         if (availability && !availability.ready) {
-          setMicError(`OpenAI Realtime LIVE no está configurado (${availability.missing.join(', ')}). Voz local activa.`)
+          setMicError('Conversacion en tiempo real no disponible en este momento. Usando voz de respaldo.')
         } else if (!availability) {
           setMicError('No se pudo verificar OpenAI Realtime LIVE. Voz local de respaldo activa.')
         }

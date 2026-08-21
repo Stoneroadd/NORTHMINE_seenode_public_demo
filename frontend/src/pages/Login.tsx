@@ -131,7 +131,7 @@ export function Login({ onAuthenticated }: Props) {
           </form>
 
           <div className="login-status">
-            <span><RadioTower size={14} /> API FastAPI</span>
+            <span><RadioTower size={14} /> Plataforma segura</span>
             <span>{settingsService.isProduction ? tl.status_produccion : tl.status_demo_local}</span>
           </div>
         </motion.section>

@@ -7,7 +7,6 @@ export interface ReportsT {
   filtro_todos: string
 
   loading_reporte: string
-  error_con_mensaje: (msg: string) => string
   error_generico: string
   error_sufijo: string
 
@@ -53,8 +52,7 @@ export const reportsT: ModuleDict<ReportsT> = {
     filtro_todos: 'Todos',
 
     loading_reporte: 'Conectando reporte ejecutivo con NORTHMINE...',
-    error_con_mensaje: (msg) => `No se pudo cargar /api/reports/shift: ${msg}`,
-    error_generico: 'No se pudo cargar /api/reports/shift.',
+    error_generico: 'No pudimos cargar el reporte de turno. Reintenta en unos segundos.',
     error_sufijo: ' No se usa demo sin modo explicito del backend.',
 
     fuente_cache_real: 'CACHE REAL',
@@ -96,8 +94,7 @@ export const reportsT: ModuleDict<ReportsT> = {
     filtro_todos: 'All',
 
     loading_reporte: 'Connecting executive report to NORTHMINE...',
-    error_con_mensaje: (msg) => `Could not load /api/reports/shift: ${msg}`,
-    error_generico: 'Could not load /api/reports/shift.',
+    error_generico: 'We could not load the shift report. Try again in a few seconds.',
     error_sufijo: ' Demo mode is not used without an explicit backend flag.',
 
     fuente_cache_real: 'REAL CACHE',
@@ -139,8 +136,7 @@ export const reportsT: ModuleDict<ReportsT> = {
     filtro_todos: 'Alle',
 
     loading_reporte: 'Verbinde Executive-Bericht mit NORTHMINE...',
-    error_con_mensaje: (msg) => `Der Bericht /api/reports/shift konnte nicht geladen werden: ${msg}`,
-    error_generico: 'Der Bericht /api/reports/shift konnte nicht geladen werden.',
+    error_generico: 'Der Schichtbericht konnte nicht geladen werden. Versuchen Sie es in Kürze erneut.',
     error_sufijo: ' Demo wird nicht ohne expliziten Backend-Modus verwendet.',
 
     fuente_cache_real: 'ECHTER CACHE',

@@ -365,7 +365,6 @@ export function CurrentShiftPage() {
         eyebrow={t.eyebrow}
         title={`${data.shift_label}${t.title_suffix}`}
         description={t.descripcion(data.fecha, data.elapsed_minutes)}
-        meta="API /api/shift/current"
         actions={
           <>
             <button className="command-button" type="button" onClick={handlePdf} disabled={exportingPdf}>

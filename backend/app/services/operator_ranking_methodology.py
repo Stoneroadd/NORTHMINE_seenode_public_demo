@@ -21,15 +21,15 @@ def build_operator_ranking_methodology() -> dict[str, Any]:
         "data_mode": _data_mode(),
         "score_formula": {
             "text": (
-                "score_global = productividad_score * 0.35 + disponibilidad_score * 0.25 + "
-                "utilizacion_score * 0.20 + control_demoras_score * 0.15 + seguridad_score * 0.05"
+                "Score global = Productividad (35%) + Disponibilidad (25%) + "
+                "Utilizacion (20%) + Control de demoras (15%) + Seguridad (5%)"
             ),
             "components": {
-                "productividad": "min(100, toneladas_reales / toneladas_esperadas * 100)",
-                "disponibilidad": "minutos_productivos / minutos_turno * 100",
-                "utilizacion": "minutos_operativos / minutos_disponibles * 100",
-                "control_demoras": "100 - penalizacion por exceso de demoras gestionables",
-                "seguridad": "100 - penalizacion por eventos de seguridad",
+                "productividad": "Toneladas reales sobre toneladas esperadas (tope 100%).",
+                "disponibilidad": "Minutos productivos sobre minutos de turno.",
+                "utilizacion": "Minutos operativos sobre minutos disponibles.",
+                "control_demoras": "100 menos penalizacion por exceso de demoras gestionables.",
+                "seguridad": "100 menos penalizacion por eventos de seguridad.",
             },
         },
         "weights": {

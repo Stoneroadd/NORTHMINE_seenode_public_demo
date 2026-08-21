@@ -49,7 +49,6 @@ export function ExpertAnalysisPage() {
         eyebrow={t.eyebrow}
         title={t.title}
         description={t.description}
-        meta="API /api/analysis/expert"
         actions={
           <>
             {cycles && (

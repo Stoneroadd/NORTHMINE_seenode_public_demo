@@ -77,7 +77,6 @@ export interface CockpitT {
   required_green_prom_actual: (avg: string, days: number) => string
   loading_cockpit: string
   error_title: string
-  error_detail: (msg: string) => string
   error_detail_generic: string
   error_demo_suffix: string
   projection_sin_meta: string
@@ -226,7 +225,6 @@ export interface CockpitT {
   header_ultimo_registro: string
   header_calidad: string
   header_frescura: string
-  header_api: string
   header_refresh_aria: string
 
   // DispatcherAdvisorPanel.tsx
@@ -755,8 +753,7 @@ export const cockpitT: ModuleDict<CockpitT> = {
     required_green_prom_actual: (avg, days) => `Prom. actual ${avg} / ${days} dias restantes`,
     loading_cockpit: 'Cargando cockpit operacional...',
     error_title: 'Cockpit sin datos operacionales',
-    error_detail: (msg) => `No se pudo cargar /api/cockpit: ${msg}`,
-    error_detail_generic: 'No se pudo cargar /api/cockpit.',
+    error_detail_generic: 'No pudimos actualizar el cockpit. Reintenta en unos segundos.',
     error_demo_suffix: ' No se usa demo sin modo explicito del backend.',
     projection_sin_meta: 'Sin meta',
     projection_sobre_meta: 'Sobre meta',
@@ -893,11 +890,10 @@ export const cockpitT: ModuleDict<CockpitT> = {
     header_title: 'COCKPIT OPERACIONAL',
     header_subtitle: 'Vision en tiempo real de la operacion',
     header_status_aria: 'Estado operacional',
-    header_backend: (status) => `Backend ${status}`,
+    header_backend: (status) => `Sistema ${status}`,
     header_ultimo_registro: 'Ultimo registro real',
     header_calidad: 'Calidad',
     header_frescura: 'Frescura',
-    header_api: 'API',
     header_refresh_aria: 'Actualizar cockpit',
 
     dispatcher_kicker: 'AI Dispatcher Advisor',
@@ -1414,8 +1410,7 @@ export const cockpitT: ModuleDict<CockpitT> = {
     required_green_prom_actual: (avg, days) => `Current avg. ${avg} / ${days} days remaining`,
     loading_cockpit: 'Loading operational cockpit...',
     error_title: 'Cockpit without operational data',
-    error_detail: (msg) => `Could not load /api/cockpit: ${msg}`,
-    error_detail_generic: 'Could not load /api/cockpit.',
+    error_detail_generic: 'We could not refresh the cockpit. Try again in a few seconds.',
     error_demo_suffix: ' Demo is not used without explicit backend mode.',
     projection_sin_meta: 'No target',
     projection_sobre_meta: 'Above target',
@@ -1552,11 +1547,10 @@ export const cockpitT: ModuleDict<CockpitT> = {
     header_title: 'OPERATIONAL COCKPIT',
     header_subtitle: 'Real-time view of the operation',
     header_status_aria: 'Operational status',
-    header_backend: (status) => `Backend ${status}`,
+    header_backend: (status) => `System ${status}`,
     header_ultimo_registro: 'Last real record',
     header_calidad: 'Quality',
     header_frescura: 'Freshness',
-    header_api: 'API',
     header_refresh_aria: 'Refresh cockpit',
 
     dispatcher_kicker: 'AI Dispatcher Advisor',
@@ -2073,8 +2067,7 @@ export const cockpitT: ModuleDict<CockpitT> = {
     required_green_prom_actual: (avg, days) => `Akt. Durchschnitt ${avg} / ${days} Tage verbleibend`,
     loading_cockpit: 'Operationales Cockpit wird geladen...',
     error_title: 'Cockpit ohne Betriebsdaten',
-    error_detail: (msg) => `/api/cockpit konnte nicht geladen werden: ${msg}`,
-    error_detail_generic: '/api/cockpit konnte nicht geladen werden.',
+    error_detail_generic: 'Das Cockpit konnte nicht aktualisiert werden. Versuchen Sie es in Kürze erneut.',
     error_demo_suffix: ' Demo wird ohne expliziten Backend-Modus nicht verwendet.',
     projection_sin_meta: 'Kein Ziel',
     projection_sobre_meta: 'Über Ziel',
@@ -2211,11 +2204,10 @@ export const cockpitT: ModuleDict<CockpitT> = {
     header_title: 'OPERATIONALES COCKPIT',
     header_subtitle: 'Echtzeitansicht des Betriebs',
     header_status_aria: 'Betriebsstatus',
-    header_backend: (status) => `Backend ${status}`,
+    header_backend: (status) => `System ${status}`,
     header_ultimo_registro: 'Letzter echter Eintrag',
     header_calidad: 'Qualität',
     header_frescura: 'Aktualität',
-    header_api: 'API',
     header_refresh_aria: 'Cockpit aktualisieren',
 
     dispatcher_kicker: 'AI Dispatcher Advisor',

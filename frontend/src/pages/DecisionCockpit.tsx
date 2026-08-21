@@ -539,10 +539,7 @@ export function DecisionCockpit() {
   if (!FAST_PUBLIC_DEMO && query.isLoading) return <LoadingState label={t.loading_cockpit} />
 
   if (query.isError || !data) {
-    const detail = query.error instanceof Error
-      ? t.error_detail(query.error.message)
-      : t.error_detail_generic
-    return <ErrorState title={t.error_title} detail={`${detail}${t.error_demo_suffix}`} onRetry={() => query.refetch()} />
+    return <ErrorState title={t.error_title} detail={`${t.error_detail_generic}${t.error_demo_suffix}`} onRetry={() => query.refetch()} />
   }
 
   const hourlySpark = data.hourly.map((point) => point.tonnes)

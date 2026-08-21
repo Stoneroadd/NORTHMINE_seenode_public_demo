@@ -197,7 +197,7 @@ export const operatorRankingT: ModuleDict<OperatorRankingT> = {
     sin_causa: 'Sin causa',
     sin_modo: 'SIN MODO',
     cargando_ranking: 'Cargando ranking real WENCO/SQL de operadores...',
-    error_cargar_ranking: 'No se pudo cargar /api/operator-ranking/global.',
+    error_cargar_ranking: 'No pudimos cargar el ranking. Reintenta en unos segundos.',
 
     eyebrow: 'Analitica operacional',
     titulo: 'Ranking Global de Operadores',
@@ -389,7 +389,7 @@ export const operatorRankingT: ModuleDict<OperatorRankingT> = {
     sin_causa: 'No cause',
     sin_modo: 'NO MODE',
     cargando_ranking: 'Loading real WENCO/SQL operator ranking...',
-    error_cargar_ranking: 'Could not load /api/operator-ranking/global.',
+    error_cargar_ranking: 'We could not load the ranking. Try again in a few seconds.',
 
     eyebrow: 'Operational analytics',
     titulo: 'Global Operator Ranking',
@@ -581,7 +581,7 @@ export const operatorRankingT: ModuleDict<OperatorRankingT> = {
     sin_causa: 'Ohne Ursache',
     sin_modo: 'OHNE MODUS',
     cargando_ranking: 'Lade echtes WENCO/SQL-Operatoren-Ranking...',
-    error_cargar_ranking: 'Konnte /api/operator-ranking/global nicht laden.',
+    error_cargar_ranking: 'Das Ranking konnte nicht geladen werden. Versuchen Sie es in Kürze erneut.',
 
     eyebrow: 'Operative Analytik',
     titulo: 'Globales Operatoren-Ranking',

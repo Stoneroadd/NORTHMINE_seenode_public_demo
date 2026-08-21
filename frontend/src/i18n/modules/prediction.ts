@@ -52,7 +52,7 @@ export interface PredictionT {
 export const predictionT: ModuleDict<PredictionT> = {
   es: {
     loading: 'Cargando predicción ML...',
-    error: 'No se pudo cargar /api/ml/prediction.',
+    error: 'Prediccion no disponible en este momento.',
     header_eyebrow: 'ML / Inteligencia',
     header_title: 'Predicción de Turno',
     header_desc: 'Proyección de producción basada en modelo predictivo entrenado con histórico operacional.',
@@ -101,7 +101,7 @@ export const predictionT: ModuleDict<PredictionT> = {
   },
   en: {
     loading: 'Loading ML prediction...',
-    error: 'Could not load /api/ml/prediction.',
+    error: 'Prediction not available at this time.',
     header_eyebrow: 'ML / Intelligence',
     header_title: 'Shift Prediction',
     header_desc: 'Production projection based on a predictive model trained on operational history.',

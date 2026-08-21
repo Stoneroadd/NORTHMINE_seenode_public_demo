@@ -136,9 +136,7 @@ export function Production() {
   if (query.isError || !query.data) {
     const detail = query.error instanceof ApiError && (query.error.status === 401 || query.error.status === 403)
       ? `${t.error_prefix} ${t.error_session_invalid}`
-      : query.error instanceof Error
-        ? `${t.error_prefix} ${query.error.message}`
-        : t.error_generic
+      : t.error_generic
     return <ErrorState detail={`${detail} ${t.error_no_demo_suffix}`} onRetry={() => query.refetch()} />
   }
 

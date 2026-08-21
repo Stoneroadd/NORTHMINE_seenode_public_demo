@@ -286,7 +286,6 @@ export function AerialPage() {
         eyebrow={t.eyebrow}
         title={t.title}
         description={t.description}
-        meta="API /api/aerial/status"
         actions={
           <>
             <span className="panel-tag">

@@ -38,8 +38,7 @@ const sourceRequests: Array<{ key: SourceKey; endpoint: string; run: () => Promi
   { key: 'monthlyTarget', endpoint: '/api/monthly-target', run: () => northmineApi.monthlyTarget() },
 ]
 
-function errorMessage(t: MindMap3dT, error: unknown): string {
-  if (error instanceof Error) return error.message
+function errorMessage(t: MindMap3dT, _error: unknown): string {
   return t.page_modulo_no_disponible
 }
 

@@ -1,7 +1,7 @@
 import { FormEvent, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { KeyRound, Pencil, Power, RefreshCw, Save, ShieldCheck, UserPlus, Users } from 'lucide-react'
-import { ApiError, northmineApi, type UserCreateRequest, type UserPublic, type UserRole, type UserUpdateRequest } from '../lib/api'
+import { northmineApi, type UserCreateRequest, type UserPublic, type UserRole, type UserUpdateRequest } from '../lib/api'
 import { useAppStore } from '../store'
 import { useModuleT } from '../i18n/useModuleT'
 import { adminUsersT, type AdminUsersT } from '../i18n/modules/adminUsers'
@@ -44,8 +44,7 @@ function formatDate(value: string | null, t: AdminUsersT): string {
   return date.toLocaleString()
 }
 
-function apiMessage(error: unknown, t: AdminUsersT): string {
-  if (error instanceof ApiError) return error.message
+function apiMessage(_error: unknown, t: AdminUsersT): string {
   return t.operacion_no_disponible
 }
 
