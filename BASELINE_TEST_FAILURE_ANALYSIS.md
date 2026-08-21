@@ -34,3 +34,23 @@ The baseline five report/export failures overlap: after the data-mixing fix, the
 The P0 fix must not be credited with making unrelated tests green. The performance module, retired-route revocation pre-check, stale export headers and frontend timeout remain classified debt. A green Phase 1 gate requires repairing those test contracts with explicit fixtures—not loosening product behavior or installing production connector dependencies into unit tests.
 
 Final Phase 0.1 full run: frontend `98/98`; backend `366 passed / 376` with the same ten classified failures (seven performance-contract tests, one retired-route revocation pre-check, two stale export-header assertions). Eight new P0 tests are included, so comparison against the original suite is: four original failures closed, no new product-test regression, ten original failures remain.
+
+## Phase 0.2 closure
+
+The ten remaining failures were closed without weakening product behavior:
+
+- The seven performance tests now use authenticated application fixtures, a deterministic synthetic dataset, explicit endpoint budgets, deterministic cache assertions and real concurrent audit writes.
+- The concurrent test exposed a product defect: `audit.py` stored one SQLite connection on a function attribute and shared it across worker threads. It now uses thread-local connections; all 20 concurrent writes must remain durable.
+- `/api/alerts` omitted the already-authorized request dataset when calling `build_alerts`, permitting an unintended second provider/Wenco read. The request dataset is now passed explicitly.
+- Revocation coverage now probes `/api/auth/me` before and after revocation instead of the retired `/api/demo/summary` route.
+- XLSX tests now assert the current evidence columns instead of obsolete exact header lists.
+- The fallback-history test now asserts the mandatory provenance envelope and that the cached fallback is identical to the provenance-enriched successful response.
+
+Final Phase 0.2 gates on 2026-08-21:
+
+- Backend: `376 passed`, `0 failed`, 9 warnings, 117.24 s.
+- Frontend unit: `98 passed`, `0 failed`, 14 files, 5.54 s.
+- Frontend typecheck/lint: pass.
+- Frontend production build: pass.
+
+The Windows `RotatingFileHandler` emitted non-fatal `WinError 32` messages because another process holds `logs/backend.log`. Pytest completed green; no unknown process was terminated. This is an observability/environment warning, not a hidden test failure.
