@@ -571,7 +571,7 @@ def test_ws_memory_response_keeps_visual_detail_and_speaks_a_brief_status(client
     number = str(100 + (uuid.uuid4().int % 800))
     entity = f"PALA {number}"
     working_memory.track_entity(
-        entity=entity, entity_type="equipment", company_id=None, site_id=None, shift="DIA",
+        entity=entity, entity_type="equipment", company_id=login_as_operador["empresa"], site_id=login_as_operador["faena"], shift="DIA",
         current_issue="Rendimiento bajo el plan.", metric_value=-10.0, metric_label="variacion_pct",
         metric_direction="lower_is_worse", created_by="tester",
     )

@@ -25,6 +25,7 @@ from app.ai.investigation_schemas import (
 )
 from app.ai.planner import PlannerRejection
 from app.core.dependencies import RequireAny
+from app.core.request_context import require_resource_owner
 from app.core.rate_limit import endpoint_limit, limiter
 
 router = APIRouter(prefix="/ai-copilot/investigations", tags=["ai-copilot-investigations"])
@@ -234,6 +235,7 @@ async def execute_investigation_plan(investigation_id: str, request: Request, us
     record = get_investigation(investigation_id)
     if not record:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Investigacion no encontrada")
+    require_resource_owner(user, owner_id=record.get("created_by"))
     if record["status"] not in ("planned", "failed"):
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Esta investigacion ya fue ejecutada")
 
@@ -259,6 +261,7 @@ def get_investigation_endpoint(investigation_id: str, user: dict = RequireAny) -
     record = get_investigation(investigation_id)
     if not record:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Investigacion no encontrada")
+    require_resource_owner(user, owner_id=record.get("created_by"))
     return {**record, "result": json.loads(record["result_json"])}
 
 
@@ -277,6 +280,7 @@ def report_ui_step(investigation_id: str, step_id: str, request: Request, payloa
     record = get_investigation(investigation_id)
     if not record:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Investigacion no encontrada")
+    require_resource_owner(user, owner_id=record.get("created_by"))
 
     result_data = json.loads(record["result_json"])
     for step in result_data.get("plan", {}).get("steps", []):

@@ -6,6 +6,7 @@ from typing import Any, Callable
 
 from app.services import data_quality_service, kpis
 from app.services.data_provider import get_dataset as provider_get_dataset
+from app.services.data_provenance import DataOrigin, resolve_provenance
 from app.services.filtering import normalize_shift
 
 """Herramientas tipadas del Copilot.
@@ -26,9 +27,8 @@ def _freshness(dataset: dict[str, Any]) -> dict[str, Any]:
     cycles = dataset.get("cycles") or []
     last = max((c.get("datetime") for c in cycles if c.get("datetime")), default=None)
     stale = bool(dataset.get("stale", False))
-    source = str(dataset.get("source") or "")
-    data_source = str(dataset.get("data_source") or ("DEMO" if "demo" in source.lower() else "REAL")).upper()
-    if data_source == "DEMO":
+    provenance = resolve_provenance(dataset)
+    if provenance["origin"] in {DataOrigin.SYNTHETIC.value, DataOrigin.SIMULATED.value}:
         status = "current"
     elif stale:
         status = "stale"
@@ -43,6 +43,10 @@ def _freshness(dataset: dict[str, Any]) -> dict[str, Any]:
         except ValueError:
             age_minutes = None
     return {"last_updated_at": last, "status": status, "age_minutes": age_minutes}
+
+
+def _provenance(dataset: dict[str, Any]) -> dict[str, Any]:
+    return {**resolve_provenance(dataset), "representation": "DERIVED"}
 
 
 def _quality(dataset: dict[str, Any]) -> dict[str, Any]:
@@ -105,6 +109,7 @@ def tool_get_current_shift_summary(args: dict[str, Any]) -> dict[str, Any]:
         "ciclos": command_center["ciclos"],
         "proyeccion": command_center.get("projection"),
         "data_quality": quality,
+        "provenance": _provenance(dataset),
         "freshness": _freshness(dataset),
         "confidence": _confidence_from_quality(quality),
         "warnings": [] if command_center["meta_configurada"] else ["Meta de turno no configurada."],
@@ -133,6 +138,7 @@ def tool_get_production_kpis(args: dict[str, Any]) -> dict[str, Any]:
         "peor_hora": production["peor_hora"],
         "toneladas_por_hora": production["toneladas_por_hora"],
         "data_quality": quality,
+        "provenance": _provenance(dataset),
         "freshness": _freshness(dataset),
         "confidence": _confidence_from_quality(quality),
         "warnings": production.get("warnings", []),
@@ -160,6 +166,7 @@ def tool_get_fleet_status(args: dict[str, Any]) -> dict[str, Any]:
         "disponibilidad_pct": overview["disponibilidad_pct"],
         "equipos": equipos[:25],
         "data_quality": quality,
+        "provenance": _provenance(dataset),
         "freshness": _freshness(dataset),
         "confidence": _confidence_from_quality(quality),
     }
@@ -183,6 +190,7 @@ def tool_get_alerts(args: dict[str, Any]) -> dict[str, Any]:
         "items": items[:limit],
         "count": len(items),
         "data_quality": quality,
+        "provenance": _provenance(dataset),
         "freshness": _freshness(dataset),
         "confidence": _confidence_from_quality(quality),
     }
@@ -201,6 +209,7 @@ def tool_get_data_quality_status(args: dict[str, Any]) -> dict[str, Any]:
         "last_record_age_min": quality["last_record_age_min"],
         "stale": quality["stale"],
         "source": quality["source"],
+        "provenance": _provenance(dataset),
         "freshness": _freshness(dataset),
         "confidence": _confidence_from_quality(quality),
     }
@@ -233,6 +242,7 @@ def tool_get_loading_performance(args: dict[str, Any]) -> dict[str, Any]:
             for item in items
         ],
         "data_quality": quality,
+        "provenance": _provenance(dataset),
         "freshness": _freshness(dataset),
         "confidence": _confidence_from_quality(quality),
     }

@@ -12,6 +12,7 @@ from app.ai.proactivity.persistence import list_proactive_events
 from app.ai.work_products import persistence, tasks as tasks_module, versions
 from app.ai.work_products.models import ReportDraft, ShiftHandoverDraft, TaskDraft
 from app.core.dependencies import RequireAny
+from app.core.request_context import require_resource_scope
 
 router = APIRouter(prefix="/ai-agent/work-products", tags=["ai-agent-work-products"])
 
@@ -31,6 +32,10 @@ def _client_ip(request: Request) -> str:
 
 def _scope(user: dict) -> tuple[str | None, str | None]:
     return user.get("empresa"), user.get("faena")
+
+
+def _authorize(user: dict, resource: ReportDraft | ShiftHandoverDraft | TaskDraft) -> None:
+    require_resource_scope(user, tenant_id=resource.company_id, site_id=resource.site_id)
 
 
 class RejectRequest(BaseModel):
@@ -67,12 +72,17 @@ def get_report(report_id: str, version: int | None = None, user: dict = RequireA
     report = versions.get_version(report_id, version)
     if not report:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Informe no encontrado")
+    _authorize(user, report)
     return report
 
 
 @router.get("/reports/{report_id}/versions")
 def get_report_versions(report_id: str, user: dict = RequireAny) -> list[ReportDraft]:
-    return versions.history(report_id)
+    reports = versions.history(report_id)
+    if not reports:
+        return []
+    _authorize(user, reports[0])
+    return reports
 
 
 @router.post("/reports/{report_id}/approve")
@@ -83,6 +93,7 @@ def approve_report(report_id: str, request: Request, user: dict = RequireAny) ->
     report = persistence.get_latest_report(report_id)
     if not report:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Informe no encontrado")
+    _authorize(user, report)
     if not report.quality_gate.passed:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -108,6 +119,7 @@ def reject_report(report_id: str, body: RejectRequest, request: Request, user: d
     report = persistence.get_latest_report(report_id)
     if not report:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Informe no encontrado")
+    _authorize(user, report)
     rejected = report.model_copy(update={
         "status": "rejected", "approved_by": str(user.get("sub") or "anon"), "approved_at": _now(),
         "rejection_reason": body.reason,
@@ -148,6 +160,7 @@ def get_handover(handover_id: str, user: dict = RequireAny) -> ShiftHandoverDraf
     handover = persistence.get_handover(handover_id)
     if not handover:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cambio de turno no encontrado")
+    _authorize(user, handover)
     return handover
 
 
@@ -159,6 +172,7 @@ def approve_handover(handover_id: str, request: Request, user: dict = RequireAny
     handover = persistence.get_handover(handover_id)
     if not handover:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cambio de turno no encontrado")
+    _authorize(user, handover)
     approved = handover.model_copy(update={"status": "approved", "approved_by": str(user.get("sub") or "anon"), "approved_at": _now()})
     persistence.save_handover(approved)
     from app.ai.memory import episodic_memory
@@ -178,6 +192,7 @@ def reject_handover(handover_id: str, body: RejectRequest, request: Request, use
     handover = persistence.get_handover(handover_id)
     if not handover:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cambio de turno no encontrado")
+    _authorize(user, handover)
     rejected = handover.model_copy(update={
         "status": "rejected", "approved_by": str(user.get("sub") or "anon"), "approved_at": _now(), "rejection_reason": body.reason,
     })
@@ -201,6 +216,9 @@ def approve_task(task_id: str, request: Request, user: dict = RequireAny) -> Tas
     role = str(user.get("rol") or "")
     if not policies.can_approve(role):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Rol sin permiso de aprobación")
+    task = tasks_module.get_task(task_id)
+    if task:
+        _authorize(user, task)
     task = tasks_module.approve_task(task_id, approved_by=str(user.get("sub") or "anon"))
     if not task:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tarea no encontrada o no pendiente de aprobación")
@@ -213,6 +231,9 @@ def reject_task(task_id: str, body: RejectRequest, request: Request, user: dict 
     role = str(user.get("rol") or "")
     if not policies.can_approve(role):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Rol sin permiso de aprobación")
+    task = tasks_module.get_task(task_id)
+    if task:
+        _authorize(user, task)
     task = tasks_module.reject_task(task_id, rejected_by=str(user.get("sub") or "anon"), reason=body.reason)
     if not task:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tarea no encontrada o no pendiente de aprobación")
@@ -222,6 +243,9 @@ def reject_task(task_id: str, body: RejectRequest, request: Request, user: dict 
 
 @router.post("/tasks/{task_id}/complete")
 def complete_task(task_id: str, request: Request, user: dict = RequireAny) -> TaskDraft:
+    task = tasks_module.get_task(task_id)
+    if task:
+        _authorize(user, task)
     task = tasks_module.complete_task(task_id, completed_by=str(user.get("sub") or "anon"))
     if not task:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tarea no encontrada o no aprobada")

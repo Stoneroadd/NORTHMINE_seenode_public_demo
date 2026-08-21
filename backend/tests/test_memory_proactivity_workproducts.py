@@ -425,7 +425,7 @@ def test_regenerate_with_executive_audience_changes_scope_not_facts():
 def test_report_approval_requires_permission(client, login_as_operador, login_as_supervisor):
     report = reports_module.build_report(
         report_type="SHIFT_REPORT", scope=ReportScope(shift=None, audience="supervisor"),
-        generated_by="tester", company_id=None, site_id=None,
+        generated_by="tester", company_id=login_as_supervisor["empresa"], site_id=login_as_supervisor["faena"],
     )
     from app.ai.work_products import persistence as wp_persistence
     report = report.model_copy(update={"quality_gate": report.quality_gate.model_copy(update={"passed": True})})
@@ -444,7 +444,7 @@ def test_report_approval_requires_permission(client, login_as_operador, login_as
 def test_report_approval_rejects_failed_quality_gate(client, login_as_supervisor):
     report = reports_module.build_report(
         report_type="SHIFT_REPORT", scope=ReportScope(shift=None, audience="supervisor"),
-        generated_by="tester", company_id=None, site_id=None,
+        generated_by="tester", company_id=login_as_supervisor["empresa"], site_id=login_as_supervisor["faena"],
     )
     from app.ai.work_products import persistence as wp_persistence
     report = report.model_copy(update={"quality_gate": report.quality_gate.model_copy(update={
@@ -464,7 +464,7 @@ def test_report_approval_rejects_failed_quality_gate(client, login_as_supervisor
 def test_report_rejection_records_reason(client, login_as_supervisor):
     report = reports_module.build_report(
         report_type="SHIFT_REPORT", scope=ReportScope(shift=None, audience="supervisor"),
-        generated_by="tester", company_id=None, site_id=None,
+        generated_by="tester", company_id=login_as_supervisor["empresa"], site_id=login_as_supervisor["faena"],
     )
     from app.ai.work_products import persistence as wp_persistence
     wp_persistence.save_report_version(report)

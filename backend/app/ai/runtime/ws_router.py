@@ -83,6 +83,14 @@ async def _authenticate(websocket: WebSocket) -> dict | None:
             return None
         if payload.get("auth_version") != user.auth_version:
             return None
+        payload = {
+            **payload,
+            "uid": user.id,
+            "rol": user.role,
+            "empresa": user.empresa,
+            "faena": user.faena,
+            "is_demo": user.is_demo,
+        }
     return payload
 
 

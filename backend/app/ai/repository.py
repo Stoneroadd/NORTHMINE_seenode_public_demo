@@ -132,12 +132,22 @@ def get_task_draft(task_id: str) -> dict[str, Any] | None:
     return _row_to_task(row) if row else None
 
 
-def list_task_drafts(status: str | None = None, limit: int = 50) -> list[dict[str, Any]]:
+def list_task_drafts(status: str | None = None, limit: int = 50, created_by: str | None = None) -> list[dict[str, Any]]:
     conn = _connection()
-    if status:
+    if status and created_by:
+        rows = conn.execute(
+            "SELECT * FROM ai_task_drafts WHERE status = ? AND created_by = ? ORDER BY created_at DESC LIMIT ?",
+            (status, created_by, limit),
+        ).fetchall()
+    elif status:
         rows = conn.execute(
             "SELECT * FROM ai_task_drafts WHERE status = ? ORDER BY created_at DESC LIMIT ?",
             (status, limit),
+        ).fetchall()
+    elif created_by:
+        rows = conn.execute(
+            "SELECT * FROM ai_task_drafts WHERE created_by = ? ORDER BY created_at DESC LIMIT ?",
+            (created_by, limit),
         ).fetchall()
     else:
         rows = conn.execute(

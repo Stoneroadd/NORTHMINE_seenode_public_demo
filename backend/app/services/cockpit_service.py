@@ -5,6 +5,7 @@ from typing import Any
 
 from app.services.action_service import build_cause_breakdown, build_happening, build_recommendation
 from app.services.data_quality_service import build_data_quality
+from app.services.data_provenance import DataOrigin, resolve_provenance
 from app.services.economics_service import build_delay_breakdown, build_economics, build_scenario_table
 from app.services.equipment_service import (
     build_caex_status,
@@ -81,21 +82,25 @@ def build_cockpit_response(
         else None
     )
 
+    provenance = resolve_provenance(dataset)
+    origin = provenance["origin"]
+    is_demo = bool(provenance["demo_context"])
     return {
         "status": "STALE" if stale else "OK",
         "generated_at": _now_iso(),
         "api_version": COCKPIT_API_VERSION,
-        "data_source": "REAL",
-        "source_system": "WENCO",
+        "data_source": origin,
+        "source_system": provenance["source_system"],
         "source": dataset.get("source", "wenco-sql-live"),
-        "mode": "CACHE" if stale else "DATOS_REALES",
+        "provenance": {**provenance, "representation": "DERIVED"},
+        "mode": "CACHE" if stale else ("DEMO" if is_demo else "DATOS_REALES"),
         "backend_status": "CONNECTED",
         "data_source_status": "STALE" if stale else "CONNECTED",
         "selected_date": current["fecha"],
         "selected_shift": current["turno"],
-        "last_real_record": last_record_at,
+        "last_real_record": last_record_at if origin == DataOrigin.REAL.value else None,
         "data_freshness_seconds": data_freshness_seconds,
-        "is_demo": False,
+        "is_demo": is_demo,
         "stale": stale,
         "shift": {
             "name": current.get("shift_label") or f"Turno {current['turno']}",

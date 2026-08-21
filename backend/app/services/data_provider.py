@@ -24,6 +24,7 @@ from datetime import date, datetime, time, timedelta
 from typing import Any
 
 from app.core.config import get_settings
+from app.services.data_provenance import with_provenance
 from app.services.wenco_data import get_equipment_status as _get_wenco_equipment_status
 from app.services.wenco_data import get_equipment_status_history as _get_wenco_equipment_status_history
 from app.services.wenco_data import get_wenco_dataset, get_wenco_fleet_full
@@ -198,15 +199,14 @@ def _demo_dataset(fecha: str | None, dias: int) -> dict[str, Any]:
                         "duration_minutes": duration,
                         "turno": shift,
                     })
-    return {
+    return with_provenance({
         "source": "northmine-demo-synthetic",
-        "data_source": "DEMO",
         "today": selected.isoformat(),
         "plan": [],
         "cycles": cycles,
         "loader_status_durations": loader_status_durations,
         "stale": False,
-    }
+    })
 
 
 def get_dataset(fecha: str | None = None, dias: int = 2) -> dict[str, Any]:
@@ -215,7 +215,7 @@ def get_dataset(fecha: str | None = None, dias: int = 2) -> dict[str, Any]:
     key = (fecha, dias)
     try:
         result = get_wenco_dataset(fecha, dias=dias) if fecha else get_wenco_dataset(dias=dias)
-        result = {**result, "stale": False}
+        result = with_provenance({**result, "stale": False})
         _dataset_cache[key] = result
         return result
     except Exception:
@@ -225,21 +225,21 @@ def get_dataset(fecha: str | None = None, dias: int = 2) -> dict[str, Any]:
                 "WENCO no disponible, devolviendo dataset cacheado (fecha=%s, dias=%s) marcado stale",
                 fecha, dias,
             )
-            return {**cached, "stale": True}
+            return with_provenance({**cached, "stale": True})
         raise
 
 
 def get_fleet_full(dias: int = 7, seed: int = 42) -> dict[str, Any]:
     try:
         result = get_wenco_fleet_full(dias=dias)
-        result = {**result, "stale": False}
+        result = with_provenance({**result, "stale": False})
         _fleet_cache[dias] = result
         return result
     except Exception:
         cached = _fleet_cache.get(dias)
         if cached is not None:
             logger.warning("WENCO no disponible, devolviendo fleet_full cacheado (dias=%s) marcado stale", dias)
-            return {**cached, "stale": True}
+            return with_provenance({**cached, "stale": True})
         raise
 
 
@@ -252,9 +252,12 @@ def get_equipment_status(dias: int = 1) -> dict[str, dict[str, Any]]:
     puntual, asi que no vale la pena tumbar el endpoint entero por esto.
     """
     if get_settings().is_demo:
-        return _demo_equipment_status(dias)
+        provenance = with_provenance({"source": "northmine-demo-synthetic"})["provenance"]
+        return {key: {**value, "provenance": provenance} for key, value in _demo_equipment_status(dias).items()}
     try:
         result = _get_wenco_equipment_status(dias=dias)
+        provenance = with_provenance({"source": "wenco-sql-live"})["provenance"]
+        result = {key: {**value, "provenance": provenance} for key, value in result.items()}
         _status_cache[dias] = result
         return result
     except Exception:
@@ -273,9 +276,12 @@ def get_equipment_status_history(dias: int = 7) -> list[dict[str, Any]]:
     cache, devuelve lista vacia en vez de tumbar el endpoint de historial de averias.
     """
     if get_settings().is_demo:
-        return _demo_equipment_status_history(dias)
+        provenance = with_provenance({"source": "northmine-demo-synthetic"})["provenance"]
+        return [{**item, "provenance": provenance} for item in _demo_equipment_status_history(dias)]
     try:
         result = _get_wenco_equipment_status_history(dias=dias)
+        provenance = with_provenance({"source": "wenco-sql-live"})["provenance"]
+        result = [{**item, "provenance": provenance} for item in result]
         _status_history_cache[dias] = result
         return result
     except Exception:

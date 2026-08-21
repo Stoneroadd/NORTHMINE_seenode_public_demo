@@ -68,6 +68,15 @@ async def get_current_user(
                 headers={"WWW-Authenticate": "Bearer"},
             )
 
+        payload = {
+            **payload,
+            "uid": user.id,
+            "rol": user.role,
+            "empresa": user.empresa,
+            "faena": user.faena,
+            "is_demo": user.is_demo,
+        }
+
     update_session_activity(token)
     return payload
 

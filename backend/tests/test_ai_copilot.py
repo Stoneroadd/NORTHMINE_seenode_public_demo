@@ -112,7 +112,7 @@ def test_task_draft_requires_explicit_approval_before_it_is_official(client, log
         priority="alta",
         suggested_owner="Despacho",
         linked_finding=None,
-        created_by="test-suite",
+        created_by=login_as_operador["username"],
     )
     assert draft["status"] == "draft"
 

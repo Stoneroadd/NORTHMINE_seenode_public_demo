@@ -9,6 +9,7 @@ from app.core.cache import cached
 from app.core.config import get_settings
 from app.services.data_provider import get_dataset as _provider_get_dataset
 from app.services.data_provider import get_equipment_status as _provider_get_equipment_status
+from app.services.data_provenance import resolve_provenance
 from app.services.forecast_service import forecast_shift_total
 
 
@@ -555,8 +556,9 @@ def build_production_shift(
     second_half = sum(row["toneladas"] for row in toneladas_por_hora[max(1, len(toneladas_por_hora) // 2):])
     tendencia = "AL ALZA" if second_half >= first_half * 0.92 else "A LA BAJA"
     source = str(dataset.get("source", "wenco-sql-live"))
-    data_source = str(dataset.get("data_source") or ("DEMO" if "demo" in source.lower() else "REAL")).upper()
-    source_system = "DEMO" if data_source == "DEMO" else "WENCO"
+    provenance = resolve_provenance(dataset)
+    data_source = provenance["origin"]
+    source_system = provenance["source_system"]
     stale = bool(dataset.get("stale", False))
     last_real_record = max(
         (record.get("datetime") for record in dataset.get("cycles", []) if record.get("datetime")),
@@ -568,6 +570,7 @@ def build_production_shift(
         "api_version": "v1",
         "data_source": data_source,
         "source_system": source_system,
+        "provenance": {**provenance, "representation": "DERIVED"},
         "backend_status": "CONNECTED",
         "data_source_status": "CACHE" if stale else "CONNECTED",
         "source": source,
@@ -630,9 +633,10 @@ def _is_standby_item(item: dict[str, Any]) -> bool:
 def build_fleet_status(
     dataset: dict[str, Any] | None = None,
     turno: str | None = None,
+    allow_external_enrichment: bool = True,
 ) -> list[dict[str, Any]]:
     dataset = dataset or _provider_get_dataset()
-    equipment_status = _provider_get_equipment_status()
+    equipment_status = _provider_get_equipment_status() if allow_external_enrichment else {}
     cycles: list[dict[str, Any]] = dataset["cycles"]
     shift_records, _, _ = _current_shift_records(dataset, turno)
     latest_by_truck: dict[str, dict[str, Any]] = {}
@@ -698,8 +702,9 @@ def build_fleet_status(
 def build_fleet_overview(
     dataset: dict[str, Any] | None = None,
     turno: str | None = None,
+    allow_external_enrichment: bool = True,
 ) -> dict[str, Any]:
-    rows = build_fleet_status(dataset, turno)
+    rows = build_fleet_status(dataset, turno, allow_external_enrichment)
     total = len(rows)
     activos = sum(1 for item in rows if item["estado"] == "ACTIVO")
     demora = sum(1 for item in rows if item["estado"] == "DEMORA")
@@ -729,9 +734,10 @@ def build_fleet_overview(
 def build_loading_units_summary(
     dataset: dict[str, Any] | None = None,
     turno: str | None = None,
+    allow_external_enrichment: bool = True,
 ) -> dict[str, Any]:
     dataset = dataset or _provider_get_dataset()
-    equipment_status = _provider_get_equipment_status()
+    equipment_status = _provider_get_equipment_status() if allow_external_enrichment else {}
     shift_records, _, _ = _current_shift_records(dataset, turno)
     by_loader: dict[str, dict[str, Any]] = {}
     for record in shift_records:
@@ -1696,11 +1702,13 @@ def _alert(
 def build_alerts(
     summary: dict[str, Any] | None = None,
     fleet: list[dict[str, Any]] | None = None,
+    dataset: dict[str, Any] | None = None,
+    turno: str | None = None,
 ) -> list[dict[str, Any]]:
-    summary = summary or build_summary()
-    production = build_production_shift()
-    fleet = fleet or build_fleet_status()
-    loading = build_loading_units_summary()
+    summary = summary or build_summary(dataset)
+    production = build_production_shift(dataset, turno=turno)
+    fleet = fleet or build_fleet_status(dataset, turno=turno, allow_external_enrichment=False)
+    loading = build_loading_units_summary(dataset, turno=turno, allow_external_enrichment=False)
     alerts: list[dict[str, Any]] = []
 
     if production["cumplimiento_pct"] < 98:
@@ -1754,9 +1762,9 @@ def build_shift_report(
 ) -> dict[str, Any]:
     dataset = dataset or _provider_get_dataset()
     production = build_production_shift(dataset, turno=turno)
-    loading = build_loading_units_summary(dataset, turno=turno)
-    fleet = build_fleet_overview(dataset, turno=turno)
-    alerts = build_alerts(build_summary(dataset), fleet["lista_equipos"])
+    loading = build_loading_units_summary(dataset, turno=turno, allow_external_enrichment=False)
+    fleet = build_fleet_overview(dataset, turno=turno, allow_external_enrichment=False)
+    alerts = build_alerts(build_summary(dataset), fleet["lista_equipos"], dataset, turno)
     source = str(dataset.get("source") or "wenco-sql-live")
     is_demo_dataset = (
         str(dataset.get("data_source") or "").upper() == "DEMO"
@@ -1798,8 +1806,9 @@ def build_shift_report(
         f"{report_tonnes:,} t contra meta {report_meta:,} t "
         f"({cumplimiento:.1f}%). Flota activa {fleet['equipos_activos']}/{fleet['total_equipos']}."
     )
-    data_source = str(dataset.get("data_source") or ("DEMO" if "demo" in source.lower() else "REAL")).upper()
-    source_system = "DEMO" if data_source == "DEMO" else "WENCO"
+    provenance = resolve_provenance(dataset)
+    data_source = provenance["origin"]
+    source_system = provenance["source_system"]
     stale = bool(dataset.get("stale", False))
     last_real_record = max(
         (record.get("datetime") for record in dataset.get("cycles", []) if record.get("datetime")),
@@ -1812,6 +1821,7 @@ def build_shift_report(
         "api_version": "v1",
         "data_source": data_source,
         "source_system": source_system,
+        "provenance": {**provenance, "representation": "DERIVED"},
         "backend_status": "CONNECTED",
         "data_source_status": "CACHE" if stale else "CONNECTED",
         "source": source,

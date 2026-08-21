@@ -35,6 +35,7 @@ from app.core.config import get_settings
 from app.core.distributed import SyncAlreadyRunning
 from app.core.crypto import decrypt_sensitive_data
 from app.core.dependencies import RequireAdmin, RequireAny, RequireOperador, RequireSupervisor, get_current_user
+from app.core.request_context import RequestContext, require_resource_scope
 from app.core.health import build_health_response, build_liveness_response, build_readiness_response
 from app.core.monitoring import build_admin_system_status
 from app.core.mfa import (
@@ -1300,10 +1301,20 @@ def aerea_equipos(user: dict = RequireAny) -> dict:
 # ADMIN â€” solo rol admin
 # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
+def _authorize_admin_target(user: dict, target) -> None:
+    require_resource_scope(user, tenant_id=target.empresa, site_id=target.faena)
+
+
 @router.get("/admin/users", response_model=UserListResponse)
 def admin_list_users(request: Request, user: dict = RequireAdmin) -> UserListResponse:
     repository = get_user_repository()
-    users = [_to_user_public(item) for item in repository.list_users()]
+    context = RequestContext.from_user(user)
+    users = [
+        _to_user_public(item)
+        for item in repository.list_users()
+        if str(item.empresa).strip().casefold() == context.tenant_id
+        and str(item.faena).strip().casefold() == context.site_id
+    ]
     return UserListResponse(count=len(users), items=users)
 
 
@@ -1314,12 +1325,14 @@ def admin_get_user(user_id: str, request: Request, user: dict = RequireAdmin) ->
     if not target:
         _audit_admin_user_action(repository, request, user, user_id, "admin_user_action_denied", "not_found", status_code=404)
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    _authorize_admin_target(user, target)
     return _to_user_public(target)
 
 
 @router.post("/admin/users", response_model=UserPublic, status_code=status.HTTP_201_CREATED)
 def admin_create_user(payload: UserCreateRequest, request: Request, user: dict = RequireAdmin) -> UserPublic:
     repository = get_user_repository()
+    require_resource_scope(user, tenant_id=payload.empresa, site_id=payload.faena)
     try:
         created = repository.create_user(
             payload.username,
@@ -1359,6 +1372,12 @@ def admin_update_user(user_id: str, payload: UserUpdateRequest, request: Request
     if not target:
         _audit_admin_user_action(repository, request, user, user_id, "admin_user_action_denied", "not_found", status_code=404)
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    _authorize_admin_target(user, target)
+    require_resource_scope(
+        user,
+        tenant_id=payload.empresa if payload.empresa is not None else target.empresa,
+        site_id=payload.faena if payload.faena is not None else target.faena,
+    )
     try:
         updated = repository.update_user(
             user_id,
@@ -1393,6 +1412,7 @@ def admin_update_user_role(user_id: str, payload: UserRoleUpdateRequest, request
     if not target:
         _audit_admin_user_action(repository, request, user, user_id, "admin_user_action_denied", "not_found", status_code=404)
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    _authorize_admin_target(user, target)
     try:
         updated = repository.update_role(user_id, payload.role)
     except LastAdminError as exc:
@@ -1410,6 +1430,7 @@ def admin_update_user_status(user_id: str, payload: UserStatusUpdateRequest, req
     if not target:
         _audit_admin_user_action(repository, request, user, user_id, "admin_user_action_denied", "not_found", status_code=404)
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    _authorize_admin_target(user, target)
     try:
         updated = repository.set_active_status(user_id, payload.is_active)
     except LastAdminError as exc:
@@ -1436,6 +1457,7 @@ def admin_reset_user_password(user_id: str, payload: UserPasswordResetRequest, r
     if not target:
         _audit_admin_user_action(repository, request, user, user_id, "admin_user_action_denied", "not_found", status_code=404)
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    _authorize_admin_target(user, target)
     try:
         updated = repository.reset_password(user_id, payload.new_password)
     except UserRepositoryError as exc:
@@ -1511,6 +1533,7 @@ def revoke_user_tokens(user_id: str, user: dict = RequireAdmin) -> dict:
     target = repository.get_user_by_id(user_id) or repository.get_by_username(user_id)
     if not target:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    _authorize_admin_target(user, target)
     _invalidate_auth_sessions(repository, target.username)
     return {"message": f"Tokens revocados para {user_id}"}
 

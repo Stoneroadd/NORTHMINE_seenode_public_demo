@@ -50,7 +50,7 @@ def _reject_demo_mode(endpoint: str) -> None:
 
 def _explicit_demo_mode() -> bool:
     settings = get_settings()
-    return settings.environment == "demo" or settings.mode == "demo"
+    return getattr(settings, "environment", None) == "demo" or getattr(settings, "mode", None) == "demo"
 
 
 def _builder_demo_flag(demo_mode: bool) -> bool:
