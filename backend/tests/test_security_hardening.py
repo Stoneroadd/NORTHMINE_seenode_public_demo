@@ -83,8 +83,8 @@ def test_password_strength_validation(client, login_as_admin):
     assert resp.status_code == 400
 
 
-def test_security_metrics_endpoint(client, login_as_admin):
-    headers = {"Authorization": f"Bearer {login_as_admin['access_token']}"}
+def test_security_metrics_endpoint(client, login_as_real_admin):
+    headers = {"Authorization": f"Bearer {login_as_real_admin['access_token']}"}
     resp = client.get("/api/admin/metrics", headers=headers)
     assert resp.status_code == 200
     data = resp.json()
@@ -95,7 +95,7 @@ def test_security_metrics_endpoint(client, login_as_admin):
     assert "suspicious_activity" in data
 
 
-def test_public_demo_protects_network_identity_and_system_details(client, monkeypatch):
+def test_public_demo_protects_network_identity_and_system_details(client, monkeypatch, login_as_real_admin):
     demo_settings = replace(
         get_settings(),
         mode="demo",
@@ -113,9 +113,12 @@ def test_public_demo_protects_network_identity_and_system_details(client, monkey
         endpoint="/api/demo/protected-network-test",
         status_code=200,
     )
-    login = client.post("/api/auth/login", json={"username": "admin", "password": "admin"})
-    assert login.status_code == 200
-    headers = {"Authorization": f"Bearer {login.json()['access_token']}"}
+    # RequireAdmin now excludes is_demo accounts, so a real (non-demo) admin
+    # is required to reach these endpoints at all. This test is about a
+    # separate protection layer -- what even a real admin sees when the
+    # deployment itself is running in public-demo mode -- not about who is
+    # asking, so login_as_real_admin replaces the old admin/admin login.
+    headers = {"Authorization": f"Bearer {login_as_real_admin['access_token']}"}
 
     audit_response = client.get("/api/admin/audit-log", headers=headers)
     system_response = client.get("/api/admin/system", headers=headers)
@@ -131,8 +134,8 @@ def test_public_demo_protects_network_identity_and_system_details(client, monkey
     assert system_response.json()["frontend"]["expected_origin"] == "entorno demo protegido"
 
 
-def test_revoke_user_tokens(client, login_as_admin):
-    admin_headers = {"Authorization": f"Bearer {login_as_admin['access_token']}"}
+def test_revoke_user_tokens(client, login_as_real_admin):
+    admin_headers = {"Authorization": f"Bearer {login_as_real_admin['access_token']}"}
 
     sup = client.post("/api/auth/login", json={"username": "supervisor", "password": "supervisor"})
     assert sup.status_code == 200

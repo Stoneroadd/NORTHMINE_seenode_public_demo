@@ -89,6 +89,27 @@ def admin_header(client: TestClient) -> dict[str, str]:
     return {"Authorization": f"Bearer {token}"}
 
 
+def real_admin_header(client: TestClient) -> dict[str, str]:
+    # RequireAdmin excludes is_demo accounts (dependencies.py
+    # _require_real_admin): the shared admin/admin demo login can no longer
+    # see or review demo-access requests, since those carry real prospect
+    # PII (name/email/company), not synthetic data. Tests that exercise
+    # this authorization boundary need a genuine non-demo admin account.
+    user_repository = get_user_repository()
+    if user_repository.get_by_username("qa_real_admin") is None:
+        user_repository.create_user(
+            "qa_real_admin", "Qa-Real-Admin-2026!!",
+            full_name="QA Real Admin", role="admin", is_demo=False,
+        )
+    response = client.post(
+        "/api/auth/login",
+        json={"username": "qa_real_admin", "password": "Qa-Real-Admin-2026!!"},
+    )
+    assert response.status_code == 200
+    token = response.json()["access_token"]
+    return {"Authorization": f"Bearer {token}"}
+
+
 def supervisor_header(client: TestClient) -> dict[str, str]:
     response = client.post(
         "/api/auth/login",
@@ -202,7 +223,7 @@ def test_admin_can_list_and_approve_request(demo_access_client) -> None:
     created = client.post("/api/demo-access/requests", json=valid_payload())
     assert created.status_code == 202
     request_id = repository.list()[0].id
-    headers = admin_header(client)
+    headers = real_admin_header(client)
 
     listed = client.get("/api/demo-access/requests?status=pending", headers=headers)
     approved = client.post(
@@ -216,7 +237,7 @@ def test_admin_can_list_and_approve_request(demo_access_client) -> None:
     assert listed.json()["items"][0]["email_normalized"] == "camila.rojas@example.com"
     assert approved.status_code == 200
     assert approved.json()["status"] == "approved"
-    assert approved.json()["reviewed_by"] == "admin"
+    assert approved.json()["reviewed_by"] == "qa_real_admin"
     assert approved.json()["internal_notes"] == "Contexto validado por administracion."
 
 
@@ -227,16 +248,16 @@ def test_admin_can_reject_request(demo_access_client) -> None:
 
     rejected = client.post(
         f"/api/demo-access/requests/{request_id}/reject",
-        headers=admin_header(client),
+        headers=real_admin_header(client),
         json={"internal_notes": "Solicitud fuera del alcance actual."},
     )
 
     assert rejected.status_code == 200
     assert rejected.json()["status"] == "rejected"
-    assert rejected.json()["reviewed_by"] == "admin"
+    assert rejected.json()["reviewed_by"] == "qa_real_admin"
     audit_records = query_audit_log(
         limit=5,
-        usuario="admin",
+        usuario="qa_real_admin",
         endpoint=f"/api/demo-access/requests/{request_id}/reject",
     )
     assert audit_records
@@ -261,12 +282,35 @@ def test_admin_endpoints_reject_missing_or_insufficient_role(
     assert forbidden.status_code == 403
 
 
+def test_demo_admin_account_cannot_reach_demo_access_requests(
+    demo_access_client,
+) -> None:
+    # The core of this fix: admin/admin is a publicly-shared credential
+    # handed to anyone with approved demo access (see conversation with the
+    # user -- prospect PII must not sit behind a guessable shared login).
+    # is_demo, not role, is what RequireAdmin checks now.
+    client, repository = demo_access_client
+    client.post("/api/demo-access/requests", json=valid_payload())
+    request_id = repository.list()[0].id
+    headers = admin_header(client)
+
+    listed = client.get("/api/demo-access/requests", headers=headers)
+    approved = client.post(
+        f"/api/demo-access/requests/{request_id}/approve",
+        headers=headers,
+        json={"internal_notes": "no deberia poder escribir esto"},
+    )
+
+    assert listed.status_code == 403
+    assert approved.status_code == 403
+
+
 def test_admin_get_unknown_request_returns_404(demo_access_client) -> None:
     client, _ = demo_access_client
 
     response = client.get(
         "/api/demo-access/requests/does-not-exist",
-        headers=admin_header(client),
+        headers=real_admin_header(client),
     )
 
     assert response.status_code == 404
