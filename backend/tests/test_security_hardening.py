@@ -139,13 +139,13 @@ def test_revoke_user_tokens(client, login_as_admin):
     sup_token = sup.json()["access_token"]
     sup_headers = {"Authorization": f"Bearer {sup_token}"}
 
-    resp = client.get("/api/demo/summary", headers=sup_headers)
+    resp = client.get("/api/auth/me", headers=sup_headers)
     assert resp.status_code == 200
 
     resp = client.post("/api/admin/revoke-user-tokens/supervisor", headers=admin_headers)
     assert resp.status_code == 200
 
-    resp = client.get("/api/demo/summary", headers=sup_headers)
+    resp = client.get("/api/auth/me", headers=sup_headers)
     assert resp.status_code == 401
 
 

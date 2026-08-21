@@ -11,7 +11,7 @@ from fastapi.responses import StreamingResponse
 from app.ai import conclusion as conclusion_module
 from app.ai import executor, hypotheses as hypotheses_module, planner, verifier
 from app.ai.audit import record_investigation, record_investigation_ui_step
-from app.ai.investigation_repository import get_investigation, list_investigations, save_investigation
+from app.ai.investigation_repository import get_investigation_for_owner, list_investigations, save_investigation
 from app.ai.investigation_schemas import (
     CreateInvestigationRequest,
     DateRange,
@@ -25,7 +25,6 @@ from app.ai.investigation_schemas import (
 )
 from app.ai.planner import PlannerRejection
 from app.core.dependencies import RequireAny
-from app.core.request_context import require_resource_owner
 from app.core.rate_limit import endpoint_limit, limiter
 
 router = APIRouter(prefix="/ai-copilot/investigations", tags=["ai-copilot-investigations"])
@@ -232,10 +231,9 @@ async def execute_investigation_plan(investigation_id: str, request: Request, us
     """Segundo paso del modo Guiado: ejecuta un plan ya construido y
     persistido por POST /plan. Rechaza si ya se ejecuto (idempotencia -
     seccion 8: no repetir una investigacion completada)."""
-    record = get_investigation(investigation_id)
+    record = get_investigation_for_owner(investigation_id, str(user.get("sub") or "anon"))
     if not record:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Investigacion no encontrada")
-    require_resource_owner(user, owner_id=record.get("created_by"))
     if record["status"] not in ("planned", "failed"):
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Esta investigacion ya fue ejecutada")
 
@@ -258,10 +256,9 @@ async def execute_investigation_plan(investigation_id: str, request: Request, us
 
 @router.get("/{investigation_id}")
 def get_investigation_endpoint(investigation_id: str, user: dict = RequireAny) -> dict[str, Any]:
-    record = get_investigation(investigation_id)
+    record = get_investigation_for_owner(investigation_id, str(user.get("sub") or "anon"))
     if not record:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Investigacion no encontrada")
-    require_resource_owner(user, owner_id=record.get("created_by"))
     return {**record, "result": json.loads(record["result_json"])}
 
 
@@ -277,10 +274,9 @@ def report_ui_step(investigation_id: str, step_id: str, request: Request, payloa
     ejecuto con AgentActionExecutor (Etapa 2). No bloqueante: la investigacion
     ya concluyo antes de que esto se llame; esto solo deja auditoria y,
     cuando corresponde, actualiza el registro persistido para revision."""
-    record = get_investigation(investigation_id)
+    record = get_investigation_for_owner(investigation_id, str(user.get("sub") or "anon"))
     if not record:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Investigacion no encontrada")
-    require_resource_owner(user, owner_id=record.get("created_by"))
 
     result_data = json.loads(record["result_json"])
     for step in result_data.get("plan", {}).get("steps", []):

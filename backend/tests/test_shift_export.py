@@ -56,7 +56,7 @@ def test_export_shift_xlsx_caex_sheet_lists_real_trucks():
     sheet = workbook.active
     assert sheet.title == "Ranking CAEX"
     header = [cell.value for cell in sheet[1]]
-    assert header == ["rank", "caex_id", "modelo", "estado", "toneladas", "ciclos", "rendimiento_tph"]
+    assert header == ["rank", "caex_id", "modelo", "estado", "toneladas", "ciclos", "rendimiento_tph", "origen", "destino", "distancia_km_ciclo"]
     caex_ids = {row[1].value for row in sheet.iter_rows(min_row=2)}
     assert caex_ids == {"CA0001", "CA0002"}
 
@@ -67,6 +67,6 @@ def test_export_shift_xlsx_loading_sheet_lists_real_loaders():
     sheet = workbook.active
     assert sheet.title == "Unidades de carguio"
     header = [cell.value for cell in sheet[1]]
-    assert header == ["carguio_id", "modelo", "estado", "toneladas", "ciclos", "rendimiento_tph", "ubicacion"]
+    assert header == ["carguio_id", "modelo", "estado", "toneladas", "ciclos", "rendimiento_tph", "ubicacion", "destino", "distancia_km_ciclo"]
     loader_ids = {row[0].value for row in sheet.iter_rows(min_row=2)}
     assert loader_ids == {"EX3600", "EX3470"}

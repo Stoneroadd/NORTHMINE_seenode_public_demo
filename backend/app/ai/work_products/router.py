@@ -9,7 +9,7 @@ from app.ai.memory import episodic_memory, working_memory
 from app.ai.memory.models import OperationalEpisode, WorkingMemoryEntity
 from app.ai.proactivity import notification_manager, subscriptions
 from app.ai.proactivity.persistence import list_proactive_events
-from app.ai.work_products import persistence, tasks as tasks_module, versions
+from app.ai.work_products import persistence, tasks as tasks_module
 from app.ai.work_products.models import ReportDraft, ShiftHandoverDraft, TaskDraft
 from app.core.dependencies import RequireAny
 from app.core.request_context import require_resource_scope
@@ -69,7 +69,12 @@ def list_reports(status_filter: str | None = None, limit: int = 20, user: dict =
 
 @router.get("/reports/{report_id}")
 def get_report(report_id: str, version: int | None = None, user: dict = RequireAny) -> ReportDraft:
-    report = versions.get_version(report_id, version)
+    company_id, site_id = _scope(user)
+    report = (
+        persistence.get_latest_report_in_scope(report_id, company_id=company_id, site_id=site_id)
+        if version is None
+        else persistence.get_report_version_in_scope(report_id, version, company_id=company_id, site_id=site_id)
+    )
     if not report:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Informe no encontrado")
     _authorize(user, report)
@@ -78,7 +83,8 @@ def get_report(report_id: str, version: int | None = None, user: dict = RequireA
 
 @router.get("/reports/{report_id}/versions")
 def get_report_versions(report_id: str, user: dict = RequireAny) -> list[ReportDraft]:
-    reports = versions.history(report_id)
+    company_id, site_id = _scope(user)
+    reports = persistence.list_report_versions_in_scope(report_id, company_id=company_id, site_id=site_id)
     if not reports:
         return []
     _authorize(user, reports[0])
@@ -90,7 +96,8 @@ def approve_report(report_id: str, request: Request, user: dict = RequireAny) ->
     role = str(user.get("rol") or "")
     if not policies.can_approve(role):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Rol sin permiso de aprobación")
-    report = persistence.get_latest_report(report_id)
+    company_id, site_id = _scope(user)
+    report = persistence.get_latest_report_in_scope(report_id, company_id=company_id, site_id=site_id)
     if not report:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Informe no encontrado")
     _authorize(user, report)
@@ -116,7 +123,8 @@ def reject_report(report_id: str, body: RejectRequest, request: Request, user: d
     role = str(user.get("rol") or "")
     if not policies.can_approve(role):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Rol sin permiso de aprobación")
-    report = persistence.get_latest_report(report_id)
+    company_id, site_id = _scope(user)
+    report = persistence.get_latest_report_in_scope(report_id, company_id=company_id, site_id=site_id)
     if not report:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Informe no encontrado")
     _authorize(user, report)
@@ -157,7 +165,8 @@ def list_handovers(limit: int = 10, user: dict = RequireAny) -> list[ShiftHandov
 
 @router.get("/handovers/{handover_id}")
 def get_handover(handover_id: str, user: dict = RequireAny) -> ShiftHandoverDraft:
-    handover = persistence.get_handover(handover_id)
+    company_id, site_id = _scope(user)
+    handover = persistence.get_handover_in_scope(handover_id, company_id=company_id, site_id=site_id)
     if not handover:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cambio de turno no encontrado")
     _authorize(user, handover)
@@ -169,7 +178,8 @@ def approve_handover(handover_id: str, request: Request, user: dict = RequireAny
     role = str(user.get("rol") or "")
     if not policies.can_approve(role):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Rol sin permiso de aprobación")
-    handover = persistence.get_handover(handover_id)
+    company_id, site_id = _scope(user)
+    handover = persistence.get_handover_in_scope(handover_id, company_id=company_id, site_id=site_id)
     if not handover:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cambio de turno no encontrado")
     _authorize(user, handover)
@@ -189,7 +199,8 @@ def reject_handover(handover_id: str, body: RejectRequest, request: Request, use
     role = str(user.get("rol") or "")
     if not policies.can_approve(role):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Rol sin permiso de aprobación")
-    handover = persistence.get_handover(handover_id)
+    company_id, site_id = _scope(user)
+    handover = persistence.get_handover_in_scope(handover_id, company_id=company_id, site_id=site_id)
     if not handover:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cambio de turno no encontrado")
     _authorize(user, handover)
@@ -216,9 +227,10 @@ def approve_task(task_id: str, request: Request, user: dict = RequireAny) -> Tas
     role = str(user.get("rol") or "")
     if not policies.can_approve(role):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Rol sin permiso de aprobación")
-    task = tasks_module.get_task(task_id)
-    if task:
-        _authorize(user, task)
+    company_id, site_id = _scope(user)
+    task = persistence.get_task_in_scope(task_id, company_id=company_id, site_id=site_id)
+    if not task:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tarea no encontrada")
     task = tasks_module.approve_task(task_id, approved_by=str(user.get("sub") or "anon"))
     if not task:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tarea no encontrada o no pendiente de aprobación")
@@ -231,9 +243,10 @@ def reject_task(task_id: str, body: RejectRequest, request: Request, user: dict 
     role = str(user.get("rol") or "")
     if not policies.can_approve(role):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Rol sin permiso de aprobación")
-    task = tasks_module.get_task(task_id)
-    if task:
-        _authorize(user, task)
+    company_id, site_id = _scope(user)
+    task = persistence.get_task_in_scope(task_id, company_id=company_id, site_id=site_id)
+    if not task:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tarea no encontrada")
     task = tasks_module.reject_task(task_id, rejected_by=str(user.get("sub") or "anon"), reason=body.reason)
     if not task:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tarea no encontrada o no pendiente de aprobación")
@@ -243,9 +256,10 @@ def reject_task(task_id: str, body: RejectRequest, request: Request, user: dict 
 
 @router.post("/tasks/{task_id}/complete")
 def complete_task(task_id: str, request: Request, user: dict = RequireAny) -> TaskDraft:
-    task = tasks_module.get_task(task_id)
-    if task:
-        _authorize(user, task)
+    company_id, site_id = _scope(user)
+    task = persistence.get_task_in_scope(task_id, company_id=company_id, site_id=site_id)
+    if not task:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tarea no encontrada")
     task = tasks_module.complete_task(task_id, completed_by=str(user.get("sub") or "anon"))
     if not task:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tarea no encontrada o no aprobada")

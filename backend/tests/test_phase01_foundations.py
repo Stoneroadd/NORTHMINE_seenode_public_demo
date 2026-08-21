@@ -78,7 +78,11 @@ def test_direct_report_id_cannot_cross_tenant(monkeypatch) -> None:
         report_type="SHIFT_REPORT", title="B", scope=ReportScope(), generated_by="bob",
         company_id="Tenant B", site_id="Site B",
     )
-    monkeypatch.setattr(work_product_router.versions, "get_version", lambda *_args: report)
+    monkeypatch.setattr(
+        work_product_router.persistence,
+        "get_latest_report_in_scope",
+        lambda _id, *, company_id, site_id: report if (company_id, site_id) == ("Tenant B", "Site B") else None,
+    )
     with pytest.raises(HTTPException) as exc:
         work_product_router.get_report(report.report_id, user=_user())
     assert exc.value.status_code == 404
@@ -89,7 +93,11 @@ def test_direct_report_id_cannot_cross_site(monkeypatch) -> None:
         report_type="SHIFT_REPORT", title="A2", scope=ReportScope(), generated_by="bob",
         company_id="Tenant A", site_id="Site B",
     )
-    monkeypatch.setattr(work_product_router.versions, "get_version", lambda *_args: report)
+    monkeypatch.setattr(
+        work_product_router.persistence,
+        "get_latest_report_in_scope",
+        lambda _id, *, company_id, site_id: report if (company_id, site_id) == ("Tenant A", "Site B") else None,
+    )
     with pytest.raises(HTTPException) as exc:
         work_product_router.get_report(report.report_id, user=_user())
     assert exc.value.status_code == 404
@@ -97,7 +105,11 @@ def test_direct_report_id_cannot_cross_site(monkeypatch) -> None:
 
 def test_direct_task_id_is_authorized_before_mutation(monkeypatch) -> None:
     task = TaskDraft(title="B", description="x", reason="x", created_by="bob", company_id="Tenant B", site_id="Site B")
-    monkeypatch.setattr(work_product_router.tasks_module, "get_task", lambda *_args: task)
+    monkeypatch.setattr(
+        work_product_router.persistence,
+        "get_task_in_scope",
+        lambda _id, *, company_id, site_id: task if (company_id, site_id) == ("Tenant B", "Site B") else None,
+    )
     called = False
 
     def _mutate(*_args, **_kwargs):
@@ -115,8 +127,8 @@ def test_direct_task_id_is_authorized_before_mutation(monkeypatch) -> None:
 def test_investigation_direct_id_is_owner_scoped(monkeypatch) -> None:
     monkeypatch.setattr(
         investigation_router,
-        "get_investigation",
-        lambda *_args: {"created_by": "bob", "result_json": "{}"},
+        "get_investigation_for_owner",
+        lambda _id, owner: {"created_by": "bob", "result_json": "{}"} if owner == "bob" else None,
     )
     with pytest.raises(HTTPException) as exc:
         investigation_router.get_investigation_endpoint("inv-b", user=_user(identity="alice"))
@@ -124,7 +136,11 @@ def test_investigation_direct_id_is_owner_scoped(monkeypatch) -> None:
 
 
 def test_legacy_copilot_task_id_is_owner_scoped_before_mutation(monkeypatch) -> None:
-    monkeypatch.setattr(copilot_router.repository, "get_task_draft", lambda *_args: {"id": "task-b", "created_by": "bob"})
+    monkeypatch.setattr(
+        copilot_router.repository,
+        "get_task_draft_for_owner",
+        lambda _id, owner: {"id": "task-b", "created_by": "bob"} if owner == "bob" else None,
+    )
     called = False
 
     def _mutate(*_args, **_kwargs):

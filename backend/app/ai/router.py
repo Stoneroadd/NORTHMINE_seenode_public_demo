@@ -13,7 +13,6 @@ from app.ai.orchestrator import run_chat_turn
 from app.ai.schemas import ChatRequest, FeedbackRequest, TaskActionRequest
 from app.core.config import get_settings
 from app.core.dependencies import RequireAny, RequireOperador
-from app.core.request_context import require_resource_owner
 from app.core.rate_limit import endpoint_limit, limiter
 
 router = APIRouter(prefix="/ai-copilot", tags=["ai-copilot"])
@@ -129,11 +128,11 @@ def complete_task(task_id: str, request: Request, payload: TaskActionRequest, us
 
 def _transition_task(task_id: str, new_status: str, request: Request, user: dict) -> dict[str, Any]:
     actor = str(user.get("sub") or "anon")
-    current = repository.get_task_draft(task_id)
-    if current:
-        require_resource_owner(user, owner_id=current.get("created_by"))
+    current = repository.get_task_draft_for_owner(task_id, actor)
+    if not current:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tarea no encontrada")
     try:
-        updated = repository.update_task_status(task_id, new_status, actor)
+        updated = repository.update_task_status(task_id, new_status, actor, created_by=actor)
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
     if not updated:

@@ -112,10 +112,17 @@ def test_get_equipment_status_history_falls_back_to_cache_when_wenco_fails(monke
     monkeypatch.setattr(data_provider, "_get_wenco_equipment_status_history", flaky)
 
     good = data_provider.get_equipment_status_history(dias=7)
-    assert good == fake_rows
+    assert [{key: row[key] for key in fake_rows[0]} for row in good] == fake_rows
+    assert good[0]["provenance"] == {
+        "origin": "REAL",
+        "representation": "SOURCE",
+        "source_system": "WENCO",
+        "source_id": "wenco-sql-live",
+        "demo_context": False,
+    }
 
     fallback = data_provider.get_equipment_status_history(dias=7)
-    assert fallback == fake_rows
+    assert fallback == good
 
 
 def test_get_equipment_status_history_returns_empty_without_cache(monkeypatch):

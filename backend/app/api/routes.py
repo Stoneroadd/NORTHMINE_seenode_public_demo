@@ -755,7 +755,7 @@ def alerts(request: Request, user: dict = RequireAny) -> dict:
     dataset = _dataset(request)
     summary = build_summary(dataset)
     fleet   = build_fleet_status(dataset)
-    items   = build_alerts(summary, fleet)
+    items   = build_alerts(summary, fleet, dataset=dataset)
     items = apply_common_filters(items, _filters(request))
     return {"source": dataset.get("source", "wenco-sql-live"), "count": len(items), "items": items}
 

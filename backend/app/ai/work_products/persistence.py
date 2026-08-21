@@ -122,11 +122,47 @@ def get_latest_report(report_id: str) -> ReportDraft | None:
     return ReportDraft.model_validate_json(row["report_json"]) if row else None
 
 
+def get_report_version_in_scope(
+    report_id: str, version: int, *, company_id: str | None, site_id: str | None,
+) -> ReportDraft | None:
+    with _lock:
+        conn = _connection()
+        row = conn.execute(
+            "SELECT report_json FROM agent_reports WHERE report_id = ? AND version = ? AND company_id IS ? AND site_id IS ?",
+            (report_id, version, company_id, site_id),
+        ).fetchone()
+    return ReportDraft.model_validate_json(row["report_json"]) if row else None
+
+
+def get_latest_report_in_scope(
+    report_id: str, *, company_id: str | None, site_id: str | None,
+) -> ReportDraft | None:
+    with _lock:
+        conn = _connection()
+        row = conn.execute(
+            "SELECT report_json FROM agent_reports WHERE report_id = ? AND company_id IS ? AND site_id IS ? ORDER BY version DESC LIMIT 1",
+            (report_id, company_id, site_id),
+        ).fetchone()
+    return ReportDraft.model_validate_json(row["report_json"]) if row else None
+
+
 def list_report_versions(report_id: str) -> list[ReportDraft]:
     with _lock:
         conn = _connection()
         rows = conn.execute(
             "SELECT report_json FROM agent_reports WHERE report_id = ? ORDER BY version ASC", (report_id,),
+        ).fetchall()
+    return [ReportDraft.model_validate_json(r["report_json"]) for r in rows]
+
+
+def list_report_versions_in_scope(
+    report_id: str, *, company_id: str | None, site_id: str | None,
+) -> list[ReportDraft]:
+    with _lock:
+        conn = _connection()
+        rows = conn.execute(
+            "SELECT report_json FROM agent_reports WHERE report_id = ? AND company_id IS ? AND site_id IS ? ORDER BY version ASC",
+            (report_id, company_id, site_id),
         ).fetchall()
     return [ReportDraft.model_validate_json(r["report_json"]) for r in rows]
 
@@ -175,6 +211,18 @@ def get_handover(handover_id: str) -> ShiftHandoverDraft | None:
     return ShiftHandoverDraft.model_validate_json(row["handover_json"]) if row else None
 
 
+def get_handover_in_scope(
+    handover_id: str, *, company_id: str | None, site_id: str | None,
+) -> ShiftHandoverDraft | None:
+    with _lock:
+        conn = _connection()
+        row = conn.execute(
+            "SELECT handover_json FROM agent_handovers WHERE handover_id = ? AND company_id IS ? AND site_id IS ?",
+            (handover_id, company_id, site_id),
+        ).fetchone()
+    return ShiftHandoverDraft.model_validate_json(row["handover_json"]) if row else None
+
+
 def list_handovers(*, company_id: str | None, site_id: str | None, limit: int = 20) -> list[ShiftHandoverDraft]:
     with _lock:
         conn = _connection()
@@ -205,6 +253,18 @@ def get_task(task_id: str) -> TaskDraft | None:
     with _lock:
         conn = _connection()
         row = conn.execute("SELECT task_json FROM agent_tasks WHERE task_id = ?", (task_id,)).fetchone()
+    return TaskDraft.model_validate_json(row["task_json"]) if row else None
+
+
+def get_task_in_scope(
+    task_id: str, *, company_id: str | None, site_id: str | None,
+) -> TaskDraft | None:
+    with _lock:
+        conn = _connection()
+        row = conn.execute(
+            "SELECT task_json FROM agent_tasks WHERE task_id = ? AND company_id IS ? AND site_id IS ?",
+            (task_id, company_id, site_id),
+        ).fetchone()
     return TaskDraft.model_validate_json(row["task_json"]) if row else None
 
 

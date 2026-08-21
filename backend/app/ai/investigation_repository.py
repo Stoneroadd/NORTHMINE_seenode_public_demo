@@ -104,6 +104,17 @@ def get_investigation(investigation_id: str) -> dict[str, Any] | None:
         return dict(row)
 
 
+def get_investigation_for_owner(investigation_id: str, created_by: str) -> dict[str, Any] | None:
+    """Resolve a user-facing investigation without exposing an unscoped ID lookup."""
+    with _lock:
+        conn = _connection()
+        row = conn.execute(
+            "SELECT * FROM ai_investigations WHERE id = ? AND created_by = ?",
+            (investigation_id, created_by),
+        ).fetchone()
+        return dict(row) if row else None
+
+
 def list_investigations(created_by: str | None = None, limit: int = 20) -> list[dict[str, Any]]:
     with _lock:
         conn = _connection()

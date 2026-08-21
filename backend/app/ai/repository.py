@@ -132,6 +132,15 @@ def get_task_draft(task_id: str) -> dict[str, Any] | None:
     return _row_to_task(row) if row else None
 
 
+def get_task_draft_for_owner(task_id: str, created_by: str) -> dict[str, Any] | None:
+    conn = _connection()
+    row = conn.execute(
+        "SELECT * FROM ai_task_drafts WHERE id = ? AND created_by = ?",
+        (task_id, created_by),
+    ).fetchone()
+    return _row_to_task(row) if row else None
+
+
 def list_task_drafts(status: str | None = None, limit: int = 50, created_by: str | None = None) -> list[dict[str, Any]]:
     conn = _connection()
     if status and created_by:
@@ -165,8 +174,8 @@ _ALLOWED_TRANSITIONS: dict[str, set[str]] = {
 }
 
 
-def update_task_status(task_id: str, new_status: str, actor: str) -> dict[str, Any] | None:
-    current = get_task_draft(task_id)
+def update_task_status(task_id: str, new_status: str, actor: str, *, created_by: str | None = None) -> dict[str, Any] | None:
+    current = get_task_draft_for_owner(task_id, created_by) if created_by else get_task_draft(task_id)
     if not current:
         return None
     if new_status not in _ALLOWED_TRANSITIONS.get(current["status"], set()):
@@ -175,16 +184,16 @@ def update_task_status(task_id: str, new_status: str, actor: str) -> dict[str, A
     now = _now()
     if new_status == "approved":
         conn.execute(
-            "UPDATE ai_task_drafts SET status = ?, updated_at = ?, approved_by = ?, approved_at = ? WHERE id = ?",
-            (new_status, now, actor, now, task_id),
+            "UPDATE ai_task_drafts SET status = ?, updated_at = ?, approved_by = ?, approved_at = ? WHERE id = ? AND (? IS NULL OR created_by = ?)",
+            (new_status, now, actor, now, task_id, created_by, created_by),
         )
     else:
         conn.execute(
-            "UPDATE ai_task_drafts SET status = ?, updated_at = ? WHERE id = ?",
-            (new_status, now, task_id),
+            "UPDATE ai_task_drafts SET status = ?, updated_at = ? WHERE id = ? AND (? IS NULL OR created_by = ?)",
+            (new_status, now, task_id, created_by, created_by),
         )
     conn.commit()
-    return get_task_draft(task_id)
+    return get_task_draft_for_owner(task_id, created_by) if created_by else get_task_draft(task_id)
 
 
 def _row_to_task(row: sqlite3.Row) -> dict[str, Any]:

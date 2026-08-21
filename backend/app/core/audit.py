@@ -4,6 +4,7 @@ import json
 import logging
 import os
 import sqlite3
+import threading
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -13,6 +14,7 @@ from app.core.database import close_db_connections, execute_query
 logger = logging.getLogger(__name__)
 audit_logger = logging.getLogger("northmine.audit")
 AUDIT_DB = Path(os.environ.get("NORTHMINE_AUDIT_DB", "northmine_audit.db"))
+_connections = threading.local()
 
 LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO")
 
@@ -29,17 +31,18 @@ class AuditStoreUnavailable(RuntimeError):
 
 
 def _conn() -> sqlite3.Connection:
-    if not hasattr(_conn, "_local"):
-        _conn._local = sqlite3.connect(str(AUDIT_DB), timeout=10, check_same_thread=False)
-        _conn._local.row_factory = sqlite3.Row
-    return _conn._local
+    if not hasattr(_connections, "connection"):
+        _connections.connection = sqlite3.connect(str(AUDIT_DB), timeout=10)
+        _connections.connection.row_factory = sqlite3.Row
+    return _connections.connection
 
 
 def _cleanup_pool() -> None:
     close_db_connections()
-    if hasattr(_conn, "_local") and _conn._local:
-        _conn._local.close()
-        del _conn._local
+    connection = getattr(_connections, "connection", None)
+    if connection is not None:
+        connection.close()
+        del _connections.connection
 
 
 def init_audit_db() -> None:
