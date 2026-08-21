@@ -94,7 +94,36 @@ def require_role(*roles: str):
     return check_role
 
 
-RequireAdmin      = Depends(require_role("admin"))
+async def _require_real_admin(request: Request, user: dict = Depends(get_current_user)) -> dict:
+    # RequireAdmin gates real administrative surfaces: gestion de usuarios,
+    # deshabilitar MFA ajena, revocar tokens, metricas de seguridad y las
+    # solicitudes de acceso al demo (nombre/correo/empresa reales de
+    # prospectos, no datos sinteticos). Las cuentas sembradas
+    # (admin/demo/supervisor/operador) son credenciales publicas compartidas
+    # con quien recibe acceso aprobado al demo -- deben poder explorar el
+    # dashboard operacional, pero nunca estas superficies, sin importar que
+    # a "admin" se le haya asignado rol admin al sembrarla. is_demo, no rol,
+    # es el limite real aqui.
+    if user.get("rol") != "admin" or user.get("is_demo"):
+        log_event(
+            usuario=str(user.get("sub", "anon")),
+            ip=request.client.host if request.client else "unknown",
+            accion="access_denied",
+            resultado="forbidden",
+            metodo=request.method,
+            endpoint=request.url.path,
+            status_code=403,
+            user_agent=request.headers.get("user-agent", ""),
+            detalle={"required_roles": ("admin",), "role": user.get("rol"), "is_demo": user.get("is_demo")},
+        )
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Se requiere una cuenta administrativa real, no una cuenta demo.",
+        )
+    return user
+
+
+RequireAdmin      = Depends(_require_real_admin)
 RequireSupervisor = Depends(require_role("admin", "supervisor"))
 RequireOperador   = Depends(require_role("admin", "supervisor", "operador"))
 RequireAny        = Depends(get_current_user)

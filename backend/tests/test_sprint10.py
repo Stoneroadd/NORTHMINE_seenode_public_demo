@@ -60,15 +60,15 @@ def test_mfa_login_with_backup_code(client, login_as_admin):
     assert resp.status_code == 200, f"Backup code login failed: {resp.text}"
 
 
-def test_active_sessions_tracked_after_login(client, login_as_admin):
-    headers = {"Authorization": f"Bearer {login_as_admin['access_token']}"}
+def test_active_sessions_tracked_after_login(client, login_as_real_admin):
+    headers = {"Authorization": f"Bearer {login_as_real_admin['access_token']}"}
     resp = client.get("/api/admin/metrics", headers=headers)
     assert resp.status_code == 200
     assert resp.json()["active_sessions"] >= 1
 
 
-def test_audit_log_encrypted_detalle(client, login_as_admin):
-    headers = {"Authorization": f"Bearer {login_as_admin['access_token']}"}
+def test_audit_log_encrypted_detalle(client, login_as_real_admin):
+    headers = {"Authorization": f"Bearer {login_as_real_admin['access_token']}"}
     resp = client.get("/api/admin/audit-log", headers=headers)
     assert resp.status_code == 200
     items = resp.json()["items"]
