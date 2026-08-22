@@ -92,6 +92,10 @@ def login_as_real_admin(client: TestClient) -> dict[str, Any]:
         repo.create_user(
             "qa_real_admin", "Qa-Real-Admin-2026!!",
             full_name="QA Real Admin", role="admin", is_demo=False,
+            # Must match the demo seeds' tenant/site so require_resource_scope
+            # (multi-tenant isolation) doesn't 404 admin operations against
+            # demo-seeded targets like supervisor/operador.
+            empresa="NORTHMINE DEMO", faena="MINA CHILE DEMO",
         )
     resp = client.post("/api/auth/login", json={"username": "qa_real_admin", "password": "Qa-Real-Admin-2026!!"})
     assert resp.status_code == 200, f"Login qa_real_admin failed: {resp.status_code} {resp.text}"
