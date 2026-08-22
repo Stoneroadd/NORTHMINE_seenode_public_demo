@@ -4,9 +4,9 @@ import { AlertTriangle, CheckCircle2, CircleDot, Database, GitBranch, Layers3, R
 import { MissionState, StatusIndicator } from '../mission-control/design-system'
 import { OperationalFlowCanvas } from '../mission-control/operational-flow/OperationalFlowCanvas'
 import { getOperationalFlowSnapshot } from '../mission-control/operational-flow/service'
-import type { AssertionType, FlowNode, OperationalCondition } from '../mission-control/operational-flow/types'
+import type { AssertionType, FlowDetail, FlowNode, OperationalCondition } from '../mission-control/operational-flow/types'
 
-const EXPECTED_SCHEMA = 'mission-control.operational-flow.v1'
+const EXPECTED_SCHEMA = 'mission-control.operational-flow.v2'
 const DEFAULT_AT = '2026-08-20T10:45:00-04:00'
 
 function assertionLabel(assertion: AssertionType): string {
@@ -36,11 +36,18 @@ function selectedNodeOrFirst(nodes: FlowNode[], selectedNodeId: string): FlowNod
   return nodes.find((node) => node.node_id === selectedNodeId) ?? nodes[0]
 }
 
+function groupedDetails(details: FlowDetail[]): Array<[string, FlowDetail[]]> {
+  const groups = new Map<string, FlowDetail[]>()
+  for (const detail of details) groups.set(detail.group, [...(groups.get(detail.group) ?? []), detail])
+  return [...groups.entries()]
+}
+
 export function OperationalFlowPage() {
   const [selectedAt, setSelectedAt] = useState(DEFAULT_AT)
   const [selectedNodeId, setSelectedNodeId] = useState('loading-ph03')
   const [showImpact, setShowImpact] = useState(true)
   const [showAssertions, setShowAssertions] = useState(true)
+  const [technicalDetailsOpen, setTechnicalDetailsOpen] = useState(false)
   const query = useQuery({
     queryKey: ['mission-control', 'operational-flow', selectedAt],
     queryFn: () => getOperationalFlowSnapshot(selectedAt),
@@ -200,6 +207,7 @@ export function OperationalFlowPage() {
                       <span>{evidence.assertion_type}</span>
                       <strong>{evidence.label}</strong>
                       <p>{evidence.value}</p>
+                      <small>{formatTimestamp(evidence.observed_at)} · {evidence.provenance.source_system}</small>
                     </li>
                   ))}
                 </ul>
@@ -207,6 +215,37 @@ export function OperationalFlowPage() {
                 <p className="mc-flow-inspector__empty">No existe evidencia suficiente para calcular este impacto. NORTHMINE no inventa el valor.</p>
               )}
             </section>
+
+            {selectedNode.technical_details.length > 0 && (
+              <details
+                className="mc-flow-inspector__disclosure"
+                open={technicalDetailsOpen}
+                onToggle={(event) => setTechnicalDetailsOpen(event.currentTarget.open)}
+              >
+                <summary>
+                  <span>Datos técnicos</span>
+                  <small>{selectedNode.technical_details.length} variables</small>
+                </summary>
+                <div className="mc-flow-inspector__details">
+                  {groupedDetails(selectedNode.technical_details).map(([group, details]) => (
+                    <section key={group} aria-label={group}>
+                      <h3>{group}</h3>
+                      <dl>
+                        {details.map((detail) => (
+                          <div key={detail.detail_id}>
+                            <dt>{detail.label}</dt>
+                            <dd>
+                              <strong>{detail.value}{detail.unit ? ` ${detail.unit}` : ''}</strong>
+                              <small>{detail.assertion_type} · {detail.data_quality} · {formatTimestamp(detail.observed_at)}</small>
+                            </dd>
+                          </div>
+                        ))}
+                      </dl>
+                    </section>
+                  ))}
+                </div>
+              </details>
+            )}
 
             <button className="mc-action mc-action--quiet" type="button" onClick={() => setSelectedNodeId(event?.primary_node_id ?? 'loading-ph03')}>
               <RotateCcw aria-hidden="true" size={15} /> Volver al evento

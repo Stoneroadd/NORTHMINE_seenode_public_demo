@@ -14,10 +14,12 @@ Entregar una primera representación Operational Flow que conecte frente, unidad
 
 - Ruta autenticada y lazy-loaded `/mission-control/operational-flow`.
 - Endpoint `GET /api/mission-control/operational-flow?at=` con alcance tenant/site resuelto en servidor.
-- Snapshot tipado `mission-control.operational-flow.v1` para la ventana S01.
+- Snapshot tipado `mission-control.operational-flow.v2` para la ventana S01.
 - Estados estable, crítico, recuperando y normalizado.
 - Grafo causal desktop/tablet, cadena ordenada móvil e inspector contextual.
 - Evidencia y relaciones con procedencia, calidad y tipo de afirmación explícitos.
+- Datos técnicos Level 3 por nodo: equipo, asignaciones CAEX, ciclo, velocidad, cola, tonelaje y plan.
+- Selección accidental de texto bloqueada en el canvas, sin impedir copiar información desde el inspector.
 - Degradación segura ante carga, error, esquema incompatible, tiempo inválido o layout no autorizado.
 - Costo mantenido como hipótesis desconocida y sin cálculo autorizado.
 

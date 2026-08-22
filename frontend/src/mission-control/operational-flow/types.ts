@@ -19,6 +19,19 @@ export interface FlowEvidence {
   provenance: Provenance
 }
 
+export interface FlowDetail {
+  detail_id: string
+  group: string
+  label: string
+  value: string
+  unit: string | null
+  assertion_type: AssertionType
+  data_quality: DataQuality
+  observed_at: string
+  evidence_id: string | null
+  provenance: Provenance
+}
+
 export interface FlowNode {
   node_id: string
   entity_id: string | null
@@ -32,6 +45,7 @@ export interface FlowNode {
   assertion_type: AssertionType
   data_quality: DataQuality
   evidence_ids: string[]
+  technical_details: FlowDetail[]
 }
 
 export interface FlowRelationship {

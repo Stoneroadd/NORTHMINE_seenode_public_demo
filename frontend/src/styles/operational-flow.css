@@ -221,8 +221,9 @@
   background-size: 42px 42px;
 }
 
-.mc-flow-canvas { display: block; width: 100%; min-height: 500px; overflow: visible; }
+.mc-flow-canvas { display: block; width: 100%; min-height: 500px; overflow: visible; user-select: none; -webkit-user-select: none; }
 .mc-flow-lanes text { fill: var(--mc-text-tertiary); font: 600 10px var(--mc-font-mono); letter-spacing: 0.12em; }
+.mc-flow-canvas text { pointer-events: none; }
 
 .mc-flow-edge {
   fill: none;
@@ -306,7 +307,41 @@
 .mc-flow-inspector__evidence span { grid-row: 1 / 3; align-self: start; color: var(--mc-info); font: 650 8px/1.3 var(--mc-font-mono); }
 .mc-flow-inspector__evidence strong { color: var(--mc-text); font-size: 11px; }
 .mc-flow-inspector__evidence p { margin: 0; color: var(--mc-text-secondary); font-size: 11px; line-height: 1.4; }
+.mc-flow-inspector__evidence small { grid-column: 2; color: var(--mc-text-tertiary); font: 500 8px/1.35 var(--mc-font-mono); overflow-wrap: anywhere; }
 .mc-flow-inspector__empty { margin: 0; color: var(--mc-text-tertiary); font-size: 12px; line-height: 1.5; }
+
+.mc-flow-inspector__disclosure {
+  border-top: 1px solid var(--mc-line-soft);
+  padding-top: 14px;
+}
+
+.mc-flow-inspector__disclosure summary {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--mc-text);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  list-style: none;
+}
+
+.mc-flow-inspector__disclosure summary::-webkit-details-marker { display: none; }
+.mc-flow-inspector__disclosure summary::after { color: var(--mc-brand-strong); content: '+'; font: 600 18px/1 var(--mc-font-mono); }
+.mc-flow-inspector__disclosure[open] summary::after { content: '−'; }
+.mc-flow-inspector__disclosure summary small { margin-left: auto; color: var(--mc-text-tertiary); font: 500 9px/1 var(--mc-font-mono); }
+
+.mc-flow-inspector__details { display: grid; gap: 18px; padding-top: 10px; }
+.mc-flow-inspector__details section { gap: 7px; }
+.mc-flow-inspector__details section > h3 { color: var(--mc-text-tertiary); font: 650 9px/1.3 var(--mc-font-mono); letter-spacing: 0.08em; text-transform: uppercase; }
+.mc-flow-inspector__details dl { display: grid; margin: 0; }
+.mc-flow-inspector__details dl > div { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--mc-line-soft); }
+.mc-flow-inspector__details dt { color: var(--mc-text-secondary); font-size: 10px; line-height: 1.35; }
+.mc-flow-inspector__details dd { display: grid; justify-items: end; gap: 3px; margin: 0; text-align: right; }
+.mc-flow-inspector__details dd strong { color: var(--mc-text); font: 600 10px/1.35 var(--mc-font-mono); }
+.mc-flow-inspector__details dd small { color: var(--mc-text-tertiary); font: 550 8px/1.2 var(--mc-font-mono); }
 
 .mc-flow-footnote {
   display: flex;

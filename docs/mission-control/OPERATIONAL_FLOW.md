@@ -39,13 +39,13 @@ OperationalFlowPage
   -> GET /api/mission-control/operational-flow?at=<ISO-8601 con zona>
   -> router autenticado y alcance tenant/site resuelto en servidor
   -> build_demo_operational_flow_snapshot
-  -> OperationalFlowSnapshot v1
+  -> OperationalFlowSnapshot v2
   -> canvas SVG o cadena móvil + inspector contextual
 ```
 
 - La página se carga de forma diferida en `/mission-control/operational-flow` dentro de la aplicación autenticada existente.
 - `getOperationalFlowSnapshot()` usa el cliente API común; el navegador no envía tenant ni site como autoridad.
-- El frontend rechaza una respuesta cuyo `schema_version` no sea `mission-control.operational-flow.v1`.
+- El frontend rechaza una respuesta cuyo `schema_version` no sea `mission-control.operational-flow.v2`.
 - El servicio demo está habilitado solo en entornos `demo`, `development` o `testing`; fuera de ellos responde `404`.
 - La API exige autenticación y contexto tenant/site completo. Un tiempo sin zona o fuera de la ventana S01 responde `422`.
 - El snapshot se reconstruye de forma determinística para el instante solicitado; no hay persistencia, streaming, replay durable ni lectura Wenco en esta entrega.
@@ -70,6 +70,7 @@ Authorization: sesión NORTHMINE
 | Tiempo | `site_timezone`, `temporal_mode`, `effective_at`, `generated_at` | Snapshot temporal demostrativo. |
 | Veracidad | `provenance`, `data_quality`, `scenario` | Procedencia sintética y calidad explícitas. |
 | Topología | `nodes`, `relationships` | Entidades, agregados, resultados y relaciones dirigidas. |
+| Investigación | `nodes[].technical_details` | Variables Level 3 agrupadas, temporales y trazables por nodo. |
 | Evidencia | `evidence` | Afirmación, valor, observación y procedencia. |
 | Evento | `active_event` | Evento S01 y nodos afectados; puede ser `null` en estado estable. |
 | Navegación demo | `scenario_moments` | Instantes autorizados para reconstruir la historia. |
@@ -92,6 +93,8 @@ Authorization: sesión NORTHMINE
 - La barra temporal reconstruye el snapshot en cuatro momentos S01.
 - Las capas permiten mostrar u ocultar impacto y etiquetas de afirmación; la topología permanece visible.
 - El inspector expone condición, resumen, tipo de afirmación, calidad, procedencia, relaciones y evidencia.
+- `Datos técnicos` abre bajo demanda asignaciones, tiempos de ciclo, velocidades, colas, tonelaje y plan sin sobrecargar los nodos.
+- El canvas impide selección accidental de texto durante el movimiento o arrastre del puntero; el inspector conserva texto copiable.
 
 ### Tablet
 
@@ -118,6 +121,7 @@ Authorization: sesión NORTHMINE
 - No hay Wenco, SQL operacional ni credenciales productivas.
 - No hay ejecución automática ni ruta de mutación FMS.
 - No hay cálculo autorizado de costo; el valor permanece desconocido.
+- Las variables finas son fixtures sintéticas del escenario S01 y nunca se presentan como registros Wenco.
 - No hay grafo operacional persistente, replay durable, streaming ni sincronización LIVE.
 - No hay motor general de layout: el layout está autorizado solo para los nodos S01 conocidos y falla explícitamente ante nodos no soportados.
 - No completa Phase 1, no inicia una fase posterior y no acredita preparación para producción.

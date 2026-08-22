@@ -46,6 +46,19 @@ class FlowEvidence(BaseModel):
     provenance: Provenance
 
 
+class FlowDetail(BaseModel):
+    detail_id: str
+    group: str
+    label: str
+    value: str
+    unit: str | None = None
+    assertion_type: AssertionType
+    data_quality: DataQuality = DataQuality.FRESH
+    observed_at: datetime
+    evidence_id: str | None = None
+    provenance: Provenance
+
+
 class FlowNode(BaseModel):
     node_id: str
     entity_id: UUID | None = None
@@ -59,6 +72,7 @@ class FlowNode(BaseModel):
     assertion_type: AssertionType
     data_quality: DataQuality = DataQuality.FRESH
     evidence_ids: list[str] = Field(default_factory=list)
+    technical_details: list[FlowDetail] = Field(default_factory=list)
 
 
 class FlowRelationship(BaseModel):
@@ -96,7 +110,7 @@ class FlowMoment(BaseModel):
 
 
 class OperationalFlowSnapshot(BaseModel):
-    schema_version: str = "mission-control.operational-flow.v1"
+    schema_version: str = "mission-control.operational-flow.v2"
     tenant_id: str
     site_id: str
     shift_id: str

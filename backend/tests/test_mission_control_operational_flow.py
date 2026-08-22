@@ -13,6 +13,7 @@ def test_demo_operational_flow_is_temporal_connected_and_provenance_safe() -> No
     )
 
     assert snapshot.provenance.origin == "SYNTHETIC"
+    assert snapshot.schema_version == "mission-control.operational-flow.v2"
     assert snapshot.provenance.representation == "DERIVED"
     assert snapshot.active_event is not None
     assert snapshot.active_event.status == "RECOVERING"
@@ -23,6 +24,11 @@ def test_demo_operational_flow_is_temporal_connected_and_provenance_safe() -> No
     cost = next(node for node in snapshot.nodes if node.node_id == "cost-impact")
     assert cost.condition == "UNKNOWN"
     assert cost.summary == "Sin cálculo autorizado"
+    assert cost.technical_details
+    assert all(detail.provenance.origin == "SYNTHETIC" for node in snapshot.nodes for detail in node.technical_details)
+    assert not any("$" in detail.value or "USD" in detail.value for detail in cost.technical_details)
+    route = next(node for node in snapshot.nodes if node.node_id == "route-north")
+    assert {detail.label for detail in route.technical_details} >= {"Velocidad observada", "Tiempo cargado"}
 
 
 def _scoped_user() -> dict[str, str]:
