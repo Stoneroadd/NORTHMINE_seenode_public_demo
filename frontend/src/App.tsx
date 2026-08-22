@@ -37,6 +37,7 @@ const loadAveriasPage = () => import('./pages/AveriasPage')
 const loadExpertAnalysisPage = () => import('./pages/ExpertAnalysisPage')
 const loadAlerts      = () => import('./pages/Alerts')
 const loadDemoAccessAdminPage = () => import('./pages/DemoAccessAdminPage')
+const loadMissionControlDesignSystemPage = () => import('./pages/MissionControlDesignSystemPage')
 
 const Prediction  = lazy(() => loadPrediction().then(m => ({ default: m.Prediction })))
 const Simulator   = lazy(() => loadSimulator().then(m => ({ default: m.Simulator })))
@@ -59,6 +60,7 @@ const AveriasPage = lazy(() => loadAveriasPage().then(m => ({ default: m.Averias
 const ExpertAnalysisPage = lazy(() => loadExpertAnalysisPage().then(m => ({ default: m.ExpertAnalysisPage })))
 const Alerts      = lazy(() => loadAlerts().then(m => ({ default: m.Alerts })))
 const DemoAccessAdminPage = lazy(() => loadDemoAccessAdminPage().then(m => ({ default: m.DemoAccessAdminPage })))
+const MissionControlDesignSystemPage = lazy(() => loadMissionControlDesignSystemPage().then(m => ({ default: m.MissionControlDesignSystemPage })))
 import { Settings } from 'lucide-react'
 
 const ALL_MODULE_LOADERS = [
@@ -184,6 +186,7 @@ function renderSection(section: SectionId, session: AuthSession, t: AppT) {
   if (path === '/aerea')      return wrap(_S(<AerialView />), '/aerea')
   if (path === '/cockpit')    return wrap(_S(<DecisionCockpit />), '/cockpit')
   if (path === '/operational-map-3d') return wrap(_S(<OperationalMindMap3D />), '/operational-map-3d')
+  if (path === '/mission-control/design-system') return wrap(_S(<MissionControlDesignSystemPage />), '/mission-control/design-system')
 
   switch (section) {
     case 'cockpit':

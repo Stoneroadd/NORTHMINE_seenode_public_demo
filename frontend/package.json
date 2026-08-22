@@ -12,6 +12,7 @@
     "test:visual": "playwright test",
     "test:visual:update": "playwright test --update-snapshots",
     "test:responsive": "playwright test --config=playwright.responsive.config.ts",
+    "test:mission-control": "playwright test --config=playwright.mission-control.config.ts",
     "test:unit": "vitest run"
   },
   "dependencies": {

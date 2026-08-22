@@ -16,7 +16,7 @@ Each phase begins from an approved SHA, preserves unrelated work, uses logical c
 
 ## Phase 1 — Product & Information Architecture
 
-**Status:** CONDITIONAL — Phase 1 artifacts completed on 2026-08-21; mining-user comprehension validation and explicit IA/ADR-011 approval remain open.
+**Status:** APPROVED — IA and ADR-011 approved on 2026-08-21. Mining-user comprehension validation remains an acceptance activity, not permission to skip the 5–10 second target.
 
 - Define operational questions and role-specific journeys for NOW, OPERATION, HISTORY and SEARCH.
 - Define entity inspector, event detail and three disclosure levels.
@@ -27,6 +27,8 @@ Each phase begins from an approved SHA, preserves unrelated work, uses logical c
 **Gate:** primary condition, affected equipment, recovery and investigation path are understood without visiting multiple legacy modules.
 
 ## Phase 2 — Design System 2.0
+
+**Status:** IMPLEMENTED / EN VALIDACIÓN — token contract, core primitives, catalog and deterministic visual baselines completed on 2026-08-21. Final operational-user validation remains outside this implementation gate.
 
 - Consolidate token namespaces and typography.
 - Separate copper brand tokens from semantic operational colors.
@@ -188,4 +190,4 @@ Each scenario must define deterministic source records, clock, assignments, evid
 
 # STOP
 
-This backlog records Phase 1 as conditionally completed. It is not authorization to begin Phase 2.
+This backlog records Phase 1 as approved and Phase 2 as implemented / EN VALIDACIÓN. It is not authorization to begin Phase 3.
