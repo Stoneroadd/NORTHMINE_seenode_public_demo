@@ -15,8 +15,13 @@ from app.models.users import User, normalize_role
 
 DEMO_USER_SEEDS: tuple[dict[str, str], ...] = (
     {
+        # "admin"/"admin" es exactamente el par que cualquier scanner de
+        # credenciales por defecto prueba primero -- se cambio la clave
+        # (no el usuario, para que se siga reconociendo como la cuenta
+        # demo administrativa) a algo fuera de INSECURE_PASSWORDS y de las
+        # listas de credenciales por defecto mas usadas.
         "username": "admin",
-        "password": "admin",
+        "password": "Northmine-Demo#2026",
         "role": "admin",
         "full_name": "Administrador Demo",
         "faena": "MINA CHILE DEMO",

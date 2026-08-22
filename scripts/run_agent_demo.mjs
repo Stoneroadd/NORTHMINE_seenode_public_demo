@@ -78,7 +78,7 @@ try {
   page.on('pageerror', (error) => console.error(`[browser-pageerror] ${error.message}`))
   await page.goto(`${baseUrl}/acceso-demo`, { waitUntil: 'domcontentloaded' })
   await page.locator('input[autocomplete="username"]').fill(process.env.AGENT_DEMO_USER ?? 'admin')
-  await page.locator('input[autocomplete="current-password"]').fill(process.env.AGENT_DEMO_PASSWORD ?? 'admin')
+  await page.locator('input[autocomplete="current-password"]').fill(process.env.AGENT_DEMO_PASSWORD ?? 'Northmine-Demo#2026')
   await page.locator('form').getByRole('button').click()
   await page.locator('.app-shell').waitFor({ state: 'visible', timeout: 30_000 })
   // Scope console/network acceptance to the authenticated product. The

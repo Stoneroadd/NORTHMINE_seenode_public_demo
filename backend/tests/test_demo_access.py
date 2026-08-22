@@ -82,7 +82,7 @@ def demo_access_client(
 def admin_header(client: TestClient) -> dict[str, str]:
     response = client.post(
         "/api/auth/login",
-        json={"username": "admin", "password": "admin"},
+        json={"username": "admin", "password": "Northmine-Demo#2026"},
     )
     assert response.status_code == 200
     token = response.json()["access_token"]

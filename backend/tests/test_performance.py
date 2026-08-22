@@ -33,6 +33,14 @@ def _cycle(caex_id: str, loader_id: str, hour: int, tons: int) -> dict:
     }
 
 
+def _auth_header() -> dict[str, str]:
+    resp = client.post("/api/auth/login", json={
+        "username": "admin", "password": "Northmine-Demo#2026",
+    })
+    token = resp.json()["access_token"]
+    return {"Authorization": f"Bearer {token}"}
+
+
 @pytest.fixture
 def operational_api(client, login_as_admin, monkeypatch):
     dataset = {

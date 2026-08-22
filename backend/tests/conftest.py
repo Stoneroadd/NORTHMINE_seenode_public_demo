@@ -76,7 +76,7 @@ def client() -> Generator[TestClient, None, None]:
 
 @pytest.fixture
 def login_as_admin(client: TestClient) -> dict[str, Any]:
-    resp = client.post("/api/auth/login", json={"username": "admin", "password": "admin"})
+    resp = client.post("/api/auth/login", json={"username": "admin", "password": "Northmine-Demo#2026"})
     assert resp.status_code == 200, f"Login admin failed: {resp.status_code} {resp.text}"
     return resp.json()
 
