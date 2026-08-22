@@ -550,8 +550,15 @@ class SQLiteUserRepository:
             email=settings.bootstrap_admin_email or None,
             role=role,
             is_demo=False,
+            # Must match the demo seeds' tenant/site: require_resource_scope
+            # (multi-tenant isolation) 404s admin target operations
+            # (revoke-tokens, MFA disable, password reset, /admin/users
+            # listing) when the acting admin's empresa/faena doesn't match
+            # the target's, and this is the only real admin account on the
+            # public demo deployment -- it needs to be able to manage the
+            # demo-seeded accounts, not just its own tenant.
             faena="MINA CHILE DEMO",
-            empresa="NORTHMINE",
+            empresa="NORTHMINE DEMO",
         )
 
     def validate_startup_security(self, settings: Settings | None = None) -> None:
