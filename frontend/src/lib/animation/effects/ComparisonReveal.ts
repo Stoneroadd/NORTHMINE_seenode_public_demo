@@ -26,7 +26,7 @@ export function useComparisonReveal<T extends HTMLElement>() {
 
       mm.add('(prefers-reduced-motion: no-preference)', () => {
         const tl = gsap.timeline({
-          scrollTrigger: { trigger: scope.current, start: 'top 76%', once: true },
+          scrollTrigger: { trigger: scope.current, start: 'top 76%', once: true, fastScrollEnd: true },
           defaults: { ease: 'power2.out' },
         })
 

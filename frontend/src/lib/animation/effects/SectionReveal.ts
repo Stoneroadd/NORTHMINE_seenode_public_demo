@@ -66,6 +66,7 @@ export function useSectionReveal<T extends HTMLElement>({
               trigger: scope.current,
               start,
               once: true,
+              fastScrollEnd: true,
             },
           })
         },
