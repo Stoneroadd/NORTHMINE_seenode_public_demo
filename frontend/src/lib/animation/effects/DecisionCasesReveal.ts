@@ -24,7 +24,7 @@ export function useDecisionCasesReveal<T extends HTMLElement>(columns = 3) {
 
       mm.add('(prefers-reduced-motion: no-preference)', () => {
         const tl = gsap.timeline({
-          scrollTrigger: { trigger: scope.current, start: 'top 80%', once: true },
+          scrollTrigger: { trigger: scope.current, start: 'top 80%', once: true, fastScrollEnd: true },
           defaults: { ease: 'power2.out' },
         })
 
