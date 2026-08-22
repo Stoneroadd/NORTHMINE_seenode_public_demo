@@ -100,6 +100,11 @@ def real_admin_header(client: TestClient) -> dict[str, str]:
         user_repository.create_user(
             "qa_real_admin", "Qa-Real-Admin-2026!!",
             full_name="QA Real Admin", role="admin", is_demo=False,
+            # Must match the demo seeds' tenant/site so require_resource_scope
+            # (multi-tenant isolation) doesn't 404 admin operations against
+            # demo-seeded targets. Keep in sync with conftest.py's
+            # login_as_real_admin, which creates the same account.
+            empresa="NORTHMINE DEMO", faena="MINA CHILE DEMO",
         )
     response = client.post(
         "/api/auth/login",
