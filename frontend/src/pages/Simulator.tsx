@@ -7,7 +7,6 @@ import { premiumPalette, useChartPaletteKey } from '../components/charts/premium
 import { ModuleHeader } from '../components/common/ModuleHeader'
 import { ErrorState } from '../components/common/ErrorState'
 import { LoadingState } from '../components/common/LoadingState'
-import { ApiError } from '../lib/api'
 import { useAnimatedNumber } from '../hooks/useAnimatedNumber'
 import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion'
 import { useModuleT } from '../i18n/useModuleT'
@@ -491,11 +490,7 @@ export function Simulator() {
           {loading && !result && !error && <LoadingState label="Calculando simulacion..." />}
           {error && !result && (
             <ErrorState
-              detail={
-                error instanceof ApiError
-                  ? `No se pudo calcular la simulacion: ${error.message}`
-                  : 'No se pudo calcular la simulacion.'
-              }
+              detail="No se pudo calcular la simulacion. Reintenta en unos segundos."
               onRetry={() => setRetryTick((v) => v + 1)}
             />
           )}

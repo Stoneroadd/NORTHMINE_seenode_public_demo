@@ -85,8 +85,8 @@ export interface ProductionT {
 export const productionT: ModuleDict<ProductionT> = {
   es: {
     loading: 'Cargando produccion del turno...',
-    error_prefix: 'No se pudo cargar /api/production/shift:',
-    error_generic: 'No se pudo cargar /api/production/shift.',
+    error_prefix: 'No pudimos cargar la produccion del turno:',
+    error_generic: 'No pudimos cargar la produccion del turno. Reintenta en unos segundos.',
     error_no_demo_suffix: 'No se usa demo sin modo explicito del backend.',
     error_no_session: 'Sesion no disponible. Inicia sesion nuevamente para cargar Produccion real.',
     error_session_invalid: 'la sesion no es valida o no tiene permisos para ver Produccion real.',
@@ -166,8 +166,8 @@ export const productionT: ModuleDict<ProductionT> = {
   },
   en: {
     loading: 'Loading shift production...',
-    error_prefix: 'Could not load /api/production/shift:',
-    error_generic: 'Could not load /api/production/shift.',
+    error_prefix: 'We could not load shift production:',
+    error_generic: 'We could not load shift production. Try again in a few seconds.',
     error_no_demo_suffix: 'Demo data is not used without an explicit backend mode.',
     error_no_session: 'Session not available. Sign in again to load actual Production.',
     error_session_invalid: 'the session is not valid or does not have permission to view actual Production.',
@@ -247,8 +247,8 @@ export const productionT: ModuleDict<ProductionT> = {
   },
   de: {
     loading: 'Schichtproduktion wird geladen...',
-    error_prefix: 'Konnte /api/production/shift nicht laden:',
-    error_generic: 'Konnte /api/production/shift nicht laden.',
+    error_prefix: 'Die Schichtproduktion konnte nicht geladen werden:',
+    error_generic: 'Die Schichtproduktion konnte nicht geladen werden. Versuchen Sie es in Kürze erneut.',
     error_no_demo_suffix: 'Demo wird ohne expliziten Backend-Modus nicht verwendet.',
     error_no_session: 'Sitzung nicht verfuegbar. Melden Sie sich erneut an, um echte Produktion zu laden.',
     error_session_invalid: 'die Sitzung ist ungueltig oder hat keine Berechtigung, echte Produktion einzusehen.',

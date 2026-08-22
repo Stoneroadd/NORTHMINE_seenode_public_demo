@@ -225,7 +225,7 @@ export const alertsT: ModuleDict<AlertsT> = {
     tag_suma_pct: (pct) => `Suma ${pct}%`,
 
     loading_alertas: 'Cargando alertas operacionales...',
-    error_alertas: 'No se pudo cargar /api/alerts/operational.',
+    error_alertas: 'No pudimos cargar las alertas. Reintenta en unos segundos.',
 
     smart_panel_kicker: 'Smart alerts',
     smart_panel_title: 'Riesgo operacional',
@@ -344,7 +344,7 @@ export const alertsT: ModuleDict<AlertsT> = {
     tag_suma_pct: (pct) => `Sum ${pct}%`,
 
     loading_alertas: 'Loading operational alerts...',
-    error_alertas: 'Could not load /api/alerts/operational.',
+    error_alertas: 'We could not load alerts. Try again in a few seconds.',
 
     smart_panel_kicker: 'Smart alerts',
     smart_panel_title: 'Operational risk',

@@ -283,8 +283,8 @@ export function AveriasPage() {
         `${result.filename}: ${result.events_imported} eventos nuevos (${result.events_duplicated} ya existian). ${result.notes.join(' ')}`,
       )
       await fleetQuery.refetch()
-    } catch (error) {
-      setImportMessage(error instanceof Error ? `Error al importar: ${error.message}` : 'Error al importar el archivo.')
+    } catch {
+      setImportMessage('No pudimos importar el archivo. Verifica el formato e intenta nuevamente.')
     } finally {
       setImporting(false)
       if (fileInputRef.current) fileInputRef.current.value = ''
@@ -304,15 +304,15 @@ export function AveriasPage() {
       const mailFiles = result.mail.imported_files.length
       const folderFiles = result.folder.imported_files.length
       if (result.mail.status === 'sin_configurar' && result.folder.status === 'sin_configurar') {
-        setImportMessage('Casilla y carpeta vigilada sin configurar. Define NORTHMINE_MAIL_USER / NORTHMINE_MAIL_PASSWORD o NORTHMINE_AVERIAS_WATCH_DIR en el backend.')
+        setImportMessage('La sincronizacion de correo de averias no esta configurada para este entorno.')
       } else if (result.mail.status === 'error') {
-        setImportMessage(result.mail.detail ?? 'Error al sincronizar el correo.')
+        setImportMessage('No pudimos sincronizar el correo. Intenta nuevamente.')
       } else {
         setImportMessage(`Sincronizacion lista: ${mailFiles} adjuntos desde correo, ${folderFiles} archivos desde carpeta.`)
       }
       await fleetQuery.refetch()
-    } catch (error) {
-      setImportMessage(error instanceof Error ? `Error al sincronizar: ${error.message}` : 'Error al sincronizar.')
+    } catch {
+      setImportMessage('No pudimos sincronizar. Intenta nuevamente.')
     } finally {
       setSyncing(false)
     }
@@ -431,7 +431,6 @@ export function AveriasPage() {
         eyebrow="Averias"
         title="Averias y mantencion de flota"
         description="Averias, mantenciones programadas y desglose del reporte diario de mantencion."
-        meta="API /api/averias/*"
       />
 
       <section className="kpi-grid compact">

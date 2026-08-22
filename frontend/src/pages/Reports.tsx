@@ -62,10 +62,7 @@ export function Reports() {
 
   if (query.isLoading) return <LoadingState label={t.loading_reporte} />
   if (query.isError || !query.data) {
-    const detail = query.error instanceof Error
-      ? t.error_con_mensaje(query.error.message)
-      : t.error_generico
-    return <ErrorState detail={`${detail}${t.error_sufijo}`} onRetry={() => query.refetch()} />
+    return <ErrorState detail={`${t.error_generico}${t.error_sufijo}`} onRetry={() => query.refetch()} />
   }
 
   const dataSource = query.data.data_source ?? (query.data.source === 'demo' ? 'DEMO' : 'REAL')
