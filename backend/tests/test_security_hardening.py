@@ -22,7 +22,7 @@ def test_brute_force_on_login(client):
         resp = client.post("/api/auth/login", json={"username": "admin", "password": "wrong"})
         assert resp.status_code == 401
 
-    resp = client.post("/api/auth/login", json={"username": "admin", "password": "admin"})
+    resp = client.post("/api/auth/login", json={"username": "admin", "password": "Northmine-Demo#2026"})
     assert resp.status_code == 429
     assert "Espera" in resp.text
 
@@ -46,7 +46,7 @@ def test_password_history_mining_requirement(client, login_as_admin):
     token = login_as_admin["access_token"]
 
     passwords = [f"Pala202{i}!!" for i in range(1, 6)]
-    current = "admin"
+    current = "Northmine-Demo#2026"
 
     for i, new_pw in enumerate(passwords):
         headers = {"Authorization": f"Bearer {token}"}
@@ -77,7 +77,7 @@ def test_password_history_mining_requirement(client, login_as_admin):
 def test_password_strength_validation(client, login_as_admin):
     headers = {"Authorization": f"Bearer {login_as_admin['access_token']}"}
     resp = client.post("/api/auth/change-password", headers=headers, json={
-        "current_password": "admin",
+        "current_password": "Northmine-Demo#2026",
         "new_password": "shortonumber",  # 13 chars but no uppercase, number, or special
     })
     assert resp.status_code == 400
