@@ -24,7 +24,7 @@ jobs:
           cache: pip
           cache-dependency-path: backend/requirements-dev.txt
       - name: Install backend
-        run: pip install -r backend/requirements-dev.txt
+        run: pip install -r backend/requirements.txt -r backend/requirements-dev.txt
       - name: Install frontend
         run: npm ci --legacy-peer-deps --prefix frontend
       - name: Checklist gate
