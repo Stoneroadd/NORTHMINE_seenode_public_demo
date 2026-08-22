@@ -33,6 +33,14 @@ def _cycle(caex_id: str, loader_id: str, hour: int, tons: int) -> dict:
     }
 
 
+def _auth_header() -> dict[str, str]:
+    resp = client.post("/api/auth/login", json={
+        "username": "admin", "password": "Northmine-Demo#2026",
+    })
+    token = resp.json()["access_token"]
+    return {"Authorization": f"Bearer {token}"}
+
+
 @pytest.fixture
 def operational_api(client, login_as_admin, monkeypatch):
     dataset = {
@@ -95,7 +103,7 @@ def test_cache_stats_track_one_miss_then_one_hit() -> None:
     assert stats["hits"] == 1
 
 
-def test_concurrent_audit_writes(client, login_as_admin) -> None:
+def test_concurrent_audit_writes(client, login_as_real_admin) -> None:
     action = f"phase02-concurrent-{uuid.uuid4().hex}"
 
     def write(index: int) -> None:
@@ -106,7 +114,7 @@ def test_concurrent_audit_writes(client, login_as_admin) -> None:
 
     response = client.get(
         "/api/admin/audit-log?limit=100",
-        headers={"Authorization": f"Bearer {login_as_admin['access_token']}"},
+        headers={"Authorization": f"Bearer {login_as_real_admin['access_token']}"},
     )
     assert response.status_code == 200
     assert sum(1 for item in response.json()["items"] if item["accion"] == action) == 20

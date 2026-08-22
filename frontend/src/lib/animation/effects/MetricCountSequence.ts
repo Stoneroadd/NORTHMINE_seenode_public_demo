@@ -34,7 +34,7 @@ export function useMetricCountSequence<T extends HTMLElement>() {
       mm.add('(prefers-reduced-motion: no-preference)', () => {
         gsap.set(cards, { opacity: 0, y: 20 })
         const tl = gsap.timeline({
-          scrollTrigger: { trigger: scope.current, start: 'top 80%', once: true },
+          scrollTrigger: { trigger: scope.current, start: 'top 80%', once: true, fastScrollEnd: true },
         })
         tl.to(cards, { opacity: 1, y: 0, duration: 0.5, stagger: 0.08, ease: 'power2.out' })
 

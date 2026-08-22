@@ -31,7 +31,7 @@ def test_mfa_login_requires_code(client, login_as_admin):
     code = totp.now()
     client.post("/api/auth/mfa/verify", headers=headers, json={"code": code})
     client.post("/api/auth/logout", headers=headers)
-    resp = client.post("/api/auth/login", json={"username": "admin", "password": "admin"})
+    resp = client.post("/api/auth/login", json={"username": "admin", "password": "Northmine-Demo#2026"})
     assert resp.status_code == 401
     assert "MFA" in resp.text
 
@@ -43,7 +43,7 @@ def test_mfa_login_with_valid_code(client, login_as_admin):
     code = totp.now()
     client.post("/api/auth/mfa/verify", headers=headers, json={"code": code})
     client.post("/api/auth/logout", headers=headers)
-    resp = client.post("/api/auth/login", json={"username": "admin", "password": "admin", "mfa_code": totp.now()})
+    resp = client.post("/api/auth/login", json={"username": "admin", "password": "Northmine-Demo#2026", "mfa_code": totp.now()})
     assert resp.status_code == 200, f"MFA login failed: {resp.text}"
     assert "access_token" in resp.json()
 
@@ -56,19 +56,19 @@ def test_mfa_login_with_backup_code(client, login_as_admin):
     code = totp.now()
     client.post("/api/auth/mfa/verify", headers=headers, json={"code": code})
     client.post("/api/auth/logout", headers=headers)
-    resp = client.post("/api/auth/login", json={"username": "admin", "password": "admin", "mfa_code": backup_code})
+    resp = client.post("/api/auth/login", json={"username": "admin", "password": "Northmine-Demo#2026", "mfa_code": backup_code})
     assert resp.status_code == 200, f"Backup code login failed: {resp.text}"
 
 
-def test_active_sessions_tracked_after_login(client, login_as_admin):
-    headers = {"Authorization": f"Bearer {login_as_admin['access_token']}"}
+def test_active_sessions_tracked_after_login(client, login_as_real_admin):
+    headers = {"Authorization": f"Bearer {login_as_real_admin['access_token']}"}
     resp = client.get("/api/admin/metrics", headers=headers)
     assert resp.status_code == 200
     assert resp.json()["active_sessions"] >= 1
 
 
-def test_audit_log_encrypted_detalle(client, login_as_admin):
-    headers = {"Authorization": f"Bearer {login_as_admin['access_token']}"}
+def test_audit_log_encrypted_detalle(client, login_as_real_admin):
+    headers = {"Authorization": f"Bearer {login_as_real_admin['access_token']}"}
     resp = client.get("/api/admin/audit-log", headers=headers)
     assert resp.status_code == 200
     items = resp.json()["items"]

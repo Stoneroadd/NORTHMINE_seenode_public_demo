@@ -39,7 +39,7 @@ export interface CompareT {
 export const compareT: ModuleDict<CompareT> = {
   es: {
     loading: 'Cargando comparativa operacional...',
-    error_detail: 'No se pudo cargar /api/compare.',
+    error_detail: 'No pudimos cargar la comparativa. Reintenta en unos segundos.',
     header_eyebrow: 'Comparativa',
     header_title: 'Periodos operacionales',
     header_description: 'Comparacion de tonelaje, ciclos, hora a hora y rendimiento por pala.',
@@ -79,7 +79,7 @@ export const compareT: ModuleDict<CompareT> = {
   },
   en: {
     loading: 'Loading operational comparison...',
-    error_detail: 'Could not load /api/compare.',
+    error_detail: 'We could not load the comparison. Try again in a few seconds.',
     header_eyebrow: 'Comparison',
     header_title: 'Operational periods',
     header_description: 'Comparison of tonnage, cycles, hour-by-hour and loading unit performance.',

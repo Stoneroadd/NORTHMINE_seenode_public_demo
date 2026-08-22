@@ -33,7 +33,7 @@ export function useModuleGalleryReveal<T extends HTMLElement>() {
           duration: 0.55,
           stagger: 0.1,
           ease: 'power2.out',
-          scrollTrigger: { trigger: scope.current, start: 'top 80%', once: true },
+          scrollTrigger: { trigger: scope.current, start: 'top 80%', once: true, fastScrollEnd: true },
         })
       })
     },

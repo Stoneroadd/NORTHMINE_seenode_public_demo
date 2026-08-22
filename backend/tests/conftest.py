@@ -76,8 +76,29 @@ def client() -> Generator[TestClient, None, None]:
 
 @pytest.fixture
 def login_as_admin(client: TestClient) -> dict[str, Any]:
-    resp = client.post("/api/auth/login", json={"username": "admin", "password": "admin"})
+    resp = client.post("/api/auth/login", json={"username": "admin", "password": "Northmine-Demo#2026"})
     assert resp.status_code == 200, f"Login admin failed: {resp.status_code} {resp.text}"
+    return resp.json()
+
+
+@pytest.fixture
+def login_as_real_admin(client: TestClient) -> dict[str, Any]:
+    # RequireAdmin now excludes is_demo accounts (see dependencies.py
+    # _require_real_admin) -- the seeded admin/admin no longer reaches
+    # RequireAdmin-gated routes. Tests that exercise those routes need a
+    # genuine non-demo admin account instead of login_as_admin.
+    repo = get_user_repository()
+    if repo.get_by_username("qa_real_admin") is None:
+        repo.create_user(
+            "qa_real_admin", "Qa-Real-Admin-2026!!",
+            full_name="QA Real Admin", role="admin", is_demo=False,
+            # Must match the demo seeds' tenant/site so require_resource_scope
+            # (multi-tenant isolation) doesn't 404 admin operations against
+            # demo-seeded targets like supervisor/operador.
+            empresa="NORTHMINE DEMO", faena="MINA CHILE DEMO",
+        )
+    resp = client.post("/api/auth/login", json={"username": "qa_real_admin", "password": "Qa-Real-Admin-2026!!"})
+    assert resp.status_code == 200, f"Login qa_real_admin failed: {resp.status_code} {resp.text}"
     return resp.json()
 
 

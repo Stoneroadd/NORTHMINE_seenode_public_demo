@@ -156,7 +156,6 @@ export function LoadingUnitsPage() {
         eyebrow={t.eyebrow}
         title={t.title}
         description={t.description}
-        meta="API /api/loading-units/*"
         actions={<button className="command-button command-button-secondary" type="button" onClick={() => downloadCsv(setExporting)} disabled={exporting}><Download size={15} /> {exporting ? t.exporting : t.export_csv}</button>}
       />
 

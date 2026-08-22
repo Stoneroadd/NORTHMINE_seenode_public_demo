@@ -61,7 +61,6 @@ export function CockpitHeader({
         </Badge>
         <span>{t.header_calidad} <strong className="text-text-primary">{quality}</strong></span>
         {freshness && <span>{t.header_frescura} <strong className="text-text-primary">{freshness}</strong></span>}
-        <span>{t.header_api} <strong className="text-text-primary">{data.apiVersion}</strong></span>
         {onDownloadReport && (
           <Button
             variant="secondary"

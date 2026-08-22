@@ -26,7 +26,7 @@ export function useDecisionFlowTimeline<T extends HTMLElement>() {
 
       mm.add('(prefers-reduced-motion: no-preference)', () => {
         const tl = gsap.timeline({
-          scrollTrigger: { trigger: scope.current, start: 'top 78%', once: true },
+          scrollTrigger: { trigger: scope.current, start: 'top 78%', once: true, fastScrollEnd: true },
           defaults: { ease: 'power2.out' },
         })
 

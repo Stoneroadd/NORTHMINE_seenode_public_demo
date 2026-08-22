@@ -149,7 +149,7 @@ export const fleetT: ModuleDict<FleetT> = {
     no_standby: 'Sin CAEX en standby WENCO.',
     no_cycle_suffix: 'sin ciclo',
     loading_label: 'Cargando status actual de flota...',
-    error_detail: 'No se pudo cargar /api/fleet/status.',
+    error_detail: 'No pudimos cargar el estado de flota. Reintenta en unos segundos.',
     no_substate: 'Sin subestado WENCO',
 
     checklist_kicker: 'Cierre de turno',
@@ -237,7 +237,7 @@ export const fleetT: ModuleDict<FleetT> = {
     no_standby: 'No CAEX in WENCO standby.',
     no_cycle_suffix: 'no cycle',
     loading_label: 'Loading current fleet status...',
-    error_detail: 'Could not load /api/fleet/status.',
+    error_detail: 'We could not load fleet status. Try again in a few seconds.',
     no_substate: 'No WENCO substate',
 
     checklist_kicker: 'Shift closeout',

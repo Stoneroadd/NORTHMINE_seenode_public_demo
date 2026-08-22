@@ -26,7 +26,7 @@ export function useProductStageReveal<T extends HTMLElement>() {
       mm.add('(prefers-reduced-motion: no-preference)', () => {
         gsap.set(frame, { opacity: 0, y: 70, scale: 0.97 })
         const tl = gsap.timeline({
-          scrollTrigger: { trigger: frame, start: 'top 85%', once: true },
+          scrollTrigger: { trigger: frame, start: 'top 85%', once: true, fastScrollEnd: true },
         })
         tl.to(frame, { opacity: 1, y: 0, scale: 1, duration: 1, ease: 'power3.out' })
         mineralLightSweep(tl, sweep ?? null, '-=0.2')
