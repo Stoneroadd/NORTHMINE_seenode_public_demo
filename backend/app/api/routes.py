@@ -15,6 +15,7 @@ from app.ai.work_products.router import router as ai_agent_work_products_router
 from app.ai.demo_tour import router as ai_agent_demo_router
 from app.ai.realtime.router import router as ai_agent_realtime_router
 from app.api.operational import router as operational_router
+from app.mission_control.router import router as mission_control_router
 from app.core.audit import (
     blacklist_token,
     check_password_in_history,
@@ -117,6 +118,7 @@ from app.services.filtering import (
 
 router = APIRouter(prefix=get_settings().api_prefix)
 router.include_router(operational_router)
+router.include_router(mission_control_router)
 router.include_router(ai_copilot_router)
 router.include_router(ai_investigations_router)
 router.include_router(ai_agent_voice_router)

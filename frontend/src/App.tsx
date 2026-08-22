@@ -38,6 +38,7 @@ const loadExpertAnalysisPage = () => import('./pages/ExpertAnalysisPage')
 const loadAlerts      = () => import('./pages/Alerts')
 const loadDemoAccessAdminPage = () => import('./pages/DemoAccessAdminPage')
 const loadMissionControlDesignSystemPage = () => import('./pages/MissionControlDesignSystemPage')
+const loadOperationalFlowPage = () => import('./pages/OperationalFlowPage')
 
 const Prediction  = lazy(() => loadPrediction().then(m => ({ default: m.Prediction })))
 const Simulator   = lazy(() => loadSimulator().then(m => ({ default: m.Simulator })))
@@ -61,6 +62,7 @@ const ExpertAnalysisPage = lazy(() => loadExpertAnalysisPage().then(m => ({ defa
 const Alerts      = lazy(() => loadAlerts().then(m => ({ default: m.Alerts })))
 const DemoAccessAdminPage = lazy(() => loadDemoAccessAdminPage().then(m => ({ default: m.DemoAccessAdminPage })))
 const MissionControlDesignSystemPage = lazy(() => loadMissionControlDesignSystemPage().then(m => ({ default: m.MissionControlDesignSystemPage })))
+const OperationalFlowPage = lazy(() => loadOperationalFlowPage().then(m => ({ default: m.OperationalFlowPage })))
 import { Settings } from 'lucide-react'
 
 const ALL_MODULE_LOADERS = [
@@ -69,12 +71,14 @@ const ALL_MODULE_LOADERS = [
   loadDecisionCockpit, loadOperationalMindMap3D, loadCurrentShift, loadProduction,
   loadPerformance, loadFleet, loadLoadingUnits, loadAveriasPage, loadExpertAnalysisPage,
   loadAlerts,
+  loadOperationalFlowPage,
 ]
 
 const FAST_DEMO_MODULE_LOADERS = [
   loadDecisionCockpit, loadDashboard, loadCurrentShift, loadProduction,
   loadPerformance, loadFleet, loadLoadingUnits, loadAveriasPage, loadAerialView,
   loadAlerts, loadReports,
+  loadOperationalFlowPage,
 ]
 
 // La demo publica debe sentirse instantanea. Precargamos los modulos livianos
@@ -187,6 +191,7 @@ function renderSection(section: SectionId, session: AuthSession, t: AppT) {
   if (path === '/cockpit')    return wrap(_S(<DecisionCockpit />), '/cockpit')
   if (path === '/operational-map-3d') return wrap(_S(<OperationalMindMap3D />), '/operational-map-3d')
   if (path === '/mission-control/design-system') return wrap(_S(<MissionControlDesignSystemPage />), '/mission-control/design-system')
+  if (path === '/mission-control/operational-flow') return wrap(_S(<OperationalFlowPage />), '/mission-control/operational-flow')
 
   switch (section) {
     case 'cockpit':
