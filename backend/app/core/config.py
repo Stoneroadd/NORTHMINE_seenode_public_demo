@@ -216,6 +216,8 @@ class Settings:
     openai_realtime_max_concurrent_sessions_per_user: int
     openai_realtime_inactivity_timeout_seconds: int
     openai_realtime_tool_timeout_seconds: float
+    openai_realtime_rate_limit_per_user_per_hour: int
+    openai_realtime_max_output_tokens: int
 
     @property
     def elevenlabs_available(self) -> bool:
@@ -514,4 +516,6 @@ def get_settings() -> Settings:
         openai_realtime_max_concurrent_sessions_per_user=int(os.getenv("OPENAI_REALTIME_MAX_CONCURRENT_SESSIONS_PER_USER", "1")),
         openai_realtime_inactivity_timeout_seconds=int(os.getenv("OPENAI_REALTIME_INACTIVITY_TIMEOUT_SECONDS", "120")),
         openai_realtime_tool_timeout_seconds=float(os.getenv("OPENAI_REALTIME_TOOL_TIMEOUT_SECONDS", "45")),
+        openai_realtime_rate_limit_per_user_per_hour=int(os.getenv("OPENAI_REALTIME_RATE_LIMIT_PER_USER_PER_HOUR", "10")),
+        openai_realtime_max_output_tokens=int(os.getenv("OPENAI_REALTIME_MAX_OUTPUT_TOKENS", "2048")),
     )
