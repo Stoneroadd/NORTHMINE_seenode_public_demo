@@ -122,7 +122,7 @@ def test_diagnostics_endpoint_requires_admin(client, login_as_operador):
     assert response.status_code == 403
 
 
-def test_diagnostics_endpoint_never_leaks_the_api_key_even_to_an_admin(client, login_as_admin, monkeypatch):
+def test_diagnostics_endpoint_never_leaks_the_api_key_even_to_an_admin(client, login_as_real_admin, monkeypatch):
     monkeypatch.setenv("OPENAI_API_KEY", "sk-super-secret-value-should-never-appear")
     monkeypatch.setenv("OPENAI_REALTIME_MODEL", "gpt-realtime-2.1-mini")
     get_settings.cache_clear()
@@ -131,7 +131,7 @@ def test_diagnostics_endpoint_never_leaks_the_api_key_even_to_an_admin(client, l
         return _FakeResponse(401, {"error": {"code": "invalid_api_key", "message": "Incorrect API key provided: sk-super-secret-value-should-never-appear."}})
 
     monkeypatch.setattr(httpx.AsyncClient, "post", _fake_post)
-    response = client.get("/api/ai-agent/realtime/diagnostics", headers=auth_header(login_as_admin))
+    response = client.get("/api/ai-agent/realtime/diagnostics", headers=auth_header(login_as_real_admin))
     get_settings.cache_clear()
 
     assert response.status_code == 200
