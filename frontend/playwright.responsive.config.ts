@@ -27,7 +27,9 @@ export default defineConfig({
   webServer: {
     command: 'npm run dev -- --host 127.0.0.1 --port 5205',
     url: 'http://127.0.0.1:5205/',
-    reuseExistingServer: false,
+    // Desarrollo local puede reutilizar el servidor que el equipo ya verificó.
+    // CI conserva un arranque limpio para evitar validar artefactos obsoletos.
+    reuseExistingServer: process.env.CI !== 'true',
     timeout: 30_000,
   },
   projects: [

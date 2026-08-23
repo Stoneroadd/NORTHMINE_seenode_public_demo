@@ -33,6 +33,25 @@ commit message — link to the actual commit/PR for detail.
 
 ---
 
+## 2026-08-23 — Codex — branch `feat/operator-ranking-methodology-a11y` — complete
+
+**Scope:** reproduce and close the P0 live-session accessibility gap in the
+`/operator-ranking` methodology modal: keyboard entry/order, focus containment
+and return, Escape, dialog naming/state, touch targets and narrow viewport.
+
+**Result:** production reproduction confirmed that the closed surface remained
+in the accessibility tree, focus stayed on the opener, Tab escaped into the KPI
+audit drawer and Escape did not close. The modal now has dialog semantics,
+initial/contained/restored focus, Escape dismissal, live loading/error states,
+an explicit opener relationship and a 44 px close target. Focused Playwright is
+4/4 on Pixel 7 + desktop 1440; frontend lint/typecheck, 124/124 unit tests and
+production build pass. The responsive runner now reuses an already verified
+local server outside CI while CI still starts cleanly.
+
+**Coordination:** no AI runtime, Mission Control architecture, Prediction API or
+`OperationalFlowOverview` changes. Public demo was used for BEFORE evidence;
+candidate behavior was validated against the isolated local branch.
+
 ## 2026-08-23 — Codex — branch `feat/frontend-product-sanitization` — complete
 
 **Scope:** remove user-visible implementation traces from the frontend

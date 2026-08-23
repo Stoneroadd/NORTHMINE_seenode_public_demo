@@ -469,7 +469,14 @@ export function OperatorRanking() {
           meta={dataModeLabel(t, dataMode)}
           actions={
             <div className="operator-ranking-actions">
-              <button type="button" className="command-button command-button-secondary" onClick={() => setMethodologyOpen(true)}>
+              <button
+                type="button"
+                className="command-button command-button-secondary"
+                aria-haspopup="dialog"
+                aria-expanded={methodologyOpen}
+                aria-controls="operator-methodology-dialog"
+                onClick={() => setMethodologyOpen(true)}
+              >
                 <BookOpen size={15} /> {t.btn_metodologia}
               </button>
               <button type="button" className="command-button command-button-secondary" onClick={exportCsv}>

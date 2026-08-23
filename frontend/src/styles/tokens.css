@@ -10774,8 +10774,8 @@ button:disabled,
   right: 18px;
   justify-self: end;
   z-index: 2;
-  width: 38px;
-  height: 38px;
+  width: 44px;
+  height: 44px;
   display: grid;
   place-items: center;
   border: 1px solid color-mix(in srgb, var(--cyan) 18%, transparent);

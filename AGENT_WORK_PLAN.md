@@ -37,12 +37,12 @@ serves data on the live demo site (`ENVIRONMENT=demo` special-cases past
 to this approach. Old `/api/ml/prediction` route and `mlService.ts`
 removed (fully dead once the frontend stopped calling them).
 
-## P0 — needs live session
-
-**Ranking methodology modal is not fully accessible.** No specifics
-recorded beyond "accessibility issue" — needs a fresh audit (keyboard
-nav, focus trap, ARIA labels) against the live `/operator-ranking`
-methodology modal, not a guess from the JSX alone.
+**Ranking methodology modal accessibility — RESOLVED 2026-08-23.**
+Live production reproduction established the exact focus, Escape and hidden
+content defects before implementation. The modal now has named dialog
+semantics, focus containment and restoration, keyboard dismissal, explicit
+opener state and a 44 px close target. Focused Playwright passes on Pixel 7
+and desktop 1440; see the newest `AGENT_LOG.md` entry for evidence.
 
 ## P1 — needs human judgment
 
