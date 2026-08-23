@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from app.ai import policies
+from app.ai import navigation, policies
 from app.ai.capabilities import CAPABILITY_REGISTRY, CapabilityDefinition, get_capability
 from app.ai.investigation_schemas import (
     InvestigationPlan,
@@ -100,6 +100,18 @@ def build_plan(investigation_type: InvestigationType, scope: InvestigationScope,
             continue
         if capability.kind == "backend_tool" and not policies.is_tool_allowed(role, capability.id):
             missing.append(f"{capability_id} (rol '{role}' sin permiso)")
+            continue
+        # C5: las ui_action tambien deben pasar por autorizacion real, igual
+        # que los backend_tool de arriba - antes de este chequeo, un
+        # CapabilityDefinition.required_role declarado en capabilities.py
+        # nunca se leia en ningun lado (dead code), y una ui_action con
+        # module_id restringido en navigation.py::SECTION_ALLOWED_ROLES se
+        # habria agregado al plan de cualquier rol sin verificacion. Hoy
+        # ninguna de las 9 ui_action registradas apunta a una seccion
+        # restringida, pero el chequeo debe existir para que eso siga siendo
+        # cierto por diseno, no por casualidad.
+        if capability.kind == "ui_action" and capability.module_id and not navigation.is_navigation_allowed(capability.module_id, role):
+            missing.append(f"{capability_id} (rol '{role}' sin permiso de navegacion a '{capability.module_id}')")
             continue
         steps.append(
             PlanStep(
