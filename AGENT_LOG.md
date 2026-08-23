@@ -13,6 +13,9 @@ A narrower precedent already exists for one finished feature:
 access landing page, now historical — the worktree it describes is gone).
 This file is the general, ongoing version of that idea, not a replacement.
 
+See `AGENT_WORK_PLAN.md` for the forward-looking, prioritized backlog —
+this file is the diary of what already happened, that one is the plan.
+
 ## How to use this
 
 **Before starting non-trivial work**, add an entry at the top (newest

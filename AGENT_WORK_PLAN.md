@@ -1,0 +1,75 @@
+# Work Plan
+
+Forward-looking backlog for whoever picks up work on this repo next
+(Claude Code, Codex, or the user directly) — see `AGENT_LOG.md` for what
+already happened and why. This file is the plan; that one is the diary.
+
+There is no live coordination between Claude Code and Codex sessions — if
+you're Codex reading this because the user pointed you at it, welcome;
+update this file when you finish something, same as `AGENT_LOG.md`.
+
+## How to use this
+
+Each item states what it is, why it matters, and — most importantly —
+what kind of work it needs, because that determines who can safely pick
+it up:
+
+- **Verifiable**: has a clear pass/fail signal (a test, a reproducible
+  error). Any agent can pick this up, fix it, verify it, ship it.
+- **Needs live session**: requires an authenticated browser session
+  against the real running app to reproduce or confirm. Do not guess a
+  fix from code reading alone — verify first, exactly like the Simulator
+  crash fix in `AGENT_LOG.md` did.
+- **Needs human judgment**: an architecture or product decision, not a
+  bug. Don't resolve this unilaterally — surface the tradeoffs and ask.
+
+## P0 — needs live session
+
+**Prediction API returns 410.** Root cause not yet found. `410 Gone` in
+this codebase is used deliberately in `app/api/operational.py`'s
+`_real_only_error()` for "real-data-only" endpoints when `demo_mode` is
+on — first check whether this is that same deliberate guard firing on a
+misconfigured demo request (not a bug, a config issue) or a genuine
+different failure before assuming it needs a code fix.
+
+**Ranking methodology modal is not fully accessible.** No specifics
+recorded beyond "accessibility issue" — needs a fresh audit (keyboard
+nav, focus trap, ARIA labels) against the live `/operator-ranking`
+methodology modal, not a guess from the JSX alone.
+
+## P1 — needs human judgment
+
+**`main` and `integration/agent-consolidated` (in the sibling checkout
+`NORTHMINE_agent_planner`) have deeply diverged AI-agent-runtime code
+that can't be merged mechanically.** See `project_northmine_seenode_repo_quirks.md`
+(Claude's persistent memory) for the full map. The entangled files are
+`runtime.py`, `command_router.py`, `AgentWorkspace.tsx`, `aiCopilot.ts`,
+and the investigation/report model (`conclusion.py`,
+`investigation_schemas.py`, `work_products/reports.py`). Both branches
+changed these for different, sometimes incompatible reasons (e.g. two
+different speech-chunking systems). A real reconciliation, like the
+original R2 effort, needs someone to actually read both versions and
+decide which behavior wins — not a script. Everything mechanically safe
+to port already has been (see `AGENT_LOG.md`, commits `71ba9a7` through
+`5b780ab`).
+
+## P2 — verifiable, not yet attempted
+
+**Confirmed already fine, no action needed:** `/admin/audit-log` RBAC
+(already `RequireAdmin` + redaction) and refresh-token rotation (already
+race-guarded via conditional `UPDATE`) — see `AGENT_LOG.md` for detail.
+Don't re-investigate these without new evidence of an actual failure.
+
+## Outside this repo's code — user's own action
+
+**Create the real (non-demo) admin account on the live Seenode
+deployment**, via `NORTHMINE_BOOTSTRAP_ADMIN_USER` /
+`NORTHMINE_BOOTSTRAP_ADMIN_PASSWORD` env vars in Seenode's dashboard. The
+code side of this (tenant-scope bug that would have blocked it) is
+already fixed — see commit `43585ba`. Nobody else can do this step; it
+requires the Seenode dashboard.
+
+**Formal close-out of the R4 Human Physical Acceptance walkthrough** —
+started earlier this project, left informally open. Needs the user
+actively driving alongside an agent, screen by screen — not something
+either agent can do unattended.
