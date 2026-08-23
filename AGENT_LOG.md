@@ -65,9 +65,23 @@ same entangled cluster (`AgentWorkspace.tsx`, `conclusion.py`,
 to port mechanically. Considering that branch's easily-portable content
 exhausted for now.
 
-**Next in this loop:** the original H1 backlog (ECharts crash in
-Simulator, etc.) if it still applies to this repo. Will append another
-entry (or update this one) when this loop stops.
+**Also done:** found and fixed the H1 backlog's "P0 Simulador ECharts
+crash" fresh in this repo (previous diagnosis in the other repo never
+found the root cause, only confirmed it didn't leak a stack trace).
+`buildCrossoverOption`'s tooltip formatter assumed `params[0]` always
+exists; ECharts genuinely calls it with an empty array on some
+pointer-move edge cases even for a single-series axis trigger. Exported
+the previously-private function, added `Simulator.test.ts`, confirmed
+the exact production `TypeError` by temporarily reverting the guard
+before shipping the fix. Commit `ba16d16`.
+
+**Next in this loop:** remaining original H1 backlog items (Prediction
+API 410 root cause, refresh-token race condition, `/admin/auditoria`
+RBAC issue, ranking methodology modal accessibility) if they still apply
+to this repo -- none investigated yet, same caveat as always: verify
+fresh against this repo's current code, don't assume the old diagnosis
+transfers. Will append another entry (or update this one) when this loop
+stops.
 
 ---
 
