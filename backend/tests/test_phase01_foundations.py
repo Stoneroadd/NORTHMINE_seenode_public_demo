@@ -6,7 +6,6 @@ import pytest
 from fastapi import HTTPException
 
 from app.ai import investigation_router
-from app.ai import router as copilot_router
 from app.ai.work_products import router as work_product_router
 from app.api import routes as api_routes
 from app.ai.work_products.models import ReportDraft, ReportScope, TaskDraft
@@ -133,26 +132,6 @@ def test_investigation_direct_id_is_owner_scoped(monkeypatch) -> None:
     with pytest.raises(HTTPException) as exc:
         investigation_router.get_investigation_endpoint("inv-b", user=_user(identity="alice"))
     assert exc.value.status_code == 404
-
-
-def test_legacy_copilot_task_id_is_owner_scoped_before_mutation(monkeypatch) -> None:
-    monkeypatch.setattr(
-        copilot_router.repository,
-        "get_task_draft_for_owner",
-        lambda _id, owner: {"id": "task-b", "created_by": "bob"} if owner == "bob" else None,
-    )
-    called = False
-
-    def _mutate(*_args, **_kwargs):
-        nonlocal called
-        called = True
-        return None
-
-    monkeypatch.setattr(copilot_router.repository, "update_task_status", _mutate)
-    with pytest.raises(HTTPException) as exc:
-        copilot_router._transition_task("task-b", "approved", SimpleNamespace(client=None), _user(identity="alice"))
-    assert exc.value.status_code == 404
-    assert called is False
 
 
 def test_admin_direct_user_id_cannot_cross_site(monkeypatch) -> None:

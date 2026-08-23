@@ -7,7 +7,6 @@ from fastapi.responses import FileResponse, JSONResponse
 
 from app.ai.investigation_router import router as ai_investigations_router
 from app.ai.realtime.router import router as ai_agent_realtime_router
-from app.ai.router import router as ai_copilot_router
 from app.ai.runtime.ws_router import router as ai_agent_ws_router
 from app.ai.voice.router import router as ai_agent_voice_router
 from app.ai.vision.router import router as ai_agent_vision_router
@@ -119,7 +118,6 @@ from app.services.filtering import (
 router = APIRouter(prefix=get_settings().api_prefix)
 router.include_router(operational_router)
 router.include_router(mission_control_router)
-router.include_router(ai_copilot_router)
 router.include_router(ai_investigations_router)
 router.include_router(ai_agent_voice_router)
 router.include_router(ai_agent_vision_router)
