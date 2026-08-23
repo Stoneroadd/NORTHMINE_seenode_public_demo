@@ -30,6 +30,29 @@ commit message — link to the actual commit/PR for detail.
 
 ---
 
+## 2026-08-23 — Claude Code — branch `main` — autonomous loop, in progress
+
+User authorized an unattended loop: work through the known backlog, push
+to `main` automatically whenever the full test suite is green, no
+per-step confirmation, until they say stop. Scope boundary I'm holding
+myself to: concrete, test-verifiable changes only — no unilateral
+architecture decisions (the deep `runtime.py`/`AgentWorkspace.tsx`/
+investigation-model reconciliation stays out, per the entry below).
+
+**Done this session:** ported the two `runtime.py` bug fixes flagged
+below as pending (stuck-in-speaking, duplicate-cancel WS crash) — see
+commit `9fee1bd`. Added `test_runtime_state_recovery.py`, confirmed both
+tests actually fail without the fix before shipping it. Full suite green
+(414 passed), pushed.
+
+**Next in this loop:** re-checking `integration/agent-consolidated` for
+any other genuinely isolated, empirically-verified-safe items beyond
+what commit `71ba9a7` already ported; then the original H1 backlog
+(ECharts crash in Simulator, etc.) if it still applies to this repo.
+Will append another entry (or update this one) when this loop stops.
+
+---
+
 ## 2026-08-22/23 — Claude Code — branch `main`
 
 **Touched:** Reflected 8 commits from `integration/agent-consolidated` onto
