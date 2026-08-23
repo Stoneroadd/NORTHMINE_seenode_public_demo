@@ -75,13 +75,23 @@ the previously-private function, added `Simulator.test.ts`, confirmed
 the exact production `TypeError` by temporarily reverting the guard
 before shipping the fix. Commit `ba16d16`.
 
-**Next in this loop:** remaining original H1 backlog items (Prediction
-API 410 root cause, refresh-token race condition, `/admin/auditoria`
-RBAC issue, ranking methodology modal accessibility) if they still apply
-to this repo -- none investigated yet, same caveat as always: verify
-fresh against this repo's current code, don't assume the old diagnosis
-transfers. Will append another entry (or update this one) when this loop
-stops.
+**Checked, found no evidence of a bug (not "fixed" — nothing to fix):**
+- `/admin/auditoria` RBAC: `/admin/audit-log` already uses `RequireAdmin`
+  (excludes `is_demo` accounts, per this session's earlier security fix)
+  plus `_protect_demo_audit_rows()` redaction. Looks correctly scoped.
+- Refresh-token race condition: `rotate_refresh_session()` in
+  `app/core/audit.py` already does a conditional `UPDATE ... WHERE
+  revoked_at IS NULL` and checks `rowcount != 1` to detect a losing
+  concurrent request — a real, documented single-use-rotation guard, not
+  a naive read-then-write. No reproduction attempted (would need actual
+  concurrent-load testing to disprove), but the code shows deliberate
+  protection already in place, not an obvious gap.
+
+**Not investigated — needs a live authenticated session, not just code
+reading:** Prediction API 410 root cause, ranking methodology modal
+accessibility. Stopping this loop here rather than guessing at fixes for
+scenarios I can't reproduce or verify. See the wrap-up note the session
+posts below when it stops.
 
 ---
 
