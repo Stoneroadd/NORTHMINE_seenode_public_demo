@@ -45,11 +45,29 @@ commit `9fee1bd`. Added `test_runtime_state_recovery.py`, confirmed both
 tests actually fail without the fix before shipping it. Full suite green
 (414 passed), pushed.
 
-**Next in this loop:** re-checking `integration/agent-consolidated` for
-any other genuinely isolated, empirically-verified-safe items beyond
-what commit `71ba9a7` already ported; then the original H1 backlog
-(ECharts crash in Simulator, etc.) if it still applies to this repo.
-Will append another entry (or update this one) when this loop stops.
+**Also done:** re-checked the rest of `integration/agent-consolidated`
+for further safe ports. Found and shipped one more: the first-generation
+AI copilot chat (`app/ai/{orchestrator,repository,router,schemas}.py`
+backend + 8 `AI*.tsx` frontend components) was confirmed genuinely dead
+on `main` — mounted at `/api/ai-copilot/*` but zero reachable UI entry
+point — and removed, matching `integration/agent-consolidated`'s own
+`57bed59` cleanup but re-verified fresh against this repo's current
+import graph rather than cherry-picked (two test files needed manual
+fixing after removal: `test_ai_copilot.py` deleted outright,
+`test_phase01_foundations.py` lost one test that exercised the same dead
+path). `app/ai/policies.py` and `useVoiceSession.ts` looked related but
+are both live — not touched. Commits `9fee1bd`, `e82ca86`, `23bd4ad`.
+
+Everything else surveyed in `integration/agent-consolidated` (human
+decision authority, evidence lineage, confidence semantics) touches the
+same entangled cluster (`AgentWorkspace.tsx`, `conclusion.py`,
+`investigation_schemas.py`) flagged in the entry below — still not safe
+to port mechanically. Considering that branch's easily-portable content
+exhausted for now.
+
+**Next in this loop:** the original H1 backlog (ECharts crash in
+Simulator, etc.) if it still applies to this repo. Will append another
+entry (or update this one) when this loop stops.
 
 ---
 
