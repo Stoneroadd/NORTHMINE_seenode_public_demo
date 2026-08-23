@@ -5,6 +5,7 @@ import { cockpitT } from '../../i18n/modules/cockpit'
 import { Badge, type BadgeProps } from '../ui/badge'
 import { Button } from '../ui/button'
 import { cn } from '@/lib/utils'
+import { operationalStatusLabel, sourceDisplayName } from '../../lib/presentationSafety'
 
 function dateLabel(value: string) {
   try {
@@ -35,7 +36,7 @@ export function CockpitHeader({
   const modeVariant: NonNullable<BadgeProps['variant']> = data.isDemo ? 'info' : data.stale ? 'warning' : 'success'
   const dataStatusLabel = data.isDemo
     ? t.header_datos_sinteticos
-    : `${data.sourceSystem}: ${data.dataSourceStatus}`
+    : `${sourceDisplayName(data.sourceSystem)}: ${operationalStatusLabel(data.dataSourceStatus)}`
   const quality = data.dataQualityScore === null ? data.dataQualityLabel : `${Math.round(data.dataQualityScore)}%`
   const freshness = data.lastRecordAgeMin === null ? null : `${data.lastRecordAgeMin} min`
 
@@ -49,7 +50,7 @@ export function CockpitHeader({
 
       <div className="flex flex-wrap items-center gap-2.5 text-xs text-text-secondary" aria-label={t.header_status_aria}>
         <Badge variant={statusVariant(data.backendStatus)}>
-          <ShieldCheck size={13} /> {t.header_backend(data.backendStatus)}
+          <ShieldCheck size={13} /> {t.header_backend(operationalStatusLabel(data.backendStatus))}
         </Badge>
         <Badge variant={statusVariant(data.dataSourceStatus)}>
           <Database size={13} /> {dataStatusLabel}

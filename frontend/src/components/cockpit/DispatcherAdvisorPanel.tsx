@@ -3,6 +3,7 @@ import type { DispatcherAdvisorEvidence, DispatcherAdvisorResponse } from '../..
 import { formatMoney, formatNumber, formatTons } from './cockpitModel'
 import { useModuleT } from '../../i18n/useModuleT'
 import { cockpitT } from '../../i18n/modules/cockpit'
+import { sourceDisplayName } from '../../lib/presentationSafety'
 
 interface DispatcherAdvisorPanelProps {
   data?: DispatcherAdvisorResponse
@@ -57,7 +58,7 @@ export function DispatcherAdvisorPanel({
             <span className="nmcp-section-kicker">{t.dispatcher_kicker}</span>
             <h2>{t.dispatcher_loading_title}</h2>
           </div>
-          <span className="nmcp-panel-tag">API v1</span>
+          <span className="nmcp-panel-tag">ACTUALIZANDO</span>
         </div>
         <div className="nmcp-dispatcher-empty">{t.dispatcher_loading_body}</div>
       </section>
@@ -77,7 +78,7 @@ export function DispatcherAdvisorPanel({
           </button>
         </div>
         <div className="nmcp-dispatcher-empty">
-          {t.dispatcher_error_body(error?.message ?? t.dispatcher_sin_respuesta)}
+          {t.dispatcher_error_body(t.dispatcher_sin_respuesta)}
         </div>
       </section>
     )
@@ -185,11 +186,11 @@ export function DispatcherAdvisorPanel({
           <span className="nmcp-section-kicker">{t.dispatcher_trazabilidad}</span>
           {data.traceability.inputs.map((item) => (
             <p key={item.endpoint}>
-              <strong>{item.endpoint}</strong>
-              <span>{item.status} - API {item.api_version}</span>
+              <strong>{sourceDisplayName(item.endpoint)}</strong>
+              <span>{item.status === 'OK' ? 'Disponible' : 'Requiere revisión'}</span>
             </p>
           ))}
-          <em>{data.traceability.decision_policy}</em>
+          <em>Reglas de decisión auditables</em>
           <small>{t.dispatcher_calidad_dato(formatNumber(data.data_quality.score, 0), data.data_quality.texts_analyzed)}</small>
         </aside>
       </div>

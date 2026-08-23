@@ -2,7 +2,7 @@ import { sectionPaths } from '../layout/AppShell'
 import type { SectionId } from '../layout/Sidebar'
 import { useAppStore, type TurnoId } from '../../store'
 import { moduleForRoute, NORTHMINE_MODULES } from '../../lib/agentRegistry/modules'
-import { agentWidgetRegistry } from '../../lib/agentRegistry/registry'
+import { agentWidgetRegistry } from '../../lib/agentRegistry/registry'; import { humanizeIdentifier } from '../../lib/presentationSafety'
 import { agentEntityNavigator } from '../../lib/agentRegistry/entityNavigator'
 import { resolveEquipmentAlias } from '../../lib/agentRegistry/entityResolver'
 import type { AgentActionExecutionStatus, AgentActionResult } from '../../lib/agentRegistry/types'
@@ -62,7 +62,7 @@ function guidanceForAction(action: CopilotUIAction): { targetId: string; effect:
   }
   if (action.action === 'focus_widget' || action.action === 'widget_action') {
     const manifest = agentWidgetRegistry.get(action.widget_id)
-    return { targetId: `widget:${action.widget_id}`, effect: requested?.effect ?? manifest?.agentGuidance?.preferredEffect ?? 'spotlight', durationMs: requested?.durationMs, label: requested?.label ?? `Enfocar ${manifest?.label ?? action.widget_id}` }
+    return { targetId: `widget:${humanizeIdentifier(action.widget_id, 'elemento operacional')}`, effect: requested?.effect ?? manifest?.agentGuidance?.preferredEffect ?? 'spotlight', durationMs: requested?.durationMs, label: requested?.label ?? `Enfocar ${manifest?.label ?? humanizeIdentifier(action.widget_id, 'elemento operacional')}` }
   }
   if (action.action === 'select_entity' || action.action === 'open_entity') {
     return { targetId: `entity:${action.entity_type}:${action.entity_id}`, effect: requested?.effect ?? 'glow', durationMs: requested?.durationMs, label: requested?.label ?? `Mostrar ${action.entity_id}` }
@@ -234,7 +234,7 @@ async function executeOne(actionId: string, action: CopilotUIAction): Promise<Ag
       const element =
         agentWidgetRegistry.getElement(action.widget_id)
       if (!widget && !element) {
-        return fail('rejected', `No pude encontrar el panel ${action.widget_id} porque no esta disponible en esta vista.`)
+        return fail('rejected', `No pude encontrar el panel ${humanizeIdentifier(action.widget_id, 'elemento operacional')} porque no esta disponible en esta vista.`)
       }
       agentWidgetRegistry.setFocusedWidget(action.widget_id)
       if (widget?.focus) {
@@ -248,16 +248,16 @@ async function executeOne(actionId: string, action: CopilotUIAction): Promise<Ag
     case 'widget_action': {
       const widget = agentWidgetRegistry.get(action.widget_id)
       const element = agentWidgetRegistry.getElement(action.widget_id)
-      if (!widget || !element) return fail('rejected', `El panel ${action.widget_id} no está disponible en esta vista.`)
+      if (!widget || !element) return fail('rejected', `El panel ${humanizeIdentifier(action.widget_id, 'elemento operacional')} no está disponible en esta vista.`)
       if (!widget.supportedActions.includes(action.semantic_action) || !widget.performSemanticAction) {
-        return fail('rejected', `${widget.label} no soporta ${action.semantic_action}.`)
+        return fail('rejected', `${widget.label} no soporta ${humanizeIdentifier(action.semantic_action, 'esta acción')}.`)
       }
       element.scrollIntoView({ behavior: 'smooth', block: 'center' })
       agentWidgetRegistry.setFocusedWidget(action.widget_id)
       const confirmed = await widget.performSemanticAction(action.semantic_action, action.args)
       return confirmed
         ? { actionId, status: 'completed', label: `Resaltando ${widget.label}` }
-        : fail('failed', `No se pudo confirmar ${action.semantic_action} en ${widget.label}`)
+        : fail('failed', `No se pudo confirmar ${humanizeIdentifier(action.semantic_action, 'esta acción')} en ${widget.label}`)
     }
 
     default:

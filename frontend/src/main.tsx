@@ -33,19 +33,17 @@ const queryClient = new QueryClient({
 
 interface RootErrorBoundaryState {
   hasError: boolean
-  errorMessage: string
 }
 
 class RootErrorBoundary extends React.Component<
   { children: React.ReactNode },
   RootErrorBoundaryState
 > {
-  state: RootErrorBoundaryState = { hasError: false, errorMessage: '' }
+  state: RootErrorBoundaryState = { hasError: false }
 
   static getDerivedStateFromError(error: unknown): RootErrorBoundaryState {
     return {
       hasError: Boolean(error),
-      errorMessage: error instanceof Error ? error.message : 'Error de interfaz no identificado',
     }
   }
 
@@ -93,13 +91,8 @@ class RootErrorBoundary extends React.Component<
             />
             <h1 style={{ marginTop: 10, fontSize: 24 }}>No fue posible iniciar la interfaz</h1>
             <p style={{ marginTop: 12, color: '#9aa8a8', lineHeight: 1.6 }}>
-              Se detecto una configuracion local incompatible o un error de runtime. Puedes restaurar la interfaz sin perder datos operacionales.
+              Se produjo un problema al preparar esta vista. Puedes restaurar la interfaz sin perder datos operacionales.
             </p>
-            {import.meta.env.DEV && this.state.errorMessage && (
-              <code style={{ display: 'block', marginTop: 14, padding: 10, borderRadius: 6, background: '#050810', color: '#efb04d', fontSize: 12 }}>
-                {this.state.errorMessage}
-              </code>
-            )}
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginTop: 20 }}>
               <button type="button" onClick={this.resetInterface} style={{ border: '1px solid #29e76f', borderRadius: 6, background: 'rgba(41,231,111,0.12)', color: '#f4f7fa', padding: '10px 14px', cursor: 'pointer', fontWeight: 700 }}>
                 Restaurar interfaz

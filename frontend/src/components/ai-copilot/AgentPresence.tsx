@@ -14,7 +14,7 @@ import { usePerceptionStore } from '../../lib/agentPerception/perceptionStore'
 import { workProductsApi } from '../../lib/agentWorkProducts'
 import type { CopilotContext } from '../../lib/aiCopilot'
 import '../../styles/ai-copilot.css'
-import { AGENT_DEMO_WORK_PRODUCT_FOCUS } from '../../lib/agentDemo/events'
+import { AGENT_DEMO_WORK_PRODUCT_FOCUS } from '../../lib/agentDemo/events'; import { humanizeIdentifier, toUserSafeMessage } from '../../lib/presentationSafety'
 import '../../lib/agentRegistry/devBridge'
 
 const APPROVAL_ROLES = new Set(['admin', 'supervisor', 'operador'])
@@ -114,7 +114,7 @@ export function AgentPresence() {
   // conversacional - la percepcion visual (Nivel 3) puede ocurrir con el
   // Runtime en 'idle', y nunca debe reescribir el texto/estado del orbe.
   const perceptionLabel = isAnalyzing ? 'Analizando vista' : isCapturing ? 'Observando' : null
-  const presenceLabel = userSpeaking ? 'Escuchando' : runtimeState
+  const presenceLabel = userSpeaking ? 'Escuchando' : humanizeIdentifier(runtimeState, 'Disponible')
 
   // Etapa 6, seccion 14: pulso discreto + mensaje corto - NUNCA abre el
   // workspace automaticamente, solo pulsa el orbe y muestra una tarjeta
@@ -128,7 +128,7 @@ export function AgentPresence() {
 
   function investigateProactive() {
     if (!activeProactiveEvent) return
-    agentSessionClient.send('user.text', { text: `¿Sigue ocurriendo lo de ${activeProactiveEvent.title}?` })
+    agentSessionClient.send('user.text', { text: `¿Sigue ocurriendo lo de ${toUserSafeMessage(activeProactiveEvent.title, 'una condición operacional')}?` })
     dismissProactive(activeProactiveEvent.proactive_event_id)
     setOpen(true)
   }
@@ -176,7 +176,7 @@ export function AgentPresence() {
           </span>
         )}
         {activeProactiveEvent && !open && (
-          <span className={`ai-agent-orb-proactive-badge is-${activeProactiveEvent.severity}`} aria-label="Aviso del agente" title={activeProactiveEvent.title}>
+          <span className={`ai-agent-orb-proactive-badge is-${activeProactiveEvent.severity}`} aria-label="Aviso del agente" title={toUserSafeMessage(activeProactiveEvent.title, 'Condición operacional')}>
             <Bell size={11} />
           </span>
         )}
@@ -186,7 +186,7 @@ export function AgentPresence() {
         <div className="ai-proactive-card" role="status">
           <div className="ai-proactive-card-header">
             <Bell size={14} />
-            <span>{activeProactiveEvent.summary}</span>
+            <span>{toUserSafeMessage(activeProactiveEvent.summary, 'Hay una condición operacional que requiere revisión.')}</span>
           </div>
           <div className="ai-proactive-card-actions">
             <button type="button" onClick={investigateProactive}><Search size={12} /> Investigar</button>

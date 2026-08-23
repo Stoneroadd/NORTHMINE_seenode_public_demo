@@ -504,7 +504,7 @@ export function DecisionCockpit() {
         },
       )
       if (!(response.data instanceof Blob) || response.data.size === 0) {
-        throw new Error('El backend no entrego un archivo PDF valido.')
+        throw new Error('El informe generado no está disponible.')
       }
       const url = URL.createObjectURL(response.data)
       const link = document.createElement('a')
@@ -517,7 +517,7 @@ export function DecisionCockpit() {
       window.setTimeout(() => URL.revokeObjectURL(url), 1_000)
     } catch (error) {
       console.error('No se pudo descargar el informe ejecutivo', error)
-      window.alert('No se pudo generar el informe. Verifica la conexión con el backend e inténtalo nuevamente.')
+      window.alert('No se pudo generar el informe. Verifica la disponibilidad de los datos e inténtalo nuevamente.')
     } finally {
       setDownloadingExecutiveReport(false)
     }

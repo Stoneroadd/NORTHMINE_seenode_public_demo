@@ -1,6 +1,7 @@
 import type { CalculationTraceStep } from '../../types/operatorRanking'
 import { useModuleT } from '../../i18n/useModuleT'
 import { operatorRankingT } from '../../i18n/modules/operatorRanking'
+import { humanizeIdentifier } from '../../lib/presentationSafety'
 
 export function CalculationTraceTable({ trace }: { trace: CalculationTraceStep[] }) {
   const t = useModuleT(operatorRankingT)
@@ -10,7 +11,6 @@ export function CalculationTraceTable({ trace }: { trace: CalculationTraceStep[]
         <thead>
           <tr>
             <th>{t.trace_col_componente}</th>
-            <th>{t.trace_col_formula}</th>
             <th>{t.trace_col_valor}</th>
             <th>{t.trace_col_score}</th>
             <th>{t.trace_col_peso}</th>
@@ -20,8 +20,7 @@ export function CalculationTraceTable({ trace }: { trace: CalculationTraceStep[]
         <tbody>
           {trace.map((step) => (
             <tr key={step.component}>
-              <td><strong>{step.component}</strong></td>
-              <td>{step.formula}</td>
+              <td><strong>{humanizeIdentifier(step.component)}</strong></td>
               <td>{step.raw_value.toFixed(1)}</td>
               <td>{step.normalized_score.toFixed(1)}</td>
               <td>{Math.round(step.weight * 100)}%</td>

@@ -2,6 +2,7 @@ import { ExternalLink, GitBranch, Info, Link2 } from 'lucide-react'
 import type { MindMapEdge, MindMapGraph, MindMapNode } from './mindMapModel'
 import { useModuleT } from '../../i18n/useModuleT'
 import { mindmap3dT, type MindMap3dT } from '../../i18n/modules/mindmap3d'
+import { humanizeIdentifier, sourceDisplayName } from '../../lib/presentationSafety'
 
 interface Props {
   graph: MindMapGraph
@@ -30,7 +31,14 @@ function renderMetadata(t: MindMap3dT, value: MindMapNode['metadata'][string]) {
 function relationLabel(edge: MindMapEdge, node: MindMapNode, graph: MindMapGraph): string {
   const otherId = edge.source === node.id ? edge.target : edge.source
   const other = graph.nodes.find(item => item.id === otherId)
-  return `${edge.type} - ${other?.label ?? otherId}`
+  return `${humanizeIdentifier(edge.type, 'Relación')} - ${other?.label ?? 'Entidad relacionada'}`
+}
+
+function formatGeneratedAt(value?: string): string {
+  if (!value) return 'Sin hora informada'
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return 'Hora no disponible'
+  return new Intl.DateTimeFormat('es-CL', { dateStyle: 'short', timeStyle: 'short' }).format(date)
 }
 
 export function MindMapInspector({ graph, selectedNodeId }: Props) {
@@ -57,7 +65,7 @@ export function MindMapInspector({ graph, selectedNodeId }: Props) {
   return (
     <aside className="nm-map-inspector" aria-label={t.inspector_aria_label}>
       <div className="nm-map-inspector-header">
-        <span>{selected.type}</span>
+        <span>{humanizeIdentifier(selected.type, 'Entidad operacional')}</span>
         <h2>{selected.label}</h2>
         <p>{selected.displayValue ?? t.inspector_sin_valor}</p>
         <button
@@ -90,8 +98,8 @@ export function MindMapInspector({ graph, selectedNodeId }: Props) {
       <div className="nm-map-inspector-section">
         <h3><Info size={14} /> {t.inspector_fuente}</h3>
         <p><strong>{selected.data_source}</strong></p>
-        <p>{selected.sourceEndpoint ?? t.inspector_fuente_agregada}</p>
-        <p>{selected.generated_at ?? graph.generated_at}</p>
+        <p>{sourceDisplayName(selected.sourceEndpoint ?? selected.data_source)}</p>
+        <p>{formatGeneratedAt(selected.generated_at ?? graph.generated_at)}</p>
       </div>
 
       {metadata.length > 0 && (
@@ -99,7 +107,7 @@ export function MindMapInspector({ graph, selectedNodeId }: Props) {
           <h3><GitBranch size={14} /> {t.inspector_evidencia}</h3>
           {metadata.slice(0, 10).map(([key, value]) => (
             <p key={key}>
-              <span>{key.replace(/_/g, ' ')}</span>
+              <span>{humanizeIdentifier(key)}</span>
               <strong>{renderMetadata(t, value)}</strong>
             </p>
           ))}

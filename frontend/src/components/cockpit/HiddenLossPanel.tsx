@@ -39,7 +39,7 @@ export function HiddenLossPanel({
             <span className="nmcp-section-kicker">{t.hidden_loss_title}</span>
             <h2>{t.hidden_loss_loading_title}</h2>
           </div>
-          <span className="nmcp-panel-tag">API v1</span>
+          <span className="nmcp-panel-tag">ACTUALIZANDO</span>
         </div>
         <div className="nmcp-hidden-empty">{t.hidden_loss_loading_body}</div>
       </section>
@@ -59,7 +59,7 @@ export function HiddenLossPanel({
           </button>
         </div>
         <div className="nmcp-hidden-empty">
-          {t.hidden_loss_error_body(error?.message ?? t.hidden_loss_sin_respuesta)}
+          {t.hidden_loss_error_body(t.hidden_loss_sin_respuesta)}
         </div>
       </section>
     )

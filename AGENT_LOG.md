@@ -33,6 +33,31 @@ commit message — link to the actual commit/PR for detail.
 
 ---
 
+## 2026-08-23 — Codex — branch `feat/frontend-product-sanitization` — complete
+
+**Scope:** remove user-visible implementation traces from the frontend
+(raw API paths/versions, internal identifiers, provider/runtime names,
+technical errors and infrastructure metadata) while preserving mining-domain
+evidence such as Wenco provenance and FMS operational state codes.
+
+**Coordination:** rebasing the isolated commit onto `origin/main` at `5b780ab`.
+The three first-generation `AI*.tsx` files deleted by `23bd4ad` will remain
+deleted. `AgentWorkspace.tsx` changes are presentation-only; no runtime,
+investigation-model or architecture reconciliation is being attempted.
+`OperationalFlowOverview` is not in scope and will not be touched.
+
+**Result:** isolated commit rebased onto final `origin/main` at `ff85668`.
+Expected modify/delete conflicts were resolved by retaining the deliberate
+deletion of the three first-generation AI components; the Simulator
+pointer-move fix was preserved. No Agent runtime/domain contract or
+`OperationalFlowOverview` code was changed.
+
+**Validation after rebase:** frontend typecheck PASS; focused presentation-
+safety tests 7/7 PASS; full frontend unit suite 120/120 PASS; production build
+PASS; `git diff --check` PASS. The Mission Control Playwright command remains
+blocked before tests by the existing Vite webServer configuration warning and
+30 s startup timeout; no browser assertion failed because none started.
+
 ## 2026-08-23 — Claude Code — branch `main` — autonomous loop, in progress
 
 User authorized an unattended loop: work through the known backlog, push

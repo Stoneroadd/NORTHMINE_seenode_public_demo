@@ -477,7 +477,7 @@ export function Alerts() {
   })
 
   if (query.isLoading) return <LoadingState label="Cargando alertas operacionales..." />
-  if (query.isError || !query.data) return <ErrorState detail="No se pudo cargar /api/alerts/operational." onRetry={() => query.refetch()} />
+  if (query.isError || !query.data) return <ErrorState detail="No se pudieron cargar las condiciones operacionales." onRetry={() => query.refetch()} />
 
   const data = query.data
   const summary = buildExecutiveSummary(data, t)

@@ -96,7 +96,7 @@ export function ProfitOptimizationPanel({
             <span className="nmcp-section-kicker">{t.profit_kicker}</span>
             <h2>{t.profit_loading_title}</h2>
           </div>
-          <span className="nmcp-panel-tag">API v1</span>
+          <span className="nmcp-panel-tag">ACTUALIZANDO</span>
         </div>
         <div className="nmcp-profit-empty">{t.profit_loading_body}</div>
       </section>
@@ -116,7 +116,7 @@ export function ProfitOptimizationPanel({
           </button>
         </div>
         <div className="nmcp-profit-empty">
-          {t.profit_error_body(error?.message ?? t.profit_sin_respuesta)}
+          {t.profit_error_body(t.profit_sin_respuesta)}
         </div>
       </section>
     )
@@ -139,7 +139,7 @@ export function ProfitOptimizationPanel({
           <span className={`nmcp-mode-pill ${data.data_source === 'DEMO' ? 'is-demo' : data.stale ? 'is-stale' : 'is-real'}`}>
             {data.data_source}
           </span>
-          <span className="nmcp-panel-tag">API {data.api_version}</span>
+          <span className="nmcp-panel-tag">EVIDENCIA OPERACIONAL</span>
           <button className="nmcp-icon-button" type="button" onClick={onRefresh} aria-label={t.profit_refresh_aria}>
             <RefreshCcw size={16} className={fetching ? 'is-spinning' : undefined} />
           </button>

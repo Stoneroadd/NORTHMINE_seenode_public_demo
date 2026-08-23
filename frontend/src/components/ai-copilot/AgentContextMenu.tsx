@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { agentSessionClient } from '../../lib/agentRuntime/AgentSessionClient'
 import type { StructuredIntentId } from '../../lib/agentRuntime/quickActions'
-import { agentWidgetRegistry } from '../../lib/agentRegistry/registry'
+import { agentWidgetRegistry } from '../../lib/agentRegistry/registry'; import { humanizeIdentifier } from '../../lib/presentationSafety'
 
 interface MenuState { x: number; y: number; widgetId: string }
 
@@ -48,8 +48,8 @@ export function AgentContextMenu() {
   if (!menu) return null
   const manifest = agentWidgetRegistry.get(menu.widgetId)
   return (
-    <div className="agent-context-menu" role="menu" aria-label={`Acciones para ${manifest?.label ?? menu.widgetId}`} style={{ left: Math.min(menu.x, window.innerWidth - 190), top: Math.min(menu.y, window.innerHeight - 230) }}>
-      <header><span>Contexto</span><strong>{manifest?.label ?? menu.widgetId}</strong></header>
+    <div className="agent-context-menu" role="menu" aria-label={`Acciones para ${manifest?.label ?? humanizeIdentifier(menu.widgetId, 'Elemento operacional')}`} style={{ left: Math.min(menu.x, window.innerWidth - 190), top: Math.min(menu.y, window.innerHeight - 230) }}>
+      <header><span>Contexto</span><strong>{manifest?.label ?? humanizeIdentifier(menu.widgetId, 'Elemento operacional')}</strong></header>
       {ACTIONS.map((action) => <button key={action.intent} type="button" role="menuitem" onClick={() => {
         agentSessionClient.send('user.intent', { intent: action.intent, scope: 'current_context', module_id: manifest?.moduleId, widget_id: menu.widgetId, source: 'context_action' })
         setMenu(null)

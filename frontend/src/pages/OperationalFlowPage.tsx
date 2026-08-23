@@ -5,6 +5,7 @@ import { MissionState, StatusIndicator } from '../mission-control/design-system'
 import { OperationalFlowCanvas } from '../mission-control/operational-flow/OperationalFlowCanvas'
 import { getOperationalFlowSnapshot } from '../mission-control/operational-flow/service'
 import type { AssertionType, FlowDetail, FlowNode, OperationalCondition } from '../mission-control/operational-flow/types'
+import { sourceDisplayName } from '../lib/presentationSafety'
 
 const EXPECTED_SCHEMA = 'mission-control.operational-flow.v2'
 const DEFAULT_AT = '2026-08-20T10:45:00-04:00'
@@ -79,7 +80,7 @@ export function OperationalFlowPage() {
   if (snapshot.schema_version !== EXPECTED_SCHEMA) {
     return (
       <div className="mc-surface mc-flow-page">
-        <MissionState kind="error" title="Proyección incompatible" detail={`La interfaz requiere ${EXPECTED_SCHEMA}. El backend entregó ${snapshot.schema_version}.`} />
+        <MissionState kind="error" title="Proyección no disponible" detail="La vista recibida no puede representarse de forma segura. Actualiza la página o vuelve a intentarlo." />
       </div>
     )
   }
@@ -150,7 +151,7 @@ export function OperationalFlowPage() {
           <button type="button" aria-pressed={showImpact} onClick={() => setShowImpact((value) => !value)}>Impacto</button>
           <button type="button" aria-pressed={showAssertions} onClick={() => setShowAssertions((value) => !value)}>Afirmaciones</button>
         </div>
-        <p><Radio aria-hidden="true" size={14} /> Calidad {snapshot.data_quality} · generado por backend</p>
+        <p><Radio aria-hidden="true" size={14} /> Calidad {snapshot.data_quality} · lectura operacional verificada</p>
       </div>
 
       <div className="mc-flow-workspace">
@@ -207,7 +208,7 @@ export function OperationalFlowPage() {
                       <span>{evidence.assertion_type}</span>
                       <strong>{evidence.label}</strong>
                       <p>{evidence.value}</p>
-                      <small>{formatTimestamp(evidence.observed_at)} · {evidence.provenance.source_system}</small>
+                      <small>{formatTimestamp(evidence.observed_at)} · {sourceDisplayName(evidence.provenance.source_system)}</small>
                     </li>
                   ))}
                 </ul>

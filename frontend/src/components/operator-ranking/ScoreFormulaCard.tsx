@@ -2,6 +2,7 @@ import type { OperatorRankingMethodology } from '../../types/operatorRanking'
 import { ScoreWeightBar } from './ScoreWeightBar'
 import { useModuleT } from '../../i18n/useModuleT'
 import { operatorRankingT } from '../../i18n/modules/operatorRanking'
+import { humanizeIdentifier } from '../../lib/presentationSafety'
 
 export function ScoreFormulaCard({ methodology }: { methodology: OperatorRankingMethodology }) {
   const t = useModuleT(operatorRankingT)
@@ -9,12 +10,12 @@ export function ScoreFormulaCard({ methodology }: { methodology: OperatorRanking
     <section className="operator-method-card">
       <span className="panel-kicker">{t.formula_kicker}</span>
       <h3>{t.formula_titulo}</h3>
-      <code>{methodology.score_formula.text}</code>
+      <p>El resultado combina indicadores normalizados con ponderaciones auditables.</p>
       <div className="operator-formula-components">
-        {Object.entries(methodology.score_formula.components).map(([key, formula]) => (
+        {Object.keys(methodology.score_formula.components).map((key) => (
           <div key={key}>
-            <strong>{key.replace(/_/g, ' ')}</strong>
-            <span>{formula}</span>
+            <strong>{humanizeIdentifier(key)}</strong>
+            <span>Incluido en la ponderación</span>
           </div>
         ))}
       </div>

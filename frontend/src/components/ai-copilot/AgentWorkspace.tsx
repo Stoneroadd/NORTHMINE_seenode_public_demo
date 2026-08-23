@@ -25,6 +25,7 @@ import { workProductsApi } from '../../lib/agentWorkProducts'
 import type { MemorySummary, ReportDraft, ShiftHandoverDraft, TaskDraft } from '../../lib/agentWorkProducts'
 import { actionsForModule, moduleFromPath } from '../../lib/agentRuntime/quickActions'
 import { AGENT_DEMO_WORK_PRODUCT_FOCUS, AGENT_DEMO_WORK_PRODUCT_READY } from '../../lib/agentDemo/events'
+import { humanizeIdentifier, sourceDisplayName, toUserSafeMessage } from '../../lib/presentationSafety'
 
 interface Props {
   open: boolean
@@ -41,8 +42,10 @@ const STATE_LABELS: Record<string, string> = {
 }
 
 const VOICE_LABELS: Record<VoiceOutputProviderName, string> = {
-  openai_realtime: 'OpenAI Realtime LIVE', elevenlabs: 'Voz NORTHMINE', browser: 'Voz local de respaldo', text_only: 'Solo texto',
+  openai_realtime: 'Voz en vivo', elevenlabs: 'Voz natural', browser: 'Voz de respaldo', text_only: 'Solo texto',
 }
+
+const safeAgentMessage = (value: unknown, fallback = 'Información no disponible en este momento.') => toUserSafeMessage(value, fallback)
 
 const STEP_STATUS_LABELS: Record<string, string> = {
   pending: 'Pendiente', running: 'En curso', completed: 'Completado', failed: 'Fallido',
@@ -78,7 +81,7 @@ function relativeFreshness(iso: string): { label: string; status: 'current' | 's
 function focusedWidgetLabel(snapshot: SemanticPerceptionSnapshot | null): string {
   if (!snapshot?.focusedWidgetId) return 'Ninguno'
   const widget = snapshot.visibleWidgets.find((w) => w.widgetId === snapshot.focusedWidgetId)
-  return widget?.label ?? snapshot.focusedWidgetId
+  return widget?.label ?? humanizeIdentifier(snapshot.focusedWidgetId, 'Elemento operacional')
 }
 
 /**
@@ -139,7 +142,7 @@ export function AgentWorkspace({ open, onClose, context, role: _role, canApprove
   useEffect(() => {
     const unsubState = openAIRealtimeSession.onState((state) => {
       setListening(!['idle', 'error'].includes(state))
-      if (state === 'error') setMicError('La conversación OpenAI Realtime se interrumpió.')
+      if (state === 'error') setMicError('La conversación por voz se interrumpió.')
     })
     const unsubLevel = openAIRealtimeSession.onInputLevel(setMicLevel)
     return () => {
@@ -340,9 +343,9 @@ export function AgentWorkspace({ open, onClose, context, role: _role, canApprove
       } else {
         await conversationTurnManager.activate(stream)
         if (availability && !availability.ready) {
-          setMicError(`OpenAI Realtime LIVE no está configurado (${availability.missing.join(', ')}). Voz local activa.`)
+          setMicError(`La conversación en vivo no está disponible. Voz local activa.`)
         } else if (!availability) {
-          setMicError('No se pudo verificar OpenAI Realtime LIVE. Voz local de respaldo activa.')
+          setMicError('No se pudo verificar la conversación en vivo. Voz local de respaldo activa.')
         }
       }
       setListening(true)
@@ -350,7 +353,7 @@ export function AgentWorkspace({ open, onClose, context, role: _role, canApprove
       if (availability?.ready) setMicError(null)
     } catch {
       stream.getTracks().forEach((track) => track.stop())
-      setMicError('No se pudo iniciar la conversación OpenAI Realtime.')
+      setMicError('No se pudo iniciar la conversación por voz.')
       setMicState('idle')
     } finally {
       setMicOnboardingOpen(false)
@@ -465,7 +468,7 @@ export function AgentWorkspace({ open, onClose, context, role: _role, canApprove
         <header className="ai-copilot-header">
           <div>
             <span className="ai-copilot-eyebrow">NORTHMINE OPERATIONAL INTELLIGENCE AGENT</span>
-            <h2>{STATE_LABELS[runtime.state] ?? runtime.state}</h2>
+            <h2>{STATE_LABELS[runtime.state] ?? 'Disponible'}</h2>
           </div>
           <button type="button" className="ai-copilot-close" onClick={onClose} aria-label="Cerrar">
             <X size={18} />
@@ -485,14 +488,14 @@ export function AgentWorkspace({ open, onClose, context, role: _role, canApprove
 
         <div className="ai-copilot-body" ref={bodyRef}>
           {runtime.lastError && (
-            <p className="ai-inv-warning"><AlertTriangle size={12} /> {runtime.lastError}</p>
+            <p className="ai-inv-warning"><AlertTriangle size={12} /> {safeAgentMessage(runtime.lastError, 'No fue posible completar la consulta. Reintenta.')}</p>
           )}
 
           {!plan && (
             <div className="ai-rt-empty">
               <p className="ai-inv-intro">
                 Escribe o di lo que necesitas investigar. El agente construye un plan auditable, consulta
-                herramientas de solo lectura y explica lo que encuentra a medida que avanza.
+                fuentes autorizadas de solo lectura y explica lo que encuentra a medida que avanza.
               </p>
               <div className="ai-copilot-quick-actions">
                 {actionsForModule(moduleFromPath(window.location.pathname), 5).map((action) => (
@@ -505,23 +508,23 @@ export function AgentWorkspace({ open, onClose, context, role: _role, canApprove
           {plan && (
             <div className="ai-inv-plan">
               <header>
-                <strong>{plan.goal}</strong>
+                <strong>{safeAgentMessage(plan.goal, 'Investigación operacional')}</strong>
                 <span className="ai-copilot-badge">{completedSteps}/{toolSteps.length} pasos</span>
               </header>
               {runtime.currentActivityLabel && isBusy && (
-                <p className="ai-rt-activity"><Loader2 size={13} className="ai-copilot-spin" /> {runtime.currentActivityLabel}</p>
+                <p className="ai-rt-activity"><Loader2 size={13} className="ai-copilot-spin" /> {safeAgentMessage(runtime.currentActivityLabel, 'Consultando información operacional...')}</p>
               )}
               <ul className="ai-inv-step-list">
                 {toolSteps.map((step) => (
                   <li key={step.step_id} className={`ai-inv-step is-${step.status}`}>
                     {step.status === 'completed' ? <Check size={13} /> : step.status === 'running' ? <Loader2 size={13} className="ai-copilot-spin" /> : step.status === 'failed' ? <X size={13} /> : <span className="ai-inv-step-dot" />}
-                    <span className="ai-inv-step-desc">{step.description}</span>
-                    <span className="ai-inv-step-meta">{STEP_STATUS_LABELS[step.status] ?? step.status}{step.duration_ms != null ? ` · ${step.duration_ms}ms` : ''}</span>
+                    <span className="ai-inv-step-desc">{safeAgentMessage(step.description, 'Consulta operacional')}</span>
+                    <span className="ai-inv-step-meta">{STEP_STATUS_LABELS[step.status] ?? 'Pendiente'}</span>
                   </li>
                 ))}
               </ul>
               {uiSteps.length > 0 && (
-                <p className="ai-inv-ui-steps-note">+ {uiSteps.length} acciones de visibilidad en UI.</p>
+                <p className="ai-inv-ui-steps-note">+ {uiSteps.length} acciones de contexto en la interfaz.</p>
               )}
               {runtime.pendingUiAction?.requirement === 'required' && (
                 <p className="ai-rt-activity"><Loader2 size={13} className="ai-copilot-spin" /> Esperando confirmación de interfaz…</p>
@@ -534,7 +537,7 @@ export function AgentWorkspace({ open, onClose, context, role: _role, canApprove
               <p className="ai-copilot-block-title">Hallazgos</p>
               <ul>
                 {runtime.findings.map((f) => (
-                  <li key={f.finding_id} className={`ai-rt-finding is-${f.severity}`}>{f.summary}</li>
+                  <li key={f.finding_id} className={`ai-rt-finding is-${f.severity}`}>{safeAgentMessage(f.summary)}</li>
                 ))}
               </ul>
             </div>
@@ -552,9 +555,9 @@ export function AgentWorkspace({ open, onClose, context, role: _role, canApprove
             <ul className="ai-copilot-evidence-list">
               {((runtime.lastResult.evidence as any[]) ?? []).map((item) => (
                 <li key={item.evidence_id}>
-                  <span className="ai-copilot-evidence-source">{item.capability_id}</span>
-                  <span className={`ai-copilot-badge ai-copilot-badge--freshness is-${item.freshness_status}`}>{item.freshness_status}</span>
-                  <span className="ai-copilot-badge">calidad {item.quality_status}</span>
+                  <span className="ai-copilot-evidence-source">{sourceDisplayName(item.capability_id)}</span>
+                  <span className={`ai-copilot-badge ai-copilot-badge--freshness is-${item.freshness_status}`}>{humanizeIdentifier(item.freshness_status, 'vigencia informada')}</span>
+                  <span className="ai-copilot-badge">calidad {humanizeIdentifier(item.quality_status, 'informada')}</span>
                 </li>
               ))}
             </ul>
@@ -585,23 +588,23 @@ export function AgentWorkspace({ open, onClose, context, role: _role, canApprove
           {conclusion && (
             <div className="ai-inv-conclusion">
               <p className="ai-copilot-block-title">Resultado</p>
-              <p className="ai-inv-summary">{conclusion.summary}</p>
+              <p className="ai-inv-summary">{safeAgentMessage(conclusion.summary)}</p>
               {conclusion.probable_causes.length > 0 && (
                 <div className="ai-copilot-block">
                   <span className="ai-copilot-block-title">Causas probables</span>
-                  <ul>{conclusion.probable_causes.map((c, i) => <li key={i}>{c}</li>)}</ul>
+                  <ul>{conclusion.probable_causes.map((c, i) => <li key={i}>{safeAgentMessage(c)}</li>)}</ul>
                 </div>
               )}
               {conclusion.recommendations.length > 0 && (
                 <div className="ai-copilot-block">
                   <span className="ai-copilot-block-title">Recomendaciones</span>
-                  <ul>{conclusion.recommendations.map((c, i) => <li key={i}>{c}</li>)}</ul>
+                  <ul>{conclusion.recommendations.map((c, i) => <li key={i}>{safeAgentMessage(c)}</li>)}</ul>
                 </div>
               )}
               {conclusion.limitations.length > 0 && (
                 <div className="ai-copilot-block ai-copilot-block--limitations">
                   <span className="ai-copilot-block-title">Limitaciones</span>
-                  <ul>{conclusion.limitations.map((c, i) => <li key={i}>{c}</li>)}</ul>
+                  <ul>{conclusion.limitations.map((c, i) => <li key={i}>{safeAgentMessage(c)}</li>)}</ul>
                 </div>
               )}
               <p className="ai-inv-approval"><ShieldAlert size={13} /> Requiere validación humana antes de tomar acción operacional.</p>
@@ -614,14 +617,14 @@ export function AgentWorkspace({ open, onClose, context, role: _role, canApprove
             <dl className="ai-perception-facts">
               <div>
                 <dt>Pantalla actual</dt>
-                <dd>{perceptionSnapshot?.moduleId ?? perceptionSnapshot?.route ?? '—'}</dd>
+                <dd>{perceptionSnapshot?.moduleId ? humanizeIdentifier(perceptionSnapshot.moduleId, 'Vista operacional') : 'Vista operacional'}</dd>
               </div>
               <div>
-                <dt>Widget enfocado</dt>
+                <dt>Elemento enfocado</dt>
                 <dd>
                   {focusedWidgetLabel(perceptionSnapshot)}
                   {perceptionSnapshot?.focusedWidgetId && (
-                    <button type="button" className="ai-perception-inline-action" onClick={openFocusedWidget} aria-label="Abrir widget">
+                    <button type="button" className="ai-perception-inline-action" onClick={openFocusedWidget} aria-label="Abrir elemento">
                       <ExternalLink size={11} /> Abrir
                     </button>
                   )}
@@ -633,7 +636,7 @@ export function AgentWorkspace({ open, onClose, context, role: _role, canApprove
               </div>
               <div>
                 <dt>Filtros</dt>
-                <dd>{Object.keys(perceptionSnapshot?.activeFilters ?? {}).length ? Object.entries(perceptionSnapshot!.activeFilters).map(([k, v]) => `${k}: ${v}`).join(' · ') : 'Sin filtros activos'}</dd>
+                <dd>{Object.keys(perceptionSnapshot?.activeFilters ?? {}).length ? Object.entries(perceptionSnapshot!.activeFilters).map(([k, v]) => `${humanizeIdentifier(k, 'Filtro')}: ${v}`).join(' · ') : 'Sin filtros activos'}</dd>
               </div>
             </dl>
 
@@ -645,7 +648,7 @@ export function AgentWorkspace({ open, onClose, context, role: _role, canApprove
                 <>
                   <p className="ai-perception-summary">{perception.lastObservation.summary}</p>
                   <div className="ai-perception-badges">
-                    <span className="ai-copilot-badge ai-copilot-badge--type">{perception.lastObservation.targetType === 'widget' ? 'Widget' : 'Vista completa'}</span>
+                    <span className="ai-copilot-badge ai-copilot-badge--type">{perception.lastObservation.targetType === 'widget' ? 'Elemento' : 'Vista completa'}</span>
                     <span className={`ai-copilot-badge ai-copilot-badge--freshness is-${relativeFreshness(perception.lastObservation.createdAt).status}`}>
                       {relativeFreshness(perception.lastObservation.createdAt).label}
                     </span>
@@ -654,7 +657,7 @@ export function AgentWorkspace({ open, onClose, context, role: _role, canApprove
                     </span>
                   </div>
                   {perception.lastConflict && (
-                    <p className="ai-inv-warning"><AlertTriangle size={12} /> {perception.lastConflict.description}</p>
+                    <p className="ai-inv-warning"><AlertTriangle size={12} /> {safeAgentMessage(perception.lastConflict.description, 'La lectura visual difiere del estado operacional disponible.')}</p>
                   )}
                   <div className="ai-perception-actions">
                     {perception.lastCaptureUrl && (
@@ -697,7 +700,7 @@ export function AgentWorkspace({ open, onClose, context, role: _role, canApprove
                 </div>
               )}
               {perception.lastCaptureError && (
-                <p className="ai-inv-warning"><AlertTriangle size={12} /> {perception.lastCaptureError.message}</p>
+                <p className="ai-inv-warning"><AlertTriangle size={12} /> {safeAgentMessage(perception.lastCaptureError.message, 'No fue posible analizar la vista. Reintenta.')}</p>
               )}
               {perception.mode === 'visual_disabled' && (
                 <p className="ai-perception-empty">Percepción visual desactivada por el usuario.</p>
@@ -717,8 +720,8 @@ export function AgentWorkspace({ open, onClose, context, role: _role, canApprove
                     <ul>
                       {runtime.memoryRecall.items.map((item) => (
                         <li key={item.ref_id}>
-                          <span>{item.label}</span>
-                          <span className="ai-copilot-badge">{item.status}</span>
+                          <span>{safeAgentMessage(item.label, 'Evidencia operacional')}</span>
+                          <span className="ai-copilot-badge">{humanizeIdentifier(item.status, 'estado informado')}</span>
                           <span className="ai-memory-item-date">{item.occurred_at}</span>
                         </li>
                       ))}
@@ -760,7 +763,7 @@ export function AgentWorkspace({ open, onClose, context, role: _role, canApprove
                     <ul>
                       {runtime.proactiveEvents.slice(0, 5).map((ev) => (
                         <li key={ev.proactive_event_id}>
-                          <span className={`ai-copilot-badge is-${ev.severity}`}>{ev.severity}</span> {ev.title}
+                          <span className={`ai-copilot-badge is-${humanizeIdentifier(ev.severity, 'Atención')}`}>{humanizeIdentifier(ev.severity, 'Atención')}</span> {safeAgentMessage(ev.title, 'Condición operacional')}
                         </li>
                       ))}
                     </ul>
@@ -786,11 +789,11 @@ export function AgentWorkspace({ open, onClose, context, role: _role, canApprove
                     <div key={report.report_id} className="ai-work-item" ref={openReportId === report.report_id ? demoReportRef : undefined}>
                       <div className="ai-work-item-header">
                         <button type="button" className="ai-work-item-title" onClick={() => setOpenReportId((id) => (id === report.report_id ? null : report.report_id))}>
-                          {report.title || REPORT_TYPE_LABELS[report.report_type] || report.report_type} · v{report.version}
+                          {safeAgentMessage(report.title || REPORT_TYPE_LABELS[report.report_type] || humanizeIdentifier(report.report_type, 'Informe operacional'), 'Informe operacional')}
                         </button>
-                        <span className={`ai-copilot-badge is-${report.status}`}>{WORK_PRODUCT_STATUS_LABELS[report.status] ?? report.status}</span>
+                        <span className={`ai-copilot-badge is-${report.status}`}>{WORK_PRODUCT_STATUS_LABELS[report.status] ?? humanizeIdentifier(report.status, 'Estado informado')}</span>
                       </div>
-                      <p className="ai-work-item-meta">Estado: {report.status === 'draft' ? 'Pendiente de validación' : WORK_PRODUCT_STATUS_LABELS[report.status] ?? report.status} · {report.generated_at} · {report.scope.audience}</p>
+                      <p className="ai-work-item-meta">Estado: {report.status === 'draft' ? 'Pendiente de validación' : WORK_PRODUCT_STATUS_LABELS[report.status] ?? humanizeIdentifier(report.status, 'Estado informado')} · {report.generated_at} · {humanizeIdentifier(report.scope.audience, 'audiencia autorizada')}</p>
                       <p className={`ai-work-quality is-${report.quality_gate?.passed ? 'passed' : 'failed'}`}>
                         Verificación {report.quality_gate?.passed ? 'aprobada' : 'pendiente'} · {report.quality_gate?.total_score ?? 0}/100
                       </p>
@@ -815,7 +818,7 @@ export function AgentWorkspace({ open, onClose, context, role: _role, canApprove
                               <p>{chart.data.length} puntos verificados · series: {chart.y_fields.join(', ')}</p>
                             </div>
                           ))}
-                          {report.conceptual_diff?.length > 0 && <div className="ai-work-report-diff"><strong>Cambios v{report.version}</strong><ul>{report.conceptual_diff.map((item) => <li key={item}>{item}</li>)}</ul></div>}
+                          {report.conceptual_diff?.length > 0 && <div className="ai-work-report-diff"><strong>Cambios registrados</strong><ul>{report.conceptual_diff.map((item) => <li key={item}>{safeAgentMessage(item, 'Cambio operacional registrado')}</li>)}</ul></div>}
                         </div>
                       )}
                       {canApprove && report.status === 'draft' && report.quality_gate?.passed && (
@@ -833,10 +836,10 @@ export function AgentWorkspace({ open, onClose, context, role: _role, canApprove
                   {runtime.handovers.length ? runtime.handovers.map((handover: ShiftHandoverDraft) => (
                     <div key={handover.handover_id} className="ai-work-item">
                       <div className="ai-work-item-header">
-                        <span className="ai-work-item-title">{handover.title}</span>
-                        <span className={`ai-copilot-badge is-${handover.status}`}>{WORK_PRODUCT_STATUS_LABELS[handover.status] ?? handover.status}</span>
+                        <span className="ai-work-item-title">{safeAgentMessage(handover.title, 'Entrega de turno')}</span>
+                        <span className={`ai-copilot-badge is-${handover.status}`}>{WORK_PRODUCT_STATUS_LABELS[handover.status] ?? humanizeIdentifier(handover.status, 'Estado informado')}</span>
                       </div>
-                      <p className="ai-work-item-meta">{handover.generated_by} · {handover.generated_at}</p>
+                      <p className="ai-work-item-meta">{humanizeIdentifier(handover.generated_by, 'NORTHMINE')} · {handover.generated_at}</p>
                       <p className="ai-work-item-meta">{handover.pending_for_next_shift.length} pendiente(s) para el próximo turno</p>
                       {canApprove && handover.status === 'draft' && (
                         <div className="ai-work-item-actions">
@@ -853,10 +856,10 @@ export function AgentWorkspace({ open, onClose, context, role: _role, canApprove
                   {runtime.tasks.length ? runtime.tasks.map((task: TaskDraft) => (
                     <div key={task.task_id} className="ai-work-item">
                       <div className="ai-work-item-header">
-                        <span className="ai-work-item-title">{task.title}</span>
-                        <span className={`ai-copilot-badge is-${task.status}`}>{WORK_PRODUCT_STATUS_LABELS[task.status] ?? task.status}</span>
+                        <span className="ai-work-item-title">{safeAgentMessage(task.title, 'Tarea operacional')}</span>
+                        <span className={`ai-copilot-badge is-${task.status}`}>{WORK_PRODUCT_STATUS_LABELS[task.status] ?? humanizeIdentifier(task.status, 'Estado informado')}</span>
                       </div>
-                      <p className="ai-work-item-meta">{task.reason}</p>
+                      <p className="ai-work-item-meta">{safeAgentMessage(task.reason, 'Seguimiento operacional requerido.')}</p>
                       {canApprove && task.status === 'pending_approval' && (
                         <div className="ai-work-item-actions">
                           <button type="button" disabled={pendingActionId === task.task_id} onClick={() => approveTask(task.task_id)}><ThumbsUp size={12} /> Aprobar</button>
@@ -873,9 +876,9 @@ export function AgentWorkspace({ open, onClose, context, role: _role, canApprove
                     <div key={watch.watch_id} className="ai-work-item">
                       <div className="ai-work-item-header">
                         <span className="ai-work-item-title">{watch.entity_label ?? watch.entity_ids.join(', ')}</span>
-                        <span className={`ai-copilot-badge is-${watch.status}`}>{watch.status}</span>
+                        <span className={`ai-copilot-badge is-${watch.status}`}>{humanizeIdentifier(watch.status, 'Estado informado')}</span>
                       </div>
-                      <p className="ai-work-item-meta">{watch.metric} {watch.condition} {watch.threshold ?? '—'} · expira {watch.expires_at ?? 'sin vencimiento'}</p>
+                      <p className="ai-work-item-meta">{humanizeIdentifier(watch.metric, 'Indicador')} {humanizeIdentifier(watch.condition, 'condición')} {watch.threshold ?? '—'} · expira {watch.expires_at ?? 'sin vencimiento'}</p>
                       {watch.status === 'active' && (
                         <div className="ai-work-item-actions">
                           <button type="button" disabled={pendingActionId === watch.watch_id} onClick={() => cancelWatch(watch.watch_id)}><X size={12} /> Cancelar</button>
@@ -891,7 +894,7 @@ export function AgentWorkspace({ open, onClose, context, role: _role, canApprove
           {runtime.proactiveEvents[0] && (
             <div className="ai-proactive-banner">
               <Bell size={13} />
-              <span>{runtime.proactiveEvents[0].summary}</span>
+              <span>{safeAgentMessage(runtime.proactiveEvents[0].summary, 'Hay una condición operacional que requiere revisión.')}</span>
             </div>
           )}
 
@@ -904,7 +907,7 @@ export function AgentWorkspace({ open, onClose, context, role: _role, canApprove
           {transcriptOpen && (
             <ul className="ai-rt-transcript-list">
               {runtime.transcript.map((entry) => (
-                <li key={entry.id} className={`is-${entry.role}`}>{entry.text}</li>
+                <li key={entry.id} className={`is-${entry.role}`}>{safeAgentMessage(entry.text, 'Contenido no disponible.')}</li>
               ))}
             </ul>
           )}

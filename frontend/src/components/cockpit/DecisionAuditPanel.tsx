@@ -2,7 +2,7 @@ import { ClipboardCheck, History, RefreshCcw, TrendingUp } from 'lucide-react'
 import type { DecisionAuditRecord, DecisionAuditResponse } from '../../lib/api'
 import { formatMoney, formatNumber, formatPct, formatTons } from './cockpitModel'
 import { useModuleT } from '../../i18n/useModuleT'
-import { cockpitT, type CockpitT } from '../../i18n/modules/cockpit'
+import { cockpitT, type CockpitT } from '../../i18n/modules/cockpit'; import { humanizeIdentifier } from '../../lib/presentationSafety'
 
 interface DecisionAuditPanelProps {
   data?: DecisionAuditResponse
@@ -43,7 +43,7 @@ function RecordRow({ item, t }: { item: DecisionAuditRecord; t: CockpitT }) {
   return (
     <tr>
       <td><strong>{item.recommended_action}</strong><span>{item.action_type}</span></td>
-      <td><span className={`nmcp-audit-status ${statusClass(item.execution_status)}`}>{item.execution_status}</span></td>
+      <td><span className={`nmcp-audit-status ${statusClass(item.execution_status)}`}>{humanizeIdentifier(item.execution_status, 'Estado informado')}</span></td>
       <td>{formatMoney(evaluation.expected_value_usd)}</td>
       <td>{formatMoney(evaluation.actual_value_usd)}</td>
       <td>{evaluation.effectiveness_score === null ? t.audit_sin_evaluar : formatPct(evaluation.effectiveness_score, 0)}</td>
@@ -67,7 +67,7 @@ export function DecisionAuditPanel({
             <span className="nmcp-section-kicker">{t.audit_title}</span>
             <h2>{t.audit_loading_title}</h2>
           </div>
-          <span className="nmcp-panel-tag">API v1</span>
+          <span className="nmcp-panel-tag">ACTUALIZANDO</span>
         </div>
         <div className="nmcp-audit-empty">{t.audit_loading_body}</div>
       </section>
@@ -87,7 +87,7 @@ export function DecisionAuditPanel({
           </button>
         </div>
         <div className="nmcp-audit-empty">
-          {t.audit_error_body(error?.message ?? t.audit_sin_respuesta)}
+          {t.audit_error_body(t.audit_sin_respuesta)}
         </div>
       </section>
     )
@@ -111,7 +111,7 @@ export function DecisionAuditPanel({
           <span className={`nmcp-mode-pill ${data.data_source === 'DEMO' ? 'is-demo' : 'is-real'}`}>
             {data.data_source}
           </span>
-          <span className={`nmcp-audit-status ${statusClass(data.status)}`}>{data.status}</span>
+          <span className={`nmcp-audit-status ${statusClass(data.status)}`}>{humanizeIdentifier(data.status, 'Estado informado')}</span>
           <button className="nmcp-icon-button" type="button" onClick={onRefresh} aria-label={t.audit_refresh_aria}>
             <RefreshCcw size={16} className={fetching ? 'is-spinning' : undefined} />
           </button>

@@ -26,7 +26,7 @@ export interface LoginT {
 export const loginT: ModuleDict<LoginT> = {
   es: {
     err_campos_vacios: 'Ingresa usuario y contrasena.',
-    err_api_no_disponible: 'API no disponible. Revisa que NORTHMINE este iniciado.',
+    err_api_no_disponible: 'NORTHMINE no está disponible. Reintenta en unos instantes.',
     err_credenciales_invalidas: 'Credenciales invalidas.',
     err_demasiados_intentos: 'Demasiados intentos. Espera antes de volver a ingresar.',
     err_auth_no_disponible: 'Autenticacion no disponible para este entorno.',
@@ -48,7 +48,7 @@ export const loginT: ModuleDict<LoginT> = {
   },
   en: {
     err_campos_vacios: 'Enter your username and password.',
-    err_api_no_disponible: 'API not available. Check that NORTHMINE has started.',
+    err_api_no_disponible: 'NORTHMINE is unavailable. Try again in a moment.',
     err_credenciales_invalidas: 'Invalid credentials.',
     err_demasiados_intentos: 'Too many attempts. Wait before signing in again.',
     err_auth_no_disponible: 'Authentication not available for this environment.',
@@ -70,7 +70,7 @@ export const loginT: ModuleDict<LoginT> = {
   },
   de: {
     err_campos_vacios: 'Bitte Benutzername und Passwort eingeben.',
-    err_api_no_disponible: 'API nicht verfügbar. Prüfen Sie, dass NORTHMINE gestartet ist.',
+    err_api_no_disponible: 'NORTHMINE ist nicht verfügbar. Versuchen Sie es in Kürze erneut.',
     err_credenciales_invalidas: 'Ungültige Anmeldedaten.',
     err_demasiados_intentos: 'Zu viele Versuche. Bitte warten Sie, bevor Sie sich erneut anmelden.',
     err_auth_no_disponible: 'Authentifizierung für diese Umgebung nicht verfügbar.',

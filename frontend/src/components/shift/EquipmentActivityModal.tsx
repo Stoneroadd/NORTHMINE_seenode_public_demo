@@ -175,7 +175,7 @@ export function EquipmentActivityModal({ target, onClose }: Props) {
         </header>
 
         {query.isLoading && <div className="nmcp-detail-empty">Cargando actividad WENCO...</div>}
-        {query.isError && <div className="nmcp-detail-empty">No se pudo cargar /api/shift-comparison. Reintenta.</div>}
+        {query.isError && <div className="nmcp-detail-empty">No se pudo cargar la comparación del turno. Reintenta.</div>}
         {data && !item && (
           <div className="nmcp-detail-empty">
             {target.id} sin ciclos registrados en el turno {shift}. WENCO no entrego actividad para este equipo.

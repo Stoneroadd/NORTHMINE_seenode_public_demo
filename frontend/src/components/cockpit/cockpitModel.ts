@@ -161,7 +161,7 @@ function timeLabel(value: string | null | undefined): string | null {
 function shiftPeriod(response: CockpitResponse): string {
   const start = timeLabel(response.shift.started_at)
   const end = timeLabel(response.shift.ends_at)
-  if (!start || !end) return 'Periodo no disponible en /api/cockpit v1'
+  if (!start || !end) return 'Periodo no disponible en la lectura operacional.'
   return `${start} - ${end}`
 }
 

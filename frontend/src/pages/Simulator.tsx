@@ -706,9 +706,8 @@ export function Simulator() {
               >
                 Narrativa operacional
               </div>
-              <pre
+              <p
                 style={{
-                  fontFamily: '"JetBrains Mono",monospace',
                   fontSize: 12,
                   color: 'var(--nm-text)',
                   lineHeight: 1.8,
@@ -718,7 +717,7 @@ export function Simulator() {
                 }}
               >
                 {narrative}
-              </pre>
+              </p>
             </div>
           )}
         </div>

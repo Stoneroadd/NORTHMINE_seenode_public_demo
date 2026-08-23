@@ -53,7 +53,7 @@ export const reportsT: ModuleDict<ReportsT> = {
 
     loading_reporte: 'Conectando reporte ejecutivo con NORTHMINE...',
     error_generico: 'No pudimos cargar el reporte de turno. Reintenta en unos segundos.',
-    error_sufijo: ' No se usa demo sin modo explicito del backend.',
+    error_sufijo: ' No se muestran datos de demostración fuera de un contexto autorizado.',
 
     fuente_cache_real: 'CACHE REAL',
     fuente_modo_demo: 'MODO DEMO',
@@ -95,7 +95,7 @@ export const reportsT: ModuleDict<ReportsT> = {
 
     loading_reporte: 'Connecting executive report to NORTHMINE...',
     error_generico: 'We could not load the shift report. Try again in a few seconds.',
-    error_sufijo: ' Demo mode is not used without an explicit backend flag.',
+    error_sufijo: ' Demonstration data is not shown outside an authorized context.',
 
     fuente_cache_real: 'REAL CACHE',
     fuente_modo_demo: 'DEMO MODE',

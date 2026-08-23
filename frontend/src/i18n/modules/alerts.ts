@@ -463,7 +463,7 @@ export const alertsT: ModuleDict<AlertsT> = {
     tag_suma_pct: (pct) => `Summe ${pct}%`,
 
     loading_alertas: 'Lade betriebliche Warnungen...',
-    error_alertas: '/api/alerts/operational konnte nicht geladen werden.',
+    error_alertas: 'NORTHMINE konnte nicht geladen werden.',
 
     smart_panel_kicker: 'Smart Alerts',
     smart_panel_title: 'Betriebliches Risiko',

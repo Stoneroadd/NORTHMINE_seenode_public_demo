@@ -168,7 +168,7 @@ export function LoadingEquipmentDetailModal({ item, hourly, anchor, onClose }: P
               <span className="nmcp-section-kicker">{t.loading_modal_chart_kicker}</span>
               <h3>{rows.length ? t.loading_modal_registros_horarios(rows.length) : t.loading_modal_sin_serie}</h3>
             </div>
-            <span className="nmcp-panel-tag">{peak ? t.loading_modal_peak(peak.hour) : 'API v1'}</span>
+            <span className="nmcp-panel-tag">{peak ? t.loading_modal_peak(peak.hour) : 'SIN PUNTO MÁXIMO'}</span>
           </div>
           {rows.length ? (
             <div className="nmcp-detail-chart">

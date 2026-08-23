@@ -163,7 +163,7 @@ export const fleetT: ModuleDict<FleetT> = {
     copy_wsp: 'Copiar WSP',
     download_txt: 'Descargar TXT',
     reset: 'Reset',
-    autofill_error: 'No se pudo autocompletar. Verifica el backend y reintenta.',
+    autofill_error: 'No se pudo completar la selección. Verifica la disponibilidad de los datos y reintenta.',
     autofill_success: (fromWenco, fromReport, reportDateSuffix, noData) =>
       `Autocompletado: ${fromWenco} desde WENCO en vivo, ${fromReport} desde el reporte de mantencion${reportDateSuffix}. ${noData} sin dato (revisar a mano).`,
     report_date_suffix: (date) => ` (reporte del ${date})`,
@@ -251,7 +251,7 @@ export const fleetT: ModuleDict<FleetT> = {
     copy_wsp: 'Copy WSP',
     download_txt: 'Download TXT',
     reset: 'Reset',
-    autofill_error: 'Could not auto-fill. Check the backend and retry.',
+    autofill_error: 'The selection could not be completed. Check data availability and retry.',
     autofill_success: (fromWenco, fromReport, reportDateSuffix, noData) =>
       `Auto-filled: ${fromWenco} from live WENCO, ${fromReport} from the maintenance report${reportDateSuffix}. ${noData} with no data (check manually).`,
     report_date_suffix: (date) => ` (report dated ${date})`,
@@ -325,7 +325,7 @@ export const fleetT: ModuleDict<FleetT> = {
     no_standby: 'Keine CAEX im WENCO-Standby.',
     no_cycle_suffix: 'ohne Zyklus',
     loading_label: 'Aktueller Flottenstatus wird geladen...',
-    error_detail: '/api/fleet/status konnte nicht geladen werden.',
+    error_detail: 'NORTHMINE konnte nicht geladen werden.',
     no_substate: 'Kein WENCO-Unterstatus',
 
     checklist_kicker: 'Schichtabschluss',
@@ -339,7 +339,7 @@ export const fleetT: ModuleDict<FleetT> = {
     copy_wsp: 'WSP kopieren',
     download_txt: 'TXT herunterladen',
     reset: 'Zurücksetzen',
-    autofill_error: 'Automatisches Ausfüllen fehlgeschlagen. Backend prüfen und erneut versuchen.',
+    autofill_error: 'Die Auswahl konnte nicht vervollständigt werden. Prüfen Sie die Datenverfügbarkeit und versuchen Sie es erneut.',
     autofill_success: (fromWenco, fromReport, reportDateSuffix, noData) =>
       `Automatisch ausgefüllt: ${fromWenco} aus WENCO live, ${fromReport} aus dem Wartungsbericht${reportDateSuffix}. ${noData} ohne Daten (manuell prüfen).`,
     report_date_suffix: (date) => ` (Bericht vom ${date})`,

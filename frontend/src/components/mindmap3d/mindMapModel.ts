@@ -7,6 +7,7 @@ import type {
   OperationalNlpResponse,
   ProfitOptimizationResponse,
 } from '../../lib/api'
+import { sourceDisplayName, toUserSafeMessage } from '../../lib/presentationSafety'
 import {
   asNumber,
   clamp,
@@ -245,13 +246,13 @@ function addSourceErrorNodes(nodes: MindMapNode[], edges: MindMapEdge[], ids: Se
     const node = addNode(nodes, ids, {
       type: 'ALERT',
       category: 'RISK',
-      label: `API parcial: ${error.endpoint}`,
-      displayValue: error.message,
+      label: `Fuente parcial: ${sourceDisplayName(error.endpoint)}`,
+      displayValue: toUserSafeMessage(error.message, 'La fuente no está disponible en este momento.'),
       status: 'ATTENTION',
       importance: 0.38,
       risk: 0.56,
       data_source: 'PARTIAL',
-      metadata: { endpoint: error.endpoint, message: error.message },
+      metadata: { fuente: sourceDisplayName(error.endpoint), estado: 'Requiere revisión' },
     })
     addEdge(edges, riskCategory, node.id, {
       type: 'api_error',

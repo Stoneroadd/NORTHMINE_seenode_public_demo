@@ -321,7 +321,7 @@ export function Performance() {
   })
 
   if (query.isLoading) return <LoadingState label="Cargando rendimiento operacional..." />
-  if (query.isError || !query.data) return <ErrorState detail="No se pudo cargar /api/performance/summary." onRetry={() => query.refetch()} />
+  if (query.isError || !query.data) return <ErrorState detail="No se pudo cargar el resumen de rendimiento." onRetry={() => query.refetch()} />
 
   const data = query.data
   const worstTone = (data.kpis.peor_dia?.cumplimiento_pct ?? 100) < 80 ? 'red' : 'amber'

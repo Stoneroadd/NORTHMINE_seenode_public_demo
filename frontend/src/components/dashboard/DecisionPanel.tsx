@@ -26,7 +26,7 @@ export function DecisionPanel({ decision, generatedAt, apiStatus, actions = [] }
         </div>
         <div className="decision-meta">
           <span><Activity size={14} /> Riesgo operativo {decision.score}/100</span>
-          <span>{apiStatus === 'ok' ? 'API online' : 'API verificando'}</span>
+          <span>{apiStatus === 'ok' ? 'Datos disponibles' : 'Datos en verificación'}</span>
           {generatedAt && <span>{new Date(generatedAt).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })}</span>}
         </div>
       </div>

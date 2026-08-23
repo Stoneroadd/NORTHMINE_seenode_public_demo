@@ -2,7 +2,7 @@ import { lazy, Suspense, useEffect, useMemo, useState, type CSSProperties } from
 import { useQuery } from '@tanstack/react-query'
 import { AlertTriangle, DatabaseZap, Network, RefreshCcw } from 'lucide-react'
 import { FAST_DEMO_MINDMAP, FAST_PUBLIC_DEMO } from '../../demo/fastDemo'
-import { northmineApi } from '../../lib/api'
+import { northmineApi } from '../../lib/api'; import { operationalStatusLabel, sourceDisplayName } from '../../lib/presentationSafety'
 import { MindMapControls } from './MindMapControls'
 import { MindMapFilters } from './MindMapFilters'
 import { MindMapInspector } from './MindMapInspector'
@@ -397,19 +397,19 @@ export function OperationalMindMap3D() {
     <section className="nm-map-page">
       <header className="nm-map-header">
         <div>
-          <span className="nm-map-kicker">CAP-017 - Dynamic Operational Data Mind Map 3D</span>
+          <span className="nm-map-kicker">MAPA OPERACIONAL · RELACIONES CONECTADAS</span>
           <h1>{t.page_titulo}</h1>
           <p>{t.page_desc}</p>
         </div>
         <div className="nm-map-status-strip">
           <span className={`nm-map-status-pill ${statusClass(FAST_PUBLIC_DEMO ? 'DEMO LOCAL' : graph.metadata.backend_status)}`}>
-            {t.page_backend} <strong>{FAST_PUBLIC_DEMO ? 'DEMO LOCAL' : graph.metadata.backend_status ?? t.page_conectado_fallback}</strong>
+            {t.page_backend} <strong>{FAST_PUBLIC_DEMO ? 'Demostración' : operationalStatusLabel(graph.metadata.backend_status, t.page_conectado_fallback)}</strong>
           </span>
           <span className={`nm-map-status-pill ${statusClass(FAST_PUBLIC_DEMO ? 'DEMO SIN WENCO' : graph.metadata.data_source_status)}`}>
-            {t.page_wenco} <strong>{FAST_PUBLIC_DEMO ? 'SIN WENCO' : graph.metadata.data_source_status ?? graph.metadata.source_system ?? 'NORTHMINE'}</strong>
+            {t.page_wenco} <strong>{FAST_PUBLIC_DEMO ? 'Sin conexión Wenco' : operationalStatusLabel(graph.metadata.data_source_status, sourceDisplayName(graph.metadata.source_system))}</strong>
           </span>
           <span className={`nm-map-status-pill ${statusClass(graph.data_source)}`}>
-            {t.page_datos} <strong>{graph.data_source}</strong>
+            {t.page_datos} <strong>{sourceDisplayName(graph.data_source)}</strong>
           </span>
           <span className="nm-map-status-pill">
             {t.page_actualizado} <strong>{new Date(graph.generated_at).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })}</strong>

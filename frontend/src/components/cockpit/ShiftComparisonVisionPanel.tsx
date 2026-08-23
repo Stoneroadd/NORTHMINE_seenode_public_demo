@@ -1478,7 +1478,7 @@ function EquipmentComparisonDetailModal({
               <span className="nmcp-section-kicker">{t.sc_tonelaje_hora_hora}</span>
               <h3>{focusLabel(focusShift, t)}</h3>
             </div>
-            <span className="nmcp-panel-tag">{peak ? t.sc_peak(resolveHourLabel(peak, focusShift)) : 'API v1'}</span>
+            <span className="nmcp-panel-tag">{peak ? t.sc_peak(resolveHourLabel(peak, focusShift)) : 'SIN PUNTO MÁXIMO'}</span>
           </div>
           {equipmentRows.length ? (
             <>
@@ -1791,7 +1791,7 @@ export function ShiftComparisonVisionPanel({
           </div>
         </div>
         <div className="nmcp-shift-empty">
-          {error?.message ?? t.sc_error_body}
+          {t.sc_error_body}
         </div>
       </section>
     )

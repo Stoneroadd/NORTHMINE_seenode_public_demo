@@ -153,7 +153,7 @@ export async function downloadShiftPdfReport({
     13,
   )
   doc.text(
-    `Generado: ${new Date().toLocaleString('es-CL')} / Fuente: /api/shift/current + /api/shift-comparison`,
+    `Generado: ${new Date().toLocaleString('es-CL')} / Fuente: estado del turno y comparación operacional`,
     MARGIN,
     17,
   )

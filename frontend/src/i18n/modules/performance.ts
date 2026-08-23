@@ -152,7 +152,7 @@ export const performanceT: ModuleDict<PerformanceT> = {
     period_month: 'Dieser Monat',
     period_custom: 'Benutzerdefiniert',
     loading: 'Betriebsleistung wird geladen...',
-    error: '/api/performance/summary konnte nicht geladen werden.',
+    error: 'NORTHMINE konnte nicht geladen werden.',
     header_eyebrow: 'Leistung',
     header_title: 'Stündliche Analyse und Produktivität',
     header_desc: 'Muster nach Stunde, Wochentag und Ladeeinheit mit echten WENCO/SQL-Daten.',

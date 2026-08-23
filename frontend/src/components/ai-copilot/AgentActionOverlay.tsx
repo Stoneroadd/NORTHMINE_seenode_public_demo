@@ -1,5 +1,5 @@
 import { Check, Compass, Loader2, X } from 'lucide-react'
-import type { AgentActionResult } from '../../lib/agentRegistry/types'
+import type { AgentActionResult } from '../../lib/agentRegistry/types'; import { toUserSafeMessage } from '../../lib/presentationSafety'
 
 /** "Estado actuando" (seccion 2 y 16 del brief): cada accion queda visible, con su resultado real - nunca se afirma "completed" sin confirmarlo. */
 export function AgentActionOverlay({ actions }: { actions: AgentActionResult[] }) {
@@ -13,7 +13,7 @@ export function AgentActionOverlay({ actions }: { actions: AgentActionResult[] }
           {entry.status === 'executing' && <Loader2 size={13} className="ai-copilot-spin" />}
           {(entry.status === 'rejected' || entry.status === 'failed') && <X size={13} />}
           <Compass size={13} />
-          <span>{entry.label}</span>
+          <span>{toUserSafeMessage(entry.label, 'Acción operacional')}</span>
         </li>
       ))}
     </ul>

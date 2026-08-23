@@ -4,7 +4,7 @@ import type { MonthlyTargetResponse } from '../../lib/api'
 import { formatNumber, formatPct } from './cockpitModel'
 import { useModuleT } from '../../i18n/useModuleT'
 import { cockpitT, type CockpitT } from '../../i18n/modules/cockpit'
-import { useInView } from '../../hooks/useInView'
+import { useInView } from '../../hooks/useInView'; import { sourceDisplayName } from '../../lib/presentationSafety'
 
 interface MonthlyTargetPanelProps {
   data?: MonthlyTargetResponse
@@ -177,7 +177,7 @@ export function MonthlyTargetPanel({
   const f02Accumulated = data.mov_f02_acumulado ?? 0
   const totalWithF02 = data.mov_total_con_f02 ?? data.mov_real_acumulado
   const isDemo = data.data_source.toUpperCase() === 'DEMO'
-  const sourceSystem = isDemo ? 'NORTHMINE DEMO' : data.source_system
+  const sourceSystem = isDemo ? 'Escenario de demostración' : sourceDisplayName(data.source_system)
   const dataQuality = isDemo ? 'DATOS SINTÉTICOS CONFIGURADOS' : data.quality
 
   return (

@@ -119,7 +119,7 @@ export const compareT: ModuleDict<CompareT> = {
   },
   de: {
     loading: 'Lade betrieblichen Vergleich...',
-    error_detail: 'Der Endpunkt /api/compare konnte nicht geladen werden.',
+    error_detail: 'Der Vergleich konnte nicht geladen werden.',
     header_eyebrow: 'Vergleich',
     header_title: 'Betriebszeiträume',
     header_description: 'Vergleich von Tonnage, Zyklen, Stunde für Stunde und Leistung je Bagger.',

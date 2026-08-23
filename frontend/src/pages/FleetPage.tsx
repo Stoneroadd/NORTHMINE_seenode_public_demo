@@ -10,6 +10,7 @@ import { getFleetStatus } from '../services/fleetService'
 import { getShiftExport, type FleetEquipment } from '../lib/api'
 import { useModuleT } from '../i18n/useModuleT'
 import { fleetT, type FleetT } from '../i18n/modules/fleet'
+import { sourceDisplayName } from '../lib/presentationSafety'
 import { useAgentWidget } from '../lib/agentRegistry/useAgentWidget'
 import { useAgentEntityHandler } from '../lib/agentRegistry/useAgentEntityHandler'
 import type { AgentWidgetSnapshot } from '../lib/agentRegistry/types'
@@ -207,7 +208,7 @@ export function FleetPage() {
   if (query.isLoading) return <LoadingState label={t.loading_label} />
   if (query.isError || !data) return <ErrorState detail={t.error_detail} onRetry={() => query.refetch()} />
 
-  const dataSource = data.source === 'wenco-sql-live' ? t.live_wenco : String(data.source || 'API').toUpperCase()
+  const dataSource = data.source === 'wenco-sql-live' ? t.live_wenco : sourceDisplayName(data.source)
 
   return (
     <>

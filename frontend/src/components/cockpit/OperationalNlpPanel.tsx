@@ -59,7 +59,7 @@ export function OperationalNlpPanel({
             <span className="nmcp-section-kicker">{t.nlp_title}</span>
             <h2>{t.nlp_loading_title}</h2>
           </div>
-          <span className="nmcp-panel-tag">API v1</span>
+          <span className="nmcp-panel-tag">ACTUALIZANDO</span>
         </div>
         <div className="nmcp-nlp-empty">{t.nlp_loading_body}</div>
       </section>
@@ -79,7 +79,7 @@ export function OperationalNlpPanel({
           </button>
         </div>
         <div className="nmcp-nlp-empty">
-          {t.nlp_error_body(error?.message ?? t.nlp_sin_respuesta)}
+          {t.nlp_error_body(t.nlp_sin_respuesta)}
         </div>
       </section>
     )
@@ -100,7 +100,7 @@ export function OperationalNlpPanel({
           <span className={`nmcp-mode-pill ${data.data_source === 'DEMO' ? 'is-demo' : data.stale ? 'is-stale' : 'is-real'}`}>
             {data.data_source}
           </span>
-          <span className="nmcp-panel-tag">API {data.api_version}</span>
+          <span className="nmcp-panel-tag">EVIDENCIA OPERACIONAL</span>
           <button className="nmcp-icon-button" type="button" onClick={onRefresh} aria-label={t.nlp_refresh_aria}>
             <RefreshCcw size={16} className={fetching ? 'is-spinning' : undefined} />
           </button>

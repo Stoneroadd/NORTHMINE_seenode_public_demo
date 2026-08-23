@@ -11,6 +11,7 @@ import { AnalysisFilterBar } from '../components/filters/AnalysisFilterBar'
 import { useAnalysisFilters } from '../hooks/useAnalysisFilters'
 import { useModuleT } from '../i18n/useModuleT'
 import { reportsT } from '../i18n/modules/reports'
+import { sourceDisplayName } from '../lib/presentationSafety'
 import { useAgentWidget } from '../lib/agentRegistry/useAgentWidget'
 
 export function Reports() {
@@ -79,7 +80,7 @@ export function Reports() {
         eyebrow={t.eyebrow}
         title={t.titulo}
         description={t.descripcion}
-        meta={`${connectionLabel} - ${query.data.source_system ?? query.data.source}`}
+        meta={`${connectionLabel} - ${sourceDisplayName(query.data.source_system ?? query.data.source)}`}
         actions={
           <div className="filter-bar">
             {filters.map((filter) => (

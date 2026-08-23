@@ -4,6 +4,7 @@ import { useAppStore } from '../store'
 import { apiFetch } from '../lib/api'
 import { useModuleT } from '../i18n/useModuleT'
 import { auditLogT } from '../i18n/modules/auditLog'
+import { auditActionLabel, auditOutcome, sourceDisplayName } from '../lib/presentationSafety'
 
 interface AuditEntry {
   id: number
@@ -33,18 +34,16 @@ export function AuditLog() {
   const t = useModuleT(auditLogT)
   const usuario        = useAppStore(s => s.usuario)
   const [filterUser,   setFilterUser]   = useState('')
-  const [filterEndpt,  setFilterEndpt]  = useState('')
   const [filterDesde,  setFilterDesde]  = useState('')
 
   const token = usuario?.token ?? ''
 
   const params: Record<string, string> = {}
   if (filterUser)  params.usuario  = filterUser
-  if (filterEndpt) params.endpoint = filterEndpt
   if (filterDesde) params.desde    = filterDesde
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ['audit-log', token, filterUser, filterEndpt, filterDesde],
+    queryKey: ['audit-log', token, filterUser, filterDesde],
     queryFn:  () => fetchAuditLog(params),
     enabled:  !!token && usuario?.rol === 'admin',
     refetchInterval: 30_000,
@@ -62,9 +61,9 @@ export function AuditLog() {
 
   function exportCsv() {
     if (!data?.items) return
-    const header = 'timestamp,usuario,metodo,endpoint,status_code,duracion_ms\n'
+    const header = 'fecha,usuario,accion,operacion,resultado,duracion_ms\n'
     const rows = data.items.map(r =>
-      `"${r.timestamp}","${r.usuario}","${r.metodo}","${r.endpoint}",${r.status_code},${r.duracion_ms}`
+      `"${r.timestamp}","${r.usuario}","${auditActionLabel(r.metodo)}","${sourceDisplayName(r.endpoint)}","${auditOutcome(r.status_code).label}",${r.duracion_ms}`
     ).join('\n')
     const blob = new Blob([header + rows], { type: 'text/csv' })
     const url  = URL.createObjectURL(blob)
@@ -106,7 +105,6 @@ export function AuditLog() {
       <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
         {([
           [t.label_usuario, filterUser,  setFilterUser,  t.placeholder_usuario],
-          [t.label_endpoint, filterEndpt, setFilterEndpt, t.placeholder_endpoint],
           [t.label_desde, filterDesde, setFilterDesde, t.placeholder_desde],
         ] as const).map(([label, val, setter, ph]) => (
           <label key={label} style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 11, color: 'var(--text-tertiary)', fontWeight: 700 }}>
@@ -132,7 +130,7 @@ export function AuditLog() {
       {data && (
         <>
           <div style={{ overflowX: 'auto', borderRadius: 8, border: '1px solid var(--border-dim)' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, fontFamily: 'var(--font-mono)' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
               <thead>
                 <tr style={{ background: 'var(--bg-elevated)', borderBottom: '1px solid var(--border-mid)' }}>
                   {[t.col_timestamp, t.col_usuario, t.col_metodo, t.col_endpoint, t.col_status, t.col_ms].map(h => (
@@ -149,12 +147,12 @@ export function AuditLog() {
                       {row.timestamp.replace('T', ' ').slice(0, 19)}
                     </td>
                     <td style={{ padding: '7px 12px', color: 'var(--op-green)' }}>{row.usuario}</td>
-                    <td style={{ padding: '7px 12px', color: 'var(--data-cyan)' }}>{row.metodo}</td>
+                    <td style={{ padding: '7px 12px', color: 'var(--data-cyan)' }}>{auditActionLabel(row.metodo)}</td>
                     <td style={{ padding: '7px 12px', color: 'var(--text-primary)', maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {row.endpoint}
+                      {sourceDisplayName(row.endpoint)}
                     </td>
                     <td style={{ padding: '7px 12px', color: statusColor(row.status_code), fontWeight: 700 }}>
-                      {row.status_code}
+                      {auditOutcome(row.status_code).label}
                     </td>
                     <td style={{ padding: '7px 12px', color: 'var(--text-tertiary)' }}>{row.duracion_ms}</td>
                   </tr>

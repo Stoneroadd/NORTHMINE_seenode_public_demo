@@ -12,6 +12,7 @@ import { useAppStore } from '../store'
 import { useModuleT } from '../i18n/useModuleT'
 import { productionT, type ProductionT } from '../i18n/modules/production'
 import { formatHourLabel } from '../lib/time/operationalHour'
+import { sourceDisplayName } from '../lib/presentationSafety'
 import { useAgentWidget } from '../lib/agentRegistry/useAgentWidget'
 import type { AgentWidgetSnapshot } from '../lib/agentRegistry/types'
 
@@ -151,7 +152,7 @@ export function Production() {
   const dataSource = data.data_source ?? (data.source === 'demo' ? 'DEMO' : 'REAL')
   const sourceLabel = data.stale ? t.source_cache : dataSource === 'DEMO' ? t.source_demo : t.source_real
   const lastRecord = data.last_real_record ? new Date(data.last_real_record).toLocaleString('es-CL') : t.sin_registro
-  const sourceSystem = data.source_system ?? data.source
+  const sourceSystem = sourceDisplayName(data.source_system ?? data.source)
   const hasProductionRows = data.produccion_acumulada.length > 0
   const hasTarget = data.meta_configurada !== false && data.meta_turno > 0
   const projectedFinal = data.proyeccion_fin_turno ?? data.toneladas_turno

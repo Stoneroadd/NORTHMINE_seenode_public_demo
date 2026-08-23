@@ -111,7 +111,7 @@ export const aerialT: ModuleDict<AerialT> = {
 
     coverage_kicker: 'Cobertura',
     layer_status: 'Estado de capas',
-    no_internal_routes_hint: 'No se exponen rutas internas del servidor al frontend.',
+    no_internal_routes_hint: 'La vista solo muestra información autorizada para esta sesión.',
 
     files_kicker: 'Archivos',
     files_metadata: 'Metadatos disponibles',
@@ -167,7 +167,7 @@ export const aerialT: ModuleDict<AerialT> = {
 
     coverage_kicker: 'Coverage',
     layer_status: 'Layer status',
-    no_internal_routes_hint: 'Internal server routes are not exposed to the frontend.',
+    no_internal_routes_hint: 'This view only shows information authorized for this session.',
 
     files_kicker: 'Files',
     files_metadata: 'Available metadata',
@@ -223,7 +223,7 @@ export const aerialT: ModuleDict<AerialT> = {
 
     coverage_kicker: 'Abdeckung',
     layer_status: 'Ebenenstatus',
-    no_internal_routes_hint: 'Interne Server-Routen werden dem Frontend nicht bereitgestellt.',
+    no_internal_routes_hint: 'Diese Ansicht zeigt nur für diese Sitzung freigegebene Informationen.',
 
     files_kicker: 'Dateien',
     files_metadata: 'Verfügbare Metadaten',

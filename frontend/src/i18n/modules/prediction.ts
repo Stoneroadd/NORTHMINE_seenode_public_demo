@@ -150,7 +150,7 @@ export const predictionT: ModuleDict<PredictionT> = {
   },
   de: {
     loading: 'ML-Prognose wird geladen...',
-    error: '/api/ml/prediction konnte nicht geladen werden.',
+    error: 'NORTHMINE konnte nicht geladen werden.',
     header_eyebrow: 'ML / Intelligenz',
     header_title: 'Schichtprognose',
     header_desc: 'Produktionsprognose auf Basis eines Prognosemodells, trainiert mit dem operativen Verlauf.',

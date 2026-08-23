@@ -77,7 +77,7 @@ export function OperationalFlowCanvas({
   if (unsupportedNode) {
     return (
       <div className="mc-flow-projection-error" role="alert">
-        La proyección {snapshot.schema_version} no contiene layout autorizado para {unsupportedNode.label}.
+        {unsupportedNode.label} todavía no dispone de una representación visual autorizada.
       </div>
     )
   }
