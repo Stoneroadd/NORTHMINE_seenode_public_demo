@@ -9,6 +9,7 @@ import { FMSComplement } from './FMSComplement'
 import { ArchitectureDiagram } from './ArchitectureDiagram'
 import { FMSComparison } from './FMSComparison'
 import { IntelligenceLevels } from './IntelligenceLevels'
+import { OperationalFlowOverview } from './OperationalFlowOverview'
 import { DecisionFlow } from './DecisionFlow'
 import { DecisionCases } from './DecisionCases'
 import { ResponsibleAI } from './ResponsibleAI'
@@ -51,6 +52,7 @@ export function SaaSPrototypePage() {
         <ArchitectureDiagram />
         <FMSComparison />
         <IntelligenceLevels />
+        <OperationalFlowOverview />
         <DecisionFlow />
         <DecisionCases />
         <MineIntelligenceBand />

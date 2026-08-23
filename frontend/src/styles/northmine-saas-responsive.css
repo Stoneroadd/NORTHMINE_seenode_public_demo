@@ -63,6 +63,10 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .nm-saas .ns-flow-overview__benefits {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .nm-saas .ns-footer__inner {
     grid-template-columns: 1fr 1fr;
   }
@@ -246,12 +250,17 @@
     padding-block: 72px;
   }
 
+  .nm-saas .ns-flow-overview__benefits {
+    grid-template-columns: 1fr;
+  }
+
   .nm-saas .ns-security,
   .nm-saas .ns-arch,
   .nm-saas .ns-comparison,
   .nm-saas .ns-levels,
   .nm-saas .ns-cases,
-  .nm-saas .ns-rai {
+  .nm-saas .ns-rai,
+  .nm-saas .ns-flow-overview {
     padding-block: 56px;
   }
 
