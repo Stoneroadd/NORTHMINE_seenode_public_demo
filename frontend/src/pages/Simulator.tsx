@@ -66,7 +66,7 @@ type SimValues = {
 
 // ─── Chart builder ────────────────────────────────────────────────────────────
 
-function buildCrossoverOption(
+export function buildCrossoverOption(
   curva: SimResult['curva_caex'],
   currentCaex: number,
   caexMin: number,
@@ -89,8 +89,14 @@ function buildCrossoverOption(
       borderColor: premiumPalette.border,
       textStyle: { color: premiumPalette.text, fontSize: 12 },
       formatter: (params: unknown) => {
-        const rows = params as [{ axisValue: number; value: number }]
-        return t.tooltip_crossover(rows[0].axisValue, rows[0].value.toLocaleString('es-CL'))
+        // ECharts calls this with an empty array in some pointer-move edge
+        // cases (fast hover across a resize/re-render boundary) even when
+        // trigger is 'axis' with a single series -- params[0] being
+        // undefined here crashed the whole chart, not just the tooltip.
+        const rows = params as { axisValue: number; value: number }[]
+        const first = rows?.[0]
+        if (!first) return ''
+        return t.tooltip_crossover(first.axisValue, first.value.toLocaleString('es-CL'))
       },
     },
     xAxis: {
