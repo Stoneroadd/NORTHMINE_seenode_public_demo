@@ -348,6 +348,15 @@ async def _run_investigation(live: LiveSession, user: dict, plan: InvestigationP
         payload={"result": result.model_dump(mode="json")},
     )
     live.session = live.session.model_copy(update={"active_investigation_id": None})
+    # C7: a diferencia del camino cancelado (que si volvia a IDLE mas arriba
+    # en este mismo metodo), el camino exitoso se quedaba parado en
+    # 'speaking' para siempre - ni un cancel tardio (speaking->cancelled) ni
+    # una SEGUNDA investigacion legitima (speaking->planning) son aristas
+    # validas desde 'speaking', asi que cualquiera de los dos lanzaba
+    # InvalidStateTransition sin capturar y tumbaba la conexion WS. Cerrar
+    # el turno explicitamente a idle es lo que ya hacia el camino cancelado
+    # para el resto de los flujos.
+    await _set_state(live, AgentRuntimeState.IDLE, correlation_id=correlation_id)
 
 
 async def _run_tool_step(live: LiveSession, plan: InvestigationPlan, step: PlanStep, evidence: list[EvidenceItem], correlation_id: str) -> None:
@@ -544,11 +553,24 @@ async def cancel_investigation(live: LiveSession, user: dict, correlation_id: st
         kind="cancel", investigation_id=live.session.active_investigation_id, plan_modified=False,
     )
     if live.current_investigation_task is None:
-        # No hay loop corriendo (p.ej. estabamos en verifying/speaking): forzar cierre limpio.
-        await _set_state(live, AgentRuntimeState.CANCELLED, correlation_id=correlation_id)
-        interruption.clear_cancel(live)
-        live.session = live.session.model_copy(update={"active_investigation_id": None})
-        await _set_state(live, AgentRuntimeState.IDLE, correlation_id=correlation_id)
+        # C7: un cancel duplicado (evento de transporte repetido, doble
+        # click, reconexion) que llega cuando la sesion ya no tiene nada
+        # que cancelar (ya volvio a idle, o quedo en un estado terminal
+        # tipo speaking/verifying sin una arista valida hacia cancelled) no
+        # debe intentar la transicion igual - AgentStateMachine la rechaza
+        # (InvalidStateTransition) y, sin este chequeo, esa excepcion se
+        # propagaba sin capturar por todo _dispatch_client_event hasta el
+        # loop del WebSocket, tumbando la conexion. Se usa can_transition
+        # en vez de comparar contra un unico estado "seguro" (ej. solo
+        # IDLE) porque no es el unico estado sin arista hacia cancelled.
+        if live.state_machine.can_transition(AgentRuntimeState.CANCELLED):
+            # No hay loop corriendo (p.ej. estabamos en verifying/speaking): forzar cierre limpio.
+            await _set_state(live, AgentRuntimeState.CANCELLED, correlation_id=correlation_id)
+            interruption.clear_cancel(live)
+            live.session = live.session.model_copy(update={"active_investigation_id": None})
+            await _set_state(live, AgentRuntimeState.IDLE, correlation_id=correlation_id)
+        else:
+            interruption.clear_cancel(live)
 
 
 async def interrupt_agent(live: LiveSession, user: dict, command: AgentCommand, correlation_id: str, ip: str) -> None:
