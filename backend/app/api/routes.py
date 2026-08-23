@@ -1264,15 +1264,6 @@ def navigation(
     }
 
 
-@router.get("/ml/prediction")
-def ml_prediction(
-    fecha: Annotated[str | None, Query()] = None,
-    turno: Annotated[str, Query()] = "NOCHE",
-    user: dict = RequireAny,
-) -> dict:
-    _real_only_error("/api/ml/prediction", "Endpoint ML demo deshabilitado. Usa /api/cockpit o /api/production/shift para forecast real operacional.")
-
-
 @router.post("/simulator/run")
 @limiter.limit(endpoint_limit("/api/simulator/run"))
 async def simulator_run(request: Request, payload: SimulatorRequestSecure, user: dict = RequireAny) -> dict:
