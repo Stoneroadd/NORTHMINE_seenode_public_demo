@@ -23,14 +23,21 @@ it up:
 - **Needs human judgment**: an architecture or product decision, not a
   bug. Don't resolve this unilaterally — surface the tradeoffs and ask.
 
-## P0 — needs live session
+## Done
 
-**Prediction API returns 410.** Root cause not yet found. `410 Gone` in
-this codebase is used deliberately in `app/api/operational.py`'s
-`_real_only_error()` for "real-data-only" endpoints when `demo_mode` is
-on — first check whether this is that same deliberate guard firing on a
-misconfigured demo request (not a bug, a config issue) or a genuine
-different failure before assuming it needs a code fix.
+**Prediction API returns 410 — RESOLVED 2026-08-23, commit `ec3ebdf`.**
+Root cause: `/api/ml/prediction` was unconditionally 410 (no demo-mode
+guard, permanent), and the frontend `Prediction.tsx` page was never
+updated to stop calling it — every visit to `/prediccion` errored, for
+every user. Rewired the page to `/api/cockpit`'s real forecast (OLS
+regression over actual hourly progress, `forecast_service.py`) instead
+of resurrecting the old fake ML model. Verified `/api/cockpit` actually
+serves data on the live demo site (`ENVIRONMENT=demo` special-cases past
+`build_cockpit_response`'s own real-data-only guard) before committing
+to this approach. Old `/api/ml/prediction` route and `mlService.ts`
+removed (fully dead once the frontend stopped calling them).
+
+## P0 — needs live session
 
 **Ranking methodology modal is not fully accessible.** No specifics
 recorded beyond "accessibility issue" — needs a fresh audit (keyboard

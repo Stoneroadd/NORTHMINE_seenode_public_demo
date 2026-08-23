@@ -118,8 +118,30 @@ before shipping the fix. Commit `ba16d16`.
 **Not investigated — needs a live authenticated session, not just code
 reading:** Prediction API 410 root cause, ranking methodology modal
 accessibility. Stopping this loop here rather than guessing at fixes for
-scenarios I can't reproduce or verify. See the wrap-up note the session
-posts below when it stops.
+scenarios I can't reproduce or verify.
+
+---
+
+## 2026-08-23 — Claude Code — branch `main` — loop resumed, Prediction fixed
+
+User authorized resuming. Investigated "Prediction API 410" properly
+this time (local dev servers + demo API credentials, not the live
+production login form). Real finding: not a transient error, `/api/ml/
+prediction` is permanently, unconditionally disabled, and the whole
+`Prediction.tsx` page (reachable from the sidebar) had been silently
+broken for every user since whenever that endpoint was killed. Asked the
+user whether to delete the page or reconnect it to real data — this is
+a product decision, not a bug fix, so didn't decide it alone. They chose
+reconnect. Rewired the page to `/api/cockpit`'s real forecast, verified
+that endpoint actually serves data in the live demo's `ENVIRONMENT=demo`
+mode before committing to the approach, dropped the two chart/table
+sections that had no real data backing them (feature importance,
+predicted-vs-actual history) rather than fabricate placeholder data for
+them. Full detail in `AGENT_WORK_PLAN.md`. Commit `ec3ebdf`, full suite
+green (backend 391, frontend 124 + build).
+
+Remaining: ranking methodology modal accessibility (still needs a live
+session). Pausing here again.
 
 ---
 
