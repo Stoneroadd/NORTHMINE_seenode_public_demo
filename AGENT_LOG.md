@@ -760,3 +760,30 @@ Verification: TypeScript lint PASS, Vitest 126/126, production build PASS withou
 Vite warnings, production audit zero vulnerabilities, no remaining
 `services/api` reference, and `git diff --check` PASS. No API route, payload or
 runtime bundle changed.
+
+---
+
+## 2026-08-24 — Codex — canonical authenticated routes and Operational Flow agent context
+
+The router audit reproduced the architectural drift documented in the Agent
+Registry itself: AppShell owned 14 section paths, App resolved extra/admin and
+Mission Control routes with literals, Sidebar repeated seven of them, and the
+agent kept an independent eight-route `EXTRA_ROUTES` object. Operational Flow
+was renderable but absent from the agent module catalog, so contextual AI
+navigation could not resolve that intelligence surface.
+
+`lib/appRoutes.ts` now provides one typed contract for section, analysis, admin
+and Mission Control paths plus the existing `/dashboard` alias and normalization
+semantics. App, AppShell, Sidebar and the agent action/registry layers consume
+that contract; the manual router and all public routes remain unchanged.
+Operational Flow is now a read-only operational agent module with shift context
+and declared equipment/loading-unit/route semantics. It is explicitly marked
+`instrumented: false`: navigation is real, but widget/entity actions are not
+claimed until the view registers them.
+
+Verification: TypeScript lint PASS, Vitest 133/133 (seven new route/registry
+assertions), production build PASS without warnings, `npm audit --omit=dev` zero
+vulnerabilities, `git diff --check` PASS, and focused Playwright 2/2 on Pixel 7
+and desktop 1440. The browser proof covers Mission Control with a trailing slash,
+sidebar navigation to Prediccion, Back/Forward reconstruction, retained
+authenticated shell and no login fallback.

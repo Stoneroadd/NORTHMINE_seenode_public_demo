@@ -6,7 +6,7 @@ import type { AuthSession } from './lib/api'
 import { restoreSession } from './services/authService'
 import { LoadingState } from './components/common/LoadingState'
 import { AppShell } from './components/layout/AppShell'
-import type { SectionId } from './components/layout/Sidebar'
+import { appPaths, normalizeAppPath, type SectionId } from './lib/appRoutes'
 import { Login } from './pages/Login'
 import { IdleTimeoutBanner } from './components/ui/IdleTimeoutBanner'
 import { useIdleTimeout } from './hooks/useIdleTimeout'
@@ -126,8 +126,8 @@ function ActiveSectionSync({ section, children }: { section: SectionId; children
 
 function renderSection(section: SectionId, session: AuthSession, t: AppT) {
   const _S = (children: ReactNode) => <Suspense fallback={<div className="loading-state">{t.cargando}</div>}>{children}</Suspense>
-  const path = window.location.pathname
-  if (path === '/admin/sistema') {
+  const path = normalizeAppPath(window.location.pathname)
+  if (path === appPaths.adminSistema) {
     if (session.rol !== 'admin') {
       return wrap(
         <div className="section-placeholder">
@@ -136,12 +136,12 @@ function renderSection(section: SectionId, session: AuthSession, t: AppT) {
           <h2>{t.acceso_restringido_sistema_titulo}</h2>
           <p>{t.acceso_restringido_sistema_desc}</p>
         </div>,
-        '/admin/sistema-denied',
+        `${appPaths.adminSistema}-denied`,
       )
     }
-    return wrap(_S(<SystemPage />), '/admin/sistema')
+    return wrap(_S(<SystemPage />), appPaths.adminSistema)
   }
-  if (path === '/admin/demo-access') {
+  if (path === appPaths.adminDemoAccess) {
     if (session.rol !== 'admin') {
       return wrap(
         <div className="section-placeholder">
@@ -150,12 +150,12 @@ function renderSection(section: SectionId, session: AuthSession, t: AppT) {
           <h2>Solicitudes de acceso restringidas</h2>
           <p>Solo un administrador puede revisar solicitudes del demo.</p>
         </div>,
-        '/admin/demo-access-denied',
+        `${appPaths.adminDemoAccess}-denied`,
       )
     }
-    return wrap(_S(<DemoAccessAdminPage />), '/admin/demo-access')
+    return wrap(_S(<DemoAccessAdminPage />), appPaths.adminDemoAccess)
   }
-  if (path === '/admin/users') {
+  if (path === appPaths.adminUsers) {
     if (session.rol !== 'admin') {
       return wrap(
         <div className="section-placeholder">
@@ -164,14 +164,14 @@ function renderSection(section: SectionId, session: AuthSession, t: AppT) {
           <h2>{t.acceso_restringido_usuarios_titulo}</h2>
           <p>{t.acceso_restringido_usuarios_desc}</p>
         </div>,
-        '/admin/users-denied',
+        `${appPaths.adminUsers}-denied`,
       )
     }
-    return wrap(_S(<AdminUsersPage />), '/admin/users')
+    return wrap(_S(<AdminUsersPage />), appPaths.adminUsers)
   }
-  if (path === '/admin/auditoria') return wrap(_S(<AuditLog />), '/admin/auditoria')
-  if (path === '/comparativa') return wrap(_S(<Compare />), '/comparativa')
-  if (path === '/operator-ranking') {
+  if (path === appPaths.adminAuditoria) return wrap(_S(<AuditLog />), appPaths.adminAuditoria)
+  if (path === appPaths.comparativa) return wrap(_S(<Compare />), appPaths.comparativa)
+  if (path === appPaths.operatorRanking) {
     if (!['admin', 'supervisor'].includes(session.rol)) {
       return wrap(
         <div className="section-placeholder">
@@ -180,18 +180,18 @@ function renderSection(section: SectionId, session: AuthSession, t: AppT) {
           <h2>{t.acceso_restringido_ranking_titulo}</h2>
           <p>{t.acceso_restringido_ranking_desc}</p>
         </div>,
-        '/operator-ranking-denied',
+        `${appPaths.operatorRanking}-denied`,
       )
     }
-    return wrap(_S(<OperatorRanking />), '/operator-ranking')
+    return wrap(_S(<OperatorRanking />), appPaths.operatorRanking)
   }
-  if (path === '/prediccion') return wrap(_S(<Prediction />), '/prediccion')
-  if (path === '/simulador')  return wrap(_S(<Simulator />), '/simulador')
-  if (path === '/aerea')      return wrap(_S(<AerialView />), '/aerea')
-  if (path === '/cockpit')    return wrap(_S(<DecisionCockpit />), '/cockpit')
-  if (path === '/operational-map-3d') return wrap(_S(<OperationalMindMap3D />), '/operational-map-3d')
-  if (path === '/mission-control/design-system') return wrap(_S(<MissionControlDesignSystemPage />), '/mission-control/design-system')
-  if (path === '/mission-control/operational-flow') return wrap(_S(<OperationalFlowPage />), '/mission-control/operational-flow')
+  if (path === appPaths.prediccion) return wrap(_S(<Prediction />), appPaths.prediccion)
+  if (path === appPaths.simulador)  return wrap(_S(<Simulator />), appPaths.simulador)
+  if (path === appPaths.aerea)      return wrap(_S(<AerialView />), appPaths.aerea)
+  if (path === appPaths.cockpit)    return wrap(_S(<DecisionCockpit />), appPaths.cockpit)
+  if (path === appPaths.operationalMap3d) return wrap(_S(<OperationalMindMap3D />), appPaths.operationalMap3d)
+  if (path === appPaths.missionControlDesignSystem) return wrap(_S(<MissionControlDesignSystemPage />), appPaths.missionControlDesignSystem)
+  if (path === appPaths.operationalFlow) return wrap(_S(<OperationalFlowPage />), appPaths.operationalFlow)
 
   switch (section) {
     case 'cockpit':

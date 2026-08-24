@@ -1,28 +1,11 @@
-import { sectionPaths } from '../../components/layout/AppShell'
+import { appPaths, sectionPaths } from '../appRoutes'
 import type { AgentModuleManifest } from './types'
 
 /**
- * Fuente unica de verdad de modulos para el agente. Las 14 rutas del
- * sidebar vienen de AppShell.sectionPaths (cero duplicacion). Las 8 rutas
- * restantes son reales pero NO viven en sectionPaths - App.tsx::renderSection
- * las resuelve por chequeo directo de `window.location.pathname` ANTES del
- * switch de SectionId (ver lineas 122-186 de App.tsx). Son literales aca
- * porque extraerlas a un objeto compartido habria significado refactorizar
- * el routing manual de App.tsx, fuera del alcance de esta etapa; si esas
- * rutas cambian, este archivo y App.tsx deben actualizarse juntos (marcado
- * explicitamente para que no se desincronicen en silencio).
+ * Modulos que el agente puede reconocer. Las rutas provienen del contrato
+ * compartido appRoutes; App, shell, sidebar y agente ya no mantienen
+ * literales paralelos que puedan desincronizarse.
  */
-const EXTRA_ROUTES = {
-  prediccion: '/prediccion',
-  simulador: '/simulador',
-  comparativa: '/comparativa',
-  operatorRanking: '/operator-ranking',
-  adminSistema: '/admin/sistema',
-  adminUsers: '/admin/users',
-  adminDemoAccess: '/admin/demo-access',
-  adminAuditoria: '/admin/auditoria',
-} as const
-
 const SHIFT_FILTER = { id: 'shift', label: 'Turno', type: 'shift', allowedValues: ['DIA', 'NOCHE', 'AMBOS'] } as const
 const DATE_FILTERS = [
   { id: 'start_date', label: 'Fecha desde', type: 'date' } as const,
@@ -214,6 +197,25 @@ export const NORTHMINE_MODULES: Record<string, AgentModuleManifest> = {
     supportedActions: ['navigate', 'focus_widget'],
     instrumented: true,
   },
+  operationalFlow: {
+    id: 'operationalFlow',
+    route: appPaths.operationalFlow,
+    label: 'Operational Flow',
+    description: 'Proyeccion temporal del Operational Graph y su cadena de impacto.',
+    category: 'operacional',
+    agentAccess: 'read_only',
+    minRoles: 'any',
+    filters: [SHIFT_FILTER],
+    entities: [
+      { type: 'equipment', label: 'CAEX' },
+      { type: 'loading_unit', label: 'Pala' },
+      { type: 'route', label: 'Ruta' },
+    ],
+    supportedActions: ['navigate'],
+    // La vista expone datos canonicos, pero todavia no registra widgets ni
+    // handlers de entidad en el Agent UI Registry.
+    instrumented: false,
+  },
   admin: {
     id: 'admin',
     route: sectionPaths.admin,
@@ -231,7 +233,7 @@ export const NORTHMINE_MODULES: Record<string, AgentModuleManifest> = {
   },
   prediccion: {
     id: 'prediccion',
-    route: EXTRA_ROUTES.prediccion,
+    route: appPaths.prediccion,
     label: 'Predicción',
     description: 'Proyeccion de produccion con Machine Learning.',
     category: 'predictivo',
@@ -244,7 +246,7 @@ export const NORTHMINE_MODULES: Record<string, AgentModuleManifest> = {
   },
   simulador: {
     id: 'simulador',
-    route: EXTRA_ROUTES.simulador,
+    route: appPaths.simulador,
     label: 'Simulador',
     description: 'Simulacion de escenarios de flota.',
     category: 'predictivo',
@@ -259,7 +261,7 @@ export const NORTHMINE_MODULES: Record<string, AgentModuleManifest> = {
   },
   comparativa: {
     id: 'comparativa',
-    route: EXTRA_ROUTES.comparativa,
+    route: appPaths.comparativa,
     label: 'Comparativa',
     description: 'Dos periodos lado a lado, variacion por KPI.',
     category: 'analitico',
@@ -276,7 +278,7 @@ export const NORTHMINE_MODULES: Record<string, AgentModuleManifest> = {
   },
   operatorRanking: {
     id: 'operatorRanking',
-    route: EXTRA_ROUTES.operatorRanking,
+    route: appPaths.operatorRanking,
     label: 'Operator Ranking',
     description: 'Ranking y scoring de operadores.',
     category: 'analitico',
@@ -289,7 +291,7 @@ export const NORTHMINE_MODULES: Record<string, AgentModuleManifest> = {
   },
   adminSistema: {
     id: 'adminSistema',
-    route: EXTRA_ROUTES.adminSistema,
+    route: appPaths.adminSistema,
     label: 'Sistema',
     description: 'Configuracion de sistema.',
     category: 'administrativo',
@@ -302,7 +304,7 @@ export const NORTHMINE_MODULES: Record<string, AgentModuleManifest> = {
   },
   adminUsers: {
     id: 'adminUsers',
-    route: EXTRA_ROUTES.adminUsers,
+    route: appPaths.adminUsers,
     label: 'Usuarios',
     description: 'Administracion de usuarios.',
     category: 'administrativo',
@@ -315,7 +317,7 @@ export const NORTHMINE_MODULES: Record<string, AgentModuleManifest> = {
   },
   adminDemoAccess: {
     id: 'adminDemoAccess',
-    route: EXTRA_ROUTES.adminDemoAccess,
+    route: appPaths.adminDemoAccess,
     label: 'Acceso Demo',
     description: 'Solicitudes de acceso a la demo publica.',
     category: 'administrativo',
@@ -328,7 +330,7 @@ export const NORTHMINE_MODULES: Record<string, AgentModuleManifest> = {
   },
   adminAuditoria: {
     id: 'adminAuditoria',
-    route: EXTRA_ROUTES.adminAuditoria,
+    route: appPaths.adminAuditoria,
     label: 'Auditoría',
     description: 'Bitacora de seguridad del sistema.',
     category: 'administrativo',

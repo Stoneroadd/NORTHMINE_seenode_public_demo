@@ -1,4 +1,4 @@
-import type { SectionId } from '../../components/layout/Sidebar'
+import type { SectionId } from '../appRoutes'
 
 /**
  * Tipos del Agent UI Registry (Etapa 2). Espejo deliberado y acotado del
@@ -12,11 +12,8 @@ import type { SectionId } from '../../components/layout/Sidebar'
  *   (agentActionExecutor.ts), no en una funcion `apply` por filtro - pedirle
  *   codigo al modelo o a cada widget para esto seria una abstraccion sin
  *   uso real en esta base de codigo.
- * - Las rutas NO viven en un unico objeto: AppShell.sectionPaths cubre las
- *   14 secciones del sidebar; otras 8 rutas reales (/prediccion, /simulador,
- *   /comparativa, /operator-ranking, /admin/*) se resuelven por chequeo
- *   directo de pathname en App.tsx::renderSection, fuera del switch de
- *   SectionId. modules.ts documenta explicitamente esa costura.
+ * - Las rutas viven en appRoutes.ts. El registro conserva IDs semanticos del
+ *   agente, pero consume el mismo contrato que App, AppShell y Sidebar.
  */
 
 export type AgentModuleId =
@@ -29,6 +26,7 @@ export type AgentModuleId =
   | 'adminUsers'
   | 'adminDemoAccess'
   | 'adminAuditoria'
+  | 'operationalFlow'
 
 export type AgentModuleCategory =
   | 'operacional'
@@ -101,7 +99,7 @@ export interface AgentWidgetManifest {
 
 // ── Entidades navegables (Etapa 2.5) ─────────────────────────────────────
 
-export type AgentEntityType = 'equipment' | 'loading_unit' | 'alert' | 'report' | 'task' | 'operator' | 'breakdown'
+export type AgentEntityType = 'equipment' | 'loading_unit' | 'route' | 'alert' | 'report' | 'task' | 'operator' | 'breakdown'
 export type AgentEntityAction = 'select' | 'open' | 'focus' | 'compare' | 'explain'
 
 export interface AgentEntityManifest {

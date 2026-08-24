@@ -23,23 +23,10 @@ import {
 } from 'lucide-react'
 import type { MouseEvent } from 'react'
 import { useAppStore, useT } from '../../store'
+import { appPaths, type SectionId } from '../../lib/appRoutes'
 import { NorthmineLogo } from '../brand/NorthmineLogo'
 
-export type SectionId =
-  | 'cockpit'
-  | 'operationalMap3d'
-  | 'dashboard'
-  | 'turno'
-  | 'produccion'
-  | 'rendimiento'
-  | 'flota'
-  | 'carguio'
-  | 'averias'
-  | 'analisis'
-  | 'aerea'
-  | 'alertas'
-  | 'reportes'
-  | 'admin'
+export type { SectionId } from '../../lib/appRoutes'
 
 interface SidebarItem {
   id: SectionId
@@ -144,7 +131,7 @@ export function Sidebar({ active, onSelect, mobileOpen = false, onNavigate, acti
 
         <span className="nav-group-label" style={{ marginTop: 12 }}>ANÁLISIS</span>
         {canViewOperatorRanking && (
-          <a className={`nav-item ${activePath === '/operator-ranking' ? 'is-active' : ''}`} href="/operator-ranking" title="Ranking Operadores: Productividad y demoras" onClick={(event) => handleInternalLink(event, '/operator-ranking')}>
+          <a className={`nav-item ${activePath === appPaths.operatorRanking ? 'is-active' : ''}`} href={appPaths.operatorRanking} title="Ranking Operadores: Productividad y demoras" onClick={(event) => handleInternalLink(event, appPaths.operatorRanking)}>
             <span className="nav-active-line" />
             <span className="nav-icon"><Users size={18} /></span>
             <span>
@@ -153,7 +140,7 @@ export function Sidebar({ active, onSelect, mobileOpen = false, onNavigate, acti
             </span>
           </a>
         )}
-        <a className={`nav-item ${activePath === '/comparativa' ? 'is-active' : ''}`} href="/comparativa" title="Comparativa: Periodos y brechas" onClick={(event) => handleInternalLink(event, '/comparativa')}>
+        <a className={`nav-item ${activePath === appPaths.comparativa ? 'is-active' : ''}`} href={appPaths.comparativa} title="Comparativa: Periodos y brechas" onClick={(event) => handleInternalLink(event, appPaths.comparativa)}>
           <span className="nav-active-line" />
           <span className="nav-icon"><BarChart3 size={18} /></span>
           <span>
@@ -161,7 +148,7 @@ export function Sidebar({ active, onSelect, mobileOpen = false, onNavigate, acti
             <span className="nav-caption">Periodos y brechas</span>
           </span>
         </a>
-        <a className={`nav-item ${activePath === '/prediccion' ? 'is-active' : ''}`} href="/prediccion" title="Predicción ML: Proyección de turno" onClick={(event) => handleInternalLink(event, '/prediccion')}>
+        <a className={`nav-item ${activePath === appPaths.prediccion ? 'is-active' : ''}`} href={appPaths.prediccion} title="Predicción ML: Proyección de turno" onClick={(event) => handleInternalLink(event, appPaths.prediccion)}>
           <span className="nav-active-line" />
           <span className="nav-icon"><Brain size={18} /></span>
           <span>
@@ -169,7 +156,7 @@ export function Sidebar({ active, onSelect, mobileOpen = false, onNavigate, acti
             <span className="nav-caption">Proyección de turno</span>
           </span>
         </a>
-        <a className={`nav-item ${activePath === '/simulador' ? 'is-active' : ''}`} href="/simulador" title="Simulador: Escenarios de meta" onClick={(event) => handleInternalLink(event, '/simulador')}>
+        <a className={`nav-item ${activePath === appPaths.simulador ? 'is-active' : ''}`} href={appPaths.simulador} title="Simulador: Escenarios de meta" onClick={(event) => handleInternalLink(event, appPaths.simulador)}>
           <span className="nav-active-line" />
           <span className="nav-icon"><FlaskConical size={18} /></span>
           <span>
@@ -181,7 +168,7 @@ export function Sidebar({ active, onSelect, mobileOpen = false, onNavigate, acti
         {usuario?.rol === 'admin' && (
           <>
             <span className="nav-group-label" style={{ marginTop: 12 }}>HERRAMIENTAS</span>
-            <a className={`nav-item ${activePath === '/admin/users' ? 'is-active' : ''}`} href="/admin/users" title="Usuarios: Roles y acceso" onClick={(event) => handleInternalLink(event, '/admin/users')}>
+            <a className={`nav-item ${activePath === appPaths.adminUsers ? 'is-active' : ''}`} href={appPaths.adminUsers} title="Usuarios: Roles y acceso" onClick={(event) => handleInternalLink(event, appPaths.adminUsers)}>
               <span className="nav-active-line" />
               <span className="nav-icon"><Users size={18} /></span>
               <span>
@@ -189,7 +176,7 @@ export function Sidebar({ active, onSelect, mobileOpen = false, onNavigate, acti
                 <span className="nav-caption">Roles y acceso</span>
               </span>
             </a>
-            <a className={`nav-item ${activePath === '/admin/sistema' ? 'is-active' : ''}`} href="/admin/sistema" title="Sistema: Salud y monitoreo" onClick={(event) => handleInternalLink(event, '/admin/sistema')}>
+            <a className={`nav-item ${activePath === appPaths.adminSistema ? 'is-active' : ''}`} href={appPaths.adminSistema} title="Sistema: Salud y monitoreo" onClick={(event) => handleInternalLink(event, appPaths.adminSistema)}>
               <span className="nav-active-line" />
               <span className="nav-icon"><Server size={18} /></span>
               <span>
@@ -197,7 +184,7 @@ export function Sidebar({ active, onSelect, mobileOpen = false, onNavigate, acti
                 <span className="nav-caption">Salud y monitoreo</span>
               </span>
             </a>
-            <a className={`nav-item ${activePath === '/admin/auditoria' ? 'is-active' : ''}`} href="/admin/auditoria" title="Auditoría: Log de seguridad" onClick={(event) => handleInternalLink(event, '/admin/auditoria')}>
+            <a className={`nav-item ${activePath === appPaths.adminAuditoria ? 'is-active' : ''}`} href={appPaths.adminAuditoria} title="Auditoría: Log de seguridad" onClick={(event) => handleInternalLink(event, appPaths.adminAuditoria)}>
               <span className="nav-active-line" />
               <span className="nav-icon"><ShieldAlert size={18} /></span>
               <span>

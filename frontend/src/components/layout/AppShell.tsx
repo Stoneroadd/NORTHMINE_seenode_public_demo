@@ -6,45 +6,19 @@ import { getHealth } from '../../services/dashboardService'
 import { logout as clearSession } from '../../services/authService'
 import { useAppStore } from '../../store'
 import { CommandCenterBackground } from '../effects/CommandCenterBackground'
-import { Sidebar, type SectionId } from './Sidebar'
+import { Sidebar } from './Sidebar'
 import { Topbar } from './Topbar'
 import { useModuleT } from '../../i18n/useModuleT'
 import { layoutT } from '../../i18n/modules/layout'
 import { AgentGuidanceLayer } from '../ai-copilot/AgentGuidanceLayer'
 import { AgentCommandPalette } from '../ai-copilot/AgentCommandPalette'
 import { AgentContextMenu } from '../ai-copilot/AgentContextMenu'
+import { sectionFromPath, sectionPaths, type SectionId } from '../../lib/appRoutes'
 
 interface Props {
   session: AuthSession
   onLogout: () => void
   children: (section: SectionId) => ReactNode
-}
-
-// Exportado para que el AI Agent (AgentActionExecutor) pueda navegar
-// reusando el mismo mapa seccion->ruta, sin duplicarlo ni acoplarse al
-// estado interno de AppShell (navega via pushState + popstate, igual que
-// handleSelectSection de mas abajo).
-export const sectionPaths: Record<SectionId, string> = {
-  cockpit: '/cockpit',
-  operationalMap3d: '/operational-map-3d',
-  dashboard: '/resumen',
-  turno: '/turno',
-  produccion: '/produccion',
-  rendimiento: '/rendimiento',
-  flota: '/flota',
-  carguio: '/carguio',
-  averias: '/averias',
-  analisis: '/analisis',
-  aerea: '/aerea',
-  alertas: '/alertas',
-  reportes: '/reportes',
-  admin: '/admin',
-}
-
-function sectionFromPath(pathname: string): SectionId {
-  const normalized = pathname.replace(/\/+$/, '') || '/'
-  const entries = Object.entries(sectionPaths) as Array<[SectionId, string]>
-  return entries.find(([, path]) => path === normalized)?.[0] ?? (normalized === '/dashboard' ? 'dashboard' : 'cockpit')
 }
 
 export function AppShell({ session, onLogout, children }: Props) {

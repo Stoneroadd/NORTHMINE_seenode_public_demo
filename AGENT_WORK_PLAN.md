@@ -199,6 +199,16 @@ paths and duplicated the typed service layer used by every current page. It and
 its stale tsconfig exclusion are removed. Canonical `lib/api.ts` and all live
 domain services remain unchanged.
 
+**Canonical authenticated route contract and Operational Flow agent context — COMPLETE (Codex).**
+The manual router previously split path ownership between AppShell, App literal
+checks, Sidebar literals and an Agent Registry `EXTRA_ROUTES` copy. A typed
+`appRoutes.ts` contract now owns all authenticated section, analysis, admin and
+Mission Control paths while preserving the existing router and legacy dashboard
+alias. Operational Flow is registered as a read-only operational module for the
+agent, with honest non-instrumented status and no fabricated entity handlers.
+Unit contracts cover uniqueness/mapping/registry membership; browser history,
+trailing-slash rendering and authenticated navigation pass on mobile/desktop.
+
 **Public analytics/CSP mismatch — COMPLETE (Codex).**
 The deployed landing includes GoatCounter from `gc.zgo.at`, while the enforced
 Content Security Policy blocks that origin and produces a browser console

@@ -1,5 +1,4 @@
-import { sectionPaths } from '../layout/AppShell'
-import type { SectionId } from '../layout/Sidebar'
+import { sectionPaths, type SectionId } from '../../lib/appRoutes'
 import { useAppStore, type TurnoId } from '../../store'
 import { moduleForRoute, NORTHMINE_MODULES } from '../../lib/agentRegistry/modules'
 import { agentWidgetRegistry } from '../../lib/agentRegistry/registry'; import { humanizeIdentifier } from '../../lib/presentationSafety'
