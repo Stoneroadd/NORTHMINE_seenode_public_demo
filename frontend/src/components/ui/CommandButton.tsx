@@ -1,4 +1,4 @@
-import { MouseEvent, ReactNode, useEffect, useRef, useState } from 'react'
+import { MouseEvent, ReactNode, Ref, useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Loader2, type LucideIcon } from 'lucide-react'
 
@@ -19,6 +19,7 @@ interface Props {
   disabled?: boolean
   type?: 'button' | 'submit' | 'reset'
   title?: string
+  buttonRef?: Ref<HTMLButtonElement>
   'aria-label'?: string
   onClick?: (event: MouseEvent<HTMLButtonElement>) => void
 }
@@ -30,6 +31,7 @@ export function CommandButton({
   children,
   className = '',
   disabled,
+  buttonRef,
   onClick,
   ...props
 }: Props) {
@@ -55,6 +57,7 @@ export function CommandButton({
 
   return (
     <motion.button
+      ref={buttonRef}
       {...props}
       type={props.type ?? 'button'}
       disabled={disabled || loading}

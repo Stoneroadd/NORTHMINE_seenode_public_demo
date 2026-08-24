@@ -22,6 +22,7 @@ import { ErrorState } from '../components/common/ErrorState'
 import { EmptyState } from '../components/common/EmptyState'
 import { AlertSeverityBadge, normalizeSeverity } from '../components/alerts/AlertSeverityBadge'
 import { EquipmentDetailDrawer } from '../components/equipment/detail/EquipmentDetailDrawer'
+import { EQUIPMENT_DETAIL_DRAWER_ID } from '../components/equipment/equipmentDetailA11y'
 import { getEquipmentFamilyLabel, getEquipmentImage, getEquipmentLabel } from '../data/equipmentAssets'
 import { axisLabel, formatNumber, formatTons, premiumPalette, tooltipBase, useChartPaletteKey } from '../components/charts/premium/chartTheme'
 import type { DestinationDistribution, LowCaexAlert, OperationalAlertsResponse, SmartAlert } from '../lib/api'
@@ -606,6 +607,9 @@ export function Alerts() {
                     className={`alerts-action-item is-${severityName.toLowerCase()}`}
                     onClick={() => equipment && setSelectedEquipmentId(equipment.id)}
                     disabled={!equipment}
+                    aria-haspopup={equipment ? 'dialog' : undefined}
+                    aria-controls={equipment ? EQUIPMENT_DETAIL_DRAWER_ID : undefined}
+                    aria-expanded={equipment ? selectedEquipmentId === equipment.id : undefined}
                   >
                     <span className="alerts-action-rank">{index + 1}</span>
                     <span className="alerts-action-copy">
@@ -663,7 +667,14 @@ export function Alerts() {
             </div>
             <div className="low-caex-list">
               {data.low_caex.map((item, index) => (
-                <button key={item.caex_id} type="button" onClick={() => setSelectedEquipmentId(item.caex_id)}>
+                <button
+                  key={item.caex_id}
+                  type="button"
+                  aria-haspopup="dialog"
+                  aria-controls={EQUIPMENT_DETAIL_DRAWER_ID}
+                  aria-expanded={selectedEquipmentId === item.caex_id}
+                  onClick={() => setSelectedEquipmentId(item.caex_id)}
+                >
                   <span className="low-caex-rank">{index + 1}</span>
                   <span>
                     <strong>{item.caex_id}</strong>

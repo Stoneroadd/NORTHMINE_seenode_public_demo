@@ -46,7 +46,7 @@ commit message — link to the actual commit/PR for detail.
 
 ---
 
-## 2026-08-23 — Codex — branch `feat/equipment-detail-drawer-a11y` — starting
+## 2026-08-23 — Codex — branch `feat/equipment-detail-drawer-a11y` — complete
 
 **Scope:** live-audit and, only if reproduced, harden the shared
 `EquipmentDetailDrawer` used by Fleet, Performance, Alerts, Reports and Compare:
@@ -55,6 +55,21 @@ and opener relationships. This is the next autonomous, test-verifiable item.
 
 **Coordination:** no equipment KPI calculations, APIs, AI runtime, Mission
 Control architecture or route migration changes.
+
+**Result:** the shared equipment drawer now reuses `useModalA11y`, moves the
+dialog contract onto the actual panel, keeps the backdrop out of keyboard and
+screen-reader navigation, focuses the close action after async detail loading,
+contains Tab/Shift+Tab, restores the opener and exposes dialog relationships on
+shared cards plus Fleet/Performance/Alerts activators. The close action is at
+least 44px and the narrow panel remains inside the viewport.
+
+**Evidence:** lint/typecheck and production build pass; unit suite 124/124 with
+one worker; focused Playwright 4/4 on Pixel 7 + desktop 1440. The broader device
+attempt was interrupted after Vite intermittently failed dynamic-module imports
+on iPhone SE; the trace stayed on Cockpit and never reached the target route, so
+this is recorded as local dev-server environmental evidence, not hidden as a
+green result. Impeccable findings were pre-existing debt in the monolithic token
+file, not introduced by this change.
 
 ## 2026-08-23 — Claude Code — branch `main` — extended the a11y fix to two sibling drawers, complete
 

@@ -44,7 +44,9 @@ export function useModalA11y(open: boolean, onClose: () => void) {
     if (!open) return undefined
 
     const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null
-    const focusFrame = window.requestAnimationFrame(() => closeButtonRef.current?.focus())
+    const focusFrame = window.requestAnimationFrame(() => {
+      ;(closeButtonRef.current ?? panelRef.current)?.focus()
+    })
 
     const handleKeyDown = (event: KeyboardEvent) => {
       const panel = panelRef.current

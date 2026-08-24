@@ -2,6 +2,7 @@ import { motion } from 'framer-motion'
 import type { FleetEquipment, LoadingUnit } from '../../lib/api'
 import { getEquipmentFamilyLabel, getEquipmentImage, getEquipmentLabel } from '../../data/equipmentAssets'
 import { MachineStatusOverlay } from './MachineStatusOverlay'
+import { EQUIPMENT_DETAIL_DRAWER_ID } from './equipmentDetailA11y'
 
 type Machine = FleetEquipment | LoadingUnit
 
@@ -39,6 +40,8 @@ export function MachineHeroCard({ item, title = 'Equipo destacado', subtitle, on
       role={isInteractive ? 'button' : undefined}
       tabIndex={isInteractive ? 0 : undefined}
       aria-label={isInteractive ? `Ver detalle operacional ${id}` : undefined}
+      aria-haspopup={isInteractive ? 'dialog' : undefined}
+      aria-controls={isInteractive ? EQUIPMENT_DETAIL_DRAWER_ID : undefined}
       onKeyDown={(event) => {
         if (!isInteractive) return
         if (event.key === 'Enter' || event.key === ' ') {

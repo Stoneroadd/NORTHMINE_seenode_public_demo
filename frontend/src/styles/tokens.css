@@ -2423,6 +2423,11 @@ html[data-theme] .command-card-critical:hover {
   padding: 22px;
 }
 
+.equipment-detail-actions .command-button {
+  min-width: 44px;
+  min-height: 44px;
+}
+
 .equipment-drawer-state {
   min-height: 100%;
   display: grid;
@@ -4246,6 +4251,22 @@ html[data-theme] .command-card-critical:hover {
   margin-top: 3px;
   color: var(--dim);
   font-size: 11px;
+}
+
+.fleet-equipment-detail-trigger {
+  min-width: 44px;
+  min-height: 44px;
+  display: grid;
+  justify-items: start;
+  align-content: center;
+  padding: 4px 6px;
+  border: 0;
+  border-radius: 6px;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
 }
 
 .fleet-status-detail {

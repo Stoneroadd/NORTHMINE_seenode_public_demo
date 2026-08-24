@@ -7,6 +7,7 @@ import { CommandCard } from '../ui/CommandCard'
 import { StatusPill, toneFromOperationalState } from '../ui/StatusPill'
 import { MachineStatusOverlay } from './MachineStatusOverlay'
 import { formatTons as formatTonsBase } from '../../lib/format'
+import { EQUIPMENT_DETAIL_DRAWER_ID } from './equipmentDetailA11y'
 
 interface Props {
   equipmentId: string
@@ -68,6 +69,9 @@ export function EquipmentVisualCard({
         style={tilt.style}
         aria-label={`Ver detalle operacional ${equipmentId}`}
         aria-pressed={selected}
+        aria-haspopup={canOpenDetail ? 'dialog' : undefined}
+        aria-controls={canOpenDetail ? EQUIPMENT_DETAIL_DRAWER_ID : undefined}
+        aria-expanded={canOpenDetail ? selected : undefined}
         aria-disabled={!canOpenDetail}
         tabIndex={canOpenDetail ? 0 : -1}
       >

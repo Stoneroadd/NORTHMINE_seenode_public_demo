@@ -6,6 +6,7 @@ import { LoadingState } from '../components/common/LoadingState'
 import { ErrorState } from '../components/common/ErrorState'
 import { ExecutiveKpiCard } from '../components/kpi/ExecutiveKpiCard'
 import { EquipmentDetailDrawer } from '../components/equipment/detail/EquipmentDetailDrawer'
+import { EQUIPMENT_DETAIL_DRAWER_ID } from '../components/equipment/equipmentDetailA11y'
 import { getFleetStatus } from '../services/fleetService'
 import { getShiftExport, type FleetEquipment } from '../lib/api'
 import { useModuleT } from '../i18n/useModuleT'
@@ -294,7 +295,22 @@ export function FleetPage() {
                     const state = operationalStatus(item)
                     return (
                       <tr key={item.caex_id} data-agent-guidance-target={`entity:equipment:${item.caex_id}`} className={selectedEquipmentId === item.caex_id ? 'is-agent-data-highlight' : undefined} onClick={() => setSelectedEquipmentId(item.caex_id)}>
-                        <td><strong>{item.caex_id}</strong><small>{item.modelo}</small></td>
+                        <td>
+                          <button
+                            className="fleet-equipment-detail-trigger"
+                            type="button"
+                            aria-label={`Ver detalle operacional ${item.caex_id}`}
+                            aria-haspopup="dialog"
+                            aria-controls={EQUIPMENT_DETAIL_DRAWER_ID}
+                            aria-expanded={selectedEquipmentId === item.caex_id}
+                            onClick={(event) => {
+                              event.stopPropagation()
+                              setSelectedEquipmentId(item.caex_id)
+                            }}
+                          >
+                            <strong>{item.caex_id}</strong><small>{item.modelo}</small>
+                          </button>
+                        </td>
                         <td><span className={`fleet-status-pill ${statusClass(state)}`}>{state}</span></td>
                         <td><span className="fleet-status-detail">{statusDetail(item, t)}</span></td>
                         <td>{tons(item.toneladas)}</td>
@@ -342,7 +358,14 @@ export function FleetPage() {
               {standbyRows.length ? (
                 <div className="fleet-standby-list">
                   {standbyRows.slice(0, 8).map((item) => (
-                    <button key={item.caex_id} type="button" onClick={() => setSelectedEquipmentId(item.caex_id)}>
+                    <button
+                      key={item.caex_id}
+                      type="button"
+                      aria-haspopup="dialog"
+                      aria-controls={EQUIPMENT_DETAIL_DRAWER_ID}
+                      aria-expanded={selectedEquipmentId === item.caex_id}
+                      onClick={() => setSelectedEquipmentId(item.caex_id)}
+                    >
                       <strong>{item.caex_id}</strong>
                       <span>{statusDetail(item, t)}</span>
                       <small>{item.operador || t.no_operator} · {minutes(item.minutos_sin_actividad)} {t.no_cycle_suffix}</small>

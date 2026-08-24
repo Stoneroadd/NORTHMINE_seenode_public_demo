@@ -1,3 +1,4 @@
+import type { Ref } from 'react'
 import { X } from 'lucide-react'
 import type { EquipmentDetail } from '../../../types/equipment'
 import { getEquipmentImage } from '../../../data/equipmentAssets'
@@ -11,9 +12,12 @@ import { equipmentT } from '../../../i18n/modules/equipment'
 interface Props {
   detail: EquipmentDetail
   onClose: () => void
+  closeButtonRef: Ref<HTMLButtonElement>
+  titleId: string
+  descriptionId: string
 }
 
-export function EquipmentDetailHeader({ detail, onClose }: Props) {
+export function EquipmentDetailHeader({ detail, onClose, closeButtonRef, titleId, descriptionId }: Props) {
   const t = useModuleT(equipmentT)
   const tilt = useTilt3D({ maxTilt: 5, scale: 1.025 })
   const image = getEquipmentImage(detail.equipment_id, detail.model)
@@ -37,10 +41,10 @@ export function EquipmentDetailHeader({ detail, onClose }: Props) {
       <div className="equipment-detail-heading">
         <div className="equipment-detail-actions">
           <span className="module-eyebrow">{t.operationalDetail}</span>
-          <CommandButton variant="ghost" icon={X} onClick={onClose} aria-label={t.closeDetail}>{t.close}</CommandButton>
+          <CommandButton buttonRef={closeButtonRef} variant="ghost" icon={X} onClick={onClose} aria-label={t.closeDetail}>{t.close}</CommandButton>
         </div>
-        <h2>{detail.equipment_id}</h2>
-        <p>{detail.model}</p>
+        <h2 id={titleId}>{detail.equipment_id}</h2>
+        <p id={descriptionId}>{detail.model}</p>
         <div className="equipment-detail-pills">
           <StatusPill tone={tone}>{detail.status}</StatusPill>
           <StatusPill tone="info">{detail.family_label}</StatusPill>

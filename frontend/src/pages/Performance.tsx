@@ -9,6 +9,7 @@ import { LoadingState } from '../components/common/LoadingState'
 import { ErrorState } from '../components/common/ErrorState'
 import { ExecutiveKpiCard } from '../components/kpi/ExecutiveKpiCard'
 import { EquipmentDetailDrawer } from '../components/equipment/detail/EquipmentDetailDrawer'
+import { EQUIPMENT_DETAIL_DRAWER_ID } from '../components/equipment/equipmentDetailA11y'
 import {
   axisLabel,
   formatNumber,
@@ -393,7 +394,14 @@ export function Performance() {
             </div>
             <div className="loader-phase-legend">
               {data.loader_performance.map((item) => (
-                <button key={item.carguio_id} type="button" onClick={() => setSelectedEquipmentId(item.carguio_id)}>
+                <button
+                  key={item.carguio_id}
+                  type="button"
+                  aria-haspopup="dialog"
+                  aria-controls={EQUIPMENT_DETAIL_DRAWER_ID}
+                  aria-expanded={selectedEquipmentId === item.carguio_id}
+                  onClick={() => setSelectedEquipmentId(item.carguio_id)}
+                >
                   <span className={`phase-badge phase-badge-${item.fase.toLowerCase()}`}>{item.fase}</span>
                   {item.carguio_id}
                 </button>
