@@ -692,3 +692,21 @@ desktop 1440, `npm audit --omit=dev` zero vulnerabilities and `git diff --check`
 PASS. The first Vitest invocation used Jest's unsupported `--runInBand` flag and
 failed at CLI parsing before test collection; the repository's documented
 `npm run test:unit` command then passed completely. No product code or UI changed.
+
+---
+
+## 2026-08-24 — Codex — remove unused Leaflet dependency surface
+
+The Phase 0 frontend audit noted that Leaflet was installed despite no live map.
+A fresh repository-wide search found no `leaflet`, `react-leaflet` or type-package
+imports in source or tests. Only the package declarations and two `.nm-popup`
+rules targeting Leaflet's DOM classes remained. All three packages and those
+orphaned rules are removed; no Vista Aérea, 3D or Operational Flow component was
+changed. Five installed packages leave the dependency tree.
+
+Verification: TypeScript lint PASS, Vitest 126/126, production build PASS,
+`npm audit --omit=dev` zero vulnerabilities, no remaining Leaflet source/package
+references, and `git diff --check` PASS. The Impeccable detector was run on the
+modified legacy token file and reported only its established global design-debt
+findings (side accents, Inter, decorative grid, gradient text, bounce easing and
+one width transition); removal of the unreachable popup rules introduced none.

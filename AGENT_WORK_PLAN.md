@@ -171,6 +171,14 @@ introduced. The lockfile drops 31 obsolete tooling packages; clean build output
 contains neither warning. Validation: lint PASS, unit 126/126, browser 8/8,
 production audit 0 vulnerabilities, build PASS.
 
+**Unused Leaflet dependency surface — COMPLETE (Codex).**
+Repository-wide reference inspection confirmed that `leaflet`, `react-leaflet`
+and `@types/leaflet` had no application or test imports; Vista Aérea remains an
+orthomosaic viewer and Operational Flow does not consume them. The three unused
+packages and their two orphaned popup rules are removed. This is dependency
+surface cleanup, not a claim of geospatial capability. Build/lint/unit remain
+green and the production dependency audit remains at zero vulnerabilities.
+
 **Public analytics/CSP mismatch — COMPLETE (Codex).**
 The deployed landing includes GoatCounter from `gc.zgo.at`, while the enforced
 Content Security Policy blocks that origin and produces a browser console

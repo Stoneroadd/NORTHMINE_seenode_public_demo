@@ -7272,22 +7272,6 @@ html[data-theme] .command-card-critical:hover {
   .page-content { animation: none !important; }
 }
 
-/* ── Leaflet popup dark theme ── */
-.nm-popup .leaflet-popup-content-wrapper {
-  background: color-mix(in srgb, var(--bg-elevated) 88%, transparent);
-  border: 1px solid color-mix(in srgb, var(--cyan) 18%, transparent);
-  color: color-mix(in srgb, var(--text-primary) 92%, transparent);
-  border-radius: 8px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(12px);
-  font-family: "JetBrains Mono", monospace;
-  font-size: 12px;
-}
-
-.nm-popup .leaflet-popup-tip {
-  background: color-mix(in srgb, var(--bg-elevated) 88%, transparent);
-}
-
 /* ── Alertas: hint simulador ── */
 .alert-sim-hint {
   display: flex;
