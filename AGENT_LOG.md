@@ -46,16 +46,18 @@ commit message — link to the actual commit/PR for detail.
 
 ---
 
-## 2026-08-24 — Claude Code — branch `main` — defer html2canvas-pro in agent perception, starting
+## 2026-08-24 — Claude Code — branch `main` — defer html2canvas-pro in agent perception, complete
 
 **Scope:** `lib/agentPerception/visualCapture.ts` statically imports
-`html2canvas-pro` (~200KB, 46KB gzip). `AgentPresence` (mounted eagerly
-in `App.tsx`, every page including `/login`) → `AgentWorkspace` →
-`perceptionManager` → `visualCapture` means that library loads for every
+`html2canvas-pro` (~246KB, 62KB gzip). `AgentPresence` (mounted eagerly
+in `App.tsx` for every *authenticated* page — gated behind the same
+`if (!session)` check that renders `Login` instead, so `/login` itself
+was never affected) → `AgentWorkspace` → `perceptionManager` →
+`visualCapture` means that library loaded for every authenticated
 session regardless of whether visual capture is ever used. The file's
 own doc comment states capture is "SOLO bajo demanda - nunca automatica,
 nunca periodica" (on-demand only, per section 29 of its design brief),
-so this is purely a load-timing change: moving the `import html2canvas
+so this is purely a load-timing change: moved the `import html2canvas
 from 'html2canvas-pro'` from module top-level into a dynamic `import()`
 inside `captureElement()`, the one internal function both
 `captureWidget`/`captureViewport` already call asynchronously. No change
@@ -63,15 +65,26 @@ to either exported function's signature, return shape, or when a
 capture actually fires — same on-demand-only behavior, just deferred
 bytes.
 
-**Coordination:** touching only `visualCapture.ts` (one file, one
-import statement moved). Not touching `perceptionManager.ts`,
-`AgentWorkspace.tsx`, `AgentPresence.tsx`, `privacy.ts`, redaction logic,
-or any agent runtime/state contract — flagging this explicitly since
-it's inside the ai-copilot/agentPerception cluster that P1 in
-`AGENT_WORK_PLAN.md` calls out for care, even though this specific
-change carries none of that risk (verified no behavior/API change,
-tested with tsc/vitest/build + live network-request verification same
-as the three.js deferral).
+**Coordination:** touched only `visualCapture.ts` (one file, one import
+statement moved into the function that already used it). Did not touch
+`perceptionManager.ts`, `AgentWorkspace.tsx`, `AgentPresence.tsx`,
+`privacy.ts`, redaction logic, or any agent runtime/state contract —
+flagged this explicitly since it's inside the ai-copilot/agentPerception
+cluster that P1 in `AGENT_WORK_PLAN.md` calls out for care, even though
+this specific change carries none of that risk.
+
+**Verification:** `tsc --noEmit` clean, `vitest run` 133/133, `npm run
+build` succeeds. Confirmed the same way as the three.js deferral,
+statically this time (not a live authenticated browser session — that
+would need a local backend + login flow, judged unnecessary given the
+identical, already browser-verified `React.lazy`/dynamic-`import()`
+mechanism): the compiled `App-*.js` shows
+`await import('./html2canvas-pro.esm-*.js')` wrapped in Vite's
+`__vitePreload` helper, not a static/eager reference, and
+`html2canvas-pro` now builds as its own separate chunk file. Correction
+to my own starting entry above: `AgentPresence` does not mount on
+`/login` at all (pre-auth early return), so this change's actual
+benefit is every *authenticated* page load, not the login page.
 
 ## 2026-08-23 — Claude Code — branch `main` — login page defers three.js, complete
 

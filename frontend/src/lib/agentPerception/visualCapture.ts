@@ -1,4 +1,3 @@
-import html2canvas from 'html2canvas-pro'
 import { agentWidgetRegistry } from '../agentRegistry/registry'
 import { applyRedactions, isVisualCaptureAllowed } from './privacy'
 import type { VisualCaptureFailureReason, VisualCaptureMimeType, VisualCaptureResult } from './types'
@@ -60,6 +59,10 @@ function clampCanvas(source: HTMLCanvasElement): HTMLCanvasElement {
 async function captureElement(element: HTMLElement): Promise<{ canvas: HTMLCanvasElement; redactedSelectors: string[] }> {
   const { redactedSelectors, restore } = applyRedactions(document)
   try {
+    // Loaded on demand: capture only ever happens per an explicit
+    // captureWidget/captureViewport call (never on mount), so the
+    // ~200KB library shouldn't be a static dependency of every session.
+    const { default: html2canvas } = await import('html2canvas-pro')
     const canvas = await html2canvas(element, { backgroundColor: null, logging: false, useCORS: true })
     return { canvas, redactedSelectors }
   } finally {

@@ -92,6 +92,18 @@ with a live production-build browser session, not just bundle analysis:
 other lazy chunk, both CSS bundles and the `/api/auth/refresh` call —
 genuinely deferred, not just cosmetically split. See `AGENT_LOG.md`.
 
+**Agent perception no longer blocks on html2canvas-pro — RESOLVED
+2026-08-24.** `visualCapture.ts` (used by the AI agent's on-demand
+visual capture, "never automatic, never periodic" per its own design
+brief) statically imported `html2canvas-pro` (~246KB/62KB gzip),
+loading it for every authenticated page via the always-mounted
+`AgentPresence` even though capture only ever fires on an explicit
+call. The import moved inside the one function that already awaits it,
+same zero-behavior-change pattern as the three.js fix above. See
+`AGENT_LOG.md` for the coordination note (this one touches the
+ai-copilot/agentPerception cluster, flagged even though the change
+itself carries none of that cluster's usual risk).
+
 ## P1 — needs human judgment
 
 **`main` and `integration/agent-consolidated` (in the sibling checkout
