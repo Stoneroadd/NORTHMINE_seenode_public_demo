@@ -162,6 +162,15 @@ Regression coverage verifies chart mounting, pointer interaction and navigation
 on Pixel 7 and desktop 1440. Final evidence: unit 126/126, focused browser 8/8,
 production build PASS, npm production audit 0 vulnerabilities, detector `[]`.
 
+**Vite 8 React plugin compatibility — COMPLETE (Codex).**
+The frontend still paired Vite 8.1 with `@vitejs/plugin-react` 4.3, which caused
+the official plugin to emit deprecated Babel/esbuild and Rolldown-option
+warnings on every build. The plugin is now on its Vite-8-compatible 6.1 line.
+No React Compiler experiment or unsupported `plugin-react-oxc` package was
+introduced. The lockfile drops 31 obsolete tooling packages; clean build output
+contains neither warning. Validation: lint PASS, unit 126/126, browser 8/8,
+production audit 0 vulnerabilities, build PASS.
+
 **Public analytics/CSP mismatch — COMPLETE (Codex).**
 The deployed landing includes GoatCounter from `gc.zgo.at`, while the enforced
 Content Security Policy blocks that origin and produces a browser console

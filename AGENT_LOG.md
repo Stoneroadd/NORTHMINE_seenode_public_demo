@@ -672,3 +672,23 @@ without page errors, authenticated Predicción navigation without login fallback
 `npm audit --omit=dev` 0 vulnerabilities, `git diff --check` PASS, and the
 Impeccable detector returned `[]`. Existing Vite plugin deprecation warnings are
 unchanged and remain separate migration work.
+
+---
+
+## 2026-08-24 — Codex — Vite 8 React plugin compatibility
+
+The warning left by the previous entry came from a real dependency mismatch:
+Vite was already 8.1.5 while `@vitejs/plugin-react` remained on 4.3. The current
+official plugin 6.1 line declares Vite 8 compatibility. Updating only that
+development dependency removed the deprecated `esbuild` and
+`optimizeDeps.rollupOptions` warnings and pruned 31 obsolete tooling packages.
+The separately named `@vitejs/plugin-react-oxc` was not selected because its
+published peer range does not include Vite 8; no experimental compiler was
+enabled.
+
+Post-change evidence: production build PASS without the two warnings, TypeScript
+lint PASS, Vitest 126/126, focused responsive Playwright 8/8 on Pixel 7 and
+desktop 1440, `npm audit --omit=dev` zero vulnerabilities and `git diff --check`
+PASS. The first Vitest invocation used Jest's unsupported `--runInBand` flag and
+failed at CLI parsing before test collection; the repository's documented
+`npm run test:unit` command then passed completely. No product code or UI changed.
