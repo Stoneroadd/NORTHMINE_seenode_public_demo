@@ -202,6 +202,71 @@ with an `<picture>`/fallback pattern instead of re-encoding PNG-to-PNG.
 Don't reuse the `sharp` default PNG pipeline as-is; it changes edge pixel
 color under semi-transparent alpha.
 
+**Follow-up same day, re-attempted narrower and still declined.**
+Re-checked which of the 13 have zero real transparency (`hasAlpha:
+false`, or `hasAlpha: true` with alpha uniformly 255 everywhere —
+verified by scanning every pixel, not trusting the metadata flag alone):
+`fondo_login.png`, `simon-despacho.png`, `planta-concentradora.png`,
+`simon-operador.png`. Reasoned the alpha-edge bug above couldn't apply
+to these (no semi-transparent pixels exist), re-ran the same
+`compressionLevel: 9, effort: 10` re-encode on just those 4 (9.49MB ->
+3.01MB), and re-verified with the same raw-pixel-diff-against-git-HEAD
+method. Still not pixel-identical: `fondo_login.png` (channels=3, no
+alpha at all, so the earlier theory is ruled out as the cause here)
+came back with **80.70% of bytes differing**, mostly by 1-3/255 but with
+at least one outlier delta of 72/255. So the earlier root-cause guess
+(RGB-under-transparent-alpha) was only one symptom, not the real
+explanation — something in sharp/libvips' PNG decode+encode round trip
+in this environment shifts pixel values pervasively even with no alpha
+channel involved at all (both images report identical `space: "srgb"`,
+`hasProfile: false`, `isProgressive: false`, so it isn't an obvious ICC
+or interlacing mismatch — gamma-chunk reinterpretation is the leading
+guess, not confirmed). **Conclusion: don't trust this `sharp` pipeline
+to be lossless for PNG-to-PNG re-encoding in this repo at all, alpha or
+not.** Reverted again, same cleanup (scripts + temporary devDependency
+removed). A real attempt needs either a different, verified-lossless
+tool (e.g. `oxipng`/`pngcrush` specifically, checked the same
+pixel-diff-vs-git-HEAD way) or a lossy-but-verified path (WebP/JPEG with
+an actual before/after screenshot comparison in a live browser — this
+environment has browser automation tools that weren't used for this
+attempt and should be for the next one).
+
+**Third attempt same day, succeeded with `oxipng` instead of `sharp`.**
+Took the "different, verified-lossless tool" option above. `oxipng` (npm
+package wrapping the real Rust `oxipng` CLI, v4.0.3) doesn't decode to
+raw pixels and re-encode through libvips like `sharp` does — it rewrites
+the DEFLATE stream and does a small set of provably-lossless PNG-level
+reductions (color-type/bit-depth/palette reduction when the pixel data
+already only uses that reduced range) directly against the existing IDAT
+data. Ran `oxipng -o max` on all 13 candidates. Verified the same way as
+both earlier attempts, but stricter this time: decoded both sides with
+`sharp` and additionally called `.ensureAlpha()` on both before
+comparing, so a legitimate opaque-alpha-channel drop (`oxipng` did this
+for `simon-despacho.png`/`planta-concentradora.png`, printed as
+"Reducing image to 3x8 bits/pixel, RGB" in its own output) compares by
+composited color instead of registering as a fake mismatch from channel
+count alone. Result: **all 13 pixel-identical**, confirmed. `tsc
+--noEmit`, `vitest run` 124/124 and `npm run build` all pass unchanged.
+
+**Numbers:** 19.43MB -> 16.06MB across the 13 files (~17.4%, far more
+modest than the fake 66-70% `sharp` reported, because `sharp`'s number
+included the color shift this doesn't). Biggest single wins:
+`aljibe.png` 681KB->402KB (41%, real transparency so more redundant
+data to compress), `simon-despacho.png` 3097KB->2073KB (33%, opaque
+alpha drop), `planta-concentradora.png` 2466KB->1836KB (25.5%),
+`fondo_login.png` (the highest-traffic one, every `/login` visit)
+3921KB->2861KB (27%), `northmine-symbol-transparent.png`
+141KB->97KB (31%). The equipment truck/loader PNGs (already
+reasonably compressed) only moved 0.3-1.5%. Commit follows this entry.
+
+**Lesson for next time, in one line:** for "lossless" PNG work, reach
+for `oxipng`/`pngcrush`/`optipng` (stream-level, provably lossless) over
+any pixel-decode-and-re-encode pipeline (`sharp`, `imagemagick -quality`,
+etc.) — the latter can silently shift pixel values even with no quality
+loss requested, and the shift can be large enough to matter (this
+session measured a 72/255 outlier delta on a fully opaque image with no
+alpha channel at all, not just a transparent-edge rounding artifact).
+
 ## 2026-08-23 — Codex — branch `feat/responsive-test-harness` — complete
 
 **Scope:** make the responsive Playwright suite self-contained by reusing the

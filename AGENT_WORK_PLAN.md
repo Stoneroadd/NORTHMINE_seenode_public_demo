@@ -62,6 +62,24 @@ per-file rationale and verification. Honest finding: this is a
 maintainability cleanup, not a bundle-size win — Rollup was already
 tree-shaking these out of the shipped build.
 
+**Dead public brand/equipment image assets removed — RESOLVED 2026-08-23.**
+9 zero-reference files under `public/assets/` (~4.4MB) that, unlike
+`src/`, ship byte-for-byte to the deployed build with no tree-shaking.
+User approved the deletion after the environment blocked the first
+`git rm` attempt on binary brand assets. See `AGENT_LOG.md`.
+
+**Heavy referenced PNGs losslessly recompressed — RESOLVED 2026-08-23.**
+The 13 largest actually-referenced PNGs (login background, brand logo,
+origin-story photos, equipment cutouts) were 19.43MB combined. Two
+earlier same-day attempts using `sharp`'s decode/re-encode pipeline
+looked lossless (up to 70% smaller) but were proven NOT pixel-identical
+via raw-decode diffing and reverted both times — see `AGENT_LOG.md` for
+the full trail. Third attempt with `oxipng` (stream-level recompression,
+doesn't decode-and-redraw pixels) verified genuinely pixel-identical on
+all 13 (alpha-normalized comparison against git HEAD). 19.43MB ->
+16.06MB (~17.4%), including `fondo_login.png` (every `/login` visit)
+3921KB -> 2861KB. `tsc`/`vitest`/`build` all pass unchanged.
+
 ## P1 — needs human judgment
 
 **`main` and `integration/agent-consolidated` (in the sibling checkout
