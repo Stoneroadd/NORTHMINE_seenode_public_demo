@@ -9,6 +9,7 @@ import type { LangId } from '../../i18n/translations'
 import type { Translations } from '../../i18n/translations'
 import { secureApi } from '../../lib/secureApi'
 import { MFASetupModal } from '../auth/MFASetupModal'
+import { MFA_SETUP_DIALOG_ID } from '../auth/mfaSetupA11y'
 import { useModalA11y } from '../../hooks/useModalA11y'
 import { SETTINGS_PANEL_ID } from './settingsA11y'
 
@@ -116,6 +117,9 @@ function MFASection() {
       <button
         type="button"
         onClick={() => setOpen(true)}
+        aria-haspopup="dialog"
+        aria-controls={MFA_SETUP_DIALOG_ID}
+        aria-expanded={open}
         className="nm-settings-cta"
         style={{
           padding: '8px 16px', borderRadius: 7,

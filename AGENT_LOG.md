@@ -1074,3 +1074,31 @@ controls. Focused Playwright passes 4/4 on Pixel 7 and desktop 1440. TypeScript
 lint PASS, Vitest 138/138, production build PASS, npm production audit zero
 vulnerabilities, Impeccable detector `[]`, and `git diff --check` PASS. Shift
 comparison, hourly, operator, cycle, route and tonnage logic are unchanged.
+
+---
+
+## 2026-08-24 — Codex — MFA setup request isolation and nested dialog contract
+
+`MFASetupModal` called its asynchronous setup function from render. That
+function synchronously changed state, causing another render and another POST.
+The first Pixel 7 reproduction emitted React's "Too many re-renders" failure and
+recorded 104 requests to `/api/auth/mfa/setup` before the root error boundary
+replaced the application. This was a security and data-integrity defect, not a
+cosmetic issue.
+
+Setup now runs from an open-state effect exactly once per explicit opening.
+Late responses are ignored after cleanup; secret, QR, backup-code and one-time
+code state are cleared on each opening/closure. TOTP verification, backend
+cryptography, rate limits and API contracts are unchanged. The visible panel is
+a named modal dialog with numeric/one-time-code input semantics, status/error
+announcements and 44 px primary controls. Its opener exposes a stable
+relationship and expanded state.
+
+The focused nested test then exposed that Escape reached the parent Settings
+dialog before the child. `useModalA11y` now lets only the closest active modal
+process keyboard events, so Escape closes MFA and restores its opener while
+Settings remains open. MFA Playwright passes 4/4 on Pixel 7 and desktop 1440;
+the shared-hook regression matrix passes 16/16 across Settings, loading detail,
+equipment detail and all operator dialogs. TypeScript lint PASS, Vitest 138/138,
+production build PASS, npm production audit zero vulnerabilities, Impeccable
+detector `[]`, and `git diff --check` PASS.

@@ -50,7 +50,11 @@ export function useModalA11y<T extends HTMLElement = HTMLElement>(open: boolean,
 
     const handleKeyDown = (event: KeyboardEvent) => {
       const panel = panelRef.current
-      if (!panel || !panel.contains(document.activeElement)) return
+      const activeElement = document.activeElement
+      if (!panel || !(activeElement instanceof Element) || !panel.contains(activeElement)) return
+
+      const activeModal = activeElement.closest('[role="dialog"][aria-modal="true"]')
+      if (activeModal && activeModal !== panel) return
 
       if (event.key === 'Escape') {
         event.preventDefault()

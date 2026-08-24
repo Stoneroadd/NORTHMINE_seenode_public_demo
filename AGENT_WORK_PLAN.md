@@ -346,6 +346,13 @@ row reports an expanded relationship; keyboard focus is contained/restored and
 the close target is 44 by 44 pixels. Comparison, hourly, operator, cycle and
 tonnage calculations are unchanged.
 
+**MFA setup render loop and nested-dialog isolation — COMPLETE (Codex).**
+Opening MFA previously issued 104 setup requests in one reproduced session and
+crashed React with a re-render loop because the security request ran during
+render. Setup now runs exactly once per explicit opening, ignores late results
+after closure and clears sensitive client state. The nested MFA dialog contains
+focus and Escape closes only MFA, not its parent Settings dialog.
+
 **Confirmed already fine, no action needed:** `/admin/audit-log` RBAC
 (already `RequireAdmin` + redaction) and refresh-token rotation (already
 race-guarded via conditional `UPDATE`) — see `AGENT_LOG.md` for detail.

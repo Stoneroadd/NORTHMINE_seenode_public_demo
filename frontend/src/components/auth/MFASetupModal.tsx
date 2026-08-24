@@ -1,7 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { secureApi } from '../../lib/secureApi'
 import { useModuleT } from '../../i18n/useModuleT'
 import { authModuleT } from '../../i18n/modules/auth'
+import { useModalA11y } from '../../hooks/useModalA11y'
+import { MFA_SETUP_DIALOG_ID } from './mfaSetupA11y'
+import './mfa-setup-modal.css'
 
 interface Props {
   open: boolean
@@ -18,20 +21,48 @@ export function MFASetupModal({ open, onClose }: Props) {
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
 
-  const startSetup = async () => {
-    setStep('loading')
+  const handleClose = () => {
+    setSecret('')
+    setQrBase64('')
+    setBackupCodes([])
+    setCode('')
     setError('')
-    try {
-      const resp = await secureApi.post('/api/auth/mfa/setup', {})
-      setSecret(resp.data.secret)
-      setQrBase64(resp.data.qr_base64)
-      setBackupCodes(resp.data.backup_codes || [])
-      setStep('setup')
-    } catch {
-      setError(t.err_iniciar_config)
-      setStep('setup')
-    }
+    setSaving(false)
+    setStep('loading')
+    onClose()
   }
+  const { panelRef, closeButtonRef, titleId } = useModalA11y<HTMLDivElement>(open, handleClose)
+
+  useEffect(() => {
+    if (!open) return undefined
+
+    let active = true
+    setStep('loading')
+    setSecret('')
+    setQrBase64('')
+    setBackupCodes([])
+    setCode('')
+    setError('')
+    setSaving(false)
+
+    void secureApi.post('/api/auth/mfa/setup', {})
+      .then((resp) => {
+        if (!active) return
+        setSecret(resp.data.secret)
+        setQrBase64(resp.data.qr_base64)
+        setBackupCodes(resp.data.backup_codes || [])
+        setStep('setup')
+      })
+      .catch(() => {
+        if (!active) return
+        setError(t.err_iniciar_config)
+        setStep('setup')
+      })
+
+    return () => {
+      active = false
+    }
+  }, [open])
 
   const verifyAndEnable = async () => {
     if (!code || code.length < 1) {
@@ -52,10 +83,6 @@ export function MFASetupModal({ open, onClose }: Props) {
 
   if (!open) return null
 
-  if (step === 'loading') {
-    startSetup()
-  }
-
   const overlayStyle: React.CSSProperties = {
     position: 'fixed', inset: 0, zIndex: 700,
     background: 'rgba(0,0,0,0.72)',
@@ -74,14 +101,23 @@ export function MFASetupModal({ open, onClose }: Props) {
   }
 
   return (
-    <div style={overlayStyle} onClick={(e) => { if (e.target === e.currentTarget && step !== 'loading') onClose() }}>
-      <div style={panelStyle} onClick={(e) => e.stopPropagation()}>
+    <div style={overlayStyle} onClick={(e) => { if (e.target === e.currentTarget && step !== 'loading') handleClose() }}>
+      <div
+        ref={panelRef}
+        id={MFA_SETUP_DIALOG_ID}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        tabIndex={-1}
+        style={panelStyle}
+        onClick={(e) => e.stopPropagation()}
+      >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontWeight: 800, fontSize: 14, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--data-cyan, #00D4FF)' }}>
+          <span id={titleId} style={{ fontWeight: 800, fontSize: 14, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--data-cyan, #00D4FF)' }}>
             {t.mfa_titulo}
           </span>
           {step !== 'loading' && (
-            <button onClick={onClose} style={{ background: 'transparent', border: '1px solid var(--border-dim)', borderRadius: 6, color: 'var(--text-secondary)', cursor: 'pointer', padding: '4px 8px', fontSize: 12, fontFamily: 'inherit' }}>
+            <button ref={closeButtonRef} type="button" className="nm-mfa-close" onClick={handleClose} style={{ background: 'transparent', border: '1px solid var(--border-dim)', borderRadius: 6, color: 'var(--text-secondary)', cursor: 'pointer', padding: '4px 8px', fontSize: 12, fontFamily: 'inherit' }}>
               {t.cerrar}
             </button>
           )}
@@ -90,7 +126,7 @@ export function MFASetupModal({ open, onClose }: Props) {
         <div style={{ height: 1, background: 'var(--border-dim)' }} />
 
         {step === 'loading' && (
-          <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--text-secondary)', fontSize: 13 }}>
+          <div role="status" style={{ textAlign: 'center', padding: '24px 0', color: 'var(--text-secondary)', fontSize: 13 }}>
             {t.configurando}
           </div>
         )}
@@ -132,6 +168,9 @@ export function MFASetupModal({ open, onClose }: Props) {
                 value={code}
                 onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                 placeholder={t.placeholder_codigo}
+                aria-label={t.ingresar_codigo_activar}
+                autoComplete="one-time-code"
+                inputMode="numeric"
                 style={{
                   flex: 1, padding: '8px 10px', borderRadius: 6,
                   border: '1px solid var(--border-dim, rgba(255,255,255,0.15))',
@@ -143,10 +182,11 @@ export function MFASetupModal({ open, onClose }: Props) {
               />
             </div>
 
-            {error && <div style={{ fontSize: 12, color: '#FF2D55', padding: '4px 0' }}>{error}</div>}
+            {error && <div role="alert" style={{ fontSize: 12, color: '#FF2D55', padding: '4px 0' }}>{error}</div>}
 
             <button
               type="button"
+              className="nm-mfa-primary"
               disabled={saving}
               onClick={verifyAndEnable}
               style={{
@@ -174,7 +214,8 @@ export function MFASetupModal({ open, onClose }: Props) {
             </div>
             <button
               type="button"
-              onClick={onClose}
+              className="nm-mfa-primary"
+              onClick={handleClose}
               style={{
                 padding: '8px 24px', borderRadius: 7,
                 border: '1px solid var(--border-bright)',
