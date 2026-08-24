@@ -46,6 +46,39 @@ commit message — link to the actual commit/PR for detail.
 
 ---
 
+## 2026-08-24 — Claude Code — branch `main` — trim redundant Google Fonts requests, complete
+
+**Scope:** `OperationalFontLoader.tsx` (mounted for every non-public-marketing
+route — every authenticated page and `/login`, via `PublicRouter.tsx`'s
+fallback branch) injected 5 separate `fonts.googleapis.com` stylesheet
+requests on top of `tokens.css`'s own `@import`. Checked actual usage
+before touching anything: grepped every `font-family` declaration in
+`src/**/*.css` for each requested family.
+
+**Result:** Orbitron, Share Tech Mono, Exo 2, Rajdhani and Barlow
+Condensed appear in zero `font-family` rules anywhere in the app —
+pure dead weight, dropped entirely. The Inter/JetBrains Mono request
+duplicated weights already covered (same or narrower) by `tokens.css`'s
+own `@import` — dropped entirely. IBM Plex Sans/Mono weights 400/500/600
+are already self-hosted locally (`northmine-fonts.css`'s `@font-face`
+rules, confirmed live via `main.tsx`'s import) — narrowed both requests
+to just weight 700, the one actual gap (confirmed `font-weight: 700`
+is used broadly in `tokens.css`/`northmine-tokens.css`, so not
+speculative). Cairo is genuinely used (`html[lang="ar"]` override in
+`themes.css`) and left unconditional — narrowing it to only fire for
+Arabic locale sessions is a separate, smaller follow-up not attempted
+here.
+
+**Verification:** `tsc --noEmit` clean, `vitest run` 136/136, `npm run
+build` succeeds. Live production-build browser session on `/login`
+(not just static grep) confirms exactly 3 `fonts.googleapis.com`
+requests now (was 6 total including `tokens.css`'s own), each with a
+smaller payload; page renders visually identical (screenshot-compared)
+with zero console errors.
+
+**Coordination:** touched only `OperationalFontLoader.tsx`; no overlap
+with Codex's active Operational Flow/Mission Control work.
+
 ## 2026-08-24 — Claude Code — branch `main` — defer html2canvas-pro in agent perception, complete
 
 **Scope:** `lib/agentPerception/visualCapture.ts` statically imports

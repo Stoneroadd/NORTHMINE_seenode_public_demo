@@ -104,6 +104,18 @@ same zero-behavior-change pattern as the three.js fix above. See
 ai-copilot/agentPerception cluster, flagged even though the change
 itself carries none of that cluster's usual risk).
 
+**Redundant Google Fonts requests trimmed — RESOLVED 2026-08-24.**
+`OperationalFontLoader` (every authenticated page + `/login`) fired 5
+separate Google Fonts stylesheet requests; verified via grep that 5 of
+the requested font families were used nowhere in the app and one
+duplicated `tokens.css`'s own `@import`. Trimmed to the two real gaps
+(IBM Plex Sans/Mono weight 700, not covered by the self-hosted local
+files) plus Cairo (genuinely used for Arabic locale). Live browser
+verification: 6 Google Fonts requests down to 3 per page load, smaller
+payloads, visually identical. Possible follow-up not attempted: load
+Cairo only for `lang="ar"` sessions instead of unconditionally. See
+`AGENT_LOG.md`.
+
 ## P1 — needs human judgment
 
 **`main` and `integration/agent-consolidated` (in the sibling checkout

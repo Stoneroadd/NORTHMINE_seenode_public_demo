@@ -1,11 +1,14 @@
 import { useEffect } from 'react'
 
+// Orbitron, Share Tech Mono, Exo 2, Rajdhani and Barlow Condensed were
+// requested here but appear in zero `font-family` declarations anywhere
+// in src/ -- dropped. Inter and JetBrains Mono at these exact weights are
+// already covered by tokens.css's own @import. IBM Plex Sans/Mono weights
+// 400/500/600 are already self-hosted locally (northmine-fonts.css); only
+// weight 700 is an actual gap, so that's all that's requested here.
 const operationalFontStylesheets = [
-  'https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&family=Exo+2:wght@300;400;600;700&display=swap',
-  'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap',
   'https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap',
-  'https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&family=Barlow+Condensed:wght@300;400;500;600;700&display=swap',
-  'https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap',
+  'https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@700&family=IBM+Plex+Sans:wght@700&display=swap',
 ]
 
 export function OperationalFontLoader() {
