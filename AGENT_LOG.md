@@ -46,7 +46,7 @@ commit message — link to the actual commit/PR for detail.
 
 ---
 
-## 2026-08-23 — Codex — branch `feat/mission-control-test-harness` — starting
+## 2026-08-23 — Codex — branch `feat/mission-control-test-harness` — complete
 
 **Scope:** make `npm run test:mission-control` reproducible from a clean local
 checkout by having Playwright start and health-check the authorized demo backend
@@ -54,8 +54,24 @@ as well as Vite. The current command was reproduced failing on
 `/api/auth/{refresh,login}` with `ECONNREFUSED` because port 8001 is an implicit
 external prerequisite.
 
-**Coordination:** test infrastructure only; no Mission Control UI, snapshots,
-operational contracts, AI runtime, Wenco connector or production configuration.
+**Coordination:** test infrastructure only; no Mission Control UI, unreviewed
+snapshot regeneration, operational contracts, AI runtime, Wenco connector or
+production configuration.
+
+**Result:** Playwright now starts/health-checks/stops the real FastAPI app in an
+explicit synthetic demo boundary plus Vite, using disposable temp databases and
+a runtime-generated audit encryption key. The shared login helper now uses the
+current `demo/demo` seed instead of the retired `admin/admin` pair. Once the
+harness reached the catalog it exposed two stale visual baselines; expected vs
+actual vs diff were inspected, confirmed as the current demo identity/control
+state rather than a layout regression, and only desktop/tablet evidence was
+renewed.
+
+**Evidence:** before, 4/4 tests failed on auth `ECONNREFUSED`; after backend
+ownership but before the identity fix, 4/4 reached auth and correctly rejected
+the stale credentials; final Mission Control suite 4/4 PASS. Frontend unit tests
+124/124, lint/typecheck, production build and `git diff --check` PASS. No process
+remained listening on test ports 8001 or 5206 after teardown.
 
 ## 2026-08-23 — Codex — branch `feat/equipment-detail-drawer-a11y` — complete
 

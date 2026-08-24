@@ -81,8 +81,8 @@ export async function gotoAndSettle(page: Page, path: string, settleMs = 700) {
  */
 export async function loginAsDemo(page: Page) {
   await gotoAndSettle(page, '/acceso-demo', 500)
-  await page.fill('input[placeholder="usuario"]', 'admin')
-  await page.fill('input[placeholder="contrasena"]', 'admin')
+  await page.fill('input[placeholder="usuario"]', 'demo')
+  await page.fill('input[placeholder="contrasena"]', 'demo')
   await page.click('button[type="submit"]')
   await page.waitForURL('**/cockpit', { timeout: 20000 })
   await page.locator('.topbar-menu-button, .topbar').first().waitFor({ state: 'visible', timeout: 20000 })
