@@ -80,6 +80,14 @@ to port already has been (see `AGENT_LOG.md`, commits `71ba9a7` through
 
 ## P2 — verifiable, not yet attempted
 
+**Public analytics/CSP mismatch — IN PROGRESS (Codex).**
+The deployed landing includes GoatCounter from `gc.zgo.at`, while the enforced
+Content Security Policy blocks that origin and produces a browser console
+error. Determine whether analytics is intentionally configured and either
+remove the dead integration or authorize only the exact required origins.
+Preserve the fail-closed CSP and do not broaden security directives without
+verified network evidence.
+
 **Shared responsive visual harness — COMPLETE (Codex).**
 Mission Control and responsive Playwright suites now share one isolated
 synthetic-demo backend/Vite lifecycle. The browser-only ASGI entrypoint is

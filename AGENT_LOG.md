@@ -46,6 +46,15 @@ commit message — link to the actual commit/PR for detail.
 
 ---
 
+## 2026-08-23 — Codex — branch `feat/goatcounter-csp` — starting
+
+**Scope:** resolve the deployed landing's GoatCounter/CSP mismatch discovered
+through a real Seenode browser console inspection after `cbf9ff4`.
+
+**Coordination:** public analytics tag, security-header allowlist and focused
+browser/security regression only; no Mission Control UI, product visuals,
+operational contracts, AI runtime, Wenco or production credentials.
+
 ## 2026-08-23 — Codex — branch `feat/fetch-priority-warning` — complete
 
 **Scope:** reproduce and remove the React DOM-property warning emitted by the
