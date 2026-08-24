@@ -186,6 +186,13 @@ packages installed for unreachable code. The wrappers and direct dependencies
 are removed. Live Radix Tabs and Slot/Button primitives remain untouched.
 Build/lint/unit and production dependency audit remain green.
 
+**Excluded legacy UI barrel — COMPLETE (Codex).**
+The excluded `components/ui/index.tsx` barrel and standalone Card/Skeleton
+wrappers had zero imports across source and tests. The barrel duplicated live UI
+primitives, contained 443 lines hidden from the normal TypeScript root, and was
+explicitly excluded in `tsconfig.json`. All three unreachable files and the stale
+exclusion are removed. No rendered component or dependency changed.
+
 **Public analytics/CSP mismatch — COMPLETE (Codex).**
 The deployed landing includes GoatCounter from `gc.zgo.at`, while the enforced
 Content Security Policy blocks that origin and produces a browser console

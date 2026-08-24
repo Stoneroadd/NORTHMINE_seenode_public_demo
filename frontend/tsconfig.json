@@ -22,7 +22,6 @@
   },
   "include": ["src", "vite.config.ts"],
   "exclude": [
-    "src/components/ui/index.tsx",
     "src/i18n/translations.ts",
     "src/services/api.ts",
     "src/store/index.ts"

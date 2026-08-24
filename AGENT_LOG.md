@@ -726,3 +726,21 @@ Verification: TypeScript lint PASS, Vitest 126/126, production build PASS withou
 Vite warnings, `npm audit --omit=dev` zero vulnerabilities, no remaining imports
 or package declarations for the removed wrappers, and `git diff --check` PASS.
 No rendered component, route or operational contract changed.
+
+---
+
+## 2026-08-24 — Codex — remove excluded legacy UI barrel
+
+The remaining UI-folder audit found `components/ui/index.tsx` was both explicitly
+excluded from the TypeScript root and completely unimported. Its 443 lines
+duplicated Spinner, Badge, Button, Panel and chart helpers under a second visual
+API. The adjacent `card.tsx` and `skeleton.tsx` wrappers also had zero imports in
+source, tests or configuration. All three are removed and the obsolete tsconfig
+exclusion is deleted. The current CommandButton, CommandCard, StatusPill,
+InteractiveMetricCard, Button/Badge and Tabs primitives remain live and untouched.
+
+Verification: TypeScript lint PASS, Vitest 126/126, production build PASS without
+Vite warnings, production audit zero vulnerabilities, repository-wide exact-path
+search found no consumers, and `git diff --check` PASS. This removes 512 lines of
+unreachable code; Rollup already excluded it, so no runtime bundle reduction is
+claimed.
