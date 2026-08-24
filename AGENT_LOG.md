@@ -578,3 +578,8 @@ application and initializes the proactivity schema once per pytest session,
 matching the schema guarantee provided by production startup while preserving
 process isolation. The formerly failing test passes from a clean store; a
 caller-supplied sentinel path remained absent; full backend result is 393/393.
+Public Ubuntu run `32684926842` then passed the complete workflow in 1m52s.
+The only remaining annotation was the runner's Node 20 deprecation warning for
+the three official setup actions. Their official v7 manifests/documentation
+use Node 24, so checkout, setup-node and setup-python were moved to v7 without
+changing the application runtime pins (Node 22 and Python 3.12).

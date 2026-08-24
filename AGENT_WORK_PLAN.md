@@ -109,7 +109,14 @@ contract receives its required artifact. A second clean-run dependency in the
 agent proactivity store is also isolated per pytest process and initialized for
 direct domain tests. Local backend result: 393/393; the external runtime DB
 sentinel remains untouched. The public Linux gate retains bounded failure
-annotations for future diagnosis without exposing credentials.
+annotations for future diagnosis without exposing credentials. Public run
+`32684926842` passed every gate on Ubuntu in 1m52s.
+
+**GitHub Actions Node 24 migration — COMPLETE (Codex).**
+The successful Linux gate still warned that checkout v4, setup-node v4 and
+setup-python v5 used deprecated Node 20 internals. All three official actions
+now use their documented v7 Node 24 line; NORTHMINE's tested application Node
+version remains explicitly pinned to 22 and Python remains pinned to 3.12.
 
 **Public analytics/CSP mismatch — COMPLETE (Codex).**
 The deployed landing includes GoatCounter from `gc.zgo.at`, while the enforced
