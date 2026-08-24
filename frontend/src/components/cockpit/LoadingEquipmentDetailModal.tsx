@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react'
+import { useMemo } from 'react'
 import { createPortal } from 'react-dom'
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { X } from 'lucide-react'
@@ -8,6 +8,8 @@ import { getDetailModalStyle, type DetailModalAnchor } from './detailModalPositi
 import { useModuleT } from '../../i18n/useModuleT'
 import { cockpitT, type CockpitT } from '../../i18n/modules/cockpit'
 import { premiumPalette, useChartPaletteKey } from '../charts/premium/chartTheme'
+import { useModalA11y } from '../../hooks/useModalA11y'
+import { LOADING_EQUIPMENT_DETAIL_ID } from './loadingEquipmentDetailA11y'
 
 // premiumPalette siempre resuelve a hex de 6 digitos (definidos asi en las 6
 // apariencias de themes.css), por eso se puede sumar un sufijo de alpha.
@@ -76,6 +78,7 @@ function TooltipContent({ active, payload, label, t }: any) {
 
 export function LoadingEquipmentDetailModal({ item, hourly, anchor, onClose }: Props) {
   const t = useModuleT(cockpitT)
+  const { panelRef, closeButtonRef } = useModalA11y<HTMLElement>(Boolean(item), onClose)
   const paletteKey = useChartPaletteKey()
   const palette = useMemo(() => ({
     cyan: premiumPalette.cyan,
@@ -109,15 +112,6 @@ export function LoadingEquipmentDetailModal({ item, hourly, anchor, onClose }: P
       })
   }, [hourly, item?.id])
 
-  useEffect(() => {
-    if (!item) return
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose()
-    }
-    window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
-  }, [item, onClose])
-
   if (!item) return null
 
   const totalHourly = rows.reduce((sum, row) => sum + row.tonnes, 0)
@@ -135,13 +129,18 @@ export function LoadingEquipmentDetailModal({ item, hourly, anchor, onClose }: P
   const modal = (
     <div
       className={`nmcp-detail-layer ${anchor ? 'is-anchored' : ''}`}
-      role="dialog"
-      aria-modal="true"
-      aria-label={t.loading_modal_aria(item.id)}
       style={getDetailModalStyle(anchor)}
     >
-      <button className="nmcp-detail-backdrop" type="button" onClick={onClose} aria-label={t.loading_modal_close_aria} />
-      <aside className="nmcp-detail-modal">
+      <button className="nmcp-detail-backdrop" type="button" onClick={onClose} aria-hidden="true" tabIndex={-1} />
+      <aside
+        id={LOADING_EQUIPMENT_DETAIL_ID}
+        ref={panelRef}
+        className="nmcp-detail-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-label={t.loading_modal_aria(item.id)}
+        tabIndex={-1}
+      >
         <header className="nmcp-detail-header">
           <div>
             <span className="nmcp-section-kicker">{t.loading_modal_kicker}</span>
@@ -149,7 +148,7 @@ export function LoadingEquipmentDetailModal({ item, hourly, anchor, onClose }: P
             <p>{item.front}{' -> '}{item.destination}</p>
             <p>{t.loading_modal_operador(item.operator ?? t.common_sin_dato)}</p>
           </div>
-          <button className="nmcp-icon-button" type="button" onClick={onClose} aria-label={t.loading_modal_close_aria}>
+          <button ref={closeButtonRef} className="nmcp-icon-button" type="button" onClick={onClose} aria-label={t.loading_modal_close_aria}>
             <X size={17} />
           </button>
         </header>

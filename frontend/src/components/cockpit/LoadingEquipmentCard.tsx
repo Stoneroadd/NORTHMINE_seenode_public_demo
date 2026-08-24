@@ -6,6 +6,7 @@ import { getDetailModalAnchor, type DetailModalAnchor } from './detailModalPosit
 import { useModuleT } from '../../i18n/useModuleT'
 import { cockpitT } from '../../i18n/modules/cockpit'
 import { cn } from '@/lib/utils'
+import { LOADING_EQUIPMENT_DETAIL_ID } from './loadingEquipmentDetailA11y'
 
 const toneDot: Record<CockpitEquipmentCardModel['tone'], string> = {
   good: 'bg-success',
@@ -21,11 +22,13 @@ export function LoadingEquipmentCard({
   item,
   rank,
   leaderTonnes,
+  detailOpen = false,
   onOpenDetail,
 }: {
   item: CockpitEquipmentCardModel
   rank?: number
   leaderTonnes?: number
+  detailOpen?: boolean
   onOpenDetail?: (item: CockpitEquipmentCardModel, anchor: DetailModalAnchor) => void
 }) {
   const t = useModuleT(cockpitT)
@@ -54,6 +57,9 @@ export function LoadingEquipmentCard({
         }
       }}
       aria-label={t.loading_card_aria(item.id)}
+      aria-controls={LOADING_EQUIPMENT_DETAIL_ID}
+      aria-expanded={detailOpen}
+      aria-haspopup="dialog"
       className="grid cursor-pointer grid-cols-[auto_1fr_auto_auto_auto_auto] items-center gap-x-4 gap-y-1 border-b border-border-dim px-1 py-3 text-sm transition-colors last:border-b-0 hover:bg-hover"
     >
       <span className={cn('h-2 w-2 shrink-0 rounded-full', toneDot[item.tone])} aria-hidden="true" />

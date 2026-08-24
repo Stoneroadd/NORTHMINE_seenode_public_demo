@@ -1012,3 +1012,23 @@ close control without changing UI. The first build then caught the hook's broad
 compile-time contract. Final evidence: TypeScript lint PASS, Vitest 138/138,
 production build PASS, npm production audit zero vulnerabilities, Impeccable
 detector `[]`, and `git diff --check` PASS.
+
+---
+
+## 2026-08-24 — Codex — loading-equipment detail focus contract
+
+Decision Cockpit's `LoadingEquipmentDetailModal` placed `role="dialog"` on the
+full-screen positioning layer while the actual inspector `<aside>` had no focus
+contract. Escape listened globally, Tab could leave the surface, backdrop close
+was exposed as a second accessible close control, and closure did not reliably
+return users to the loading-unit row. The shared modal hook now owns scoped
+Escape, focus entry/containment/restoration on the inspector itself. The backdrop
+is presentation-only, and each `LoadingEquipmentCard` reports `aria-haspopup`,
+the controlled panel ID and its expanded state. No cockpit model, calculation,
+chart, route or source payload changed.
+
+Focused authenticated Playwright passes 2/2 on Pixel 7 and desktop 1440,
+opening a real deterministic loading unit, verifying focus on its close action,
+Escape closure, row focus restoration and expanded-state reset. TypeScript lint
+PASS, Vitest 138/138, production build PASS, npm production audit zero
+vulnerabilities, Impeccable detector `[]`, and `git diff --check` PASS.

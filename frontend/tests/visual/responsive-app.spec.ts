@@ -87,6 +87,23 @@ test.describe('authenticated app', () => {
     await expect(opener).toHaveAttribute('aria-expanded', 'false')
   })
 
+  test('loading-equipment detail contains focus and restores its operational row', async ({ page }) => {
+    const opener = page.locator('.nmcp-equipment-card-grid article[role="button"]').first()
+    await expect(opener).toBeVisible({ timeout: 30_000 })
+    await opener.click()
+
+    const dialog = page.getByRole('dialog', { name: /detalle (?:uc|unidad)|unidad.*cargu/i })
+    await expect(dialog).toBeVisible()
+    await expect(dialog.getByRole('button', { name: /cerrar/i })).toBeFocused()
+    await expect(opener).toHaveAttribute('aria-expanded', 'true')
+
+    await page.keyboard.press('Escape')
+
+    await expect(dialog).toHaveCount(0)
+    await expect(opener).toBeFocused()
+    await expect(opener).toHaveAttribute('aria-expanded', 'false')
+  })
+
   test('cockpit — table has an internal horizontal-scroll wrapper, not a page-level one', async ({ page }) => {
     const table = page.locator('table').first()
     const count = await page.locator('table').count()

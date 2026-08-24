@@ -279,6 +279,13 @@ an explicit opener relationship. The shared hook is generically typed so div,
 aside and future HTMLElement panel surfaces retain exact ref safety. Responsive
 coverage verifies the complete keyboard lifecycle on mobile and desktop.
 
+**Loading-equipment operational detail accessibility — COMPLETE (Codex).**
+Decision Cockpit's loading-unit detail now places dialog semantics and focus on
+the actual inspector panel, not its backdrop layer. Escape is scoped, focus is
+contained/restored, the backdrop is removed from the accessibility tree, and
+each operational row exposes its dialog relationship/expanded state. Tonnes,
+cycles, routes, chart and Wenco-derived evidence are unchanged.
+
 **Public analytics/CSP mismatch — COMPLETE (Codex).**
 The deployed landing includes GoatCounter from `gc.zgo.at`, while the enforced
 Content Security Policy blocks that origin and produces a browser console

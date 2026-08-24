@@ -880,6 +880,7 @@ export function DecisionCockpit() {
                   item={item}
                   rank={index + 1}
                   leaderTonnes={leaderEquipmentTonnes ?? undefined}
+                  detailOpen={selectedLoadingUnitId === item.id}
                   onOpenDetail={(selected, anchor) => {
                     setSelectedLoadingUnitId(selected.id)
                     setSelectedLoadingUnitAnchor(anchor)
