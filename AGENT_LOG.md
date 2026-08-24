@@ -1202,3 +1202,25 @@ TypeScript lint PASS, production build PASS, npm production audit zero
 vulnerabilities and `git diff --check` PASS. Impeccable reported only its known
 grid advisory on the actual Operational Flow canvas; the new selection styles
 introduced no finding.
+
+---
+
+## 2026-08-24 — Codex — inspector graph traversal
+
+The inspector named relationship direction and counterpart but rendered that
+counterpart as inert text. This left users—especially on the stacked mobile
+representation—to relocate a connected entity manually before inspecting its
+evidence. A red desktop browser contract reproduced the missing action.
+
+Each available counterpart is now a native button that selects the canonical
+source/target node already present in the snapshot. Selection updates the graph
+focus, inspector details and evidence without changing site, shift, timestamp or
+route. Missing counterpart nodes remain disabled rather than producing an
+invented entity. The actions use explicit keyboard focus styling and a 44 px
+minimum touch target.
+
+Final evidence: traversal 2/2 on Pixel 7 and desktop 1440, complete Operational
+Flow routing matrix 16/16 with no retries, full frontend 139/139, TypeScript
+lint PASS, production build PASS, npm production audit zero vulnerabilities and
+`git diff --check` PASS. Impeccable reported only the known advisory for the
+grid on the actual operational canvas; no new anti-pattern was introduced.

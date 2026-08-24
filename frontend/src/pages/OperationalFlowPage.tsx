@@ -194,26 +194,31 @@ export function OperationalFlowPage() {
               <h3 id="mc-related-heading">Relaciones vigentes</h3>
               {connectedRelationships.length ? (
                 <ul className="mc-flow-inspector__relations">
-                  {connectedRelationships.map((relationship) => (
-                    <li key={relationship.relationship_id}>
-                      <strong>
-                        {relationship.source_node_id === selectedNode.node_id ? 'Hacia' : 'Desde'}{' '}
-                        {nodesById.get(
-                          relationship.source_node_id === selectedNode.node_id
-                            ? relationship.target_node_id
-                            : relationship.source_node_id,
-                        )?.label ?? 'Entidad no disponible'}
-                      </strong>
-                      <span>{relationshipLabel(relationship.relationship_type, relationship.label)}</span>
-                      <small>
-                        {[
-                          assertionShortLabel(relationship.assertion_type),
-                          confidenceLabel(relationship.confidence_level),
-                          `desde ${formatTimestamp(relationship.effective_from)}`,
-                        ].filter(Boolean).join(' · ')}
-                      </small>
-                    </li>
-                  ))}
+                  {connectedRelationships.map((relationship) => {
+                    const isOutgoing = relationship.source_node_id === selectedNode.node_id
+                    const counterpartNodeId = isOutgoing ? relationship.target_node_id : relationship.source_node_id
+                    const counterpartLabel = nodesById.get(counterpartNodeId)?.label ?? 'Entidad no disponible'
+                    return (
+                      <li key={relationship.relationship_id}>
+                        <button
+                          type="button"
+                          className="mc-flow-inspector__relation-link"
+                          onClick={() => setSelectedNodeId(counterpartNodeId)}
+                          disabled={!nodesById.has(counterpartNodeId)}
+                        >
+                          {isOutgoing ? 'Hacia' : 'Desde'} {counterpartLabel}
+                        </button>
+                        <span>{relationshipLabel(relationship.relationship_type, relationship.label)}</span>
+                        <small>
+                          {[
+                            assertionShortLabel(relationship.assertion_type),
+                            confidenceLabel(relationship.confidence_level),
+                            `desde ${formatTimestamp(relationship.effective_from)}`,
+                          ].filter(Boolean).join(' · ')}
+                        </small>
+                      </li>
+                    )
+                  })}
                 </ul>
               ) : <p className="mc-flow-inspector__empty">Sin relaciones visibles en esta proyección.</p>}
             </section>

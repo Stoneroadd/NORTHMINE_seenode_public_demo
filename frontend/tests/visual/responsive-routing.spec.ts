@@ -165,4 +165,15 @@ test.describe('canonical authenticated routing', () => {
     await expect(page.locator('[data-relationship-id="rel-plan-cost"]')).toHaveClass(/is-muted/)
     await expect(page.locator('[data-relationship-id="rel-plan-cost"]')).not.toHaveClass(/is-contextual/)
   })
+
+  test('Operational Flow traverses to connected entities from the inspector', async ({ page }) => {
+    await navigateWithinApp(page, appPaths.operationalFlow)
+    await page.getByRole('button', { name: /^Ruta Norte\./ }).filter({ visible: true }).click()
+
+    const inspector = page.locator('.mc-flow-inspector')
+    await inspector.getByRole('button', { name: 'Hacia Chancador 01', exact: true }).click()
+    await expect(inspector.locator('#mc-flow-inspector-title')).toHaveText('Chancador 01')
+    await expect(page.locator('[data-relationship-id="rel-route-destination"]')).toHaveClass(/is-contextual/)
+    await expect(page.locator('[data-relationship-id="rel-destination-tonnage"]')).toHaveClass(/is-contextual/)
+  })
 })

@@ -99,6 +99,9 @@ Authorization: sesión NORTHMINE
 - El inspector expone condición, resumen, tipo de afirmación, calidad,
   procedencia, relaciones, dirección/contraparte y evidencia. Cuando una
   relación es incierta, muestra su nivel de confianza autorizado por backend.
+- Cada contraparte de relación es una acción contextual: permite avanzar al
+  nodo conectado y actualiza canvas e inspector sin cambiar ruta, tiempo o
+  snapshot.
 - `Datos técnicos` abre bajo demanda asignaciones, tiempos de ciclo, velocidades, colas, tonelaje y plan sin sobrecargar los nodos.
 - El canvas impide selección accidental de texto durante el movimiento o arrastre del puntero; el inspector conserva texto copiable.
 - Seleccionar una entidad aumenta el peso de sus relaciones directas y atenúa

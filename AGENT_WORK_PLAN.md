@@ -382,6 +382,12 @@ animating or hiding topology. Active operational-impact edges retain priority
 even when they are not connected to the selected node. Browser coverage guards
 the exact Ruta Norte neighborhood and the existing impact boundary.
 
+**Operational Flow inspector traversal — COMPLETE (Codex).**
+Relationship counterparts in the inspector are now keyboard/touch actions,
+allowing users to traverse the canonical graph from Ruta Norte to Chancador 01
+and onward without searching the canvas again. Each action is 44 px, keeps the
+same snapshot/time and updates both selection focus and evidence context.
+
 **Confirmed already fine, no action needed:** `/admin/audit-log` RBAC
 (already `RequireAdmin` + redaction) and refresh-token rotation (already
 race-guarded via conditional `UPDATE`) — see `AGENT_LOG.md` for detail.
