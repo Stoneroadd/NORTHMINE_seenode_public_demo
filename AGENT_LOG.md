@@ -1032,3 +1032,24 @@ opening a real deterministic loading unit, verifying focus on its close action,
 Escape closure, row focus restoration and expanded-state reset. TypeScript lint
 PASS, Vitest 138/138, production build PASS, npm production audit zero
 vulnerabilities, Impeccable detector `[]`, and `git diff --check` PASS.
+
+---
+
+## 2026-08-24 — Codex — current-shift equipment activity focus contract
+
+`EquipmentActivityModal` in Turno Actual placed `role="dialog"` on the complete
+overlay instead of the visible inspector, listened for Escape globally, allowed
+Tab to leave the surface and did not restore focus to the CAEX/loading-unit row
+that opened it. The shared modal accessibility contract now owns focus entry,
+containment, scoped Escape and restoration on the actual `aside`. The backdrop
+is presentation-only, and every activity entry reports `aria-haspopup`, the
+controlled dialog ID and its selected expanded state.
+
+The first responsive run also exposed that this inspector's close action was
+only 38 px on Pixel 7 and 32 px on desktop. A component-scoped rule now provides
+a 44 by 44 px target without increasing every compact Cockpit icon. Focused
+Playwright passes 4/4 on Pixel 7 and desktop 1440. TypeScript lint PASS, Vitest
+138/138, production build PASS, npm production audit zero vulnerabilities,
+Impeccable detector `[]` on the changed surface files, and `git diff --check`
+PASS. Equipment queries, WENCO payloads, tonnes, cycles, routes and status
+calculations are unchanged.

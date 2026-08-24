@@ -7,6 +7,7 @@ import { ErrorState } from '../components/common/ErrorState'
 import { EmptyState } from '../components/common/EmptyState'
 import { ExecutiveKpiCard } from '../components/kpi/ExecutiveKpiCard'
 import { EquipmentActivityModal, type EquipmentActivityTarget } from '../components/shift/EquipmentActivityModal'
+import { EQUIPMENT_ACTIVITY_DIALOG_ID } from '../components/shift/equipmentActivityA11y'
 import { getEquipmentImage, getEquipmentLabel } from '../data/equipmentAssets'
 import {
   getCurrentShift,
@@ -142,6 +143,7 @@ function EquipmentRow({
   anomaly,
   ucAnomalyCount,
   onOpenActivity,
+  activityOpen,
 }: {
   id: string
   model?: string
@@ -153,6 +155,7 @@ function EquipmentRow({
   anomaly?: CycleAnomaly
   ucAnomalyCount?: number
   onOpenActivity?: () => void
+  activityOpen?: boolean
 }) {
   const t = useModuleT(currentShiftT)
   return (
@@ -168,6 +171,9 @@ function EquipmentRow({
         }
       }}
       aria-label={onOpenActivity ? t.ver_actividad_wenco(id) : undefined}
+      aria-haspopup={onOpenActivity ? 'dialog' : undefined}
+      aria-controls={onOpenActivity ? EQUIPMENT_ACTIVITY_DIALOG_ID : undefined}
+      aria-expanded={onOpenActivity ? Boolean(activityOpen) : undefined}
     >
       <span className="nm-shift-equip-visual">
         <EquipmentImage id={id} model={model} />
@@ -547,6 +553,9 @@ export function CurrentShiftPage() {
                   }
                 }}
                 aria-label={t.ver_actividad_wenco(item.caex_id)}
+                aria-haspopup="dialog"
+                aria-controls={EQUIPMENT_ACTIVITY_DIALOG_ID}
+                aria-expanded={activityTarget?.type === 'truck' && activityTarget.id === item.caex_id}
               >
                 <span className="nm-shift-equip-visual">
                   <EquipmentImage id={item.caex_id} model={item.modelo} />
@@ -574,6 +583,7 @@ export function CurrentShiftPage() {
                 sub={[routeLabel(item, t) ?? item.ubicacion, item.operador].filter(Boolean).join(' / ')}
                 ucAnomalyCount={anomalyCountByUc.get(item.carguio_id)}
                 onOpenActivity={() => setActivityTarget({ id: item.carguio_id, model: item.modelo, type: 'loader' })}
+                activityOpen={activityTarget?.type === 'loader' && activityTarget.id === item.carguio_id}
               />
             ))}
           </div>
@@ -593,6 +603,7 @@ export function CurrentShiftPage() {
                 rank={item.rank}
                 anomaly={anomalyByCaex.get(item.caex_id)}
                 onOpenActivity={() => setActivityTarget({ id: item.caex_id, model: item.modelo, type: 'truck' })}
+                activityOpen={activityTarget?.type === 'truck' && activityTarget.id === item.caex_id}
               />
             ))}
           </div>

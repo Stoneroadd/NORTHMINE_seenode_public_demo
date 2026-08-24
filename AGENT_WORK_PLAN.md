@@ -331,6 +331,14 @@ action and explicit opener relationships. Focused authenticated regression
 coverage protects desktop and mobile behavior. Equipment data and Mission
 Control contracts were not changed.
 
+**Current-shift equipment activity accessibility — COMPLETE (Codex).**
+The WENCO activity inspector in Turno Actual now applies dialog semantics to
+the real panel, contains keyboard focus, scopes Escape and restores focus to
+the exact CAEX or loading-unit row that opened it. All entry rows expose their
+dialog relationship and expanded state. Its close action is 44 by 44 pixels on
+mobile and desktop; operational queries, tonnes, cycles, routes and statuses
+are unchanged.
+
 **Confirmed already fine, no action needed:** `/admin/audit-log` RBAC
 (already `RequireAdmin` + redaction) and refresh-token rotation (already
 race-guarded via conditional `UPDATE`) — see `AGENT_LOG.md` for detail.

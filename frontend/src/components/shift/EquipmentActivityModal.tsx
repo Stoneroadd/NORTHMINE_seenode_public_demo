@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import { X } from 'lucide-react'
 import { formatNumber, formatTons } from '../cockpit/cockpitModel'
 import { getEquipmentImage, getEquipmentLabel } from '../../data/equipmentAssets'
+import { useModalA11y } from '../../hooks/useModalA11y'
 import {
   northmineApi,
   type ShiftComparisonEquipmentHourlyPoint,
@@ -11,6 +12,8 @@ import {
   type ShiftComparisonEquipmentStatusBreakdown,
   type ShiftComparisonResponse,
 } from '../../lib/api'
+import { EQUIPMENT_ACTIVITY_DIALOG_ID } from './equipmentActivityA11y'
+import './equipment-activity-modal.css'
 
 // Actividad WENCO completa de un equipo en el turno vigente: descargas,
 // destinos, estados (demoras, colacion, averias/mantencion) y hora a hora.
@@ -74,6 +77,7 @@ function minutesLabel(value: number): string {
 }
 
 export function EquipmentActivityModal({ target, onClose }: Props) {
+  const { panelRef, closeButtonRef, titleId } = useModalA11y<HTMLElement>(true, onClose)
   const query = useQuery({
     queryKey: ['shift-comparison', 'equipment-activity'],
     queryFn: () => northmineApi.shiftComparison(),
@@ -82,9 +86,6 @@ export function EquipmentActivityModal({ target, onClose }: Props) {
   })
 
   useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose()
-    }
     const previousOverflow = document.body.style.overflow
     const previousPaddingRight = document.body.style.paddingRight
     const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth
@@ -92,13 +93,11 @@ export function EquipmentActivityModal({ target, onClose }: Props) {
     if (scrollbarWidth > 0) {
       document.body.style.paddingRight = `${scrollbarWidth}px`
     }
-    window.addEventListener('keydown', onKeyDown)
     return () => {
-      window.removeEventListener('keydown', onKeyDown)
       document.body.style.overflow = previousOverflow
       document.body.style.paddingRight = previousPaddingRight
     }
-  }, [onClose])
+  }, [])
 
   const data = query.data
   const shift: 'DIA' | 'NOCHE' = data ? currentShiftOf(data) : 'NOCHE'
@@ -149,9 +148,17 @@ export function EquipmentActivityModal({ target, onClose }: Props) {
   })
 
   const modal = (
-    <div className="nmcp-detail-layer nm-shift-activity-layer" role="dialog" aria-modal="true" aria-label={`Actividad WENCO ${target.id}`}>
-      <button className="nmcp-detail-backdrop" type="button" onClick={onClose} aria-label="Cerrar detalle" />
-      <aside className="nmcp-detail-modal nm-shift-activity-modal">
+    <div className="nmcp-detail-layer nm-shift-activity-layer">
+      <button className="nmcp-detail-backdrop" type="button" onClick={onClose} aria-hidden="true" tabIndex={-1} />
+      <aside
+        ref={panelRef}
+        id={EQUIPMENT_ACTIVITY_DIALOG_ID}
+        className="nmcp-detail-modal nm-shift-activity-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        tabIndex={-1}
+      >
         <header className="nmcp-detail-header">
           <div className="nmcp-shift-detail-title">
             <span className={`nmcp-equipment-visual is-${target.type}${isPala1 ? ' is-pala-1' : ''}`}>
@@ -164,12 +171,18 @@ export function EquipmentActivityModal({ target, onClose }: Props) {
             </span>
             <div>
               <span className="nmcp-section-kicker">Actividad WENCO / Turno {shift}</span>
-              <h2>{target.id}</h2>
+              <h2 id={titleId}>{target.id}</h2>
               <p>{displayModel ?? 'Sin modelo'}{bench ? ` - ${bench}` : ''}</p>
               <p>Operador: {operator ?? 'Sin dato'}</p>
             </div>
           </div>
-          <button className="nmcp-icon-button" type="button" onClick={onClose} aria-label="Cerrar detalle">
+          <button
+            ref={closeButtonRef}
+            className="nmcp-icon-button nm-shift-activity-close"
+            type="button"
+            onClick={onClose}
+            aria-label="Cerrar detalle"
+          >
             <X size={17} />
           </button>
         </header>
