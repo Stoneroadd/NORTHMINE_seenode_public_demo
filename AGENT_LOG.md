@@ -874,3 +874,26 @@ Playwright 4/4 on Pixel 7 and desktop 1440. The browser test proves the inspecto
 shows “Unidad de carguio”, “Datos actualizados”, “Escenario sintetico”, “Hecho de
 fuente”, “Alimenta” and “Carga”, while the main operational surface contains none
 of the former implementation codes.
+
+---
+
+## 2026-08-24 — Codex — Operational Flow SVG pointer stability
+
+The reported node-hover instability was reproduced in Chromium. The node's SVG
+`transform="translate(...)"` was stable in the domain renderer, but a late global
+`[role="button"]:hover { transform: translateY(-1px) }` rule also targeted SVG
+`<g role="button">` nodes. CSS transform replaced the SVG presentation transform,
+moving the node toward the canvas origin instead of providing a one-pixel HTML
+button lift. The global affordance now excludes `<g>` primitives; Operational
+Flow keeps its purpose-built fill/stroke hover and focus states.
+
+A permanent responsive regression waits for settled geometry, moves a real mouse
+over PH03, Ruta Norte and Tonelaje, verifies screen geometry and the authored SVG
+transform remain unchanged, then selects each node by keyboard and verifies the
+shared inspector context. Mobile exercises the equivalent touch selection path.
+Focused Playwright passes 6/6 on Pixel 7 and desktop 1440. TypeScript lint PASS,
+Vitest 136/136, production build PASS, npm production audit reports zero
+vulnerabilities and `git diff --check` PASS. The interaction-only responsive
+matrix additionally passes 7/7 across phones, tablets and 1440/1920 desktops.
+The Impeccable scan reports only the pre-existing findings in the 13k-line legacy
+token file; the changed selector introduced no new detector finding.

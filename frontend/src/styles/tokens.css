@@ -12762,15 +12762,15 @@ body::before {
 }
 
 /* --- Filas / tarjetas clicables genericas en cualquier pagina --- */
-[role="button"] {
+[role="button"]:not(g) {
   transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1), background 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
 }
 
-[role="button"]:hover {
+[role="button"]:not(g):hover {
   transform: translateY(-1px);
 }
 
-[role="button"]:active {
+[role="button"]:not(g):active {
   transform: translateY(0) scale(0.995);
 }
 

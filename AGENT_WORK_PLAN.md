@@ -238,6 +238,14 @@ presentation adapter translates known values and uses safe human fallbacks for
 unknown future values. Facts, derivations, hypotheses, quality and provenance
 remain visible in operational language rather than being hidden.
 
+**Operational Flow SVG pointer stability — COMPLETE (Codex).**
+The generic HTML affordance for `[role="button"]` also matched interactive SVG
+groups and replaced each graph node's positional `transform` on hover/active.
+The affordance now excludes SVG `<g>` primitives, so connected nodes remain in
+their segments while retaining their own fill/stroke feedback. Responsive
+browser coverage protects hover geometry, keyboard selection and inspector
+context for PH03, Ruta Norte and Tonelaje.
+
 **Public analytics/CSP mismatch — COMPLETE (Codex).**
 The deployed landing includes GoatCounter from `gc.zgo.at`, while the enforced
 Content Security Policy blocks that origin and produces a browser console
