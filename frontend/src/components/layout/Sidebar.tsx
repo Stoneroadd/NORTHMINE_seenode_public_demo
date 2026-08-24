@@ -18,6 +18,7 @@ import {
   Truck,
   TrendingUp,
   Users,
+  Waypoints,
   Wrench,
   type LucideIcon,
 } from 'lucide-react'
@@ -38,6 +39,7 @@ interface SidebarItem {
 
 const items: SidebarItem[] = [
   { id: 'cockpit', label: 'Decision Cockpit', caption: 'Costos, riesgo y accion', icon: Gauge },
+  { id: 'operationalFlow', label: 'Operational Flow', caption: 'Impacto y propagación', icon: Waypoints },
   { id: 'operationalMap3d', label: 'Mapa Operacional 3D', caption: 'Constelacion de datos', icon: Network },
   { id: 'dashboard', label: 'Resumen', caption: 'Executive overview', icon: LayoutDashboard },
   { id: 'turno', label: 'Turno Actual', caption: 'Ops en tiempo real', icon: Activity },

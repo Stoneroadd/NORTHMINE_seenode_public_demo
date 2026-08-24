@@ -7,6 +7,7 @@
  */
 export const sectionPaths = {
   cockpit: '/cockpit',
+  operationalFlow: '/mission-control/operational-flow',
   operationalMap3d: '/operational-map-3d',
   dashboard: '/resumen',
   turno: '/turno',
@@ -36,7 +37,6 @@ export const appPaths = {
   adminDemoAccess: '/admin/demo-access',
   adminAuditoria: '/admin/auditoria',
   missionControlDesignSystem: '/mission-control/design-system',
-  operationalFlow: '/mission-control/operational-flow',
 } as const
 
 export type AppPath = (typeof appPaths)[keyof typeof appPaths]

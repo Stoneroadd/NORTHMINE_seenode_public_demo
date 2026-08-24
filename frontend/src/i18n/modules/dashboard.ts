@@ -144,6 +144,7 @@ export const dashboardT: ModuleDict<DashboardT> = {
   es: {
     section_label: {
       cockpit: 'Decision Cockpit',
+      operationalFlow: 'Operational Flow',
       operationalMap3d: 'Mapa Operacional 3D',
       dashboard: 'Dashboard ejecutivo',
       turno: 'Turno actual',
@@ -297,6 +298,7 @@ export const dashboardT: ModuleDict<DashboardT> = {
   en: {
     section_label: {
       cockpit: 'Decision Cockpit',
+      operationalFlow: 'Operational Flow',
       operationalMap3d: '3D Operational Map',
       dashboard: 'Executive dashboard',
       turno: 'Current shift',
@@ -450,6 +452,7 @@ export const dashboardT: ModuleDict<DashboardT> = {
   de: {
     section_label: {
       cockpit: 'Decision Cockpit',
+      operationalFlow: 'Operational Flow',
       operationalMap3d: 'Operative 3D-Karte',
       dashboard: 'Executive-Dashboard',
       turno: 'Aktuelle Schicht',

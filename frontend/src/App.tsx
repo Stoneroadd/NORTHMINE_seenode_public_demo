@@ -196,6 +196,8 @@ function renderSection(section: SectionId, session: AuthSession, t: AppT) {
   switch (section) {
     case 'cockpit':
       return wrap(_S(<DecisionCockpit />), 'cockpit')
+    case 'operationalFlow':
+      return wrap(_S(<OperationalFlowPage />), appPaths.operationalFlow)
     case 'operationalMap3d':
       return wrap(_S(<OperationalMindMap3D />), 'operationalMap3d')
     case 'dashboard':

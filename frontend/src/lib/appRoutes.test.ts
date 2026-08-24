@@ -13,9 +13,9 @@ describe('canonical app route contract', () => {
     expect(sectionFromPath(appPaths.dashboardLegacy)).toBe('dashboard')
   })
 
-  it('keeps extra and Mission Control routes in the cockpit shell section', () => {
+  it('maps the primary Mission Control surface and keeps extra routes in the cockpit section', () => {
     expect(sectionFromPath(appPaths.prediccion)).toBe('cockpit')
-    expect(sectionFromPath(appPaths.operationalFlow)).toBe('cockpit')
+    expect(sectionFromPath(appPaths.operationalFlow)).toBe('operationalFlow')
   })
 
   it('normalizes only trailing slashes without rewriting route identity', () => {

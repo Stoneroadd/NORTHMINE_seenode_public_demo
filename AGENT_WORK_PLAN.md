@@ -209,6 +209,15 @@ agent, with honest non-instrumented status and no fabricated entity handlers.
 Unit contracts cover uniqueness/mapping/registry membership; browser history,
 trailing-slash rendering and authenticated navigation pass on mobile/desktop.
 
+**Operational Flow discoverability — COMPLETE (Codex).**
+Operational Flow no longer requires a hidden URL: it is a first-class item in
+the existing operational navigation compatibility layer, immediately after
+Decision Cockpit, with a restrained relationship icon and impact/propagation
+caption. This does not endorse the permanent sidebar as the Mission Control
+target shell; it makes the implemented intelligence surface reachable during
+migration. Active state, session retention and mobile drawer behavior are
+protected by responsive browser tests.
+
 **Public analytics/CSP mismatch — COMPLETE (Codex).**
 The deployed landing includes GoatCounter from `gc.zgo.at`, while the enforced
 Content Security Policy blocks that origin and produces a browser console

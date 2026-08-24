@@ -26,7 +26,6 @@ export type AgentModuleId =
   | 'adminUsers'
   | 'adminDemoAccess'
   | 'adminAuditoria'
-  | 'operationalFlow'
 
 export type AgentModuleCategory =
   | 'operacional'

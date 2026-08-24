@@ -814,3 +814,23 @@ vulnerabilities, `git diff --check` PASS, and focused Playwright 2/2 on Pixel 7
 and desktop 1440. The browser proof covers Mission Control with a trailing slash,
 sidebar navigation to Prediccion, Back/Forward reconstruction, retained
 authenticated shell and no login fallback.
+
+---
+
+## 2026-08-24 — Codex — Operational Flow discoverability
+
+The implemented Operational Flow still depended on knowing
+`/mission-control/operational-flow`; this matched the user's production finding
+that only Decision Cockpit was visible. Operational Flow is now a typed shell
+section and appears immediately after Decision Cockpit in the existing
+operational navigation, labelled with the concise purpose “Impacto y
+propagacion”. The change deliberately adds no card, modal, KPI or new navigation
+system. It is a compatibility bridge until the approved Mission Control shell
+replaces the permanent sidebar.
+
+The first focused browser run failed because its exact-text locator now found
+the newly added, correctly hidden mobile navigation label before the page `h1`.
+The assertion was corrected to target `.mc-flow-context h1`; no product behavior
+was changed to satisfy the test. Final evidence: TypeScript lint PASS, Vitest
+133/133, production build PASS without warnings, Impeccable detector `[]`,
+focused Playwright 4/4 on Pixel 7 and desktop 1440, and `git diff --check` PASS.
