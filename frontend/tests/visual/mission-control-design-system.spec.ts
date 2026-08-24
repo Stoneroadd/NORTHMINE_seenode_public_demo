@@ -44,10 +44,12 @@ test('desktop catalog communicates condition, impact and evidence', async ({ pag
   }
   await expect(page).toHaveScreenshot('mission-control-phase2-desktop.png', { fullPage: true })
 
+  await page.clock.install()
   const retryButton = page.getByRole('button', { name: 'Reintentar historial' })
   await retryButton.click()
   await expect(page.getByText('Recuperando historial')).toBeVisible()
   await expect(page.getByRole('button', { name: 'Recuperando…' })).toBeFocused()
+  await page.clock.runFor(600)
   await expect(page.getByText('Historial recuperado')).toBeVisible()
   await expect(page.getByRole('button', { name: 'Historial disponible' })).toBeFocused()
   expect(pageErrors).toEqual([])

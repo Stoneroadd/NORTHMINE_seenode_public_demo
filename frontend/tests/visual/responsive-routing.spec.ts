@@ -38,7 +38,7 @@ test.describe('canonical authenticated routing', () => {
 
     const entry = page.locator('button[title^="Operational Flow:"]')
     await expect(entry).toBeVisible()
-    await entry.click()
+    await entry.click({ noWaitAfter: true })
 
     await page.waitForURL((url) => url.pathname === appPaths.operationalFlow)
     await expect(page.locator('.mc-flow-context h1')).toHaveText('Operational Flow')
@@ -153,5 +153,16 @@ test.describe('canonical authenticated routing', () => {
     await expect(relationships.getByText(/Hipótesis · Confianza baja · desde/)).toBeVisible()
     await expect(relationships).not.toContainText('35%')
     await expect(relationships).not.toContainText('0,35')
+  })
+
+  test('Operational Flow emphasizes only the selected node connections', async ({ page }) => {
+    await navigateWithinApp(page, appPaths.operationalFlow)
+    await page.getByRole('button', { name: /^Ruta Norte\./ }).filter({ visible: true }).click()
+
+    for (const relationshipId of ['rel-trucks-route', 'rel-route-destination', 'rel-route-cycle']) {
+      await expect(page.locator(`[data-relationship-id="${relationshipId}"]`)).toHaveClass(/is-contextual/)
+    }
+    await expect(page.locator('[data-relationship-id="rel-plan-cost"]')).toHaveClass(/is-muted/)
+    await expect(page.locator('[data-relationship-id="rel-plan-cost"]')).not.toHaveClass(/is-contextual/)
   })
 })

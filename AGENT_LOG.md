@@ -1171,3 +1171,34 @@ evidence: backend Operational Flow 3/3, full backend 395/395, presentation unit
 4/4, full frontend 139/139, focused responsive browser 2/2 on Pixel 7 and
 desktop 1440, TypeScript lint PASS, production build PASS, npm production audit
 zero vulnerabilities, Impeccable detector `[]`, and `git diff --check` PASS.
+
+---
+
+## 2026-08-24 — Codex — selected Operational Flow connection focus
+
+The graph selected nodes and updated the inspector but left every edge at the
+same visual weight, forcing users to retrace the full topology to identify the
+selected entity's immediate dependencies. Each rendered edge now carries its
+canonical relationship ID for deterministic inspection, emphasizes only when
+its source or target is selected, and subdues unrelated relationships. This is
+pure view state: no edge, impact, confidence or temporal fact is computed by the
+frontend.
+
+Operational severity remains dominant. An unrelated relationship is only muted
+when it is not carrying validated active impact, so selected context cannot hide
+the incident propagation path. The first red browser test confirmed the
+relationship neighborhood did not exist; final focused coverage passes 2/2 on
+Pixel 7 and desktop 1440. The 14-test routing matrix completed with all
+assertions passing but one initial Playwright navigation-wait retry; the test
+still used an implicit navigation wait even though NORTHMINE's router is manual.
+Separating real click action from the explicit URL assertion passed four
+consecutive mobile/desktop repetitions without retry.
+
+The Mission Control catalog also exposed a pre-existing 600 ms transient-state
+race after screenshot capture. Playwright's deterministic clock now verifies
+loading focus, advances exactly 600 ms and verifies recovered focus without
+changing product timing; catalog result 4/4. Full frontend result: 139/139,
+TypeScript lint PASS, production build PASS, npm production audit zero
+vulnerabilities and `git diff --check` PASS. Impeccable reported only its known
+grid advisory on the actual Operational Flow canvas; the new selection styles
+introduced no finding.

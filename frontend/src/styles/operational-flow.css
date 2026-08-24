@@ -233,6 +233,10 @@
   transition: stroke var(--mc-duration-state) var(--mc-ease-out), opacity var(--mc-duration-state) var(--mc-ease-out);
 }
 
+.mc-flow-edge-group { opacity: 1; transition: opacity var(--mc-duration-state) var(--mc-ease-out); }
+.mc-flow-edge-group.is-muted { opacity: 0.24; }
+.mc-flow-edge-group.is-contextual .mc-flow-edge:not(.is-impacted) { stroke-width: 2.3; }
+.mc-flow-edge-group.is-contextual .mc-flow-edge-label { fill: var(--mc-text-secondary); }
 .mc-flow-edge--derived { stroke-dasharray: 7 5; }
 .mc-flow-edge--hypothesis { stroke: var(--mc-unknown); stroke-dasharray: 2 7; color: var(--mc-unknown); }
 .mc-flow-edge.is-impacted { stroke: var(--mc-critical); stroke-width: 2.5; color: var(--mc-critical); stroke-dasharray: 9 7; animation: mc-flow-propagate 900ms var(--mc-ease-out) 1; }

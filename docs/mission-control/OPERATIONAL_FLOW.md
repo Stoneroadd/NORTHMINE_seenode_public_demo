@@ -101,6 +101,10 @@ Authorization: sesión NORTHMINE
   relación es incierta, muestra su nivel de confianza autorizado por backend.
 - `Datos técnicos` abre bajo demanda asignaciones, tiempos de ciclo, velocidades, colas, tonelaje y plan sin sobrecargar los nodos.
 - El canvas impide selección accidental de texto durante el movimiento o arrastre del puntero; el inspector conserva texto copiable.
+- Seleccionar una entidad aumenta el peso de sus relaciones directas y atenúa
+  sólo relaciones no conectadas que no estén propagando un impacto activo. La
+  condición operacional siempre tiene prioridad visual sobre el foco de
+  inspección.
 
 ### Tablet
 

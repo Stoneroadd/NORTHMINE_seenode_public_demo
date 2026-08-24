@@ -375,6 +375,13 @@ human language (`Confianza baja`) in Level 2 while retaining `0,35` only inside
 Level 3 technical detail. The frontend does not calculate operational
 confidence or expose implementation enums.
 
+**Operational Flow selected-connection focus — COMPLETE (Codex).**
+Selecting a node now emphasizes its direct segments and subdues unrelated
+non-impact relationships, making the graph-inspector connection legible without
+animating or hiding topology. Active operational-impact edges retain priority
+even when they are not connected to the selected node. Browser coverage guards
+the exact Ruta Norte neighborhood and the existing impact boundary.
+
 **Confirmed already fine, no action needed:** `/admin/audit-log` RBAC
 (already `RequireAdmin` + redaction) and refresh-token rotation (already
 race-guarded via conditional `UPDATE`) — see `AGENT_LOG.md` for detail.

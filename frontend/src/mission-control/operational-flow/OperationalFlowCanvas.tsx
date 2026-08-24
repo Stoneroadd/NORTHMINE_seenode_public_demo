@@ -134,8 +134,14 @@ export function OperationalFlowCanvas({
           {snapshot.relationships.map((edge) => {
             const path = edgePath(edge)
             if (!path) return null
+            const contextual = edge.source_node_id === selectedNodeId || edge.target_node_id === selectedNodeId
+            const preserveOperationalImpact = showImpact && edge.impacted
             return (
-              <g key={edge.relationship_id}>
+              <g
+                key={edge.relationship_id}
+                className={`mc-flow-edge-group${contextual ? ' is-contextual' : preserveOperationalImpact ? '' : ' is-muted'}`}
+                data-relationship-id={edge.relationship_id}
+              >
                 <path
                   className={`mc-flow-edge mc-flow-edge--${edge.assertion_type.toLowerCase()}${showImpact && edge.impacted ? ' is-impacted' : ''}`}
                   d={path}
