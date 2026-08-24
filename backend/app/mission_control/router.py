@@ -35,7 +35,7 @@ def operational_flow(
         )
     if at is not None and at.tzinfo is None:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="El timestamp debe incluir zona horaria",
         )
     try:
@@ -45,4 +45,4 @@ def operational_flow(
             at=at,
         )
     except ValueError as exc:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)) from exc
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=str(exc)) from exc

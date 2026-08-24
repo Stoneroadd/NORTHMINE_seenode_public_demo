@@ -118,6 +118,12 @@ setup-python v5 used deprecated Node 20 internals. All three official actions
 now use their documented v7 Node 24 line; NORTHMINE's tested application Node
 version remains explicitly pinned to 22 and Python remains pinned to 3.12.
 
+**Backend HTTP/UTC deprecation cleanup — COMPLETE (Codex).**
+Mission Control and Agent Demo now use the framework's current HTTP 422 name,
+and operator-ranking timestamps are created as timezone-aware UTC before being
+serialized with the existing `Z` contract. Focused endpoint/service coverage
+passes 6/6; the former 422 and `datetime.utcnow()` warnings are absent.
+
 **Public analytics/CSP mismatch — COMPLETE (Codex).**
 The deployed landing includes GoatCounter from `gc.zgo.at`, while the enforced
 Content Security Policy blocks that origin and produces a browser console

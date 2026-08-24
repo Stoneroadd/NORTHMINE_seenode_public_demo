@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import hashlib
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Mapping
 
 from app.services.operator_score_engine import RESPONSIBLE_USE_NOTE, build_score_explanation
@@ -64,7 +64,7 @@ def build_operator_ranking_audit(filters: Mapping[str, Any] | None = None, usern
     audit = {
         "source": "operator_ranking",
         "data_mode": ranking.get("data_mode", "real_wenco_sql"),
-        "generated_at": datetime.utcnow().isoformat(timespec="seconds") + "Z",
+        "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z"),
         "requested_by": username,
         "applied_filters": filters,
         "seed_id": build_seed_id(filters),
@@ -114,13 +114,13 @@ def build_operator_ranking_audit_log(filters: Mapping[str, Any] | None = None, u
     filters = clean_operator_filters(filters or {})
     ranking = build_global_operator_ranking(filters)
     items = ranking.get("items", [])
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     rows = []
     for index, item in enumerate(items[:10]):
         action = "EXPORT_CSV" if index == 0 and filters.get("export") else "VIEW_AUDIT"
         rows.append(
             {
-                "timestamp": now.replace(microsecond=0).isoformat() + "Z",
+                "timestamp": now.replace(microsecond=0).isoformat().replace("+00:00", "Z"),
                 "usuario": username,
                 "accion": action,
                 "applied_filters": filters,

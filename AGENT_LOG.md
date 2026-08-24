@@ -583,3 +583,11 @@ The only remaining annotation was the runner's Node 20 deprecation warning for
 the three official setup actions. Their official v7 manifests/documentation
 use Node 24, so checkout, setup-node and setup-python were moved to v7 without
 changing the application runtime pins (Node 22 and Python 3.12).
+
+The next warning cleanup replaced only deprecated aliases: Mission Control and
+Agent Demo retain HTTP status 422 via `HTTP_422_UNPROCESSABLE_CONTENT`, while
+operator-ranking timestamps now originate from timezone-aware UTC and preserve
+their existing `...Z` wire representation. A regression parses the service
+timestamp and proves a zero UTC offset. Focused result: 6/6; neither app-owned
+warning appears in that run. FastAPI lifespan and TestClient/httpx2 warnings
+remain separate migration work.

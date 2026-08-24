@@ -177,7 +177,7 @@ def demo_scenario(scenario_id: str, mode: str = "deterministic", user: dict = Re
     if not demo_tour_enabled():
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Agent Demo Tour no habilitado en este entorno.")
     if mode not in _ALLOWED_MODES:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Modo de demostración inválido.")
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="Modo de demostración inválido.")
     try:
         fixture_id, _ = fixture_for(scenario_id)
         scenario = next(item for item in available_scenarios() if item["id"] == scenario_id)

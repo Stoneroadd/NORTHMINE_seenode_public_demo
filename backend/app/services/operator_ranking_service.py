@@ -3,7 +3,7 @@ from __future__ import annotations
 import csv
 import io
 from collections import Counter, defaultdict
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from typing import Any, Iterable, Mapping
 
 from app.services.data_provider import get_dataset as _provider_get_dataset
@@ -101,7 +101,7 @@ SYSTEM_STATUS_LABELS = {
 
 
 def _now_iso() -> str:
-    return datetime.utcnow().isoformat(timespec="seconds") + "Z"
+    return datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
 
 
 def _norm(value: Any) -> str:

@@ -1,7 +1,17 @@
 from __future__ import annotations
 
+from datetime import datetime, timedelta
+
 from app.schemas.operator_ranking import OperatorRankingResponse
 from app.services import operator_ranking_service as service
+
+
+def test_operator_ranking_timestamp_is_explicit_utc() -> None:
+    timestamp = service._now_iso()
+
+    assert timestamp.endswith("Z")
+    parsed = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
+    assert parsed.utcoffset() == timedelta(0)
 
 
 def _cycle(
