@@ -113,4 +113,21 @@ test.describe('canonical authenticated routing', () => {
 
     expect(pageErrors).toEqual([])
   })
+
+  test('Operational Flow stops active propagation at unknown cost and after recovery', async ({ page }) => {
+    await navigateWithinApp(page, appPaths.operationalFlow)
+    await expect(page.locator('.mc-flow-context h1')).toHaveText('Operational Flow')
+
+    const plan = page.getByRole('button', { name: /^Plan turno\./ }).filter({ visible: true })
+    const cost = page.getByRole('button', { name: /^Impacto costo\./ }).filter({ visible: true })
+    await expect(plan).toHaveAttribute('aria-label', /Impactado por el evento activo/)
+    await expect(cost).not.toHaveAttribute('aria-label', /Impactado por el evento activo/)
+
+    await page.getByRole('button', { name: /Recuperada/ }).click()
+    await expect(page.locator('.mc-flow-situation__status')).toContainText('Normalizado')
+    const visibleNodeLabels = await page.locator('.mc-flow-node:visible, .mc-flow-mobile-node:visible').evaluateAll(
+      nodes => nodes.map(node => node.getAttribute('aria-label') ?? ''),
+    )
+    expect(visibleNodeLabels.some(label => label.includes('Impactado por el evento activo'))).toBe(false)
+  })
 })

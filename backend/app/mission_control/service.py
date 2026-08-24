@@ -357,7 +357,11 @@ def build_demo_operational_flow_snapshot(
             if is_critical or is_normalized
             else OperationalCondition.NORMAL,
             confidence=confidence if assertion_type is AssertionType.HYPOTHESIS else None,
-            impacted=is_critical and source != "front-f03",
+            impacted=(
+                is_critical
+                and source != "front-f03"
+                and assertion_type is not AssertionType.HYPOTHESIS
+            ),
             provenance=DERIVED_PROVENANCE if assertion_type is not AssertionType.FACT else SOURCE_PROVENANCE,
         )
         for relationship_id, source, target, relationship_type, label, assertion_type, confidence in relationship_specs
@@ -374,7 +378,11 @@ def build_demo_operational_flow_snapshot(
             detected_at=EVENT_DETECTED,
             normalized_at=EVENT_NORMALIZED if is_normalized else None,
             primary_node_id="loading-ph03",
-            affected_node_ids=[node.node_id for node in nodes if node.node_id != "front-f03"],
+            affected_node_ids=[
+                node.node_id
+                for node in nodes
+                if node.node_id != "front-f03" and node.assertion_type is not AssertionType.HYPOTHESIS
+            ],
             evidence_ids=[item.evidence_id for item in evidence],
         )
 

@@ -353,6 +353,13 @@ render. Setup now runs exactly once per explicit opening, ignores late results
 after closure and clears sensitive client state. The nested MFA dialog contains
 focus and Escape closes only MFA, not its parent Settings dialog.
 
+**Operational Flow validated-impact boundary — COMPLETE (Codex).**
+S01 no longer presents an unavailable cost calculation as actively impacted:
+the low-confidence hypothetical Plan→Cost relationship remains visible and
+inspectable but does not carry propagation. Historical affected entities remain
+on the event record, while `NORMALIZED/CLOSED` snapshots suppress active-impact
+styling and announcements. Plan and production impact remain visible.
+
 **Confirmed already fine, no action needed:** `/admin/audit-log` RBAC
 (already `RequireAdmin` + redaction) and refresh-token rotation (already
 race-guarded via conditional `UPDATE`) — see `AGENT_LOG.md` for detail.

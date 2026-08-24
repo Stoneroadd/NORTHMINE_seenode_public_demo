@@ -87,7 +87,9 @@ export function OperationalFlowCanvas({
     const rightPosition = POSITIONS[right.node_id]
     return leftPosition.y - rightPosition.y || leftPosition.x - rightPosition.x
   })
-  const impactedNodeIds = new Set(snapshot.active_event?.affected_node_ids ?? [])
+  const eventHasActiveImpact = snapshot.active_event
+    && !['NORMALIZED', 'CLOSED'].includes(snapshot.active_event.status)
+  const impactedNodeIds = new Set(eventHasActiveImpact ? snapshot.active_event?.affected_node_ids ?? [] : [])
 
   const handleNodeKey = (event: KeyboardEvent<SVGGElement>, nodeId: string) => {
     if (event.key === 'Enter' || event.key === ' ') {

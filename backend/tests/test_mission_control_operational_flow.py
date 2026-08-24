@@ -20,13 +20,16 @@ def test_demo_operational_flow_is_temporal_connected_and_provenance_safe() -> No
     node_ids = {node.node_id for node in snapshot.nodes}
     assert {edge.source_node_id for edge in snapshot.relationships} <= node_ids
     assert {edge.target_node_id for edge in snapshot.relationships} <= node_ids
-    assert any(edge.relationship_type == "MAY_AFFECT_COST" for edge in snapshot.relationships)
+    cost_edge = next(edge for edge in snapshot.relationships if edge.relationship_type == "MAY_AFFECT_COST")
+    assert cost_edge.assertion_type == "HYPOTHESIS"
+    assert cost_edge.impacted is False
     cost = next(node for node in snapshot.nodes if node.node_id == "cost-impact")
     assert cost.condition == "UNKNOWN"
     assert cost.summary == "Sin cálculo autorizado"
     assert cost.technical_details
     assert all(detail.provenance.origin == "SYNTHETIC" for node in snapshot.nodes for detail in node.technical_details)
     assert not any("$" in detail.value or "USD" in detail.value for detail in cost.technical_details)
+    assert "cost-impact" not in snapshot.active_event.affected_node_ids
     route = next(node for node in snapshot.nodes if node.node_id == "route-north")
     assert {detail.label for detail in route.technical_details} >= {"Velocidad observada", "Tiempo cargado"}
 

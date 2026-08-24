@@ -1013,8 +1013,6 @@ compile-time contract. Final evidence: TypeScript lint PASS, Vitest 138/138,
 production build PASS, npm production audit zero vulnerabilities, Impeccable
 detector `[]`, and `git diff --check` PASS.
 
----
-
 ## 2026-08-24 — Codex — loading-equipment detail focus contract
 
 Decision Cockpit's `LoadingEquipmentDetailModal` placed `role="dialog"` on the
@@ -1102,3 +1100,32 @@ the shared-hook regression matrix passes 16/16 across Settings, loading detail,
 equipment detail and all operator dialogs. TypeScript lint PASS, Vitest 138/138,
 production build PASS, npm production audit zero vulnerabilities, Impeccable
 detector `[]`, and `git diff --check` PASS.
+
+---
+
+## 2026-08-24 — Codex — Operational Flow validated-impact boundary
+
+The deterministic S01 graph marked every downstream relationship and every node
+except the front as impacted. That included `MAY_AFFECT_COST` and the Cost node,
+even though the same contract declares the relationship a 0.35-confidence
+hypothesis and the calculation unavailable. The browser therefore announced
+“Impacto costo ... Impactado por el evento activo.” The recovered snapshot also
+continued to announce active impact because the renderer treated historical
+`affected_node_ids` as current state after `NORMALIZED`.
+
+Two red contracts reproduced the boundary failures. The backend now excludes
+unvalidated hypotheses from propagation and from the event's affected entity
+set; it preserves the Plan→Cost edge, confidence, provenance and unavailable
+technical evidence for investigation. The renderer shows historical affected
+entities as active only before `NORMALIZED/CLOSED`. Production and plan remain
+impacted during the incident, cost remains visibly unknown, and recovery settles
+the graph without deleting the event.
+
+Final evidence: focused backend 3/3, full backend 395/395, focused responsive
+Operational Flow 2/2 on Pixel 7 and desktop 1440, Mission Control catalog 4/4,
+TypeScript lint PASS, production build PASS, npm production audit zero
+vulnerabilities, Impeccable detector `[]`, and `git diff --check` PASS. The first
+full frontend run under parallel backend/build/browser load reproduced the
+classified `ConversationTurnManager.test.ts:209` timeout (137/138); its file then
+passed 8/8 alone and the immediate full retry passed 138/138. No agent-runtime
+code or timeout was changed.
