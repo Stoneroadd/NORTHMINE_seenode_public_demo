@@ -24,7 +24,7 @@ import {
   getOperatorRankingTrends,
 } from '../services/operatorRankingService'
 import type { OperatorRankingItem } from '../types/operatorRanking'
-import { axisLabel, formatNumber, premiumPalette, tooltipBase, useChartPaletteKey } from '../components/charts/premium/chartTheme'
+import { axisLabel, firstChartParam, formatNumber, premiumPalette, tooltipBase, useChartPaletteKey } from '../components/charts/premium/chartTheme'
 import { useModuleT } from '../i18n/useModuleT'
 import { operatorRankingT, type OperatorRankingT } from '../i18n/modules/operatorRanking'
 import { useAgentWidget } from '../lib/agentRegistry/useAgentWidget'
@@ -100,8 +100,9 @@ function buildScatter(t: OperatorRankingT, items: OperatorRankingItem[]): EChart
     tooltip: {
       ...tooltipBase(),
       formatter: (params: unknown) => {
-        const row = params as { data: [number, number, number, string] }
-        return t.chart_tooltip_scatter(row.data[3], row.data[0], row.data[1], row.data[2])
+        const data = firstChartParam(params)?.data
+        if (!Array.isArray(data) || data.length < 4) return ''
+        return t.chart_tooltip_scatter(String(data[3]), Number(data[0]), Number(data[1]), Number(data[2]))
       },
     },
     xAxis: {

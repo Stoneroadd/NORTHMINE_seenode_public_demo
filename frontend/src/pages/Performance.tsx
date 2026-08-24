@@ -12,6 +12,8 @@ import { EquipmentDetailDrawer } from '../components/equipment/detail/EquipmentD
 import { EQUIPMENT_DETAIL_DRAWER_ID } from '../components/equipment/equipmentDetailA11y'
 import {
   axisLabel,
+  chartDataIndex,
+  firstChartParam,
   formatNumber,
   formatTons,
   premiumPalette,
@@ -61,8 +63,9 @@ function buildPeakHoursOption(data: PerformanceSummary): EChartsOption {
     tooltip: {
       ...tooltipBase(),
       formatter: (params: unknown) => {
-        const row = params as { dataIndex: number }
-        const item = data.hourly_profile[row.dataIndex]
+        const index = chartDataIndex(params)
+        const item = index === undefined ? undefined : data.hourly_profile[index]
+        if (!item) return ''
         return `<strong>${item.label}</strong><br/>Promedio: <strong>${formatTons(item.promedio_ton)}</strong><br/>Participacion: <strong>${item.porcentaje_total}%</strong>`
       },
     },
@@ -162,8 +165,9 @@ function buildHeatmapOption(data: PerformanceSummary): EChartsOption {
     tooltip: {
       ...tooltipBase(),
       formatter: (params: unknown) => {
-        const row = params as { value: [number, number, number, number] }
-        return `<strong>${weekdays[row.value[0]]} ${hours[row.value[1]]}</strong><br/>Promedio: <strong>${formatTons(row.value[2])}</strong><br/>Ranking: <strong>#${row.value[3]}</strong>`
+        const value = firstChartParam(params)?.value
+        if (!Array.isArray(value) || value.length < 4) return ''
+        return `<strong>${weekdays[Number(value[0])]} ${hours[Number(value[1])]}</strong><br/>Promedio: <strong>${formatTons(Number(value[2]))}</strong><br/>Ranking: <strong>#${Number(value[3])}</strong>`
       },
     },
     xAxis: { type: 'category', data: weekdays, splitArea: { show: true }, axisLabel },
@@ -203,8 +207,9 @@ function buildLoaderOption(data: LoaderPerformance[]): EChartsOption {
     tooltip: {
       ...tooltipBase(),
       formatter: (params: unknown) => {
-        const row = params as { dataIndex: number }
-        const item = rows[row.dataIndex]
+        const index = chartDataIndex(params)
+        const item = index === undefined ? undefined : rows[index]
+        if (!item) return ''
         return `<strong>${item.carguio_id}</strong><br/>${formatTons(item.toneladas)}<br/>${formatNumber(item.ciclos)} ciclos<br/>${formatNumber(item.ton_ciclo, 1)} t/ciclo`
       },
     },
@@ -237,6 +242,7 @@ function buildLoaderOption(data: LoaderPerformance[]): EChartsOption {
           color: premiumPalette.text,
           formatter: (params: { dataIndex: number }) => {
             const item = rows[params.dataIndex]
+            if (!item) return ''
             return `${formatTons(item.toneladas)}  ${formatNumber(item.ciclos)} ciclos  ${formatNumber(item.ton_ciclo, 1)} t/ciclo`
           },
         },

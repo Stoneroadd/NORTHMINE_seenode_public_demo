@@ -151,6 +151,17 @@ Dependency resolution and `pip check` pass, focused TestClient coverage passes
 PySocks warning seen once was not reproducible in a warning-as-error full run
 and is classified environmental/flaky rather than a product dependency.
 
+**ECharts/DOMPurify security update and authenticated analysis navigation — COMPLETE (Codex).**
+The frontend now resolves the two moderate production dependency advisories by
+using ECharts 6.1 and DOMPurify 3.4.14. ECharts 6 can invoke axis tooltip
+formatters with an object, an array or no usable item during pointer transitions,
+so shared parameter normalization protects all affected operational charts.
+Sidebar analysis/admin links now use the application's client navigation path
+instead of a document reload that discarded the in-memory authenticated session.
+Regression coverage verifies chart mounting, pointer interaction and navigation
+on Pixel 7 and desktop 1440. Final evidence: unit 126/126, focused browser 8/8,
+production build PASS, npm production audit 0 vulnerabilities, detector `[]`.
+
 **Public analytics/CSP mismatch — COMPLETE (Codex).**
 The deployed landing includes GoatCounter from `gc.zgo.at`, while the enforced
 Content Security Policy blocks that origin and produces a browser console

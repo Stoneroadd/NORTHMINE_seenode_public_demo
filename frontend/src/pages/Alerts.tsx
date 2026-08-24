@@ -24,7 +24,7 @@ import { AlertSeverityBadge, normalizeSeverity } from '../components/alerts/Aler
 import { EquipmentDetailDrawer } from '../components/equipment/detail/EquipmentDetailDrawer'
 import { EQUIPMENT_DETAIL_DRAWER_ID } from '../components/equipment/equipmentDetailA11y'
 import { getEquipmentFamilyLabel, getEquipmentImage, getEquipmentLabel } from '../data/equipmentAssets'
-import { axisLabel, formatNumber, formatTons, premiumPalette, tooltipBase, useChartPaletteKey } from '../components/charts/premium/chartTheme'
+import { axisLabel, chartDataIndex, formatNumber, formatTons, premiumPalette, tooltipBase, useChartPaletteKey } from '../components/charts/premium/chartTheme'
 import type { DestinationDistribution, LowCaexAlert, OperationalAlertsResponse, SmartAlert } from '../lib/api'
 import { useModuleT } from '../i18n/useModuleT'
 import { alertsT, type AlertsT } from '../i18n/modules/alerts'
@@ -251,8 +251,9 @@ function buildWeekdayOption(data: OperationalAlertsResponse, t: AlertsT): EChart
     tooltip: {
       ...tooltipBase(),
       formatter: (params: unknown) => {
-        const row = params as { dataIndex: number }
-        const item = data.weekday_productivity[row.dataIndex]
+        const index = chartDataIndex(params)
+        const item = index === undefined ? undefined : data.weekday_productivity[index]
+        if (!item) return ''
         return `<strong>${item.label}</strong><br/>${formatTons(item.toneladas)}<br/>${t.chart_vs_average(item.delta_pct)}`
       },
     },
@@ -294,8 +295,9 @@ function buildDestinationOption(items: DestinationDistribution[], t: AlertsT): E
     tooltip: {
       ...tooltipBase(),
       formatter: (params: unknown) => {
-        const row = params as { dataIndex: number }
-        const item = rows[row.dataIndex]
+        const index = chartDataIndex(params)
+        const item = index === undefined ? undefined : rows[index]
+        if (!item) return ''
         return `<strong>${item.destino}</strong><br/>${formatTons(item.tonelaje)}<br/>${t.chart_cycles(item.ciclos)}<br/>${t.chart_pct_material(item.porcentaje)}`
       },
     },
@@ -326,6 +328,7 @@ function buildDestinationOption(items: DestinationDistribution[], t: AlertsT): E
           color: premiumPalette.text,
           formatter: (params: { dataIndex: number }) => {
             const item = rows[params.dataIndex]
+            if (!item) return ''
             return `${item.porcentaje}% / ${formatTons(item.tonelaje)}`
           },
         },

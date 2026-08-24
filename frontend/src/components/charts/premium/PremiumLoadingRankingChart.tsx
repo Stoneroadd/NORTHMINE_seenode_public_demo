@@ -3,7 +3,7 @@ import ReactECharts from 'echarts-for-react'
 import type { EChartsOption } from 'echarts'
 import type { LoadingUnit, RankingItem } from '../../../lib/api'
 import { PremiumChartFrame } from './PremiumChartFrame'
-import { axisLabel, formatNumber, formatTons, hasValues, premiumPalette, tooltipBase, useChartPaletteKey } from './chartTheme'
+import { axisLabel, chartDataIndex, formatNumber, formatTons, hasValues, premiumPalette, tooltipBase, useChartPaletteKey } from './chartTheme'
 import { useModuleT } from '../../../i18n/useModuleT'
 import { chartsT, type ChartsT } from '../../../i18n/modules/charts'
 
@@ -65,9 +65,9 @@ function PremiumLoadingRankingChartBase({
         trigger: 'axis',
         axisPointer: { type: 'shadow' },
         formatter: (params: unknown) => {
-          const first = Array.isArray(params) ? params[0] : params
-          const index = (first as { dataIndex: number }).dataIndex
-          const item = rows[index]
+          const index = chartDataIndex(params)
+          const item = index === undefined ? undefined : rows[index]
+          if (!item) return ''
           return [
             `<strong>${unitId(item, t)}</strong>`,
             t.tonnageTooltip(formatTons(tons(item))),

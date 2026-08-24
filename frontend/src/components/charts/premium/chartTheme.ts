@@ -97,6 +97,24 @@ export function hasValues<T>(items: T[] | undefined | null) {
   return Array.isArray(items) && items.length > 0
 }
 
+/**
+ * ECharts may provide either one parameter object or an array for tooltip
+ * formatters, and transient pointer/resize frames can contain no parameter at
+ * all. Normalize that boundary once so product charts never expose an
+ * implementation error to the operator.
+ */
+export function firstChartParam(params: unknown): Record<string, unknown> | undefined {
+  const candidate = Array.isArray(params) ? params[0] : params
+  return candidate !== null && typeof candidate === 'object'
+    ? candidate as Record<string, unknown>
+    : undefined
+}
+
+export function chartDataIndex(params: unknown): number | undefined {
+  const value = firstChartParam(params)?.dataIndex
+  return typeof value === 'number' && Number.isInteger(value) && value >= 0 ? value : undefined
+}
+
 // useTheme() aplica html[data-theme] dentro de un useLayoutEffect (para
 // evitar parpadeos de tema en el resto de la UI). Si un chart recalculara
 // sus colores con premiumPalette dentro de su propio render/useMemo al

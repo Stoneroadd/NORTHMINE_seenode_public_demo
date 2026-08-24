@@ -642,3 +642,33 @@ passes 4/4 without the warning; full backend remains 395/395. The optional
 PySocks warning appeared once in a full local run but could not be reproduced
 in the voice module (43/43) or a complete run treating that warning as an error
 (395/395); no unrelated proxy package was added.
+
+---
+
+## 2026-08-23 — Codex — frontend dependency security and routing integrity
+
+`npm audit --omit=dev` identified two moderate production advisories: ECharts
+before 6.1.0 and DOMPurify through 3.4.12. The direct ECharts dependency now uses
+6.1.0 and the existing transitive DOMPurify dependency is constrained to the
+fixed 3.4 line. The resulting production audit reports zero vulnerabilities.
+
+A real pointer-interaction pass after the ECharts update exposed two formatter
+failures in Performance and Alerts. The library can supply axis tooltip
+parameters as an object, an array or an empty/transient value. A shared typed
+normalizer in `chartTheme.ts` now handles those shapes, and the five affected
+operational pages/components use it rather than dereferencing `params[0]`.
+Focused unit coverage protects valid and malformed parameter shapes.
+
+The same browser pass found that the sidebar's extra analysis/admin links were
+plain anchors. Their full-document navigation discarded the authentication
+state held in memory and returned users to login. `AppShell` now tracks the
+current path independently from its broad section key, and `Sidebar` delegates
+ordinary internal clicks to the shell while preserving modified/new-tab clicks.
+This also fixes same-section popstate updates for routes mapped to `cockpit`.
+
+Verification before integration: frontend unit 126/126, lint PASS, production
+build PASS, responsive Playwright 8/8 on Pixel 7 and desktop 1440, pointer hover
+without page errors, authenticated Predicción navigation without login fallback,
+`npm audit --omit=dev` 0 vulnerabilities, `git diff --check` PASS, and the
+Impeccable detector returned `[]`. Existing Vite plugin deprecation warnings are
+unchanged and remain separate migration work.

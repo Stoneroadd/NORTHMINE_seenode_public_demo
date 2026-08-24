@@ -8,7 +8,7 @@ import { ModuleHeader } from '../components/common/ModuleHeader'
 import { LoadingState } from '../components/common/LoadingState'
 import { ErrorState } from '../components/common/ErrorState'
 import { EquipmentDetailDrawer } from '../components/equipment/detail/EquipmentDetailDrawer'
-import { axisLabel, formatNumber, formatTons, premiumPalette, tooltipBase, useChartPaletteKey } from '../components/charts/premium/chartTheme'
+import { axisLabel, chartDataIndex, firstChartParam, formatNumber, formatTons, premiumPalette, tooltipBase, useChartPaletteKey } from '../components/charts/premium/chartTheme'
 import type { CompareResponse } from '../lib/api'
 import { useModuleT } from '../i18n/useModuleT'
 import { compareT, type CompareT } from '../i18n/modules/compare'
@@ -62,11 +62,12 @@ function buildHourlyCompareOption(data: CompareResponse, t: CompareT): EChartsOp
     tooltip: {
       ...tooltipBase(),
       formatter: (params: unknown) => {
-        const rows = Array.isArray(params) ? params : [params]
-        const first = rows[0] as { dataIndex: number; axisValue?: string }
-        const a = aValues[first.dataIndex] ?? 0
-        const b = bValues[first.dataIndex] ?? 0
-        return `<strong>${first.axisValue}</strong><br/>${t.tooltip_period_a}: <strong>${formatTons(a)}</strong><br/>${t.tooltip_period_b}: <strong>${formatTons(b)}</strong><br/>${t.tooltip_diff}: <strong>${formatTons(b - a)}</strong>`
+        const index = chartDataIndex(params)
+        if (index === undefined) return ''
+        const a = aValues[index] ?? 0
+        const b = bValues[index] ?? 0
+        const axisValue = firstChartParam(params)?.axisValue ?? ''
+        return `<strong>${String(axisValue)}</strong><br/>${t.tooltip_period_a}: <strong>${formatTons(a)}</strong><br/>${t.tooltip_period_b}: <strong>${formatTons(b)}</strong><br/>${t.tooltip_diff}: <strong>${formatTons(b - a)}</strong>`
       },
     },
     legend: { top: 0, right: 0, textStyle: { color: premiumPalette.muted, fontSize: 11 } },

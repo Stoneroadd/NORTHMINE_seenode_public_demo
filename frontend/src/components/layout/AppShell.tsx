@@ -50,6 +50,7 @@ function sectionFromPath(pathname: string): SectionId {
 export function AppShell({ session, onLogout, children }: Props) {
   const t = useModuleT(layoutT)
   const [section, setSection] = useState<SectionId>(() => sectionFromPath(window.location.pathname))
+  const [currentPath, setCurrentPath] = useState(() => window.location.pathname)
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
   const queryClient = useQueryClient()
   // El fondo decorativo (matrix rain + grid) dibuja en canvas via rAF de forma
@@ -75,6 +76,16 @@ export function AppShell({ session, onLogout, children }: Props) {
     setSection(nextSection)
     setMobileSidebarOpen(false)
     const nextPath = sectionPaths[nextSection]
+    setCurrentPath(nextPath)
+    if (window.location.pathname !== nextPath) {
+      window.history.pushState(null, '', nextPath)
+    }
+  }
+
+  const handleSelectPath = (nextPath: string) => {
+    setSection(sectionFromPath(nextPath))
+    setCurrentPath(nextPath)
+    setMobileSidebarOpen(false)
     if (window.location.pathname !== nextPath) {
       window.history.pushState(null, '', nextPath)
     }
@@ -82,7 +93,9 @@ export function AppShell({ session, onLogout, children }: Props) {
 
   useEffect(() => {
     const handlePopState = () => {
-      setSection(sectionFromPath(window.location.pathname))
+      const nextPath = window.location.pathname
+      setSection(sectionFromPath(nextPath))
+      setCurrentPath(nextPath)
     }
 
     window.addEventListener('popstate', handlePopState)
@@ -106,7 +119,9 @@ export function AppShell({ session, onLogout, children }: Props) {
       {backgroundFxEnabled && <CommandCenterBackground />}
       <Sidebar
         active={section}
+        activePath={currentPath}
         onSelect={handleSelectSection}
+        onPathSelect={handleSelectPath}
         mobileOpen={mobileSidebarOpen}
         onNavigate={() => setMobileSidebarOpen(false)}
       />

@@ -21,6 +21,7 @@ import {
   Wrench,
   type LucideIcon,
 } from 'lucide-react'
+import type { MouseEvent } from 'react'
 import { useAppStore, useT } from '../../store'
 import { NorthmineLogo } from '../brand/NorthmineLogo'
 
@@ -70,15 +71,23 @@ interface Props {
   onSelect: (section: SectionId) => void
   mobileOpen?: boolean
   onNavigate?: () => void
+  activePath: string
+  onPathSelect: (path: string) => void
 }
 
-export function Sidebar({ active, onSelect, mobileOpen = false, onNavigate }: Props) {
+export function Sidebar({ active, onSelect, mobileOpen = false, onNavigate, activePath, onPathSelect }: Props) {
   const t = useT()
   const usuario = useAppStore(s => s.usuario)
   const sidebarCollapsed = useAppStore(s => s.sidebarCollapsed)
   const toggleSidebar = useAppStore(s => s.toggleSidebar)
   const canViewOperatorRanking = usuario?.rol === 'admin' || usuario?.rol === 'supervisor'
   const visibleItems = items.filter((item) => item.id !== 'admin' || usuario?.rol === 'admin')
+  const handleInternalLink = (event: MouseEvent<HTMLAnchorElement>, path: string) => {
+    onNavigate?.()
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
+    event.preventDefault()
+    onPathSelect(path)
+  }
 
   return (
     <aside className={`sidebar ${mobileOpen ? 'is-mobile-open' : ''} ${sidebarCollapsed ? 'is-collapsed' : ''}`}>
@@ -135,7 +144,7 @@ export function Sidebar({ active, onSelect, mobileOpen = false, onNavigate }: Pr
 
         <span className="nav-group-label" style={{ marginTop: 12 }}>ANÁLISIS</span>
         {canViewOperatorRanking && (
-          <a className={`nav-item ${window.location.pathname === '/operator-ranking' ? 'is-active' : ''}`} href="/operator-ranking" title="Ranking Operadores: Productividad y demoras" onClick={onNavigate}>
+          <a className={`nav-item ${activePath === '/operator-ranking' ? 'is-active' : ''}`} href="/operator-ranking" title="Ranking Operadores: Productividad y demoras" onClick={(event) => handleInternalLink(event, '/operator-ranking')}>
             <span className="nav-active-line" />
             <span className="nav-icon"><Users size={18} /></span>
             <span>
@@ -144,7 +153,7 @@ export function Sidebar({ active, onSelect, mobileOpen = false, onNavigate }: Pr
             </span>
           </a>
         )}
-        <a className={`nav-item ${window.location.pathname === '/comparativa' ? 'is-active' : ''}`} href="/comparativa" title="Comparativa: Periodos y brechas" onClick={onNavigate}>
+        <a className={`nav-item ${activePath === '/comparativa' ? 'is-active' : ''}`} href="/comparativa" title="Comparativa: Periodos y brechas" onClick={(event) => handleInternalLink(event, '/comparativa')}>
           <span className="nav-active-line" />
           <span className="nav-icon"><BarChart3 size={18} /></span>
           <span>
@@ -152,7 +161,7 @@ export function Sidebar({ active, onSelect, mobileOpen = false, onNavigate }: Pr
             <span className="nav-caption">Periodos y brechas</span>
           </span>
         </a>
-        <a className={`nav-item ${window.location.pathname === '/prediccion' ? 'is-active' : ''}`} href="/prediccion" title="Predicción ML: Proyección de turno" onClick={onNavigate}>
+        <a className={`nav-item ${activePath === '/prediccion' ? 'is-active' : ''}`} href="/prediccion" title="Predicción ML: Proyección de turno" onClick={(event) => handleInternalLink(event, '/prediccion')}>
           <span className="nav-active-line" />
           <span className="nav-icon"><Brain size={18} /></span>
           <span>
@@ -160,7 +169,7 @@ export function Sidebar({ active, onSelect, mobileOpen = false, onNavigate }: Pr
             <span className="nav-caption">Proyección de turno</span>
           </span>
         </a>
-        <a className={`nav-item ${window.location.pathname === '/simulador' ? 'is-active' : ''}`} href="/simulador" title="Simulador: Escenarios de meta" onClick={onNavigate}>
+        <a className={`nav-item ${activePath === '/simulador' ? 'is-active' : ''}`} href="/simulador" title="Simulador: Escenarios de meta" onClick={(event) => handleInternalLink(event, '/simulador')}>
           <span className="nav-active-line" />
           <span className="nav-icon"><FlaskConical size={18} /></span>
           <span>
@@ -172,7 +181,7 @@ export function Sidebar({ active, onSelect, mobileOpen = false, onNavigate }: Pr
         {usuario?.rol === 'admin' && (
           <>
             <span className="nav-group-label" style={{ marginTop: 12 }}>HERRAMIENTAS</span>
-            <a className={`nav-item ${window.location.pathname === '/admin/users' ? 'is-active' : ''}`} href="/admin/users" title="Usuarios: Roles y acceso" onClick={onNavigate}>
+            <a className={`nav-item ${activePath === '/admin/users' ? 'is-active' : ''}`} href="/admin/users" title="Usuarios: Roles y acceso" onClick={(event) => handleInternalLink(event, '/admin/users')}>
               <span className="nav-active-line" />
               <span className="nav-icon"><Users size={18} /></span>
               <span>
@@ -180,7 +189,7 @@ export function Sidebar({ active, onSelect, mobileOpen = false, onNavigate }: Pr
                 <span className="nav-caption">Roles y acceso</span>
               </span>
             </a>
-            <a className={`nav-item ${window.location.pathname === '/admin/sistema' ? 'is-active' : ''}`} href="/admin/sistema" title="Sistema: Salud y monitoreo" onClick={onNavigate}>
+            <a className={`nav-item ${activePath === '/admin/sistema' ? 'is-active' : ''}`} href="/admin/sistema" title="Sistema: Salud y monitoreo" onClick={(event) => handleInternalLink(event, '/admin/sistema')}>
               <span className="nav-active-line" />
               <span className="nav-icon"><Server size={18} /></span>
               <span>
@@ -188,7 +197,7 @@ export function Sidebar({ active, onSelect, mobileOpen = false, onNavigate }: Pr
                 <span className="nav-caption">Salud y monitoreo</span>
               </span>
             </a>
-            <a className={`nav-item ${window.location.pathname === '/admin/auditoria' ? 'is-active' : ''}`} href="/admin/auditoria" title="Auditoría: Log de seguridad" onClick={onNavigate}>
+            <a className={`nav-item ${activePath === '/admin/auditoria' ? 'is-active' : ''}`} href="/admin/auditoria" title="Auditoría: Log de seguridad" onClick={(event) => handleInternalLink(event, '/admin/auditoria')}>
               <span className="nav-active-line" />
               <span className="nav-icon"><ShieldAlert size={18} /></span>
               <span>
