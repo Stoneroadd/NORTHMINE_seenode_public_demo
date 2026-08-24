@@ -9,11 +9,9 @@ export interface FiltersT {
   applying: string
   apply: string
   commandFilters: string
-  advancedFilters: string
   close: string
   advancedFiltersInline: string
   advancedFiltersAria: string
-  closeFiltersAria: string
   activeFiltersAria: string
   noActiveFilters: string
   filteredBy: string
@@ -51,11 +49,9 @@ export const filtersT: ModuleDict<FiltersT> = {
     applying: 'Aplicando...',
     apply: 'Aplicar filtros',
     commandFilters: 'Command filters',
-    advancedFilters: 'Filtros avanzados',
     close: 'Cerrar',
     advancedFiltersInline: 'Filtros avanzados',
     advancedFiltersAria: 'Filtros avanzados inline',
-    closeFiltersAria: 'Cerrar filtros',
     activeFiltersAria: 'Filtros activos',
     noActiveFilters: 'Sin filtros activos',
     filteredBy: 'Datos filtrados por',
@@ -91,11 +87,9 @@ export const filtersT: ModuleDict<FiltersT> = {
     applying: 'Applying...',
     apply: 'Apply filters',
     commandFilters: 'Command filters',
-    advancedFilters: 'Advanced filters',
     close: 'Close',
     advancedFiltersInline: 'Advanced filters',
     advancedFiltersAria: 'Inline advanced filters',
-    closeFiltersAria: 'Close filters',
     activeFiltersAria: 'Active filters',
     noActiveFilters: 'No active filters',
     filteredBy: 'Data filtered by',
@@ -131,11 +125,9 @@ export const filtersT: ModuleDict<FiltersT> = {
     applying: 'Wird angewendet...',
     apply: 'Filter anwenden',
     commandFilters: 'Befehlsfilter',
-    advancedFilters: 'Erweiterte Filter',
     close: 'Schließen',
     advancedFiltersInline: 'Erweiterte Filter',
     advancedFiltersAria: 'Erweiterte Inline-Filter',
-    closeFiltersAria: 'Filter schließen',
     activeFiltersAria: 'Aktive Filter',
     noActiveFilters: 'Keine aktiven Filter',
     filteredBy: 'Daten gefiltert nach',
