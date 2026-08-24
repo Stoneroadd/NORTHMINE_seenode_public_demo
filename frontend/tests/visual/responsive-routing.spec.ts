@@ -173,6 +173,7 @@ test.describe('canonical authenticated routing', () => {
     const inspector = page.locator('.mc-flow-inspector')
     await inspector.getByRole('button', { name: 'Hacia Chancador 01', exact: true }).click()
     await expect(inspector.locator('#mc-flow-inspector-title')).toHaveText('Chancador 01')
+    await expect(inspector.getByRole('button', { name: 'Desde Ruta Norte', exact: true })).toBeFocused()
     await expect(page.locator('[data-relationship-id="rel-route-destination"]')).toHaveClass(/is-contextual/)
     await expect(page.locator('[data-relationship-id="rel-destination-tonnage"]')).toHaveClass(/is-contextual/)
   })
