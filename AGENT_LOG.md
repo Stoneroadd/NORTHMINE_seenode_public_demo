@@ -599,3 +599,12 @@ successful entry, so `event_monitor.stop()` remains guaranteed. A dedicated
 TestClient regression proves `startup → active app → shutdown`; full backend
 result is 395/395. Four framework deprecation warnings disappeared, leaving
 only the separate TestClient/httpx2 and optional PySocks dependency warnings.
+
+Starlette 1.3's TestClient now consumes its supported `httpx2` package from
+development requirements; NORTHMINE's runtime `httpx` callers are deliberately
+unchanged. `httpx2` requires current IDNA, so the exact runtime pin moves from
+3.17 to 3.19. Pip resolution and `pip check` pass; focused TestClient coverage
+passes 4/4 without the warning; full backend remains 395/395. The optional
+PySocks warning appeared once in a full local run but could not be reproduced
+in the voice module (43/43) or a complete run treating that warning as an error
+(395/395); no unrelated proxy package was added.

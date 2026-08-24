@@ -131,6 +131,14 @@ order and event-monitor teardown. A dedicated contract test proves startup and
 shutdown ordering; full backend result is 395/395 with only two third-party
 dependency warnings remaining.
 
+**Starlette TestClient httpx2 migration — COMPLETE (Codex).**
+Starlette's supported `httpx2` client is now a dev-only dependency; production
+`httpx` remains unchanged. `idna` is advanced to its compatible 3.19 patch.
+Dependency resolution and `pip check` pass, focused TestClient coverage passes
+4/4 without the warning, and the full backend suite passes 395/395. The lone
+PySocks warning seen once was not reproducible in a warning-as-error full run
+and is classified environmental/flaky rather than a product dependency.
+
 **Public analytics/CSP mismatch — COMPLETE (Codex).**
 The deployed landing includes GoatCounter from `gc.zgo.at`, while the enforced
 Content Security Policy blocks that origin and produces a browser console
