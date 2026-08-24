@@ -88,6 +88,54 @@ change.
 `feat/responsive-test-harness`, `feat/mission-control-test-harness` or
 any other in-flight Codex branch overlapped.
 
+## 2026-08-23 — Claude Code — branch `main` — image weight investigated, recompression declined
+
+**Scope:** continuing the same optimization mandate, looked at page-weight
+next: `public/` (18.53MB across 13 files checked) ships byte-for-byte to
+production with no tree-shaking, unlike `src/`. `fondo_login.png` (3.8MB,
+loaded on every visit to `/login`) and `northmine-logo-master.png` (2.8MB,
+loaded on every page via `NorthmineLogo.tsx` + `index.html`'s OG tags) are
+the two highest-value targets.
+
+**Tried and reverted:** re-encoded the 13 largest referenced PNGs with
+`sharp`'s PNG encoder at `compressionLevel: 9, effort: 10` (no palette
+quantization) expecting a genuinely lossless win (18.53MB -> 5.82MB, 68%).
+Verified empirically rather than trusting the "lossless" label — decoded
+both versions back to raw RGBA and diffed byte-for-byte against the
+original blob in git HEAD. Result: NOT byte-identical on any of the 13.
+Traced one (`aljibe.png`) down to real per-pixel cause: sharp's encoder
+rewrites the RGB channel under low-but-nonzero alpha (semi-transparent
+edge pixels, alpha 1-18/255) to different values than the source PNG's.
+That has a small but real visual effect on anti-aliased cutout edges
+(equipment PNGs against a transparent background), not just invisible
+alpha=0 padding. With no visual regression tooling in this repo (same
+constraint that blocked the echarts/recharts work below), shipping that
+blind isn't safe. Reverted all 13 files, removed the throwaway scripts
+and the temporary `sharp` devDependency (`npm uninstall --no-save`, never
+touched `package.json`/lockfile).
+
+**Also found, not acted on:** 9 files under `public/assets/` are
+confirmed zero-reference (checked against literal filename greps across
+`src` + `index.html` + CSS, and ruled out dynamic path construction the
+way the `aerial/` folder uses it) — `northmine-logo-chroma-source.png`,
+`northmine-logo-transparent.png`, `northmine-logo-horizontal-transparent.png`,
+`northmine-header-logo.png`, `northmine-intelligence-hub.png`,
+`northmine-app-icon.png`, `Logo moderno de NORTHMINE.png`,
+`pala_1_chromakey.png`, `rajo-operacion.jpg` (~4.4MB). Attempted `git rm`;
+the environment's own permission layer blocked deleting this batch of
+brand/binary assets specifically (unlike the `src/*.tsx` dead-code
+removal above, which went through). Left in place and flagged to the
+user directly rather than retried — some of these read like raw/source
+design files (e.g. `chroma-source`) that may be intentionally kept
+outside the app's own reference graph. Not this agent's call.
+
+**Next step for whoever picks this up:** the win is real (up to ~70%
+smaller) if redone with actual visual verification — e.g. a live-browser
+side-by-side on `/login` and an equipment card, or converting to WebP
+with an `<picture>`/fallback pattern instead of re-encoding PNG-to-PNG.
+Don't reuse the `sharp` default PNG pipeline as-is; it changes edge pixel
+color under semi-transparent alpha.
+
 ## 2026-08-23 — Codex — branch `feat/responsive-test-harness` — starting
 
 **Scope:** make the responsive Playwright suite self-contained by reusing the
