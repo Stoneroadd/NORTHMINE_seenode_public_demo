@@ -36,7 +36,24 @@ jobs:
       - name: Production build
         run: npm run build
       - name: Backend tests
-        run: python -m pytest backend/tests -q --basetemp=.pytest_tmp_ci
+        id: backend_tests
+        shell: bash
+        run: |
+          set -o pipefail
+          python -m pytest backend/tests -q --basetemp=.pytest_tmp_ci 2>&1 | tee .pytest-output.log
+      - name: Publish backend failure annotation
+        if: failure() && steps.backend_tests.outcome == 'failure'
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          output = Path('.pytest-output.log')
+          lines = output.read_text(encoding='utf-8', errors='replace').splitlines()
+          summary = ('\n'.join(lines[-80:]) or 'pytest failed without captured output')[-8000:]
+          summary = summary.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A')
+          print(f'::error title=Backend pytest failure::{summary}')
+          PY
       - name: Frontend tests
         run: npm --prefix frontend run test:unit
       - name: Typecheck

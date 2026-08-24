@@ -492,3 +492,15 @@ from scratch against today's state of both branches. Not attempted here.
 
 Full detail: commits `f6a6d69`..`71ba9a7` on `main`, plus
 `project_northmine_seenode_repo_quirks.md` in Claude's persistent memory.
+
+---
+
+## 2026-08-23 — Codex — Linux backend gate follow-up
+
+Local isolation is green at 393/393, but the public Ubuntu job still exits in
+the backend-test step after roughly 19 seconds. GitHub hides raw logs for
+anonymous viewers, so the workflow now captures pytest output and emits only a
+bounded failure annotation on failure. This is diagnostic hardening, not a test
+relaxation: `pipefail` preserves the pytest exit code and no assertion, test or
+security gate is skipped. Next action is to consume that annotation, reproduce
+the Linux-specific defect and return the public gate to green.
