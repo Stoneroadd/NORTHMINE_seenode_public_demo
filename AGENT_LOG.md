@@ -46,7 +46,7 @@ commit message — link to the actual commit/PR for detail.
 
 ---
 
-## 2026-08-23 — Codex — branch `test/backend-state-isolation` — starting
+## 2026-08-23 — Codex — branch `test/backend-state-isolation` — complete
 
 **Scope:** reproduce and eliminate the 13 order-dependent backend setup errors
 caused by shared demo-user/authentication state across the full pytest suite.
@@ -54,6 +54,19 @@ caused by shared demo-user/authentication state across the full pytest suite.
 **Coordination:** backend test fixtures and the minimum verified repository
 reset boundary only; no production credentials, auth weakening, AI behavior,
 Mission Control contracts, Wenco or frontend changes.
+
+**Result:** `conftest.py` now assigns `NORTHMINE_USERS_DB` to a temporary path
+unique to the pytest process and creates missing demo seeds before restoring
+password/active/role state. This removes the hidden dependency on an untracked
+developer database without changing application authentication. The clean
+suite then exposed one separate prerequisite: the SPA contract needs
+`frontend/dist`, while CI built it only after pytest. The existing production
+build step now runs before backend tests, with no command duplication.
+
+**Evidence:** `test_agent_runtime.py` improved from 31 passed + 12 setup errors
+to 43/43. Full backend after the required frontend build improved from 380
+passed + 13 errors to 393/393. Frontend production build passes; no product
+source, credentials, Mission Control or Wenco behavior changed.
 
 ## 2026-08-23 — Codex — branch `feat/goatcounter-csp` — complete
 

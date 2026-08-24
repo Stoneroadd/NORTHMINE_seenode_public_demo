@@ -26,6 +26,9 @@ os.environ.setdefault(
     "NORTHMINE_DEMO_ACCESS_DB",
     str(Path(tempfile.gettempdir()) / f"northmine_demo_access_tests_{os.getpid()}.db"),
 )
+os.environ["NORTHMINE_USERS_DB"] = str(
+    Path(tempfile.gettempdir()) / f"northmine_users_tests_{os.getpid()}.db"
+)
 os.environ["NORTHMINE_DEMO_ACCESS_DATABASE_URL"] = ""
 os.environ["NORTHMINE_DEMO_ACCESS_REQUIRE_DURABLE"] = "false"
 os.environ.setdefault("NORTHMINE_DEMO_ACCESS_FINGERPRINT_KEY", "test-" * 16)
@@ -50,7 +53,23 @@ def _reset_state() -> Generator[None, None, None]:
     repo = get_user_repository()
     repo.init_schema()
     for seed in DEMO_USER_SEEDS:
+        existing = repo.get_by_username(seed["username"])
+        if existing is None:
+            repo.create_user(
+                seed["username"],
+                seed["password"],
+                full_name=seed["full_name"],
+                role=seed["role"],
+                is_demo=True,
+                faena=seed["faena"],
+                empresa=seed["empresa"],
+            )
+            continue
         repo.update_password(seed["username"], seed["password"])
+        if not existing.is_active:
+            repo.set_active_status(existing.id, True)
+        if existing.role != seed["role"]:
+            repo.update_role(existing.id, seed["role"])
     yield
 
 

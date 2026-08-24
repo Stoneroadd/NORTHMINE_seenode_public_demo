@@ -33,11 +33,11 @@ jobs:
         run: npm run agent:harness
       - name: Agent demo contract
         run: npm run agent:demo:harness -- --scenario=full_operational_demo
+      - name: Production build
+        run: npm run build
       - name: Backend tests
         run: python -m pytest backend/tests -q --basetemp=.pytest_tmp_ci
       - name: Frontend tests
         run: npm --prefix frontend run test:unit
       - name: Typecheck
         run: npm run lint
-      - name: Production build
-        run: npm run build
