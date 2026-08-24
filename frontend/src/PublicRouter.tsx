@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect } from 'react'
 import { OperationalFontLoader } from './components/landing/OperationalFontLoader'
+import { PublicAnalytics } from './components/landing/PublicAnalytics'
 import { PublicPageMeta } from './components/landing/PublicPageMeta'
 import { useModuleT } from './i18n/useModuleT'
 import { publicPagesT } from './i18n/modules/publicPages'
@@ -85,7 +86,12 @@ export function PublicRouter() {
 
   return (
     <Suspense fallback={<PublicRouteFallback />}>
-      {publicRoute ?? (
+      {publicRoute ? (
+        <>
+          <PublicAnalytics />
+          {publicRoute}
+        </>
+      ) : (
         <>
           <OperationalFontLoader />
           <OperationalApplication />

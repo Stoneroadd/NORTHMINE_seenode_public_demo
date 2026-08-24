@@ -80,13 +80,14 @@ to port already has been (see `AGENT_LOG.md`, commits `71ba9a7` through
 
 ## P2 — verifiable, not yet attempted
 
-**Public analytics/CSP mismatch — IN PROGRESS (Codex).**
+**Public analytics/CSP mismatch — COMPLETE (Codex).**
 The deployed landing includes GoatCounter from `gc.zgo.at`, while the enforced
 Content Security Policy blocks that origin and produces a browser console
-error. Determine whether analytics is intentionally configured and either
-remove the dead integration or authorize only the exact required origins.
-Preserve the fail-closed CSP and do not broaden security directives without
-verified network evidence.
+error. Analytics now loads from the public route tree only; it is absent from
+the demo-access and operational application boundaries. CSP authorizes only
+the exact script/count origins and only for the allowlisted public request
+paths. API and Operational Flow policies remain closed to GoatCounter. Focused
+security tests pass 4/4 and public browser coverage passes 26/26.
 
 **Shared responsive visual harness — COMPLETE (Codex).**
 Mission Control and responsive Playwright suites now share one isolated

@@ -6,6 +6,17 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from app.core.config import get_settings
 
 
+PUBLIC_ANALYTICS_PATHS = {
+    "/",
+    "/brand-prototype",
+    "/landing-anterior",
+    "/origen",
+    "/privacy",
+    "/solicitar-demo",
+    "/solicitud-recibida",
+}
+
+
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next) -> Response:
         response: Response = await call_next(request)
@@ -32,13 +43,18 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         # relevante frente a XSS y robo de tokens en el navegador.
         docs_cdn = " https://cdn.jsdelivr.net" if not settings.is_production else ""
         script_inline = " 'unsafe-inline'" if not settings.is_production else ""
+        normalized_path = request.url.path.rstrip("/") or "/"
+        public_analytics = normalized_path in PUBLIC_ANALYTICS_PATHS
+        analytics_script = " https://gc.zgo.at" if public_analytics else ""
+        analytics_endpoint = " https://northmine.goatcounter.com" if public_analytics else ""
         response.headers["Content-Security-Policy"] = (
             "default-src 'self'; "
-            f"script-src 'self' blob:{script_inline}{docs_cdn}; "
+            f"script-src 'self' blob:{script_inline}{docs_cdn}{analytics_script}; "
             f"style-src 'self' 'unsafe-inline' https://fonts.googleapis.com{docs_cdn}; "
             "font-src 'self' https://fonts.gstatic.com; "
-            "img-src 'self' data: https://*.basemaps.cartocdn.com https://*.tile.openstreetmap.org; "
-            "connect-src 'self' https://api.anthropic.com; "
+            "img-src 'self' data: https://*.basemaps.cartocdn.com https://*.tile.openstreetmap.org"
+            f"{analytics_endpoint}; "
+            f"connect-src 'self' https://api.anthropic.com{analytics_endpoint}; "
             "worker-src 'self' blob:; "
             "object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none';"
         )

@@ -46,7 +46,7 @@ commit message — link to the actual commit/PR for detail.
 
 ---
 
-## 2026-08-23 — Codex — branch `feat/goatcounter-csp` — starting
+## 2026-08-23 — Codex — branch `feat/goatcounter-csp` — complete
 
 **Scope:** resolve the deployed landing's GoatCounter/CSP mismatch discovered
 through a real Seenode browser console inspection after `cbf9ff4`.
@@ -54,6 +54,20 @@ through a real Seenode browser console inspection after `cbf9ff4`.
 **Coordination:** public analytics tag, security-header allowlist and focused
 browser/security regression only; no Mission Control UI, product visuals,
 operational contracts, AI runtime, Wenco or production credentials.
+
+**Result:** removed the global analytics tag from `index.html` and added a
+route-tree component that loads GoatCounter only for public pages. The backend
+CSP now authorizes the exact `gc.zgo.at` script and
+`northmine.goatcounter.com` count endpoint only on an explicit public-path
+allowlist; `/acceso-demo`, `/operational-flow` and `/api` remain outside the
+analytics boundary. No wildcard or global CSP relaxation was introduced.
+
+**Evidence:** security-header tests 4/4; focused browser 2/2; full public matrix
+26/26; frontend unit 124/124; lint/typecheck and production build pass;
+Impeccable detector `[]`. Full backend remains at the documented order-dependent
+baseline: 380 passed + the same 13 login-fixture errors (two new CSP tests
+explain the increase from 378 to 380); the affected runtime/audit tests are
+unchanged and the CSP file passes independently.
 
 ## 2026-08-23 — Codex — branch `feat/fetch-priority-warning` — complete
 

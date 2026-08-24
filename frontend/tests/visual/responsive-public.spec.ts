@@ -36,6 +36,14 @@ test('landing — critical images keep high priority without React DOM warnings'
   expect(reactDomWarnings).toEqual([])
 })
 
+test('public analytics loads on the landing but not the access boundary', async ({ page }) => {
+  await gotoAndSettle(page, '/')
+  await expect(page.locator('script[data-goatcounter]')).toHaveCount(1)
+
+  await gotoAndSettle(page, '/acceso-demo')
+  await expect(page.locator('script[data-goatcounter]')).toHaveCount(0)
+})
+
 test('demo request form — inputs are actually usable, not crushed to 0px', async ({ page }) => {
   await gotoAndSettle(page, '/solicitar-demo')
   const form = page.locator('.nm-demo-request-form')
