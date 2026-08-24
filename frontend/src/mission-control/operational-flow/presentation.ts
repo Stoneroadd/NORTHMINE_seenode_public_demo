@@ -53,6 +53,14 @@ export function dataQualityLabel(value: DataQuality): string {
   return 'Datos no disponibles'
 }
 
+export function confidenceLabel(value: string | null): string | null {
+  if (value === null) return null
+  if (value === 'LOW') return 'Confianza baja'
+  if (value === 'MEDIUM') return 'Confianza media'
+  if (value === 'HIGH') return 'Confianza alta'
+  return 'Confianza no determinada'
+}
+
 export function provenanceOriginLabel(value: string): string {
   if (value === 'REAL') return 'Datos operacionales'
   if (value === 'SYNTHETIC') return 'Escenario sintético'

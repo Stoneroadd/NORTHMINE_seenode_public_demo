@@ -143,4 +143,15 @@ test.describe('canonical authenticated routing', () => {
     await expect(inspector.getByText('Hacia Chancador 01', { exact: true })).toBeVisible()
     await expect(inspector.getByText('Hacia Velocidad \/ ciclo', { exact: true })).toBeVisible()
   })
+
+  test('Operational Flow qualifies uncertain relationships without false precision', async ({ page }) => {
+    await navigateWithinApp(page, appPaths.operationalFlow)
+    await page.getByRole('button', { name: /^Impacto costo\./ }).filter({ visible: true }).click()
+
+    const inspector = page.locator('.mc-flow-inspector')
+    const relationships = inspector.locator('.mc-flow-inspector__relations')
+    await expect(relationships.getByText(/Hipótesis · Confianza baja · desde/)).toBeVisible()
+    await expect(relationships).not.toContainText('35%')
+    await expect(relationships).not.toContainText('0,35')
+  })
 })

@@ -368,6 +368,13 @@ snapshot relationship, assertion type and effective time; no relationship or
 business rule is inferred in the frontend. Responsive regression coverage
 protects the connected path on Pixel 7 and desktop 1440.
 
+**Operational Flow backend-owned confidence language — COMPLETE (Codex).**
+Hypothetical relationships now carry an explicit backend-owned confidence band
+alongside their numeric technical evidence. The inspector renders the band in
+human language (`Confianza baja`) in Level 2 while retaining `0,35` only inside
+Level 3 technical detail. The frontend does not calculate operational
+confidence or expose implementation enums.
+
 **Confirmed already fine, no action needed:** `/admin/audit-log` RBAC
 (already `RequireAdmin` + redaction) and refresh-token rotation (already
 race-guarded via conditional `UPDATE`) — see `AGENT_LOG.md` for detail.

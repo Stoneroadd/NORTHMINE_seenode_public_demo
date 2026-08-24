@@ -60,6 +60,7 @@ export interface FlowRelationship {
   condition: OperationalCondition
   data_quality: DataQuality
   confidence: number | null
+  confidence_level: 'LOW' | 'MEDIUM' | 'HIGH' | string | null
   impacted: boolean
   provenance: Provenance
 }

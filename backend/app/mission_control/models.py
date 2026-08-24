@@ -29,6 +29,12 @@ class DataQuality(StrEnum):
     UNAVAILABLE = "UNAVAILABLE"
 
 
+class ConfidenceLevel(StrEnum):
+    LOW = "LOW"
+    MEDIUM = "MEDIUM"
+    HIGH = "HIGH"
+
+
 class Provenance(BaseModel):
     origin: str = "SYNTHETIC"
     representation: str
@@ -87,6 +93,7 @@ class FlowRelationship(BaseModel):
     condition: OperationalCondition
     data_quality: DataQuality = DataQuality.FRESH
     confidence: float | None = Field(default=None, ge=0, le=1)
+    confidence_level: ConfidenceLevel | None = None
     impacted: bool = False
     provenance: Provenance
 

@@ -22,6 +22,8 @@ def test_demo_operational_flow_is_temporal_connected_and_provenance_safe() -> No
     assert {edge.target_node_id for edge in snapshot.relationships} <= node_ids
     cost_edge = next(edge for edge in snapshot.relationships if edge.relationship_type == "MAY_AFFECT_COST")
     assert cost_edge.assertion_type == "HYPOTHESIS"
+    assert cost_edge.confidence == 0.35
+    assert cost_edge.confidence_level == "LOW"
     assert cost_edge.impacted is False
     cost = next(node for node in snapshot.nodes if node.node_id == "cost-impact")
     assert cost.condition == "UNKNOWN"

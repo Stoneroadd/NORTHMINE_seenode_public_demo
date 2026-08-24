@@ -7,6 +7,7 @@ import { getOperationalFlowSnapshot } from '../mission-control/operational-flow/
 import {
   assertionDetailLabel,
   assertionShortLabel,
+  confidenceLabel,
   dataQualityLabel,
   entityKindLabel,
   eventStatusLabel,
@@ -204,7 +205,13 @@ export function OperationalFlowPage() {
                         )?.label ?? 'Entidad no disponible'}
                       </strong>
                       <span>{relationshipLabel(relationship.relationship_type, relationship.label)}</span>
-                      <small>{assertionShortLabel(relationship.assertion_type)} · desde {formatTimestamp(relationship.effective_from)}</small>
+                      <small>
+                        {[
+                          assertionShortLabel(relationship.assertion_type),
+                          confidenceLabel(relationship.confidence_level),
+                          `desde ${formatTimestamp(relationship.effective_from)}`,
+                        ].filter(Boolean).join(' · ')}
+                      </small>
                     </li>
                   ))}
                 </ul>

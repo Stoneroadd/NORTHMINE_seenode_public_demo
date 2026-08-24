@@ -1150,3 +1150,24 @@ routing matrix passes 10/10 across Pixel 7 and desktop 1440, Vitest passes
 vulnerabilities and `git diff --check` PASS. Impeccable reported only the
 pre-existing operational-canvas grid advisory; the new inspector styles had no
 finding.
+
+---
+
+## 2026-08-24 — Codex — backend-owned relationship confidence
+
+The Plan→Cost relationship already carried numeric confidence `0.35` in the
+canonical snapshot, but the Level 2 inspector only said `Hipótesis`. A first
+presentation-only proposal was rejected during implementation because mapping a
+numeric score to an operational confidence band in React would duplicate domain
+semantics. The backend contract now owns `confidence_level` and S01 explicitly
+classifies the unvalidated relationship as `LOW`; its numeric confidence remains
+unchanged and auditable.
+
+The frontend translates that canonical band to `Confianza baja` beside the
+hypothesis label. It does not expose the enum or numeric precision in the quick
+relationship scan; `0,35` remains available under Level 3 technical details.
+Unknown future confidence values receive a safe human fallback. Regression
+evidence: backend Operational Flow 3/3, full backend 395/395, presentation unit
+4/4, full frontend 139/139, focused responsive browser 2/2 on Pixel 7 and
+desktop 1440, TypeScript lint PASS, production build PASS, npm production audit
+zero vulnerabilities, Impeccable detector `[]`, and `git diff --check` PASS.

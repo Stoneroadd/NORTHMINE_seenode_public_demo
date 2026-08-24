@@ -80,6 +80,10 @@ Authorization: sesión NORTHMINE
 - `FACT`: dato suministrado por el harness sintético; no significa Wenco ni producción.
 - `DERIVED`: resultado determinístico calculado desde evidencia sintética.
 - `HYPOTHESIS`: relación o resultado no comprobado; puede incluir confianza y nunca se presenta como hecho.
+- Las relaciones hipotéticas conservan `confidence` como evidencia técnica y
+  reciben `confidence_level` (`LOW | MEDIUM | HIGH`) desde el backend. La lectura
+  rápida traduce ese nivel a lenguaje humano sin fabricar precisión; el valor
+  numérico permanece disponible sólo en la investigación técnica.
 - Calidad: `FRESH | STALE | INCOMPLETE | CONFLICTING | UNAVAILABLE`.
 - Condición: `NORMAL | ATTENTION | CRITICAL | RECOVERING | UNKNOWN`.
 - Procedencia del escenario: `origin=SYNTHETIC`, `demo_context=true`; la representación global y los cálculos son `DERIVED`.
@@ -92,7 +96,9 @@ Authorization: sesión NORTHMINE
 - Cada nodo puede seleccionarse con puntero, `Enter` o barra espaciadora.
 - La barra temporal reconstruye el snapshot en cuatro momentos S01.
 - Las capas permiten mostrar u ocultar impacto y etiquetas de afirmación; la topología permanece visible.
-- El inspector expone condición, resumen, tipo de afirmación, calidad, procedencia, relaciones y evidencia.
+- El inspector expone condición, resumen, tipo de afirmación, calidad,
+  procedencia, relaciones, dirección/contraparte y evidencia. Cuando una
+  relación es incierta, muestra su nivel de confianza autorizado por backend.
 - `Datos técnicos` abre bajo demanda asignaciones, tiempos de ciclo, velocidades, colas, tonelaje y plan sin sobrecargar los nodos.
 - El canvas impide selección accidental de texto durante el movimiento o arrastre del puntero; el inspector conserva texto copiable.
 

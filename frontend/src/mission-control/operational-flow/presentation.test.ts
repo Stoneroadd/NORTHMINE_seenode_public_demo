@@ -3,6 +3,7 @@ import {
   assertionDetailLabel,
   assertionShortLabel,
   dataQualityLabel,
+  confidenceLabel,
   entityKindLabel,
   eventStatusLabel,
   provenanceOriginLabel,
@@ -21,6 +22,14 @@ describe('Operational Flow presentation labels', () => {
     expect(entityKindLabel('LOADING_UNIT')).toBe('Unidad de carguío')
     expect(relationshipLabel('FEEDS', 'alimenta')).toBe('Alimenta')
     expect(eventStatusLabel('CONFIRMED')).toBe('Confirmado')
+  })
+
+  it('communicates confidence without exposing false precision', () => {
+    expect(confidenceLabel('LOW')).toBe('Confianza baja')
+    expect(confidenceLabel('MEDIUM')).toBe('Confianza media')
+    expect(confidenceLabel('HIGH')).toBe('Confianza alta')
+    expect(confidenceLabel('INTERNAL_VALUE')).toBe('Confianza no determinada')
+    expect(confidenceLabel(null)).toBeNull()
   })
 
   it('does not expose unknown implementation identifiers', () => {

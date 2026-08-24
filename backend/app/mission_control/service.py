@@ -4,6 +4,7 @@ from datetime import datetime, timedelta, timezone
 
 from app.mission_control.models import (
     AssertionType,
+    ConfidenceLevel,
     DataQuality,
     FlowDetail,
     FlowEvent,
@@ -357,6 +358,7 @@ def build_demo_operational_flow_snapshot(
             if is_critical or is_normalized
             else OperationalCondition.NORMAL,
             confidence=confidence if assertion_type is AssertionType.HYPOTHESIS else None,
+            confidence_level=ConfidenceLevel.LOW if assertion_type is AssertionType.HYPOTHESIS else None,
             impacted=(
                 is_critical
                 and source != "front-f03"
