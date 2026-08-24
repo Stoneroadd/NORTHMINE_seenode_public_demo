@@ -46,6 +46,23 @@ commit message — link to the actual commit/PR for detail.
 
 ---
 
+## 2026-08-24 — Claude Code — branch `main` — preconnect hints for Google Fonts, complete
+
+**Scope:** small companion to the Google Fonts trim below. `index.html`
+had no `<link rel="preconnect">` for `fonts.googleapis.com` /
+`fonts.gstatic.com`, so the browser only started DNS/TLS negotiation
+for those origins once it discovered the CSS `@import`/injected
+`<link rel="stylesheet">` tags well into the page load, not in parallel
+with the initial HTML parse.
+
+**Result:** added two standard preconnect hints (the `gstatic` one with
+`crossorigin`, since font files are fetched cross-origin under
+`@font-face`). Purely additive markup, no behavior change to anything
+JS/CSS. Confirmed present in `dist/index.html` after build.
+
+**Verification:** `tsc --noEmit` clean, `vitest run` 136/136, `npm run
+build` succeeds.
+
 ## 2026-08-24 — Claude Code — branch `main` — trim redundant Google Fonts requests, complete
 
 **Scope:** `OperationalFontLoader.tsx` (mounted for every non-public-marketing
