@@ -179,6 +179,13 @@ packages and their two orphaned popup rules are removed. This is dependency
 surface cleanup, not a claim of geospatial capability. Build/lint/unit remain
 green and the production dependency audit remains at zero vulnerabilities.
 
+**Unused Radix wrapper surface — COMPLETE (Codex).**
+Three generated UI wrappers (`scroll-area`, `separator`, `tooltip`) had no
+consumer outside their own files, leaving three Radix packages and 13 transitive
+packages installed for unreachable code. The wrappers and direct dependencies
+are removed. Live Radix Tabs and Slot/Button primitives remain untouched.
+Build/lint/unit and production dependency audit remain green.
+
 **Public analytics/CSP mismatch — COMPLETE (Codex).**
 The deployed landing includes GoatCounter from `gc.zgo.at`, while the enforced
 Content Security Policy blocks that origin and produces a browser console

@@ -710,3 +710,19 @@ references, and `git diff --check` PASS. The Impeccable detector was run on the
 modified legacy token file and reported only its established global design-debt
 findings (side accents, Inter, decorative grid, gradient text, bounce easing and
 one width transition); removal of the unreachable popup rules introduced none.
+
+---
+
+## 2026-08-24 — Codex — remove unused Radix wrapper surface
+
+Direct-package inspection found three Radix dependencies referenced exclusively
+by one wrapper file each. Repository-wide symbol/import searches confirmed
+`scroll-area.tsx`, `separator.tsx` and `tooltip.tsx` had no consumers. Those
+unreachable wrappers and their direct packages are removed, pruning 16 installed
+packages. Radix Tabs remains live in Decision Cockpit and Radix Slot remains live
+in the shared Button, so both were explicitly preserved.
+
+Verification: TypeScript lint PASS, Vitest 126/126, production build PASS without
+Vite warnings, `npm audit --omit=dev` zero vulnerabilities, no remaining imports
+or package declarations for the removed wrappers, and `git diff --check` PASS.
+No rendered component, route or operational contract changed.
