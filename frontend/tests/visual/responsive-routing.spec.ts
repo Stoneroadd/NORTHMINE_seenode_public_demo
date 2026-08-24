@@ -130,4 +130,17 @@ test.describe('canonical authenticated routing', () => {
     )
     expect(visibleNodeLabels.some(label => label.includes('Impactado por el evento activo'))).toBe(false)
   })
+
+  test('Operational Flow inspector names relationship direction and counterpart', async ({ page }) => {
+    await navigateWithinApp(page, appPaths.operationalFlow)
+    const inspector = page.locator('.mc-flow-inspector')
+
+    await expect(inspector.getByText('Desde Frente 03', { exact: true })).toBeVisible()
+    await expect(inspector.getByText('Hacia 6 CAEX', { exact: true })).toBeVisible()
+
+    await page.getByRole('button', { name: /^Ruta Norte\./ }).filter({ visible: true }).click()
+    await expect(inspector.getByText('Desde 6 CAEX', { exact: true })).toBeVisible()
+    await expect(inspector.getByText('Hacia Chancador 01', { exact: true })).toBeVisible()
+    await expect(inspector.getByText('Hacia Velocidad \/ ciclo', { exact: true })).toBeVisible()
+  })
 })

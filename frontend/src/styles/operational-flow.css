@@ -300,6 +300,7 @@
 .mc-flow-inspector__relations,
 .mc-flow-inspector__evidence { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
 .mc-flow-inspector__relations li { display: grid; gap: 4px; padding: 9px 0; border-bottom: 1px solid var(--mc-line-soft); }
+.mc-flow-inspector__relations strong { color: var(--mc-text); font-size: 11px; font-weight: 600; }
 .mc-flow-inspector__relations span { color: var(--mc-text-secondary); font: 550 10px/1.35 var(--mc-font-mono); }
 .mc-flow-inspector__relations small { color: var(--mc-text-tertiary); font-size: 10px; }
 

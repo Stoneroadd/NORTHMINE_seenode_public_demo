@@ -92,6 +92,7 @@ export function OperationalFlowPage() {
   const connectedRelationships = snapshot.relationships.filter(
     (relationship) => relationship.source_node_id === selectedNode?.node_id || relationship.target_node_id === selectedNode?.node_id,
   )
+  const nodesById = new Map(snapshot.nodes.map((node) => [node.node_id, node]))
   const event = snapshot.active_event
   const operationStable = !event
 
@@ -194,6 +195,14 @@ export function OperationalFlowPage() {
                 <ul className="mc-flow-inspector__relations">
                   {connectedRelationships.map((relationship) => (
                     <li key={relationship.relationship_id}>
+                      <strong>
+                        {relationship.source_node_id === selectedNode.node_id ? 'Hacia' : 'Desde'}{' '}
+                        {nodesById.get(
+                          relationship.source_node_id === selectedNode.node_id
+                            ? relationship.target_node_id
+                            : relationship.source_node_id,
+                        )?.label ?? 'Entidad no disponible'}
+                      </strong>
                       <span>{relationshipLabel(relationship.relationship_type, relationship.label)}</span>
                       <small>{assertionShortLabel(relationship.assertion_type)} · desde {formatTimestamp(relationship.effective_from)}</small>
                     </li>

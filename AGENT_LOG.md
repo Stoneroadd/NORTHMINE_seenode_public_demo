@@ -1129,3 +1129,24 @@ full frontend run under parallel backend/build/browser load reproduced the
 classified `ConversationTurnManager.test.ts:209` timeout (137/138); its file then
 passed 8/8 alone and the immediate full retry passed 138/138. No agent-runtime
 code or timeout was changed.
+
+---
+
+## 2026-08-24 — Codex — Operational Flow relationship counterparts
+
+The entity inspector previously listed only abstract relationship verbs such as
+`Alimenta` or `Carga`, so a user could not identify the segment's other endpoint
+without visually retracing the graph. It now resolves each endpoint from the
+same canonical snapshot and presents explicit direction plus counterpart: for
+example `Desde Frente 03`, `Hacia 6 CAEX`, and from Ruta Norte, `Desde 6 CAEX`,
+`Hacia Chancador 01` and `Hacia Velocidad / ciclo`.
+
+This is presentation-only progressive disclosure. The frontend does not create
+relationships, infer impact or alter temporal semantics; relationship type,
+assertion and effective time remain sourced from the backend contract. The red
+browser regression first reproduced the missing counterpart names. The final
+routing matrix passes 10/10 across Pixel 7 and desktop 1440, Vitest passes
+138/138, TypeScript lint PASS, production build PASS, npm production audit zero
+vulnerabilities and `git diff --check` PASS. Impeccable reported only the
+pre-existing operational-canvas grid advisory; the new inspector styles had no
+finding.

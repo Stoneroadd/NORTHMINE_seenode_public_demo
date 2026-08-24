@@ -360,6 +360,14 @@ inspectable but does not carry propagation. Historical affected entities remain
 on the event record, while `NORMALIZED/CLOSED` snapshots suppress active-impact
 styling and announcements. Plan and production impact remain visible.
 
+**Operational Flow connected-counterpart inspector — COMPLETE (Codex).**
+The entity inspector now names the direction and connected counterpart for
+every current relationship (`Desde Frente 03`, `Hacia 6 CAEX`, and equivalent
+route/destination/performance links). It continues to render the canonical
+snapshot relationship, assertion type and effective time; no relationship or
+business rule is inferred in the frontend. Responsive regression coverage
+protects the connected path on Pixel 7 and desktop 1440.
+
 **Confirmed already fine, no action needed:** `/admin/audit-log` RBAC
 (already `RequireAdmin` + redaction) and refresh-token rotation (already
 race-guarded via conditional `UPDATE`) — see `AGENT_LOG.md` for detail.
