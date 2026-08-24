@@ -51,6 +51,7 @@ function DemoAccessLoginRoute() {
   const t = useModuleT(publicPagesT)
   return (
     <>
+      <OperationalFontLoader />
       <PublicPageMeta
         title={t.meta.access.title}
         description={t.meta.access.description}

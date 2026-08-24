@@ -116,6 +116,14 @@ payloads, visually identical. Possible follow-up not attempted: load
 Cairo only for `lang="ar"` sessions instead of unconditionally. See
 `AGENT_LOG.md`.
 
+**Arabic font request scoped to Arabic sessions — COMPLETE (Codex).**
+The documented follow-up is implemented: IBM Plex weight 700 remains available
+to the operational app, while Cairo is inserted only for `lang="ar"` and removed
+when leaving Arabic. Demo-access login now mounts the same loader as other
+operational entry paths, closing the prior route gap. Unit and browser contracts
+cover Spanish/English exclusion, Arabic insertion, the actual Google Fonts
+request and language switching on mobile/desktop.
+
 ## P1 — needs human judgment
 
 **`main` and `integration/agent-consolidated` (in the sibling checkout

@@ -947,3 +947,27 @@ Focused authenticated Playwright passes 2/2 on iPhone SE and Pixel 7 with real
 focus and expanded-state assertions. TypeScript lint PASS, Vitest 136/136,
 production build PASS, npm production audit zero vulnerabilities, Impeccable
 detector `[]` on all changed UI/test files, and `git diff --check` PASS.
+
+---
+
+## 2026-08-24 — Codex — Arabic font request scoped by language
+
+The previous font cleanup left Cairo in the unconditional operational stylesheet
+list even though the only consumer is `html[lang="ar"]`. The loader now subscribes
+to the canonical language state: IBM Plex Sans/Mono weight 700 remains managed
+for all operational sessions, while Cairo is added for Arabic and removed when
+the user returns to another language. `/acceso-demo` previously returned before
+mounting `OperationalFontLoader`; that operational entry path now mounts it too,
+so post-login language changes behave consistently instead of relying on a
+fallback font.
+
+Pure contracts pass 2/2 for Arabic/non-Arabic stylesheet selection. Authenticated
+Playwright passes 2/2 on Pixel 7 and desktop 1440, proving no Cairo link in the
+default Spanish session, a real `fonts.googleapis.com` Cairo request after
+selecting Arabic, `lang="ar"`, and link removal after returning to Spanish.
+TypeScript lint PASS, production build PASS, npm production audit zero
+vulnerabilities, Impeccable detector `[]`, and `git diff --check` PASS. The first
+full Vitest run reproduced the already classified
+`ConversationTurnManager.test.ts:209` 5 s timeout (137/138); the file then passed
+8/8 alone and an immediate full retry passed 138/138. No agent-runtime code or
+test timeout was changed.

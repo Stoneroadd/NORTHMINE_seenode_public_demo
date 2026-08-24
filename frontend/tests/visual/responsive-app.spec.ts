@@ -47,6 +47,27 @@ test.describe('authenticated app', () => {
     await expect(menuButton).toHaveAttribute('aria-expanded', 'false')
   })
 
+  test('operational fonts load Cairo only for Arabic sessions', async ({ page }) => {
+    const fontRequests: string[] = []
+    page.on('request', (request) => {
+      if (request.url().startsWith('https://fonts.googleapis.com/')) fontRequests.push(request.url())
+    })
+    const cairoLink = page.locator('link[href*="family=Cairo"]')
+    const operationalLink = page.locator('link[href*="family=IBM+Plex+Mono"]')
+    await expect(operationalLink).toHaveCount(1)
+    await expect(cairoLink).toHaveCount(0)
+
+    await page.locator('button[title^="Configuración"]').click()
+    await page.locator('button', { hasText: 'العربية' }).click()
+    await expect(page.locator('html')).toHaveAttribute('lang', 'ar')
+    await expect(cairoLink).toHaveCount(1)
+    await expect.poll(() => fontRequests.some((url) => url.includes('family=Cairo'))).toBe(true)
+
+    await page.locator('button', { hasText: 'Español' }).click()
+    await expect(page.locator('html')).toHaveAttribute('lang', 'es')
+    await expect(cairoLink).toHaveCount(0)
+  })
+
   test('cockpit — table has an internal horizontal-scroll wrapper, not a page-level one', async ({ page }) => {
     const table = page.locator('table').first()
     const count = await page.locator('table').count()
