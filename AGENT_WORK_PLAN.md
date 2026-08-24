@@ -42,7 +42,10 @@ Live production reproduction established the exact focus, Escape and hidden
 content defects before implementation. The modal now has named dialog
 semantics, focus containment and restoration, keyboard dismissal, explicit
 opener state and a 44 px close target. Focused Playwright passes on Pixel 7
-and desktop 1440; see the newest `AGENT_LOG.md` entry for evidence.
+and desktop 1440; see the newest `AGENT_LOG.md` entry for evidence. Same
+fix extended to two sibling drawers with the identical bug
+(`OperatorAuditDrawer.tsx`, `OperatorRankingDrawer.tsx`) via a shared
+`useModalA11y` hook — commit `8956d49`.
 
 ## P1 — needs human judgment
 
@@ -66,6 +69,17 @@ to port already has been (see `AGENT_LOG.md`, commits `71ba9a7` through
 (already `RequireAdmin` + redaction) and refresh-token rotation (already
 race-guarded via conditional `UPDATE`) — see `AGENT_LOG.md` for detail.
 Don't re-investigate these without new evidence of an actual failure.
+
+**Minor, low-priority a11y polish left on the table:** `OperatorAuditDrawer.tsx`
+and `OperatorRankingDrawer.tsx` (fixed 2026-08-23, see above) don't have
+the `aria-haspopup="dialog"`/`aria-expanded`/`aria-controls` opener
+relationship that `OperatorMethodologyModal.tsx`'s trigger button has,
+because both open from table rows via a shared `onSelect`/`onAudit`
+callback rather than one fixed button — adding it means threading
+per-row `aria-expanded` state through `OperatorRankingTable.tsx` and
+`OperatorPriorityBoard.tsx` (not yet reviewed). The core fix (dialog
+semantics, focus trap, Escape, focus restoration) is done; this is a
+genuine but smaller remaining gap, not a blocker.
 
 ## Outside this repo's code — user's own action
 

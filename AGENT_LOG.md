@@ -18,11 +18,24 @@ this file is the diary of what already happened, that one is the plan.
 
 ## How to use this
 
-**Before starting non-trivial work**, add an entry at the top (newest
-first) with: date, agent/session, branch, what you're about to touch, and
-why. If you're not sure whether it overlaps with something in progress,
-check the most recent entries first — if someone's mid-way through touching
-the same files, coordinate (wait, or scope around it) rather than guessing.
+**Before starting non-trivial work, `git pull` and read the newest
+entries here AND in `AGENT_WORK_PLAN.md` -- then commit and push a short
+"starting: X" entry of your own before you write any real code**, not
+just after you finish. A pull-and-read at the start of your session
+isn't enough by itself: on 2026-08-23, Claude Code independently picked
+up the operator-ranking methodology-modal accessibility item, worked it
+for several minutes (live reproduction, root-cause read), and only then
+discovered via a routine mid-work re-check that Codex had already
+finished and pushed the exact same fix minutes earlier. No commits
+collided and nothing was duplicated in the repo -- but that was caught
+by a lucky-timed re-check, not prevented. A pushed "starting" entry is
+the only thing that actually closes that gap: if Claude Code's entry had
+existed before Codex started, or vice versa, the second agent would have
+seen it on their own pre-work pull and picked something else instead of
+racing to the same finish line. If you're not sure whether something
+overlaps with in-progress work, check the most recent entries first --
+if someone's mid-way through touching the same area, coordinate (wait,
+or scope around it) rather than guessing.
 
 **When you finish**, update your entry's status and note anything the next
 session needs to know: what you deliberately did NOT do and why, what's
@@ -32,6 +45,23 @@ still broken, what to check before building on top of it.
 commit message — link to the actual commit/PR for detail.
 
 ---
+
+## 2026-08-23 — Claude Code — branch `main` — extended the a11y fix to two sibling drawers, complete
+
+Re-checked this file before starting (see the entry right below): found
+Codex's methodology-modal fix already complete, so did NOT redo it.
+Instead grepped for the same `aria-hidden={!open}` anti-pattern
+elsewhere and found it live, unfixed, in two siblings sharing the same
+markup family: `OperatorAuditDrawer.tsx` and `OperatorRankingDrawer.tsx`
+(same `.operator-drawer-close` class, same always-mounted CSS toggle).
+Extracted Codex's focus-trap/Escape/restore logic into
+`frontend/src/hooks/useModalA11y.ts` and applied it to both, refactoring
+`OperatorMethodologyModal.tsx` onto the same hook so the logic exists
+once, not three times. Did not extend the `aria-haspopup`/`aria-expanded`/
+`aria-controls` opener relationship to these two -- they open from table
+rows via a shared callback, not one fixed trigger button, so that needs
+its own change to `OperatorRankingTable.tsx`/`OperatorPriorityBoard.tsx`,
+out of scope here. Commit `8956d49`. Full suite green.
 
 ## 2026-08-23 — Codex — branch `feat/operator-ranking-methodology-a11y` — complete
 
