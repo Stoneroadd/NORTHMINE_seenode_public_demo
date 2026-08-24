@@ -23,6 +23,19 @@ test('landing — hero and primary CTA stay visible', async ({ page }) => {
   await expectVisibleSize(page.getByRole('heading', { level: 1 }).first())
 })
 
+test('landing — critical images keep high priority without React DOM warnings', async ({ page }) => {
+  const reactDomWarnings: string[] = []
+  page.on('console', (message) => {
+    if (message.type() === 'error' && message.text().includes('React does not recognize')) {
+      reactDomWarnings.push(message.text())
+    }
+  })
+
+  await gotoAndSettle(page, '/')
+  await expect(page.locator('img[fetchpriority="high"]')).toHaveCount(2)
+  expect(reactDomWarnings).toEqual([])
+})
+
 test('demo request form — inputs are actually usable, not crushed to 0px', async ({ page }) => {
   await gotoAndSettle(page, '/solicitar-demo')
   const form = page.locator('.nm-demo-request-form')

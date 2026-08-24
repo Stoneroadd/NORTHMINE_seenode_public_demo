@@ -17,7 +17,7 @@ export function SaaSHero() {
           alt=""
           width={1672}
           height={941}
-          fetchPriority="high"
+          {...{ fetchpriority: 'high' }}
         />
         <div className="ns-hero__backdrop-veil" />
       </div>

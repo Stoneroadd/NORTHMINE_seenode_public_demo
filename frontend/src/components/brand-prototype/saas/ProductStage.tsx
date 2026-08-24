@@ -37,7 +37,7 @@ export function ProductStage() {
           alt={t.stage.alt}
           width="1760"
           height="1010"
-          fetchPriority="high"
+          {...{ fetchpriority: 'high' }}
         />
         <div className="ns-stage__fade" aria-hidden="true" />
       </figure>

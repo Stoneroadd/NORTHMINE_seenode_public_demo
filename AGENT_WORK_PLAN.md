@@ -91,11 +91,14 @@ skipped, 3 failed and 3 flaky to 55 passed, 7 expected skips, 0 failed and 0
 flaky; Mission Control remains 4/4. No product UI or operational contract was
 changed.
 
-**Landing `fetchPriority` React warning — IN PROGRESS (Codex).**
+**Landing `fetchPriority` React warning — COMPLETE (Codex).**
 The clean responsive matrix consistently reports that `SaaSHero` passes the
 camel-case `fetchPriority` prop to a DOM image under the current React runtime.
-Verify the supported attribute spelling/runtime typings and remove the console
-warning without changing landing presentation or loading priority.
+Both critical landing images now emit the standard lowercase HTML attribute
+while retaining high network priority under React 18.3. Focused coverage
+asserts the two priority hints and rejects the React DOM warning on mobile and
+desktop; the complete public matrix passes 24/24. Landing presentation and
+assets are unchanged.
 
 **Self-contained Mission Control visual harness — COMPLETE (Codex).**
 `npm run test:mission-control` now owns both an isolated synthetic-demo backend

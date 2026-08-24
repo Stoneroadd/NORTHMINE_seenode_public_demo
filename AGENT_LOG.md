@@ -46,7 +46,7 @@ commit message — link to the actual commit/PR for detail.
 
 ---
 
-## 2026-08-23 — Codex — branch `feat/fetch-priority-warning` — starting
+## 2026-08-23 — Codex — branch `feat/fetch-priority-warning` — complete
 
 **Scope:** reproduce and remove the React DOM-property warning emitted by the
 live SaaS landing hero while preserving the image's eager/high-priority loading
@@ -55,6 +55,17 @@ behavior and visual output.
 **Coordination:** `SaaSHero` plus focused regression coverage only; no landing
 layout/style/assets, Mission Control UI, operational contracts, AI runtime,
 Wenco, backend or production configuration.
+
+**Result:** React 18.3's types accept camel-case `fetchPriority`, but its
+development runtime warns when that prop reaches the DOM. Both the hero and
+product-stage critical images now emit the standard lowercase
+`fetchpriority="high"` through a typed JSX spread, preserving browser priority
+without broad React type augmentation or visual changes. Added browser coverage
+that asserts both hints and rejects the warning.
+
+**Evidence:** focused Pixel 7 + desktop 1440 regression 2/2; full public matrix
+24/24; frontend unit 124/124; lint/typecheck and production build pass;
+Impeccable detector `[]`; `git diff --check` clean.
 
 ## 2026-08-23 — Claude Code — branch `main` — dead-code cleanup, complete
 
