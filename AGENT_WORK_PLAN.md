@@ -124,6 +124,13 @@ and operator-ranking timestamps are created as timezone-aware UTC before being
 serialized with the existing `Z` contract. Focused endpoint/service coverage
 passes 6/6; the former 422 and `datetime.utcnow()` warnings are absent.
 
+**FastAPI lifespan migration — COMPLETE (Codex).**
+The API's deprecated startup/shutdown decorators are replaced by one
+`asynccontextmanager` lifespan while retaining the established initialization
+order and event-monitor teardown. A dedicated contract test proves startup and
+shutdown ordering; full backend result is 395/395 with only two third-party
+dependency warnings remaining.
+
 **Public analytics/CSP mismatch — COMPLETE (Codex).**
 The deployed landing includes GoatCounter from `gc.zgo.at`, while the enforced
 Content Security Policy blocks that origin and produces a browser console

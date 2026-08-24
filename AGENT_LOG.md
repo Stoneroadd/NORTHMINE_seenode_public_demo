@@ -591,3 +591,11 @@ their existing `...Z` wire representation. A regression parses the service
 timestamp and proves a zero UTC offset. Focused result: 6/6; neither app-owned
 warning appears in that run. FastAPI lifespan and TestClient/httpx2 warnings
 remain separate migration work.
+
+FastAPI's official lifespan contract then replaced the deprecated `on_event`
+decorators without moving or weakening any initialization step. The lifespan
+awaits the existing startup routine and always awaits shutdown after a
+successful entry, so `event_monitor.stop()` remains guaranteed. A dedicated
+TestClient regression proves `startup → active app → shutdown`; full backend
+result is 395/395. Four framework deprecation warnings disappeared, leaving
+only the separate TestClient/httpx2 and optional PySocks dependency warnings.

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
@@ -43,6 +44,16 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 FRONTEND_DIST = PROJECT_ROOT / "frontend" / "dist"
 FRONTEND_INDEX = FRONTEND_DIST / "index.html"
 
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    await startup()
+    try:
+        yield
+    finally:
+        await shutdown()
+
+
 app = FastAPI(
     title=settings.app_name,
     version="2.0.0",
@@ -53,6 +64,7 @@ app = FastAPI(
     docs_url="/docs" if not settings.is_production else None,
     redoc_url="/redoc" if not settings.is_production else None,
     openapi_url="/openapi.json" if not settings.is_production else None,
+    lifespan=lifespan,
 )
 
 # ── Middlewares (orden crítico) ────────────────────────────────────────────────
@@ -90,7 +102,6 @@ async def audit_store_unavailable_handler(request: Request, exc: AuditStoreUnava
     return JSONResponse(status_code=503, content={"detail": "Almacen de seguridad temporalmente no disponible"})
 
 
-@app.on_event("startup")
 async def startup() -> None:
     # Async (Etapa 6): EventMonitor necesita `asyncio.create_task` sobre el
     # loop real de uvicorn. Un handler sync se ejecuta en un threadpool
@@ -140,7 +151,6 @@ async def startup() -> None:
     )
 
 
-@app.on_event("shutdown")
 async def shutdown() -> None:
     event_monitor.stop()
 
