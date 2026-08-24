@@ -80,12 +80,22 @@ to port already has been (see `AGENT_LOG.md`, commits `71ba9a7` through
 
 ## P2 — verifiable, not yet attempted
 
-**Shared responsive visual harness — IN PROGRESS (Codex).**
-The responsive Playwright configuration still owns only Vite. A clean-process
-Decision Cockpit run fails twice at demo authentication with backend port 8001
-`ECONNREFUSED`. Extract the verified Mission Control demo-server boundary into
-one reusable configuration and apply it to both suites without changing product
-UI, responsive assertions or operational contracts.
+**Shared responsive visual harness — COMPLETE (Codex).**
+Mission Control and responsive Playwright suites now share one isolated
+synthetic-demo backend/Vite lifecycle. The browser-only ASGI entrypoint is
+guarded to demo/testing and disables rate limiting only for the ephemeral test
+process, so the 5/minute production login boundary is unchanged. Authenticated
+tests navigate through the application's current manual router without losing
+the in-memory session. Pixel 7 + desktop 1440 improved from 50 passed, 6
+skipped, 3 failed and 3 flaky to 55 passed, 7 expected skips, 0 failed and 0
+flaky; Mission Control remains 4/4. No product UI or operational contract was
+changed.
+
+**Landing `fetchPriority` React warning — NOT STARTED.**
+The clean responsive matrix consistently reports that `SaaSHero` passes the
+camel-case `fetchPriority` prop to a DOM image under the current React runtime.
+Verify the supported attribute spelling/runtime typings and remove the console
+warning without changing landing presentation or loading priority.
 
 **Self-contained Mission Control visual harness — COMPLETE (Codex).**
 `npm run test:mission-control` now owns both an isolated synthetic-demo backend

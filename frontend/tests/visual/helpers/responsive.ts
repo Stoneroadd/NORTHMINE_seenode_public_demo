@@ -87,3 +87,18 @@ export async function loginAsDemo(page: Page) {
   await page.waitForURL('**/cockpit', { timeout: 20000 })
   await page.locator('.topbar-menu-button, .topbar').first().waitFor({ state: 'visible', timeout: 20000 })
 }
+
+/**
+ * Uses the application's current manual router without discarding the
+ * in-memory access token. A full page.goto() after login forces an avoidable
+ * refresh-cookie restore and made long browser matrices timing-dependent.
+ */
+export async function navigateWithinApp(page: Page, path: string, settleMs = 500) {
+  await page.evaluate((nextPath) => {
+    window.history.pushState({}, '', nextPath)
+    window.dispatchEvent(new PopStateEvent('popstate'))
+  }, path)
+  await page.waitForURL((url) => url.pathname === path, { timeout: 20_000 })
+  await page.evaluate(() => document.fonts.ready).catch(() => undefined)
+  await page.waitForTimeout(settleMs)
+}

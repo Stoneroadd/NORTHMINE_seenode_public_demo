@@ -1,4 +1,5 @@
 import { defineConfig, devices } from '@playwright/test'
+import { createDemoWebServers } from './playwright.demo-servers'
 
 /**
  * Permanent responsive regression suite (overflow + critical-element-size
@@ -24,14 +25,7 @@ export default defineConfig({
     trace: 'retain-on-failure',
     actionTimeout: 15_000,
   },
-  webServer: {
-    command: 'npm run dev -- --host 127.0.0.1 --port 5205',
-    url: 'http://127.0.0.1:5205/',
-    // Desarrollo local puede reutilizar el servidor que el equipo ya verificó.
-    // CI conserva un arranque limpio para evitar validar artefactos obsoletos.
-    reuseExistingServer: process.env.CI !== 'true',
-    timeout: 30_000,
-  },
+  webServer: createDemoWebServers(5205),
   projects: [
     { name: 'iphone-se', use: { ...devices['iPhone SE'] } },
     { name: 'iphone-13', use: { ...devices['iPhone 13'] } },

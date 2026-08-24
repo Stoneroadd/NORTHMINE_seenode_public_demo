@@ -1,13 +1,9 @@
 import { test, expect } from '@playwright/test'
-import { expectNoHorizontalOverflow, gotoAndSettle } from './helpers/responsive'
+import { expectNoHorizontalOverflow, loginAsDemo, navigateWithinApp } from './helpers/responsive'
 
 async function openPerformance(page: import('@playwright/test').Page) {
-  await gotoAndSettle(page, '/acceso-demo', 500)
-  await page.fill('input[placeholder="usuario"]', 'demo')
-  await page.fill('input[placeholder="contrasena"]', 'demo')
-  await page.click('button[type="submit"]')
-  await page.waitForURL('**/cockpit', { timeout: 20_000 })
-  await page.goto('/rendimiento')
+  await loginAsDemo(page)
+  await navigateWithinApp(page, '/rendimiento')
 
   const trigger = page.locator('.loader-phase-legend button').first()
   await trigger.waitFor({ state: 'visible', timeout: 30_000 })

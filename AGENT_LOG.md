@@ -136,7 +136,7 @@ with an `<picture>`/fallback pattern instead of re-encoding PNG-to-PNG.
 Don't reuse the `sharp` default PNG pipeline as-is; it changes edge pixel
 color under semi-transparent alpha.
 
-## 2026-08-23 — Codex — branch `feat/responsive-test-harness` — starting
+## 2026-08-23 — Codex — branch `feat/responsive-test-harness` — complete
 
 **Scope:** make the responsive Playwright suite self-contained by reusing the
 authorized synthetic backend lifecycle already proven for Mission Control. A
@@ -145,6 +145,24 @@ attempts with auth `ECONNREFUSED` when run from clean processes.
 
 **Coordination:** harness/configuration only; no responsive CSS, product UI,
 visual baselines, backend domain code, AI runtime, Wenco or production settings.
+
+**Result:** extracted the Mission Control backend/Vite lifecycle into one
+shared Playwright server factory and applied it to both configs. The first full
+responsive run exposed two independent harness defects: the real 5/minute
+login limiter was exhausted by the matrix, and authenticated tests discarded
+their in-memory token through full reloads. A guarded demo/testing-only ASGI
+entrypoint now disables SlowAPI only in Playwright's ephemeral backend; normal
+`app.main:app` security remains unchanged. Authenticated routes now use the
+application's existing `pushState`/`popstate` router contract.
+
+**Evidence:** clean baseline Decision Cockpit failed 2/2 with backend
+`ECONNREFUSED`. After the shared server extraction, the first Pixel 7 + desktop
+1440 matrix exposed 50 passed, 6 skipped, 3 failed and 3 flaky; all failures
+were login/session setup rather than drawer assertions. Final matrix: 55
+passed, 7 expected skips, 0 failed, 0 flaky. Focused drawer: 4/4. Mission
+Control: 4/4. Frontend unit: 124/124; lint/typecheck and production build pass.
+The run also exposed a pre-existing React `fetchPriority` warning in `SaaSHero`,
+recorded separately in the work plan rather than mixed into this change.
 
 ## 2026-08-23 — Codex — branch `feat/mission-control-test-harness` — complete
 

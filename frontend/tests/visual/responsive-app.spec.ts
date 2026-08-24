@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { expectNoHorizontalOverflow, expectVisibleSize, gotoAndSettle, loginAsDemo } from './helpers/responsive'
+import { expectNoHorizontalOverflow, expectVisibleSize, loginAsDemo, navigateWithinApp } from './helpers/responsive'
 
 const APP_ROUTES = [
   { path: '/cockpit', label: 'Decision Cockpit' },
@@ -21,7 +21,7 @@ test.describe('authenticated app', () => {
 
   for (const { path, label } of APP_ROUTES) {
     test(`${label} (${path}) — no horizontal overflow`, async ({ page }) => {
-      await gotoAndSettle(page, path)
+      await navigateWithinApp(page, path)
       await expectNoHorizontalOverflow(page)
     })
   }
