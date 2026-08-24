@@ -1,5 +1,6 @@
 import type { KeyboardEvent } from 'react'
 import type { FlowNode, FlowRelationship, OperationalFlowSnapshot } from './types'
+import { assertionShortLabel } from './presentation'
 
 interface Position { x: number; y: number }
 
@@ -161,7 +162,7 @@ export function OperationalFlowCanvas({
                 transform={`translate(${position.x} ${position.y})`}
                 role="button"
                 tabIndex={0}
-                aria-label={`${node.label}. ${node.summary}. ${node.assertion_type}.${impacted ? ' Impactado por el evento activo.' : ''}`}
+                aria-label={`${node.label}. ${node.summary}. ${assertionShortLabel(node.assertion_type)}.${impacted ? ' Impactado por el evento activo.' : ''}`}
                 aria-pressed={selected}
                 onClick={() => onSelectNode(node.node_id)}
                 onKeyDown={(event) => handleNodeKey(event, node.node_id)}
@@ -170,7 +171,7 @@ export function OperationalFlowCanvas({
                 <g className="mc-flow-node__mark" transform="translate(16 17)">{conditionShape(node.condition)}</g>
                 <text className="mc-flow-node__label" x="42" y="28">{node.label}</text>
                 <text className="mc-flow-node__summary" x="16" y="57">{node.summary}</text>
-                {showAssertions && <text className="mc-flow-node__assertion" x="16" y="77">{node.assertion_type}</text>}
+                {showAssertions && <text className="mc-flow-node__assertion" x="16" y="77">{assertionShortLabel(node.assertion_type)}</text>}
               </g>
             )
           })}
@@ -186,13 +187,13 @@ export function OperationalFlowCanvas({
                 type="button"
                 className={`mc-flow-mobile-node mc-flow-mobile-node--${node.condition.toLowerCase()}${node.node_id === selectedNodeId ? ' is-selected' : ''}${impacted ? ' is-impacted' : ''}`}
                 aria-pressed={node.node_id === selectedNodeId}
-                aria-label={`${node.label}. ${node.summary}. ${node.assertion_type}.${impacted ? ' Impactado por el evento activo.' : ''}`}
+                aria-label={`${node.label}. ${node.summary}. ${assertionShortLabel(node.assertion_type)}.${impacted ? ' Impactado por el evento activo.' : ''}`}
                 onClick={() => onSelectNode(node.node_id)}
               >
                 <span>{node.label}</span>
                 {impacted && <em className="mc-flow-mobile-node__impact">Impactado</em>}
                 <strong>{node.summary}</strong>
-                {showAssertions && <small>{node.assertion_type}</small>}
+                {showAssertions && <small>{assertionShortLabel(node.assertion_type)}</small>}
               </button>
             </li>
           )

@@ -4,17 +4,20 @@ import { AlertTriangle, CheckCircle2, CircleDot, Database, GitBranch, Layers3, R
 import { MissionState, StatusIndicator } from '../mission-control/design-system'
 import { OperationalFlowCanvas } from '../mission-control/operational-flow/OperationalFlowCanvas'
 import { getOperationalFlowSnapshot } from '../mission-control/operational-flow/service'
-import type { AssertionType, FlowDetail, FlowNode, OperationalCondition } from '../mission-control/operational-flow/types'
+import {
+  assertionDetailLabel,
+  assertionShortLabel,
+  dataQualityLabel,
+  entityKindLabel,
+  eventStatusLabel,
+  provenanceOriginLabel,
+  relationshipLabel,
+} from '../mission-control/operational-flow/presentation'
+import type { FlowDetail, FlowNode, OperationalCondition } from '../mission-control/operational-flow/types'
 import { sourceDisplayName } from '../lib/presentationSafety'
 
 const EXPECTED_SCHEMA = 'mission-control.operational-flow.v2'
 const DEFAULT_AT = '2026-08-20T10:45:00-04:00'
-
-function assertionLabel(assertion: AssertionType): string {
-  if (assertion === 'FACT') return 'Hecho de fuente'
-  if (assertion === 'DERIVED') return 'Derivación determinística'
-  return 'Hipótesis · requiere validación'
-}
 
 function toneFromCondition(condition: OperationalCondition) {
   if (condition === 'CRITICAL') return 'critical' as const
@@ -124,7 +127,7 @@ export function OperationalFlowPage() {
         </div>
         <div className="mc-flow-situation__status">
           <StatusIndicator tone={operationStable ? 'normal' : event.status === 'NORMALIZED' ? 'normal' : event.status === 'RECOVERING' ? 'recovering' : 'critical'} />
-          <span>{event?.status ?? 'ESTABLE'}</span>
+          <span>{eventStatusLabel(event?.status)}</span>
         </div>
       </section>
 
@@ -151,7 +154,7 @@ export function OperationalFlowPage() {
           <button type="button" aria-pressed={showImpact} onClick={() => setShowImpact((value) => !value)}>Impacto</button>
           <button type="button" aria-pressed={showAssertions} onClick={() => setShowAssertions((value) => !value)}>Afirmaciones</button>
         </div>
-        <p><Radio aria-hidden="true" size={14} /> Calidad {snapshot.data_quality} · lectura operacional verificada</p>
+        <p><Radio aria-hidden="true" size={14} /> {dataQualityLabel(snapshot.data_quality)} · lectura operacional verificada</p>
       </div>
 
       <div className="mc-flow-workspace">
@@ -174,15 +177,15 @@ export function OperationalFlowPage() {
           <aside className="mc-flow-inspector" aria-labelledby="mc-flow-inspector-title">
             <div className="mc-flow-inspector__heading">
               <StatusIndicator tone={toneFromCondition(selectedNode.condition)} compact />
-              <p>{selectedNode.entity_kind.split('_').join(' ')}</p>
+              <p>{entityKindLabel(selectedNode.entity_kind)}</p>
               <h2 id="mc-flow-inspector-title">{selectedNode.label}</h2>
               <strong>{selectedNode.summary}</strong>
             </div>
 
             <dl className="mc-flow-inspector__meta">
-              <div><dt>Afirmación</dt><dd>{assertionLabel(selectedNode.assertion_type)}</dd></div>
-              <div><dt>Calidad</dt><dd>{selectedNode.data_quality}</dd></div>
-              <div><dt>Procedencia</dt><dd>{snapshot.provenance.origin}</dd></div>
+              <div><dt>Afirmación</dt><dd>{assertionDetailLabel(selectedNode.assertion_type)}</dd></div>
+              <div><dt>Calidad</dt><dd>{dataQualityLabel(selectedNode.data_quality)}</dd></div>
+              <div><dt>Procedencia</dt><dd>{provenanceOriginLabel(snapshot.provenance.origin)}</dd></div>
             </dl>
 
             <section aria-labelledby="mc-related-heading">
@@ -191,8 +194,8 @@ export function OperationalFlowPage() {
                 <ul className="mc-flow-inspector__relations">
                   {connectedRelationships.map((relationship) => (
                     <li key={relationship.relationship_id}>
-                      <span>{relationship.relationship_type.split('_').join(' ')}</span>
-                      <small>{relationship.assertion_type} · desde {formatTimestamp(relationship.effective_from)}</small>
+                      <span>{relationshipLabel(relationship.relationship_type, relationship.label)}</span>
+                      <small>{assertionShortLabel(relationship.assertion_type)} · desde {formatTimestamp(relationship.effective_from)}</small>
                     </li>
                   ))}
                 </ul>
@@ -205,7 +208,7 @@ export function OperationalFlowPage() {
                 <ul className="mc-flow-inspector__evidence">
                   {selectedEvidence.map((evidence) => (
                     <li key={evidence.evidence_id}>
-                      <span>{evidence.assertion_type}</span>
+                      <span>{assertionShortLabel(evidence.assertion_type)}</span>
                       <strong>{evidence.label}</strong>
                       <p>{evidence.value}</p>
                       <small>{formatTimestamp(evidence.observed_at)} · {sourceDisplayName(evidence.provenance.source_system)}</small>
@@ -237,7 +240,7 @@ export function OperationalFlowPage() {
                             <dt>{detail.label}</dt>
                             <dd>
                               <strong>{detail.value}{detail.unit ? ` ${detail.unit}` : ''}</strong>
-                              <small>{detail.assertion_type} · {detail.data_quality} · {formatTimestamp(detail.observed_at)}</small>
+                              <small>{assertionShortLabel(detail.assertion_type)} · {dataQualityLabel(detail.data_quality)} · {formatTimestamp(detail.observed_at)}</small>
                             </dd>
                           </div>
                         ))}
@@ -256,7 +259,7 @@ export function OperationalFlowPage() {
       </div>
 
       <footer className="mc-flow-footnote">
-        <span>{snapshot.scenario} · {snapshot.scenario_label}</span>
+        <span>Escenario: {snapshot.scenario_label}</span>
         <p>Demostración determinística. Las relaciones, eventos e impactos productivos no representan una faena real.</p>
       </footer>
     </div>

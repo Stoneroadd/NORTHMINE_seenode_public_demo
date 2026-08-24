@@ -847,3 +847,30 @@ The assertion was corrected to target `.mc-flow-context h1`; no product behavior
 was changed to satisfy the test. Final evidence: TypeScript lint PASS, Vitest
 133/133, production build PASS without warnings, Impeccable detector `[]`,
 focused Playwright 4/4 on Pixel 7 and desktop 1440, and `git diff --check` PASS.
+
+---
+
+## 2026-08-24 — Codex — Operational Flow human presentation boundary
+
+The Flow contract was correctly preserving technical enums, but six UI paths
+rendered them directly: node kind, relationship type, assertion type, data
+quality, provenance origin, event lifecycle and the footer scenario identifier.
+Operators therefore saw values such as `LOADING_UNIT`, `FEEDS`, `FACT`, `FRESH`,
+`SYNTHETIC`, `CONFIRMED` and `S01` even though the underlying evidence labels
+were already human-readable.
+
+A dedicated `operational-flow/presentation.ts` adapter now maps those contracts
+to operational Spanish while leaving backend payloads and domain types intact.
+Unknown future entity/status/provenance values fall back to neutral human labels
+instead of leaking a new identifier. Relationship presentation uses the known
+semantic type map and a normalized backend label fallback. Screen-reader node
+labels use the same human assertion terminology. The footer now names the
+scenario rather than exposing its harness key.
+
+Verification: TypeScript lint PASS, Vitest 136/136 (three new presentation
+contracts), production build PASS without warnings, npm production audit zero
+vulnerabilities, Impeccable detector `[]`, `git diff --check` PASS, and focused
+Playwright 4/4 on Pixel 7 and desktop 1440. The browser test proves the inspector
+shows “Unidad de carguio”, “Datos actualizados”, “Escenario sintetico”, “Hecho de
+fuente”, “Alimenta” and “Carga”, while the main operational surface contains none
+of the former implementation codes.

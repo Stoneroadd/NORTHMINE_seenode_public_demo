@@ -20,6 +20,17 @@ test.describe('canonical authenticated routing', () => {
     await expect(page.locator('.mc-flow-context h1')).toHaveText('Operational Flow')
     await expect(entry).toHaveClass(/is-active/)
     await expect(page.getByPlaceholder('usuario')).toHaveCount(0)
+
+    const inspector = page.locator('.mc-flow-inspector')
+    await expect(inspector.getByText('Unidad de carguío', { exact: true })).toBeVisible()
+    await expect(inspector.getByText('Datos actualizados', { exact: true })).toBeVisible()
+    await expect(inspector.getByText('Escenario sintético', { exact: true })).toBeVisible()
+    await expect(inspector.getByText('Hecho de fuente', { exact: true })).toBeVisible()
+    await expect(inspector.getByText('Alimenta', { exact: true })).toBeVisible()
+    await expect(inspector.getByText('Carga', { exact: true })).toBeVisible()
+
+    const operationalText = await page.locator('main').innerText()
+    expect(operationalText).not.toMatch(/\b(?:LOADING_UNIT|FEEDS|LOADS|FACT|FRESH|SYNTHETIC|CONFIRMED|S01)\b/)
   })
 
   test('Mission Control and analysis routes survive history navigation', async ({ page }) => {

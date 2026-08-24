@@ -230,6 +230,14 @@ target shell; it makes the implemented intelligence surface reachable during
 migration. Active state, session retention and mobile drawer behavior are
 protected by responsive browser tests.
 
+**Operational Flow human presentation boundary — COMPLETE (Codex).**
+Operational contracts retain canonical enum values, but the rendered Flow and
+inspector no longer expose implementation codes such as `LOADING_UNIT`, `FEEDS`,
+`FACT`, `FRESH`, `SYNTHETIC`, lifecycle enums or scenario IDs. One tested
+presentation adapter translates known values and uses safe human fallbacks for
+unknown future values. Facts, derivations, hypotheses, quality and provenance
+remain visible in operational language rather than being hidden.
+
 **Public analytics/CSP mismatch — COMPLETE (Codex).**
 The deployed landing includes GoatCounter from `gc.zgo.at`, while the enforced
 Content Security Policy blocks that origin and produces a browser console
