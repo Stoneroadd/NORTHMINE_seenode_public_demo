@@ -22,7 +22,13 @@ export function OperatorDelayPatternPanel({ patterns, onSelectOperator }: Props)
 
       <div className="operator-pattern-list">
         {patterns.slice(0, 6).map((pattern) => (
-          <button key={`${pattern.operator_id}-${pattern.category}`} type="button" onClick={() => onSelectOperator?.(pattern.operator_id)}>
+          <button
+            key={`${pattern.operator_id}-${pattern.category}`}
+            type="button"
+            aria-haspopup="dialog"
+            aria-controls="operator-detail-dialog"
+            onClick={() => onSelectOperator?.(pattern.operator_id)}
+          >
             <span className={`pattern-level pattern-${pattern.pattern_level.toLowerCase()}`}>
               <AlertTriangle size={15} /> {pattern.pattern_level}
             </span>

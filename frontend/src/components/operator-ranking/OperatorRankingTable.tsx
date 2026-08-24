@@ -113,6 +113,8 @@ export function OperatorRankingTable({ items, onSelect, onAudit }: Props) {
                   type="button"
                   className="icon-action"
                   aria-label={t.tabla_ver_detalle(item.operator_name)}
+                  aria-haspopup="dialog"
+                  aria-controls="operator-detail-dialog"
                   onClick={(event) => {
                     event.stopPropagation()
                     onSelect(item)
@@ -124,6 +126,8 @@ export function OperatorRankingTable({ items, onSelect, onAudit }: Props) {
                   type="button"
                   className="icon-action audit"
                   aria-label={t.tabla_ver_auditoria(item.operator_name)}
+                  aria-haspopup="dialog"
+                  aria-controls="operator-audit-dialog"
                   onClick={(event) => {
                     event.stopPropagation()
                     onAudit(item)

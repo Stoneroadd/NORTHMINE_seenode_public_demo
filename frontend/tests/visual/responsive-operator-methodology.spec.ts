@@ -48,4 +48,46 @@ test.describe('operator methodology dialog', () => {
     expect(closeBox!.width).toBeGreaterThanOrEqual(44)
     expect(closeBox!.height).toBeGreaterThanOrEqual(44)
   })
+
+  test('operator detail drawer contains focus and restores its trigger', async ({ page }) => {
+    const trigger = page.getByRole('button', { name: /^ver detalle /i }).first()
+    await trigger.click()
+
+    const dialog = page.getByRole('dialog')
+    const closeButton = dialog.getByRole('button', { name: /cerrar detalle/i })
+
+    await expect(dialog).toBeVisible()
+    await expect(closeButton).toBeFocused()
+    await expectNoHorizontalOverflow(page)
+
+    await page.keyboard.press('Tab')
+    await expect(closeButton).toBeFocused()
+    await page.keyboard.press('Shift+Tab')
+    await expect(closeButton).toBeFocused()
+
+    await page.keyboard.press('Escape')
+    await expect(dialog).toHaveCount(0)
+    await expect(trigger).toBeFocused()
+  })
+
+  test('operator audit drawer contains focus and restores its trigger', async ({ page }) => {
+    const trigger = page.getByRole('button', { name: /^ver auditoria /i }).first()
+    await trigger.click()
+
+    const dialog = page.getByRole('dialog')
+    const closeButton = dialog.getByRole('button', { name: /cerrar auditoria/i })
+
+    await expect(dialog).toBeVisible()
+    await expect(closeButton).toBeFocused()
+    await expectNoHorizontalOverflow(page)
+
+    await page.keyboard.press('Tab')
+    await expect(closeButton).toBeFocused()
+    await page.keyboard.press('Shift+Tab')
+    await expect(closeButton).toBeFocused()
+
+    await page.keyboard.press('Escape')
+    await expect(dialog).toHaveCount(0)
+    await expect(trigger).toBeFocused()
+  })
 })

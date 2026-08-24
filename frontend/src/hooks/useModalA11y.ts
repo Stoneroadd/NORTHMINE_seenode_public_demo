@@ -47,19 +47,22 @@ export function useModalA11y(open: boolean, onClose: () => void) {
     const focusFrame = window.requestAnimationFrame(() => closeButtonRef.current?.focus())
 
     const handleKeyDown = (event: KeyboardEvent) => {
+      const panel = panelRef.current
+      if (!panel || !panel.contains(document.activeElement)) return
+
       if (event.key === 'Escape') {
         event.preventDefault()
-        event.stopPropagation()
+        event.stopImmediatePropagation()
         onCloseRef.current()
         return
       }
 
-      if (event.key !== 'Tab' || !panelRef.current) return
+      if (event.key !== 'Tab') return
 
-      const focusable = visibleFocusableElements(panelRef.current)
+      const focusable = visibleFocusableElements(panel)
       if (focusable.length === 0) {
         event.preventDefault()
-        panelRef.current.focus()
+        panel.focus()
         return
       }
 
@@ -67,10 +70,10 @@ export function useModalA11y(open: boolean, onClose: () => void) {
       const last = focusable[focusable.length - 1]
       const active = document.activeElement
 
-      if (event.shiftKey && (active === first || !panelRef.current.contains(active))) {
+      if (event.shiftKey && (active === first || !panel.contains(active))) {
         event.preventDefault()
         last.focus()
-      } else if (!event.shiftKey && (active === last || !panelRef.current.contains(active))) {
+      } else if (!event.shiftKey && (active === last || !panel.contains(active))) {
         event.preventDefault()
         first.focus()
       }

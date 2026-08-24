@@ -210,7 +210,14 @@ function OperatorProductivityComparison({
     const tph = Number(item.tph || 0)
     const pct = Math.max(4, Math.min(100, (tph / maxTph) * 100))
     return (
-      <button key={`${mode}-${item.operator_id}`} type="button" className={`operator-productivity-row is-${mode}`} onClick={() => onSelect(item)}>
+      <button
+        key={`${mode}-${item.operator_id}`}
+        type="button"
+        className={`operator-productivity-row is-${mode}`}
+        aria-haspopup="dialog"
+        aria-controls="operator-detail-dialog"
+        onClick={() => onSelect(item)}
+      >
         <span className="operator-productivity-rank">#{index + 1}</span>
         <span className="operator-productivity-person">
           <strong>{item.operator_name}</strong>
@@ -295,7 +302,13 @@ function OperatorPriorityBoard({
       <div className="operator-priority-grid">
         {items.map((item, index) => (
           <article key={item.operator_id} className="operator-priority-card">
-            <button type="button" className="operator-priority-main" onClick={() => onSelect(item)}>
+            <button
+              type="button"
+              className="operator-priority-main"
+              aria-haspopup="dialog"
+              aria-controls="operator-detail-dialog"
+              onClick={() => onSelect(item)}
+            >
               <span className="operator-priority-rank">#{index + 1}</span>
               <div>
                 <strong>{item.operator_name}</strong>
@@ -313,7 +326,13 @@ function OperatorPriorityBoard({
               <span>{cleanCause(t, item.main_loss_cause)}</span>
               <p>{item.recommendation}</p>
             </div>
-            <button type="button" className="command-button command-button-secondary" onClick={() => onAudit(item)}>
+            <button
+              type="button"
+              className="command-button command-button-secondary"
+              aria-haspopup="dialog"
+              aria-controls="operator-audit-dialog"
+              onClick={() => onAudit(item)}
+            >
               <ClipboardCheck size={15} /> {t.priority_btn_auditar}
             </button>
           </article>
@@ -528,7 +547,13 @@ export function OperatorRanking() {
               {t.cmd_next_small(formatNumber(executive.scoreSpread, 1))}
             </small>
             {executive.risk && (
-              <button type="button" className="command-button command-button-secondary" onClick={() => setAuditOperator(executive.risk)}>
+              <button
+                type="button"
+                className="command-button command-button-secondary"
+                aria-haspopup="dialog"
+                aria-controls="operator-audit-dialog"
+                onClick={() => setAuditOperator(executive.risk)}
+              >
                 <ClipboardCheck size={15} /> {t.cmd_btn_auditar_foco}
               </button>
             )}

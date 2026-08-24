@@ -67,6 +67,7 @@ export function OperatorRankingDrawer({ operator, filters, open, onClose }: Prop
     <div className="operator-ranking-drawer is-open">
       <div className="operator-ranking-drawer-backdrop" aria-hidden="true" onClick={onClose} />
       <aside
+        id="operator-detail-dialog"
         ref={panelRef}
         className="operator-ranking-drawer-panel"
         role="dialog"

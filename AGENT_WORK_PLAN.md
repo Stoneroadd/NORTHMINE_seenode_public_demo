@@ -47,6 +47,12 @@ fix extended to two sibling drawers with the identical bug
 (`OperatorAuditDrawer.tsx`, `OperatorRankingDrawer.tsx`) via a shared
 `useModalA11y` hook — commit `8956d49`.
 
+**Operator detail and KPI audit drawer accessibility — RESOLVED 2026-08-23.**
+Live Seenode reproduction confirmed both drawers lacked dialog semantics,
+focus containment/return and Escape dismissal. They now share the verified
+dialog-focus primitive and expose their relationships from every DOM opener.
+Focused responsive coverage passes on mobile and desktop; see `AGENT_LOG.md`.
+
 ## P1 — needs human judgment
 
 **`main` and `integration/agent-consolidated` (in the sibling checkout
@@ -69,17 +75,6 @@ to port already has been (see `AGENT_LOG.md`, commits `71ba9a7` through
 (already `RequireAdmin` + redaction) and refresh-token rotation (already
 race-guarded via conditional `UPDATE`) — see `AGENT_LOG.md` for detail.
 Don't re-investigate these without new evidence of an actual failure.
-
-**Minor, low-priority a11y polish left on the table:** `OperatorAuditDrawer.tsx`
-and `OperatorRankingDrawer.tsx` (fixed 2026-08-23, see above) don't have
-the `aria-haspopup="dialog"`/`aria-expanded`/`aria-controls` opener
-relationship that `OperatorMethodologyModal.tsx`'s trigger button has,
-because both open from table rows via a shared `onSelect`/`onAudit`
-callback rather than one fixed button — adding it means threading
-per-row `aria-expanded` state through `OperatorRankingTable.tsx` and
-`OperatorPriorityBoard.tsx` (not yet reviewed). The core fix (dialog
-semantics, focus trap, Escape, focus restoration) is done; this is a
-genuine but smaller remaining gap, not a blocker.
 
 ## Outside this repo's code — user's own action
 

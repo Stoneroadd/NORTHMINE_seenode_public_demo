@@ -50,6 +50,7 @@ export function OperatorAuditDrawer({ operator, filters, open, onClose }: Props)
     <div className="operator-audit-drawer is-open">
       <div className="operator-audit-backdrop" aria-hidden="true" onClick={onClose} />
       <aside
+        id="operator-audit-dialog"
         ref={panelRef}
         className="operator-audit-panel"
         role="dialog"

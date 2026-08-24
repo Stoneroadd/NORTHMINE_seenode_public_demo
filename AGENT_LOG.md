@@ -63,6 +63,26 @@ rows via a shared callback, not one fixed trigger button, so that needs
 its own change to `OperatorRankingTable.tsx`/`OperatorPriorityBoard.tsx`,
 out of scope here. Commit `8956d49`. Full suite green.
 
+## 2026-08-23 — Codex — branch `feat/operator-drawers-a11y` — complete
+
+**Scope:** independently reproduced the same two drawer defects before seeing
+Claude's concurrent `8956d49`. After fetching, discarded the duplicate
+implementation and retained only the missing opener relationships, nested
+dialog keyboard hardening and focused responsive regression coverage.
+
+**Result:** every DOM opener now identifies its detail/audit target; both
+drawers have responsive keyboard regression coverage alongside Methodology.
+The shared hook ignores inactive underlying dialogs and stops Escape at the
+active overlay. Impeccable detector `[]`; focused Playwright 8/8 on Pixel 7 +
+desktop 1440; lint/typecheck and production build pass.
+
+**Baseline note:** the default parallel unit command twice timed out only the
+known `ConversationTurnManager.test.ts:209`; that file passes 8/8 alone and the
+complete suite passes 124/124 with one worker. No AI runtime was changed.
+
+**Coordination:** no ranking calculations, API contracts, AI runtime, Mission
+Control domain or `OperationalFlowOverview` changes.
+
 ## 2026-08-23 — Codex — branch `feat/operator-ranking-methodology-a11y` — complete
 
 **Scope:** reproduce and close the P0 live-session accessibility gap in the
