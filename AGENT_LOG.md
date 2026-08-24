@@ -46,6 +46,33 @@ commit message — link to the actual commit/PR for detail.
 
 ---
 
+## 2026-08-24 — Claude Code — branch `main` — defer html2canvas-pro in agent perception, starting
+
+**Scope:** `lib/agentPerception/visualCapture.ts` statically imports
+`html2canvas-pro` (~200KB, 46KB gzip). `AgentPresence` (mounted eagerly
+in `App.tsx`, every page including `/login`) → `AgentWorkspace` →
+`perceptionManager` → `visualCapture` means that library loads for every
+session regardless of whether visual capture is ever used. The file's
+own doc comment states capture is "SOLO bajo demanda - nunca automatica,
+nunca periodica" (on-demand only, per section 29 of its design brief),
+so this is purely a load-timing change: moving the `import html2canvas
+from 'html2canvas-pro'` from module top-level into a dynamic `import()`
+inside `captureElement()`, the one internal function both
+`captureWidget`/`captureViewport` already call asynchronously. No change
+to either exported function's signature, return shape, or when a
+capture actually fires — same on-demand-only behavior, just deferred
+bytes.
+
+**Coordination:** touching only `visualCapture.ts` (one file, one
+import statement moved). Not touching `perceptionManager.ts`,
+`AgentWorkspace.tsx`, `AgentPresence.tsx`, `privacy.ts`, redaction logic,
+or any agent runtime/state contract — flagging this explicitly since
+it's inside the ai-copilot/agentPerception cluster that P1 in
+`AGENT_WORK_PLAN.md` calls out for care, even though this specific
+change carries none of that risk (verified no behavior/API change,
+tested with tsc/vitest/build + live network-request verification same
+as the three.js deferral).
+
 ## 2026-08-23 — Claude Code — branch `main` — login page defers three.js, complete
 
 **Scope:** continuing the same UX/speed mandate, checked whether any
