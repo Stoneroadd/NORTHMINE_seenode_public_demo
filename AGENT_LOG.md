@@ -46,6 +46,17 @@ commit message — link to the actual commit/PR for detail.
 
 ---
 
+## 2026-08-23 — Codex — branch `feat/mission-control-test-harness` — starting
+
+**Scope:** make `npm run test:mission-control` reproducible from a clean local
+checkout by having Playwright start and health-check the authorized demo backend
+as well as Vite. The current command was reproduced failing on
+`/api/auth/{refresh,login}` with `ECONNREFUSED` because port 8001 is an implicit
+external prerequisite.
+
+**Coordination:** test infrastructure only; no Mission Control UI, snapshots,
+operational contracts, AI runtime, Wenco connector or production configuration.
+
 ## 2026-08-23 — Codex — branch `feat/equipment-detail-drawer-a11y` — complete
 
 **Scope:** live-audit and, only if reproduced, harden the shared

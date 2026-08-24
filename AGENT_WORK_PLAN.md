@@ -71,6 +71,13 @@ to port already has been (see `AGENT_LOG.md`, commits `71ba9a7` through
 
 ## P2 — verifiable, not yet attempted
 
+**Self-contained Mission Control visual harness — IN PROGRESS (Codex).**
+`npm run test:mission-control` starts only Vite while its authenticated catalog
+requires the backend on port 8001. A clean checkout therefore reaches the four
+tests and fails deterministically with `ECONNREFUSED` on auth. Make the Playwright
+configuration own both demo backend and frontend lifecycles, preserving the
+synthetic/no-Wenco boundary and leaving product UI/contracts unchanged.
+
 **Shared equipment detail drawer accessibility — COMPLETE (Codex).**
 The portal drawer used by Fleet, Performance, Alerts, Reports and Compare now
 has a named dialog surface, deterministic focus entry/containment/return,
