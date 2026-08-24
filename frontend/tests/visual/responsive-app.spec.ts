@@ -43,6 +43,8 @@ test.describe('authenticated app', () => {
 
     await page.keyboard.press('Escape')
     await expect(sidebar).not.toHaveClass(/is-mobile-open/)
+    await expect(menuButton).toBeFocused()
+    await expect(menuButton).toHaveAttribute('aria-expanded', 'false')
   })
 
   test('cockpit — table has an internal horizontal-scroll wrapper, not a page-level one', async ({ page }) => {

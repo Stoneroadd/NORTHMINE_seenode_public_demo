@@ -21,6 +21,8 @@ interface Props {
   title?: string
   buttonRef?: Ref<HTMLButtonElement>
   'aria-label'?: string
+  'aria-controls'?: string
+  'aria-expanded'?: boolean
   onClick?: (event: MouseEvent<HTMLButtonElement>) => void
 }
 

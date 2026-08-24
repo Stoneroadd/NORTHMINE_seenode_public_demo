@@ -897,3 +897,20 @@ vulnerabilities and `git diff --check` PASS. The interaction-only responsive
 matrix additionally passes 7/7 across phones, tablets and 1440/1920 desktops.
 The Impeccable scan reports only the pre-existing findings in the 13k-line legacy
 token file; the changed selector introduced no new detector finding.
+
+---
+
+## 2026-08-24 — Codex — mobile navigation focus restoration
+
+The existing responsive test was named “restores focus” but stopped after
+checking that Escape removed `is-mobile-open`. `AppShell` likewise closed the
+drawer without returning keyboard focus, leaving focus inside an off-canvas
+navigation surface. The topbar menu button now has a stable React ref, reports
+`aria-expanded` and `aria-controls`, and changes its accessible name between
+open and closed states. Escape only handles an actually open drawer and restores
+the opener on the next animation frame.
+
+Focused authenticated Playwright passes 2/2 on iPhone SE and Pixel 7 with real
+focus and expanded-state assertions. TypeScript lint PASS, Vitest 136/136,
+production build PASS, npm production audit zero vulnerabilities, Impeccable
+detector `[]` on all changed UI/test files, and `git diff --check` PASS.

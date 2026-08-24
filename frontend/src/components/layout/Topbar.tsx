@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type Ref } from 'react'
 import { LogOut, Menu, RefreshCw, Settings, ShieldCheck, TerminalSquare } from 'lucide-react'
 import type { AuthSession, HealthResponse } from '../../lib/api'
 import { useAppStore, useT } from '../../store'
@@ -14,6 +14,8 @@ interface Props {
   onLogout: () => void
   onRefresh: () => void
   onMenuClick?: () => void
+  menuButtonRef?: Ref<HTMLButtonElement>
+  menuOpen?: boolean
   refreshing?: boolean
 }
 
@@ -24,6 +26,8 @@ export function Topbar({
   onLogout,
   onRefresh,
   onMenuClick,
+  menuButtonRef,
+  menuOpen = false,
   refreshing,
 }: Props) {
   const t = useT()
@@ -48,7 +52,16 @@ export function Topbar({
 
   return (
     <header className={`topbar ${scrolled ? 'is-scrolled' : ''}`}>
-      <CommandButton className="topbar-menu-button" variant="ghost" icon={Menu} onClick={onMenuClick ?? (() => undefined)} aria-label="Abrir navegacion">
+      <CommandButton
+        className="topbar-menu-button"
+        variant="ghost"
+        icon={Menu}
+        buttonRef={menuButtonRef}
+        onClick={onMenuClick ?? (() => undefined)}
+        aria-label={menuOpen ? 'Cerrar navegacion' : 'Abrir navegacion'}
+        aria-controls="sidebar-nav"
+        aria-expanded={menuOpen}
+      >
         Menu
       </CommandButton>
       <div className="topbar-brand-identity">

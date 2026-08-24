@@ -1,6 +1,6 @@
 ﻿import { useQuery, useQueryClient } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { AuthSession } from '../../lib/api'
 import { getHealth } from '../../services/dashboardService'
 import { logout as clearSession } from '../../services/authService'
@@ -26,6 +26,7 @@ export function AppShell({ session, onLogout, children }: Props) {
   const [section, setSection] = useState<SectionId>(() => sectionFromPath(window.location.pathname))
   const [currentPath, setCurrentPath] = useState(() => window.location.pathname)
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
+  const menuButtonRef = useRef<HTMLButtonElement>(null)
   const queryClient = useQueryClient()
   // El fondo decorativo (matrix rain + grid) dibuja en canvas via rAF de forma
   // continua; si esta desactivado en Efectos visuales debe desmontarse del
@@ -78,12 +79,14 @@ export function AppShell({ session, onLogout, children }: Props) {
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setMobileSidebarOpen(false)
+      if (event.key !== 'Escape' || !mobileSidebarOpen) return
+      setMobileSidebarOpen(false)
+      window.requestAnimationFrame(() => menuButtonRef.current?.focus())
     }
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [])
+  }, [mobileSidebarOpen])
 
   return (
     <div className="app-shell">
@@ -112,6 +115,8 @@ export function AppShell({ session, onLogout, children }: Props) {
           healthLoading={healthQuery.isLoading}
           refreshing={queryClient.isFetching() > 0}
           onMenuClick={() => setMobileSidebarOpen((value) => !value)}
+          menuButtonRef={menuButtonRef}
+          menuOpen={mobileSidebarOpen}
           onRefresh={handleRefresh}
           onLogout={handleLogout}
         />

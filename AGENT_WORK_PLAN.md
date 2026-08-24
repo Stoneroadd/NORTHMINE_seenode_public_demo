@@ -246,6 +246,12 @@ their segments while retaining their own fill/stroke feedback. Responsive
 browser coverage protects hover geometry, keyboard selection and inspector
 context for PH03, Ruta Norte and Tonelaje.
 
+**Mobile navigation focus restoration — COMPLETE (Codex).**
+The sidebar regression claimed Escape restored focus but only asserted visual
+closure. The drawer now returns focus to its menu opener, exposes its expanded
+state and relationship, and uses an accurate open/close accessible name. The
+responsive test asserts behavior rather than only a CSS class.
+
 **Public analytics/CSP mismatch — COMPLETE (Codex).**
 The deployed landing includes GoatCounter from `gc.zgo.at`, while the enforced
 Content Security Policy blocks that origin and produces a browser console
