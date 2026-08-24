@@ -80,6 +80,13 @@ to port already has been (see `AGENT_LOG.md`, commits `71ba9a7` through
 
 ## P2 — verifiable, not yet attempted
 
+**Backend test-order state isolation — IN PROGRESS (Codex).**
+The full backend suite reproducibly ends with 380 passed and 13 setup errors,
+while the same runtime/audit tests pass in isolation. Every error is a demo-user
+login returning 401 after earlier tests mutate shared repository state. Identify
+the exact state leak and restore deterministic fixture isolation without
+weakening authentication or changing product credentials.
+
 **Public analytics/CSP mismatch — COMPLETE (Codex).**
 The deployed landing includes GoatCounter from `gc.zgo.at`, while the enforced
 Content Security Policy blocks that origin and produces a browser console

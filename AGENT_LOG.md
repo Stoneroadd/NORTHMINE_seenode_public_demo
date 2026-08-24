@@ -46,6 +46,15 @@ commit message — link to the actual commit/PR for detail.
 
 ---
 
+## 2026-08-23 — Codex — branch `test/backend-state-isolation` — starting
+
+**Scope:** reproduce and eliminate the 13 order-dependent backend setup errors
+caused by shared demo-user/authentication state across the full pytest suite.
+
+**Coordination:** backend test fixtures and the minimum verified repository
+reset boundary only; no production credentials, auth weakening, AI behavior,
+Mission Control contracts, Wenco or frontend changes.
+
 ## 2026-08-23 — Codex — branch `feat/goatcounter-csp` — complete
 
 **Scope:** resolve the deployed landing's GoatCounter/CSP mismatch discovered
