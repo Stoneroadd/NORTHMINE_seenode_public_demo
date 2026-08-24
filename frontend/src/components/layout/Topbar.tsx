@@ -6,6 +6,7 @@ import { SystemStatusBadge } from '../status/SystemStatusBadge'
 import { CommandButton } from '../ui/CommandButton'
 import { StatusPill } from '../ui/StatusPill'
 import { NorthmineLogo } from '../brand/NorthmineLogo'
+import { SETTINGS_PANEL_ID } from '../settings/settingsA11y'
 
 interface Props {
   session: AuthSession
@@ -86,6 +87,8 @@ export function Topbar({
           icon={Settings}
           onClick={() => setSettingsOpen(!settingsOpen)}
           title="Configuración (Ctrl+Shift+S)"
+          aria-controls={SETTINGS_PANEL_ID}
+          aria-expanded={settingsOpen}
         >
           <span>⚙</span>
         </CommandButton>

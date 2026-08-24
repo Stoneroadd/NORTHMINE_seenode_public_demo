@@ -68,6 +68,25 @@ test.describe('authenticated app', () => {
     await expect(cairoLink).toHaveCount(0)
   })
 
+  test('settings dialog contains focus, closes on Escape and restores its opener', async ({ page }) => {
+    const opener = page.locator('button[title^="Configuración"]')
+    await opener.click()
+
+    const dialog = page.getByRole('dialog', { name: /configuraci/i })
+    const closeButton = dialog.getByRole('button', { name: 'Cerrar', exact: true }).first()
+    await expect(dialog).toBeVisible()
+    await expect(closeButton).toBeFocused()
+    await expect(opener).toHaveAttribute('aria-expanded', 'true')
+
+    await page.keyboard.press('Shift+Tab')
+    await expect(dialog.locator(':focus')).toHaveCount(1)
+    await page.keyboard.press('Escape')
+
+    await expect(dialog).toHaveCount(0)
+    await expect(opener).toBeFocused()
+    await expect(opener).toHaveAttribute('aria-expanded', 'false')
+  })
+
   test('cockpit — table has an internal horizontal-scroll wrapper, not a page-level one', async ({ page }) => {
     const table = page.locator('table').first()
     const count = await page.locator('table').count()

@@ -988,3 +988,27 @@ full Vitest run reproduced the already classified
 `ConversationTurnManager.test.ts:209` 5 s timeout (137/138); the file then passed
 8/8 alone and an immediate full retry passed 138/138. No agent-runtime code or
 test timeout was changed.
+
+---
+
+## 2026-08-24 — Codex — Settings modal accessibility
+
+`SettingsPanel` looked and behaved visually like a modal but exposed no dialog
+role/name, did not contain focus, and closed on a global Escape listener without
+restoring its opener. It now consumes the same `useModalA11y` contract already
+proven by equipment and operator drawers. The panel declares `role="dialog"`,
+`aria-modal`, a stable title and panel ID, receives initial focus through its
+primary close action, contains Tab navigation, scopes Escape, and restores the
+topbar settings button. The opener reports `aria-controls` and `aria-expanded`.
+The shared hook gained a generic HTMLElement subtype solely to preserve exact
+React ref typing across div and aside consumers; behavior is unchanged for all
+existing drawers.
+
+Focused Playwright passes 2/2 on Pixel 7 and desktop 1440. The first focused run
+correctly exposed an ambiguous test locator because the settings surface has two
+visible actions named “Cerrar”; the assertion was narrowed to the primary named
+close control without changing UI. The first build then caught the hook's broad
+`HTMLElement` ref type at the div boundary; the generic typing corrected that
+compile-time contract. Final evidence: TypeScript lint PASS, Vitest 138/138,
+production build PASS, npm production audit zero vulnerabilities, Impeccable
+detector `[]`, and `git diff --check` PASS.

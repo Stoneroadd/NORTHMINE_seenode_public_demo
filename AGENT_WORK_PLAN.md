@@ -272,6 +272,13 @@ closure. The drawer now returns focus to its menu opener, exposes its expanded
 state and relationship, and uses an accurate open/close accessible name. The
 responsive test asserts behavior rather than only a CSS class.
 
+**Settings modal accessibility — COMPLETE (Codex).**
+The visual settings overlay now uses the shared dialog contract: named modal
+semantics, deterministic focus entry/containment/restoration, scoped Escape and
+an explicit opener relationship. The shared hook is generically typed so div,
+aside and future HTMLElement panel surfaces retain exact ref safety. Responsive
+coverage verifies the complete keyboard lifecycle on mobile and desktop.
+
 **Public analytics/CSP mismatch — COMPLETE (Codex).**
 The deployed landing includes GoatCounter from `gc.zgo.at`, while the enforced
 Content Security Policy blocks that origin and produces a browser console

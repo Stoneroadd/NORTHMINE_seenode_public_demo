@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import {
   Check, Eye, Hexagon, KeyRound, Languages, MousePointer2,
   Palette, Rows3, Settings, ShieldCheck, Sparkles, Wand2, X,
@@ -9,6 +9,8 @@ import type { LangId } from '../../i18n/translations'
 import type { Translations } from '../../i18n/translations'
 import { secureApi } from '../../lib/secureApi'
 import { MFASetupModal } from '../auth/MFASetupModal'
+import { useModalA11y } from '../../hooks/useModalA11y'
+import { SETTINGS_PANEL_ID } from './settingsA11y'
 
 interface Props {
   open: boolean
@@ -340,15 +342,7 @@ export function SettingsPanel({ open, onClose }: Props) {
   const lang = useAppStore((s) => s.lang)
   const setLang = useAppStore((s) => s.setLang)
   const [hovered, setHovered] = useState<ThemeId | null>(null)
-  const panelRef = useRef<HTMLDivElement>(null)
-
-  // Close on Escape or outside click
-  useEffect(() => {
-    if (!open) return
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [open, onClose])
+  const { panelRef, closeButtonRef, titleId } = useModalA11y<HTMLDivElement>(open, onClose)
 
   // Ctrl+Shift+S shortcut (handled in parent — just consume here)
 
@@ -368,7 +362,12 @@ export function SettingsPanel({ open, onClose }: Props) {
       onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
     >
       <div
+        id={SETTINGS_PANEL_ID}
         ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        tabIndex={-1}
         style={{
           width: 'min(540px, 95vw)',
           maxHeight: '90vh',
@@ -388,10 +387,11 @@ export function SettingsPanel({ open, onClose }: Props) {
       >
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 800, fontSize: 14, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--data-cyan, #00D4FF)' }}>
+          <span id={titleId} style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 800, fontSize: 14, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--data-cyan, #00D4FF)' }}>
             <Settings size={16} /> {t.settings.titulo}
           </span>
           <button
+            ref={closeButtonRef}
             type="button"
             onClick={onClose}
             aria-label={t.action.cerrar}

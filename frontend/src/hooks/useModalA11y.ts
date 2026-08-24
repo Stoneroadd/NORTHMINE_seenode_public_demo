@@ -29,8 +29,8 @@ function visibleFocusableElements(container: HTMLElement) {
   )
 }
 
-export function useModalA11y(open: boolean, onClose: () => void) {
-  const panelRef = useRef<HTMLElement>(null)
+export function useModalA11y<T extends HTMLElement = HTMLElement>(open: boolean, onClose: () => void) {
+  const panelRef = useRef<T>(null)
   const closeButtonRef = useRef<HTMLButtonElement>(null)
   const onCloseRef = useRef(onClose)
   const titleId = useId()
