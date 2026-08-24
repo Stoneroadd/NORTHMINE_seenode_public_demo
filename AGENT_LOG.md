@@ -46,6 +46,16 @@ commit message — link to the actual commit/PR for detail.
 
 ---
 
+## 2026-08-23 — Codex — branch `feat/equipment-detail-drawer-a11y` — starting
+
+**Scope:** live-audit and, only if reproduced, harden the shared
+`EquipmentDetailDrawer` used by Fleet, Performance, Alerts, Reports and Compare:
+dialog naming, keyboard entry/containment/return, Escape, responsive overflow
+and opener relationships. This is the next autonomous, test-verifiable item.
+
+**Coordination:** no equipment KPI calculations, APIs, AI runtime, Mission
+Control architecture or route migration changes.
+
 ## 2026-08-23 — Claude Code — branch `main` — extended the a11y fix to two sibling drawers, complete
 
 Re-checked this file before starting (see the entry right below): found

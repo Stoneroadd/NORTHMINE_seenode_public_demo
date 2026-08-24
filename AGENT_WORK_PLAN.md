@@ -71,6 +71,12 @@ to port already has been (see `AGENT_LOG.md`, commits `71ba9a7` through
 
 ## P2 — verifiable, not yet attempted
 
+**Shared equipment detail drawer accessibility — IN PROGRESS (Codex).**
+Audit the portal drawer used by Fleet, Performance, Alerts, Reports and Compare
+against a live authenticated route, then add focused regression coverage before
+any implementation. Scope is overlay interaction only; equipment data and
+Mission Control contracts remain unchanged.
+
 **Confirmed already fine, no action needed:** `/admin/audit-log` RBAC
 (already `RequireAdmin` + redaction) and refresh-token rotation (already
 race-guarded via conditional `UPDATE`) — see `AGENT_LOG.md` for detail.
