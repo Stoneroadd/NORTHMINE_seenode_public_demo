@@ -744,3 +744,19 @@ Vite warnings, production audit zero vulnerabilities, repository-wide exact-path
 search found no consumers, and `git diff --check` PASS. This removes 512 lines of
 unreachable code; Rollup already excluded it, so no runtime bundle reduction is
 claimed.
+
+---
+
+## 2026-08-24 — Codex — remove excluded legacy API facade
+
+`src/services/api.ts` was the last excluded file with no consumers. It exposed a
+loosely typed `api` object for summary/fleet/alerts/shift-report paths, while all
+current routes use the domain services and typed `lib/api.ts` contract. Exact
+path/import search found no source, test or configuration consumer. The 27-line
+facade and its obsolete tsconfig exclusion are removed; the canonical API layer
+and live services are untouched.
+
+Verification: TypeScript lint PASS, Vitest 126/126, production build PASS without
+Vite warnings, production audit zero vulnerabilities, no remaining
+`services/api` reference, and `git diff --check` PASS. No API route, payload or
+runtime bundle changed.

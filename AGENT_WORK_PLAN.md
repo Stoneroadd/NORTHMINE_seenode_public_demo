@@ -193,6 +193,12 @@ primitives, contained 443 lines hidden from the normal TypeScript root, and was
 explicitly excluded in `tsconfig.json`. All three unreachable files and the stale
 exclusion are removed. No rendered component or dependency changed.
 
+**Excluded legacy API facade — COMPLETE (Codex).**
+`src/services/api.ts` was an excluded, zero-consumer facade over four old demo
+paths and duplicated the typed service layer used by every current page. It and
+its stale tsconfig exclusion are removed. Canonical `lib/api.ts` and all live
+domain services remain unchanged.
+
 **Public analytics/CSP mismatch — COMPLETE (Codex).**
 The deployed landing includes GoatCounter from `gc.zgo.at`, while the enforced
 Content Security Policy blocks that origin and produces a browser console
