@@ -339,6 +339,13 @@ dialog relationship and expanded state. Its close action is 44 by 44 pixels on
 mobile and desktop; operational queries, tonnes, cycles, routes and statuses
 are unchanged.
 
+**Cockpit shift-comparison detail accessibility — COMPLETE (Codex).**
+The comparative shift inspector now applies modal semantics and focus behavior
+to its visible panel, not the full overlay. Only the selected shovel or truck
+row reports an expanded relationship; keyboard focus is contained/restored and
+the close target is 44 by 44 pixels. Comparison, hourly, operator, cycle and
+tonnage calculations are unchanged.
+
 **Confirmed already fine, no action needed:** `/admin/audit-log` RBAC
 (already `RequireAdmin` + redaction) and refresh-token rotation (already
 race-guarded via conditional `UPDATE`) — see `AGENT_LOG.md` for detail.

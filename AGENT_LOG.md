@@ -1053,3 +1053,24 @@ Playwright passes 4/4 on Pixel 7 and desktop 1440. TypeScript lint PASS, Vitest
 Impeccable detector `[]` on the changed surface files, and `git diff --check`
 PASS. Equipment queries, WENCO payloads, tonnes, cycles, routes and status
 calculations are unchanged.
+
+---
+
+## 2026-08-24 — Codex — Cockpit shift-comparison detail focus contract
+
+The comparative shift equipment rows opened a visually modal surface without
+declaring their dialog relationship or expanded state. The full overlay carried
+`role="dialog"`, while the visible inspector had no focus entry, containment or
+restoration contract; Escape was handled by a global window listener. A focused
+Pixel 7 regression reproduced the missing `aria-haspopup` before product code
+was changed.
+
+The shared modal hook now owns the actual inspector's named dialog semantics,
+focus entry/containment, scoped Escape and restoration to the selected shovel or
+truck. The backdrop is presentation-only, each row points to the stable detail
+ID, and only the active row reports expanded state. A component-scoped rule
+provides a 44 by 44 px close action without changing other compact Cockpit
+controls. Focused Playwright passes 4/4 on Pixel 7 and desktop 1440. TypeScript
+lint PASS, Vitest 138/138, production build PASS, npm production audit zero
+vulnerabilities, Impeccable detector `[]`, and `git diff --check` PASS. Shift
+comparison, hourly, operator, cycle, route and tonnage logic are unchanged.

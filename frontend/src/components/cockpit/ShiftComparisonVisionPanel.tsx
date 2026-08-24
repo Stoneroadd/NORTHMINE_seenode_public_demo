@@ -28,6 +28,9 @@ import { useModuleT } from '../../i18n/useModuleT'
 import { cockpitT, type CockpitT } from '../../i18n/modules/cockpit'
 import { premiumPalette, useChartPaletteKey } from '../charts/premium/chartTheme'
 import { useInView } from '../../hooks/useInView'
+import { useModalA11y } from '../../hooks/useModalA11y'
+import { SHIFT_COMPARISON_DETAIL_ID } from './shiftComparisonDetailA11y'
+import './shift-comparison-detail.css'
 
 // Dia/noche son un codigo de color semantico fijo (no un accent de marca),
 // por eso usan su propio token --vision-night en vez de premiumPalette.amber
@@ -1064,6 +1067,7 @@ function EquipmentRow({
   focusShift,
   hourlyRows,
   onOpenDetail,
+  detailOpen,
 }: {
   item: ShiftComparisonEquipmentPoint
   type: 'loader' | 'truck'
@@ -1071,6 +1075,7 @@ function EquipmentRow({
   focusShift: ShiftFocus
   hourlyRows: ShiftComparisonEquipmentHourlyPoint[]
   onOpenDetail?: (item: ShiftComparisonEquipmentPoint, anchor: DetailModalAnchor) => void
+  detailOpen?: boolean
 }) {
   const t = useModuleT(cockpitT)
   const displayTonnes = selectedTonnes(item, focusShift)
@@ -1114,6 +1119,9 @@ function EquipmentRow({
         }
       }}
       aria-label={t.sc_detalle_comparativo_aria(item.id)}
+      aria-haspopup="dialog"
+      aria-controls={SHIFT_COMPARISON_DETAIL_ID}
+      aria-expanded={Boolean(detailOpen)}
     >
       <EquipmentVisual item={item} type={type} />
       <div className="nmcp-shift-equipment-main">
@@ -1203,6 +1211,7 @@ function EquipmentList({
   focusShift,
   hourlyRows = [],
   onOpenDetail,
+  selectedEquipmentId,
 }: {
   title: string
   type: 'loader' | 'truck'
@@ -1210,6 +1219,7 @@ function EquipmentList({
   focusShift: ShiftFocus
   hourlyRows?: ShiftComparisonEquipmentHourlyPoint[]
   onOpenDetail?: (item: ShiftComparisonEquipmentPoint, anchor: DetailModalAnchor) => void
+  selectedEquipmentId?: string
 }) {
   const t = useModuleT(cockpitT)
   const visibleRows = rows
@@ -1274,6 +1284,7 @@ function EquipmentList({
             focusShift={focusShift}
             hourlyRows={hourlyRows}
             onOpenDetail={onOpenDetail}
+            detailOpen={selectedEquipmentId === item.id}
           />
         ))}
         {!visibleRows.length && <div className="nmcp-shift-empty">{t.sc_sin_equipos_para(focusLabel(focusShift, t))}</div>}
@@ -1299,14 +1310,7 @@ function EquipmentComparisonDetailModal({
 }) {
   const t = useModuleT(cockpitT)
   useChartPaletteKey()
-  useEffect(() => {
-    if (!item) return
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose()
-    }
-    window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
-  }, [item, onClose])
+  const { panelRef, closeButtonRef, titleId } = useModalA11y<HTMLElement>(Boolean(item), onClose)
 
   if (!item) return null
 
@@ -1429,13 +1433,18 @@ function EquipmentComparisonDetailModal({
   const modal = (
     <div
       className={`nmcp-detail-layer ${anchor ? 'is-anchored' : ''}`}
-      role="dialog"
-      aria-modal="true"
-      aria-label={t.sc_detalle_comparativo_aria(item.id)}
       style={getDetailModalStyle(anchor)}
     >
-      <button className="nmcp-detail-backdrop" type="button" onClick={onClose} aria-label={t.sc_close_aria} />
-      <aside className="nmcp-detail-modal">
+      <button className="nmcp-detail-backdrop" type="button" onClick={onClose} aria-hidden="true" tabIndex={-1} />
+      <aside
+        ref={panelRef}
+        id={SHIFT_COMPARISON_DETAIL_ID}
+        className="nmcp-detail-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        tabIndex={-1}
+      >
         <header className="nmcp-detail-header">
           <div className="nmcp-shift-detail-title">
             <span className={`nmcp-equipment-visual is-${type}${isPala1 ? ' is-pala-1' : ''}`}>
@@ -1443,12 +1452,18 @@ function EquipmentComparisonDetailModal({
             </span>
             <div>
               <span className="nmcp-section-kicker">{type === 'loader' ? t.sc_detalle_uc : t.sc_detalle_caex}</span>
-              <h2>{item.id}</h2>
+              <h2 id={titleId}>{item.id}</h2>
               <p>{displayModel} - {focusLabel(focusShift, t)}</p>
               <p>{t.loading_modal_operador(displayOperator)}</p>
             </div>
           </div>
-          <button className="nmcp-icon-button" type="button" onClick={onClose} aria-label={t.sc_close_aria}>
+          <button
+            ref={closeButtonRef}
+            className="nmcp-icon-button nmcp-shift-comparison-close"
+            type="button"
+            onClick={onClose}
+            aria-label={t.sc_close_aria}
+          >
             <X size={17} />
           </button>
         </header>
@@ -2038,6 +2053,7 @@ export function ShiftComparisonVisionPanel({
           focusShift={focusShift}
           hourlyRows={data.loading_unit_hourly ?? []}
           onOpenDetail={(item, anchor) => setSelectedEquipment({ type: 'loader', item, anchor })}
+          selectedEquipmentId={selectedEquipment?.type === 'loader' ? selectedEquipment.item.id : undefined}
         />
         <EquipmentList
           title={t.sc_caex}
@@ -2046,6 +2062,7 @@ export function ShiftComparisonVisionPanel({
           focusShift={focusShift}
           hourlyRows={data.caex_hourly ?? []}
           onOpenDetail={(item, anchor) => setSelectedEquipment({ type: 'truck', item, anchor })}
+          selectedEquipmentId={selectedEquipment?.type === 'truck' ? selectedEquipment.item.id : undefined}
         />
       </div>
 
