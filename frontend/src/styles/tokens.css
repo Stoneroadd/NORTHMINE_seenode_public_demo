@@ -12647,6 +12647,15 @@ body,
   display: block;
 }
 
+/* Matches PitShellVisual's own Canvas background color so the Suspense
+   fallback while the three.js chunk loads is visually seamless. */
+.login-pit-canvas-fallback {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: #050b14;
+}
+
 /* ============================================================
    PULIDO VISUAL GLOBAL — fuentes, fondos y hover en toda la app.
    Se apoya en las clases ya existentes (kpi-card, panel, command-

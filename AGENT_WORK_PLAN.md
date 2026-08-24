@@ -80,6 +80,18 @@ all 13 (alpha-normalized comparison against git HEAD). 19.43MB ->
 16.06MB (~17.4%), including `fondo_login.png` (every `/login` visit)
 3921KB -> 2861KB. `tsc`/`vitest`/`build` all pass unchanged.
 
+**Login page no longer blocks on three.js — RESOLVED 2026-08-23.**
+Every authenticated page is `React.lazy()`-loaded except `Login` itself
+(correctly, since it's the eager entry point) — but `Login.tsx`
+statically imported the purely-decorative `PitShellVisual` 3D background,
+dragging `vendor-three` (1MB/282KB gzip) into the critical path of the
+highest-traffic page. `PitShellVisual` is now its own `React.lazy`
+boundary with a matching-color `Suspense` fallback (no flash). Verified
+with a live production-build browser session, not just bundle analysis:
+`vendor-three`/`PitShellVisual` chunks now fetch after `App.js`, every
+other lazy chunk, both CSS bundles and the `/api/auth/refresh` call —
+genuinely deferred, not just cosmetically split. See `AGENT_LOG.md`.
+
 ## P1 — needs human judgment
 
 **`main` and `integration/agent-consolidated` (in the sibling checkout

@@ -1,4 +1,4 @@
-import { FormEvent, useState } from 'react'
+import { FormEvent, lazy, Suspense, useState } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 import { LockKeyhole, RadioTower } from 'lucide-react'
 import { ApiError, type AuthSession } from '../lib/api'
@@ -6,7 +6,6 @@ import { sanitize } from '../lib/sanitize'
 import * as authService from '../services/authService'
 import { CommandCenterBackground } from '../components/effects/CommandCenterBackground'
 import { BrandHero } from '../components/login/BrandHero'
-import { PitShellVisual } from '../components/login/PitShellVisual'
 import { CommandButton } from '../components/ui/CommandButton'
 import { useT } from '../store'
 import { settingsService } from '../services/settingsService'
@@ -15,6 +14,13 @@ import { loginT } from '../i18n/modules/login'
 import { publicPagesT } from '../i18n/modules/publicPages'
 import '../styles/demo-brand-system.css'
 import '../styles/demo-access-entry.css'
+
+// Purely decorative (rotating 3D pit-shell background, no data/interaction),
+// so it's split off `three`/`@react-three/fiber` (~280KB gzip) as its own
+// chunk instead of blocking the login form's initial render/interactivity.
+const PitShellVisual = lazy(() =>
+  import('../components/login/PitShellVisual').then((m) => ({ default: m.PitShellVisual })),
+)
 
 interface Props {
   onAuthenticated: (session: AuthSession) => void
@@ -77,7 +83,9 @@ export function Login({ onAuthenticated }: Props) {
 
       <div className="login-command-layout nm-login-layout">
         <section className="login-canvas-panel nm-login-visual nm-wireframe-panel" aria-label={tl.visual_aria_label}>
-          <PitShellVisual />
+          <Suspense fallback={<div className="login-pit-canvas-fallback" aria-hidden="true" />}>
+            <PitShellVisual />
+          </Suspense>
           <div className="mine-pit-hud mine-pit-hud-bl" aria-hidden="true">
             <span>RAJO DEMO / COMPAÑÍA DEMO</span>
             <strong>{tl.hud_diseno_mina_real}</strong>

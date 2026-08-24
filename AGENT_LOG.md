@@ -46,6 +46,40 @@ commit message — link to the actual commit/PR for detail.
 
 ---
 
+## 2026-08-23 — Claude Code — branch `main` — login page defers three.js, complete
+
+**Scope:** continuing the same UX/speed mandate, checked whether any
+non-lazy page pulls in `vendor-three` (1MB / 282KB gzip). `App.tsx`
+lazy-loads every authenticated page via `React.lazy()` except `Login`,
+which is statically imported (correctly, since it's the unauthenticated
+entry point and needs to render immediately). But `Login.tsx` itself
+statically imported `PitShellVisual` (a purely decorative rotating 3D
+pit-shell background, no data/interaction — see the component's own
+comment), which statically imports `@react-three/fiber`/`three`. That
+made three.js a blocking dependency of the very first page essentially
+every visitor hits.
+
+**Result:** made `PitShellVisual` its own `React.lazy()` boundary inside
+`Login.tsx`, with a `Suspense` fallback that's a plain `#050b14` div
+matching the Canvas's own background color (`.login-pit-canvas-fallback`
+in `tokens.css`) so there's no visible flash. `Login.tsx` itself is
+unchanged otherwise — still eager, still renders instantly.
+
+**Verification:** confirmed this is a real dynamic-import boundary (not
+just a cosmetic code change) three ways: (1) the compiled `App-*.js`
+shows `()=>import('./PitShellVisual-*.js')` wrapped in the standard
+`React.lazy` factory, not a static top-level import; (2) `PitShellVisual`
+now builds as its own separate chunk file; (3) live-loaded the production
+build (`vite preview`) in a real browser and read actual network request
+order — `PitShellVisual-*.js` and `vendor-three-*.js` fetch *after*
+`App.js`, every other lazy service chunk, both CSS bundles, and even the
+`/api/auth/refresh` call, not before. Visually confirmed the 3D pit still
+renders correctly a moment later with no layout shift or console errors.
+`tsc --noEmit`, `vitest run` 124/124, `npm run build` all pass.
+
+**Coordination:** touched only `Login.tsx` and one CSS rule in
+`tokens.css`; nothing in Codex's active backend/CI work overlapped.
+
 ## 2026-08-23 — Codex — branch `test/backend-state-isolation` — complete
 
 **Scope:** reproduce and eliminate the 13 order-dependent backend setup errors
