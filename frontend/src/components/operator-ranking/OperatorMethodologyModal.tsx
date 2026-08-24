@@ -1,4 +1,3 @@
-import { useEffect, useId, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { X } from 'lucide-react'
 import { getOperatorRankingMethodology } from '../../services/operatorRankingService'
@@ -7,89 +6,22 @@ import { ResponsibleUseNotice } from './ResponsibleUseNotice'
 import { ScoreFormulaCard } from './ScoreFormulaCard'
 import { useModuleT } from '../../i18n/useModuleT'
 import { operatorRankingT } from '../../i18n/modules/operatorRanking'
+import { useModalA11y } from '../../hooks/useModalA11y'
 
 interface Props {
   open: boolean
   onClose: () => void
 }
 
-const FOCUSABLE_SELECTOR = [
-  'a[href]',
-  'button:not([disabled])',
-  'input:not([disabled])',
-  'select:not([disabled])',
-  'textarea:not([disabled])',
-  '[tabindex]:not([tabindex="-1"])',
-].join(',')
-
-function visibleFocusableElements(container: HTMLElement) {
-  return Array.from(container.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)).filter(
-    (element) => element.getClientRects().length > 0 && element.getAttribute('aria-hidden') !== 'true',
-  )
-}
-
 export function OperatorMethodologyModal({ open, onClose }: Props) {
   const t = useModuleT(operatorRankingT)
-  const panelRef = useRef<HTMLElement>(null)
-  const closeButtonRef = useRef<HTMLButtonElement>(null)
-  const onCloseRef = useRef(onClose)
-  const titleId = useId()
-  const descriptionId = useId()
+  const { panelRef, closeButtonRef, titleId, descriptionId } = useModalA11y(open, onClose)
   const query = useQuery({
     queryKey: ['operator-ranking-methodology'],
     queryFn: getOperatorRankingMethodology,
     enabled: open,
     staleTime: 20 * 60 * 1000,
   })
-
-  useEffect(() => {
-    onCloseRef.current = onClose
-  }, [onClose])
-
-  useEffect(() => {
-    if (!open) return undefined
-
-    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null
-    const focusFrame = window.requestAnimationFrame(() => closeButtonRef.current?.focus())
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        event.preventDefault()
-        event.stopPropagation()
-        onCloseRef.current()
-        return
-      }
-
-      if (event.key !== 'Tab' || !panelRef.current) return
-
-      const focusable = visibleFocusableElements(panelRef.current)
-      if (focusable.length === 0) {
-        event.preventDefault()
-        panelRef.current.focus()
-        return
-      }
-
-      const first = focusable[0]
-      const last = focusable[focusable.length - 1]
-      const active = document.activeElement
-
-      if (event.shiftKey && (active === first || !panelRef.current.contains(active))) {
-        event.preventDefault()
-        last.focus()
-      } else if (!event.shiftKey && (active === last || !panelRef.current.contains(active))) {
-        event.preventDefault()
-        first.focus()
-      }
-    }
-
-    document.addEventListener('keydown', handleKeyDown, true)
-
-    return () => {
-      window.cancelAnimationFrame(focusFrame)
-      document.removeEventListener('keydown', handleKeyDown, true)
-      if (opener?.isConnected) opener.focus()
-    }
-  }, [open])
 
   if (!open) return null
 

@@ -8,6 +8,7 @@ import { OperatorRiskBadge } from './OperatorRiskBadge'
 import { ResponsibleUseNotice } from './ResponsibleUseNotice'
 import { useModuleT } from '../../i18n/useModuleT'
 import { operatorRankingT, type OperatorRankingT } from '../../i18n/modules/operatorRanking'
+import { useModalA11y } from '../../hooks/useModalA11y'
 
 interface Props {
   operator: OperatorRankingItem | null
@@ -33,6 +34,7 @@ function KeyValueGrid({ data, t }: { data: Record<string, unknown>; t: OperatorR
 
 export function OperatorAuditDrawer({ operator, filters, open, onClose }: Props) {
   const t = useModuleT(operatorRankingT)
+  const { panelRef, closeButtonRef, titleId, descriptionId } = useModalA11y(open, onClose)
   const operatorId = operator?.operator_id ?? ''
   const query = useQuery({
     queryKey: ['operator-ranking-audit', operatorId, filters],
@@ -42,27 +44,37 @@ export function OperatorAuditDrawer({ operator, filters, open, onClose }: Props)
 
   const audit = query.data
 
+  if (!open) return null
+
   return (
-    <div className={`operator-audit-drawer ${open ? 'is-open' : ''}`} aria-hidden={!open}>
-      <div className="operator-audit-backdrop" onClick={onClose} />
-      <aside className="operator-audit-panel">
-        <button type="button" className="operator-drawer-close" onClick={onClose} aria-label={t.audit_close}>
+    <div className="operator-audit-drawer is-open">
+      <div className="operator-audit-backdrop" aria-hidden="true" onClick={onClose} />
+      <aside
+        ref={panelRef}
+        className="operator-audit-panel"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        aria-describedby={descriptionId}
+        tabIndex={-1}
+      >
+        <button ref={closeButtonRef} type="button" className="operator-drawer-close" onClick={onClose} aria-label={t.audit_close}>
           <X size={18} />
         </button>
 
         <header className="operator-drawer-header">
           <span className="panel-kicker">{t.audit_kicker}</span>
-          <h2>{audit?.operator.operator_name ?? operator?.operator_name ?? t.audit_operador_fallback}</h2>
+          <h2 id={titleId}>{audit?.operator.operator_name ?? operator?.operator_name ?? t.audit_operador_fallback}</h2>
           <div className="operator-drawer-meta">
             <span>{audit?.operator.operator_id ?? operatorId}</span>
             <span>{t.audit_seed(audit?.seed_id ?? '-')}</span>
             {audit?.score.risk_level && <OperatorRiskBadge level={audit.score.risk_level} />}
           </div>
-          <p>{t.audit_desc}</p>
+          <p id={descriptionId}>{t.audit_desc}</p>
         </header>
 
-        {query.isLoading && <div className="loading-state">{t.audit_cargando}</div>}
-        {query.isError && <div className="error-state">{t.audit_error}</div>}
+        {query.isLoading && <div className="loading-state" role="status" aria-live="polite">{t.audit_cargando}</div>}
+        {query.isError && <div className="error-state" role="alert">{t.audit_error}</div>}
 
         {audit && (
           <div className="operator-audit-content">

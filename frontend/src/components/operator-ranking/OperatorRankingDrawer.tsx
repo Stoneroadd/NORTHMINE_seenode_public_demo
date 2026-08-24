@@ -10,6 +10,7 @@ import { operatorCoachingT } from '../../i18n/modules/operatorCoaching'
 import { OperatorRiskBadge } from './OperatorRiskBadge'
 import { OperatorScoreBreakdown } from './OperatorScoreBreakdown'
 import { OperatorTrendChart } from './OperatorTrendChart'
+import { useModalA11y } from '../../hooks/useModalA11y'
 
 interface Props {
   operator: OperatorRankingItem | null
@@ -40,6 +41,7 @@ function formatHours(value: number) {
 export function OperatorRankingDrawer({ operator, filters, open, onClose }: Props) {
   const t = useModuleT(operatorRankingDrawerT)
   const tCoaching = useModuleT(operatorCoachingT)
+  const { panelRef, closeButtonRef, titleId, descriptionId } = useModalA11y(open, onClose)
   const operatorId = operator?.operator_id ?? ''
   const detailQuery = useQuery({
     queryKey: ['operator-ranking-detail', operatorId, filters],
@@ -59,23 +61,34 @@ export function OperatorRankingDrawer({ operator, filters, open, onClose }: Prop
   const explanation = explanationQuery.data?.explanation ?? detail?.explanation ?? []
   const coaching = current ? buildOperatorCoaching(tCoaching, current, detail) : []
 
+  if (!open) return null
+
   return (
-    <div className={`operator-ranking-drawer ${open ? 'is-open' : ''}`} aria-hidden={!open}>
-      <div className="operator-ranking-drawer-backdrop" onClick={onClose} />
-      <aside className="operator-ranking-drawer-panel">
-        <button className="operator-drawer-close" type="button" onClick={onClose} aria-label={t.cerrar_detalle}>
+    <div className="operator-ranking-drawer is-open">
+      <div className="operator-ranking-drawer-backdrop" aria-hidden="true" onClick={onClose} />
+      <aside
+        ref={panelRef}
+        className="operator-ranking-drawer-panel"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={current ? titleId : undefined}
+        aria-describedby={current ? descriptionId : undefined}
+        aria-label={current ? undefined : t.selecciona_operador}
+        tabIndex={-1}
+      >
+        <button ref={closeButtonRef} className="operator-drawer-close" type="button" onClick={onClose} aria-label={t.cerrar_detalle}>
           <X size={18} />
         </button>
 
         {!current ? (
-          <div className="loading-state">{t.selecciona_operador}</div>
+          <div className="loading-state" role="status" aria-live="polite">{t.selecciona_operador}</div>
         ) : (
           <>
             <header className="operator-drawer-header">
               <div className="operator-drawer-identity">
                 <div>
                   <span className="panel-kicker">{t.detalle_operacional}</span>
-                  <h2>{current.operator_name}</h2>
+                  <h2 id={titleId}>{current.operator_name}</h2>
                   <div className="operator-drawer-meta">
                     <span>{current.operator_id}</span>
                     <span><Truck size={13} /> {current.frequent_equipment_id}</span>
@@ -88,7 +101,7 @@ export function OperatorRankingDrawer({ operator, filters, open, onClose }: Prop
                   <small>{current.recurrence_level || t.sin_recurrencia}</small>
                 </div>
               </div>
-              <p>{t.lectura_contextual}</p>
+              <p id={descriptionId}>{t.lectura_contextual}</p>
             </header>
 
             <section className="operator-drawer-summary-grid" aria-label={t.resumen_productivo_aria}>
@@ -131,14 +144,14 @@ export function OperatorRankingDrawer({ operator, filters, open, onClose }: Prop
             </section>
 
             {detailQuery.isError && (
-              <section className="operator-drawer-section is-warning">
+              <section className="operator-drawer-section is-warning" role="alert">
                 <h3>{t.detalle_no_disponible_titulo}</h3>
                 <p>{t.detalle_no_disponible_desc}</p>
               </section>
             )}
 
             {detailQuery.isLoading ? (
-              <div className="loading-state">{t.cargando_detalle}</div>
+              <div className="loading-state" role="status" aria-live="polite">{t.cargando_detalle}</div>
             ) : (
               <>
                 <div className="operator-drawer-content-grid">
