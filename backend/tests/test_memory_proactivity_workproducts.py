@@ -25,10 +25,10 @@ from tests.conftest import auth_header
 """Tests de Etapa 6 (memoria operacional, proactividad, work products).
 
 Misma filosofia que test_perception.py: 100% deterministico, sin llamar a
-ningun LLM. agent_runtime_db_path es un archivo sqlite COMPARTIDO entre
-corridas de tests (no se resetea por test, ver conftest.py) - por eso cada
-test usa entidades/ids con sufijo uuid unico, y ninguna asercion depende de
-'no hay nada mas en la base', solo de lo que el propio test creo.
+ningun LLM. agent_runtime_db_path es un archivo sqlite aislado por proceso de
+pytest y compartido dentro de esa corrida (ver conftest.py). Por eso cada test
+usa entidades/ids con sufijo uuid unico, y ninguna asercion depende de 'no hay
+nada mas en la base', solo de lo que el propio test creo.
 """
 
 

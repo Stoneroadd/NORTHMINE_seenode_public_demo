@@ -29,6 +29,9 @@ os.environ.setdefault(
 os.environ["NORTHMINE_USERS_DB"] = str(
     Path(tempfile.gettempdir()) / f"northmine_users_tests_{os.getpid()}.db"
 )
+os.environ["NORTHMINE_AGENT_RUNTIME_DB"] = str(
+    Path(tempfile.gettempdir()) / f"northmine_agent_runtime_tests_{os.getpid()}.db"
+)
 os.environ["NORTHMINE_DEMO_ACCESS_DATABASE_URL"] = ""
 os.environ["NORTHMINE_DEMO_ACCESS_REQUIRE_DURABLE"] = "false"
 os.environ.setdefault("NORTHMINE_DEMO_ACCESS_FINGERPRINT_KEY", "test-" * 16)
@@ -39,10 +42,18 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.main import app
+from app.ai.proactivity.persistence import init_proactivity_db
 from app.core.audit import _conn, _cleanup_pool, init_audit_db, init_security_tables
 from app.core.brute_force import _blocked_until, _failed_attempts
 from app.core.rate_limit import limiter
 from app.services.user_repository import DEMO_USER_SEEDS, get_user_repository
+
+
+@pytest.fixture(autouse=True, scope="session")
+def _init_agent_runtime_test_store() -> Generator[None, None, None]:
+    """Give direct agent-domain tests the same schema guarantee as app startup."""
+    init_proactivity_db()
+    yield
 
 
 @pytest.fixture(autouse=True)

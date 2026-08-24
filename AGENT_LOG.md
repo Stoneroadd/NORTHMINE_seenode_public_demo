@@ -569,3 +569,12 @@ bounded failure annotation on failure. This is diagnostic hardening, not a test
 relaxation: `pipefail` preserves the pytest exit code and no assertion, test or
 security gate is skipped. Next action is to consume that annotation, reproduce
 the Linux-specific defect and return the public gate to green.
+
+**Resolved locally:** the public annotation exposed the sole Ubuntu failure:
+`test_demo_watch_can_remain_a_non_active_draft` reached a clean SQLite file
+before application startup and therefore had no `agent_watches` table. The
+test harness now overrides `NORTHMINE_AGENT_RUNTIME_DB` before importing the
+application and initializes the proactivity schema once per pytest session,
+matching the schema guarantee provided by production startup while preserving
+process isolation. The formerly failing test passes from a clean store; a
+caller-supplied sentinel path remained absent; full backend result is 393/393.

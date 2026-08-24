@@ -98,17 +98,18 @@ to port already has been (see `AGENT_LOG.md`, commits `71ba9a7` through
 
 ## P2 — verifiable, not yet attempted
 
-**Backend test-order state isolation — IN PROGRESS (Codex).**
+**Backend test-order state isolation — COMPLETE (Codex).**
 The full backend suite reproducibly ends with 380 passed and 13 setup errors,
 while the same runtime/audit tests pass in isolation. Every error is a demo-user
 login returning 401 because the fixture updated rows in an implicit persistent
 database but never created them in a clean checkout. Tests now use a per-process
 temporary user database and idempotently create/restore the authorized demo
 seeds. The CI production build also runs before backend tests so the SPA route
-contract receives its required artifact. Local backend result: 393/393. The
-public Linux gate still exits during the backend step; the workflow now emits a
-bounded failure annotation so the otherwise sign-in-only pytest evidence is
-available for diagnosis without exposing credentials.
+contract receives its required artifact. A second clean-run dependency in the
+agent proactivity store is also isolated per pytest process and initialized for
+direct domain tests. Local backend result: 393/393; the external runtime DB
+sentinel remains untouched. The public Linux gate retains bounded failure
+annotations for future diagnosis without exposing credentials.
 
 **Public analytics/CSP mismatch — COMPLETE (Codex).**
 The deployed landing includes GoatCounter from `gc.zgo.at`, while the enforced
