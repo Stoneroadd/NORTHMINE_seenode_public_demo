@@ -46,6 +46,16 @@ commit message — link to the actual commit/PR for detail.
 
 ---
 
+## 2026-08-23 — Codex — branch `feat/responsive-test-harness` — starting
+
+**Scope:** make the responsive Playwright suite self-contained by reusing the
+authorized synthetic backend lifecycle already proven for Mission Control. A
+single desktop Decision Cockpit regression was reproduced failing on both
+attempts with auth `ECONNREFUSED` when run from clean processes.
+
+**Coordination:** harness/configuration only; no responsive CSS, product UI,
+visual baselines, backend domain code, AI runtime, Wenco or production settings.
+
 ## 2026-08-23 — Codex — branch `feat/mission-control-test-harness` — complete
 
 **Scope:** make `npm run test:mission-control` reproducible from a clean local

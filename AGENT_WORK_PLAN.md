@@ -71,6 +71,13 @@ to port already has been (see `AGENT_LOG.md`, commits `71ba9a7` through
 
 ## P2 — verifiable, not yet attempted
 
+**Shared responsive visual harness — IN PROGRESS (Codex).**
+The responsive Playwright configuration still owns only Vite. A clean-process
+Decision Cockpit run fails twice at demo authentication with backend port 8001
+`ECONNREFUSED`. Extract the verified Mission Control demo-server boundary into
+one reusable configuration and apply it to both suites without changing product
+UI, responsive assertions or operational contracts.
+
 **Self-contained Mission Control visual harness — COMPLETE (Codex).**
 `npm run test:mission-control` now owns both an isolated synthetic-demo backend
 and Vite, including readiness and teardown. It uses disposable databases,
