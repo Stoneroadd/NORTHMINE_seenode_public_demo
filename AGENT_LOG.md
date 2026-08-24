@@ -46,6 +46,48 @@ commit message — link to the actual commit/PR for detail.
 
 ---
 
+## 2026-08-23 — Claude Code — branch `main` — dead-code cleanup, complete
+
+**Scope:** user broadened the mandate beyond backlog items to general
+frontend/product optimization ("toma la iniciativa... UX/UI, velocidad,
+un infinito etc, hazlo"). Evaluated and explicitly declined the two
+highest-theoretical-value performance ideas first — echarts tree-shaking
+(14 files import the full bundle, not the `echarts/core` + explicit
+registration pattern) and recharts/echarts consolidation — both too high
+silent-failure risk with zero visual regression tooling in this repo.
+Picked dead-code removal instead: lower risk, still real value, and
+mechanically verifiable per file.
+
+**Result:** removed 29 files confirmed dead via zero-reference grep
+across `src` plus exclusive-sub-dependency checks (CSS/data files only
+imported by the file being removed) — an entire abandoned dashboard/
+folder (9 files, superseded by `ExecutiveInsightCard.tsx`), an entire
+abandoned third landing-page prototype subtree under `brand-prototype/`
+(9 components + 4 CSS files, `BrandPrototypePage.tsx` only ever imported
+`brand-prototype/saas/SaaSPrototypePage`), two more files inside the
+*live* `saas/` folder that turned out to be unreferenced even from
+within it, `FilterDrawer.tsx` + its 2 orphaned i18n keys, and a small
+cascade of orphaned effects/login canvas components. Full list and
+per-file rationale in commit `932d073`.
+
+**Verification:** `tsc --noEmit` clean, `vitest run` 124/124, `npm run
+build` green. Explicitly confirmed and noted for honesty: shipped bundle
+size for `BrandPrototypePage-*.js` is unchanged (89.71 kB before/after)
+— Rollup already tree-shook these out of the real build, so this is a
+maintainability win, not a runtime/bundle-size win. Backend full suite
+run separately as a discipline check (no backend files touched): 378
+passed / 13 errors in the full run, but the same 13 tests pass clean
+both in isolation and grouped together — confirmed as pre-existing
+test-order/shared-state pollution in `test_agent_runtime.py` +
+`test_decision_audit.py`, not a regression from this change. Worth
+someone eventually running with `-p no:randomly` or `--forked` to find
+the actual shared-state leak, but out of scope for a frontend-only
+change.
+
+**Coordination:** touched only frontend dead files; nothing in
+`feat/responsive-test-harness`, `feat/mission-control-test-harness` or
+any other in-flight Codex branch overlapped.
+
 ## 2026-08-23 — Codex — branch `feat/responsive-test-harness` — starting
 
 **Scope:** make the responsive Playwright suite self-contained by reusing the

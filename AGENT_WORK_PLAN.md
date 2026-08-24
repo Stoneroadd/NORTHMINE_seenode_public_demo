@@ -53,6 +53,15 @@ focus containment/return and Escape dismissal. They now share the verified
 dialog-focus primitive and expose their relationships from every DOM opener.
 Focused responsive coverage passes on mobile and desktop; see `AGENT_LOG.md`.
 
+**Dead frontend code removal — RESOLVED 2026-08-23, commit `932d073`.**
+29 confirmed-zero-reference files removed (abandoned `dashboard/`
+folder, abandoned third landing-page prototype subtree under
+`brand-prototype/`, `FilterDrawer.tsx` + orphaned i18n keys, a handful
+of orphaned effects/canvas components). See `AGENT_LOG.md` for the full
+per-file rationale and verification. Honest finding: this is a
+maintainability cleanup, not a bundle-size win — Rollup was already
+tree-shaking these out of the shipped build.
+
 ## P1 — needs human judgment
 
 **`main` and `integration/agent-consolidated` (in the sibling checkout
