@@ -91,7 +91,7 @@ skipped, 3 failed and 3 flaky to 55 passed, 7 expected skips, 0 failed and 0
 flaky; Mission Control remains 4/4. No product UI or operational contract was
 changed.
 
-**Landing `fetchPriority` React warning — NOT STARTED.**
+**Landing `fetchPriority` React warning — IN PROGRESS (Codex).**
 The clean responsive matrix consistently reports that `SaaSHero` passes the
 camel-case `fetchPriority` prop to a DOM image under the current React runtime.
 Verify the supported attribute spelling/runtime typings and remove the console

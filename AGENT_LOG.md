@@ -46,6 +46,16 @@ commit message — link to the actual commit/PR for detail.
 
 ---
 
+## 2026-08-23 — Codex — branch `feat/fetch-priority-warning` — starting
+
+**Scope:** reproduce and remove the React DOM-property warning emitted by the
+live SaaS landing hero while preserving the image's eager/high-priority loading
+behavior and visual output.
+
+**Coordination:** `SaaSHero` plus focused regression coverage only; no landing
+layout/style/assets, Mission Control UI, operational contracts, AI runtime,
+Wenco, backend or production configuration.
+
 ## 2026-08-23 — Claude Code — branch `main` — dead-code cleanup, complete
 
 **Scope:** user broadened the mandate beyond backlog items to general
