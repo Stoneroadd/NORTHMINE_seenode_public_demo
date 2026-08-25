@@ -122,6 +122,177 @@ html[data-theme="copper"] .agent-guidance-frame {
 }
 
 /* ════════════════════════════════════════
+   TEMA MONO — full black, sin azules, curvo
+   Prueba local: misma paleta y curvas que se
+   validaron en /login antes de aplicarlas aca.
+   ════════════════════════════════════════ */
+html[data-theme="mono"] {
+  color-scheme: dark;
+  --bg-void:        #0d0d0d;
+  --bg-deep:        #121212;
+  --bg-panel:       #171717;
+  --bg-card:        #171717;
+  --bg-elevated:    #212121;
+  --bg-hover:       #262626;
+  --border-dim:     rgba(255,255,255,0.06);
+  --border-mid:     rgba(255,255,255,0.12);
+  --border-bright:  rgba(255,255,255,0.32);
+  --op-green:       #5fb98a;
+  --data-cyan:      #b8b8b8;
+  --vision-night:   #9a9a9a;
+  --alert-orange:   #d99a4e;
+  --warn-yellow:    #d9b34e;
+  --danger-red:     #d9614e;
+  --text-primary:   #ececec;
+  --text-secondary: #8e8ea0;
+  --text-tertiary:  #565869;
+  --text-disabled:  #3a3a3a;
+  --shadow-card:    0 20px 50px rgba(0,0,0,0.5);
+  --cursor-color:   #ffffff;
+  --cursor-inner:   #d9d9d9;
+  --accent:         #ffffff;
+  --accent-rgb:     255,255,255;
+  --accent-pop:     #d9d9d9;
+  --font-display:   'IBM Plex Sans', -apple-system, 'Segoe UI', sans-serif;
+  --font-mono:      'IBM Plex Mono', 'JetBrains Mono', 'Consolas', monospace;
+  --font-label:     'IBM Plex Sans', -apple-system, 'Segoe UI', sans-serif;
+}
+
+html[data-theme="mono"] body {
+  background: #0d0d0d !important;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.045) 1px, transparent 1px) !important;
+  background-size: 28px 28px !important;
+}
+
+html[data-theme="mono"] .sidebar,
+html[data-theme="mono"] .topbar {
+  background: #121212 !important;
+  border-color: rgba(255,255,255,0.10) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+html[data-theme="mono"] .panel,
+html[data-theme="mono"] .kpi-card,
+html[data-theme="mono"] .hero-panel,
+html[data-theme="mono"] .module-header,
+html[data-theme="mono"] .report-card,
+html[data-theme="mono"] .state-card,
+html[data-theme="mono"] .command-card,
+html[data-theme="mono"] .login-card {
+  background: #171717 !important;
+  background-image: none !important;
+  border-radius: 20px !important;
+  border-color: rgba(255,255,255,0.10) !important;
+  border-left-color: rgba(255,255,255,0.10) !important;
+  box-shadow: var(--shadow-card) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+html[data-theme="mono"] .panel:hover,
+html[data-theme="mono"] .kpi-card:hover,
+html[data-theme="mono"] .command-card:hover {
+  border-color: rgba(255,255,255,0.24) !important;
+}
+
+html[data-theme="mono"] .nav-item.is-active,
+html[data-theme="mono"] [role='option']:hover,
+html[data-theme="mono"] [role='option']:focus-visible {
+  background: rgba(255,255,255,0.08) !important;
+  border-color: rgba(255,255,255,0.22) !important;
+}
+
+html[data-theme="mono"] :focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+
+html[data-theme="mono"] .primary-action {
+  background: #ffffff !important;
+  border-color: #ffffff !important;
+  color: #0d0d0d !important;
+  border-radius: 100px !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="mono"] .primary-action:hover {
+  background: #d9d9d9 !important;
+  border-color: #d9d9d9 !important;
+}
+
+html[data-theme="mono"] button,
+html[data-theme="mono"] .command-button,
+html[data-theme="mono"] input,
+html[data-theme="mono"] select {
+  border-radius: 100px !important;
+}
+
+/* Tarjetas y filas mas chicas del Command Center (definidas en northmine-tokens.css con
+   radios propios de 7-10px) tambien deben perder la esquina cuadrada -- "misma dinamica"
+   curva que el resto del tema, no solo los paneles grandes. */
+html[data-theme="mono"] .nmcp-opening-read-grid article,
+html[data-theme="mono"] .nmcp-equipment-card-grid > *,
+html[data-theme="mono"] .nmcp-dispatcher-evidence-card,
+html[data-theme="mono"] .nmcp-dispatcher-action-card,
+html[data-theme="mono"] .nmcp-scenario-strip article,
+html[data-theme="mono"] .nmcp-monthly-table-card,
+html[data-theme="mono"] .nmcp-chart-tooltip,
+html[data-theme="mono"] .nmcp-table-wrap {
+  border-radius: 16px !important;
+}
+
+html[data-theme="mono"] .nmcp-equipment-row {
+  border-radius: 12px !important;
+}
+
+/* Ventana emergente de detalle (CAEX/Palas, "Ver detalle"): northmine-tokens.css ya trae un
+   sistema responsive solido (bottom-sheet en movil <=720px, radio compacto en tablet <=1024px)
+   -- solo se cura la esquina del caso de escritorio, que quedaba mas cuadrada que el resto del
+   tema. Se escala min-width:1025px a proposito para no pisar esos dos breakpoints ya afinados. */
+@media (min-width: 1025px) {
+  html[data-theme="mono"] .nmcp-detail-modal {
+    border-radius: 24px !important;
+  }
+
+  html[data-theme="mono"] .nmcp-detail-kpis span,
+  html[data-theme="mono"] .nmcp-detail-chart-card,
+  html[data-theme="mono"] .nmcp-detail-table-card,
+  html[data-theme="mono"] .nmcp-status-detail-card,
+  html[data-theme="mono"] .nmcp-operator-compare-card {
+    border-radius: 16px !important;
+  }
+
+  html[data-theme="mono"] .nmcp-detail-table-head,
+  html[data-theme="mono"] .nmcp-detail-table-row,
+  html[data-theme="mono"] .nmcp-detail-empty {
+    border-radius: 12px !important;
+  }
+}
+
+html[data-theme="mono"] .nmcp-detail-header .nmcp-equipment-visual {
+  border-radius: 18px !important;
+}
+
+html[data-theme="mono"] .compact-stat {
+  border-radius: 14px !important;
+}
+
+html[data-theme="mono"] .nmcp-detail-header h2 {
+  font-size: 24px !important;
+}
+
+html[data-theme="mono"] .nmcp-detail-kpis strong {
+  font-size: 18px !important;
+}
+
+html[data-theme="mono"] .nmcp-detail-table-row {
+  font-size: 12.5px !important;
+}
+
+/* ════════════════════════════════════════
    TEMA DARK — Startup Intelligence (default)
    ════════════════════════════════════════ */
 :root,

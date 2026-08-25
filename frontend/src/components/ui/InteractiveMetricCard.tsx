@@ -30,7 +30,7 @@ export function InteractiveMetricCard({
   const t = useModuleT(uiT)
   const reducedMotion = usePrefersReducedMotion()
   const { value: animated, ref } = useAnimatedNumber(value, {
-    durationMs: 760,
+    durationMs: 1700,
     enabled: !reducedMotion,
     initialValue: 0,
   })

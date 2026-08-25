@@ -1,10 +1,10 @@
 import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Download, RefreshCcw, ShieldCheck, Timer, Truck, Wrench } from 'lucide-react'
+import { Download, RefreshCcw, Truck } from 'lucide-react'
 import { ModuleHeader } from '../components/common/ModuleHeader'
 import { LoadingState } from '../components/common/LoadingState'
 import { ErrorState } from '../components/common/ErrorState'
-import { ExecutiveKpiCard } from '../components/kpi/ExecutiveKpiCard'
+import { CompactStat, StatCluster } from '../components/kpi/CompactStat'
 import { EquipmentDetailDrawer } from '../components/equipment/detail/EquipmentDetailDrawer'
 import { EQUIPMENT_DETAIL_DRAWER_ID } from '../components/equipment/equipmentDetailA11y'
 import { getFleetStatus } from '../services/fleetService'
@@ -234,12 +234,12 @@ export function FleetPage() {
           }
         />
 
-        <section className="kpi-grid compact">
-          <ExecutiveKpiCard title={t.kpi_caex_total_title} value={`${data.total_equipos}`} subtitle={t.kpi_caex_total_subtitle} trend={t.kpi_caex_total_trend(filteredRows.length)} tone="cyan" icon={Truck} />
-          <ExecutiveKpiCard title={t.kpi_active_title} value={`${data.equipos_activos}`} subtitle={t.kpi_active_subtitle} trend={t.kpi_active_trend(number(data.utilizacion_pct, 1))} tone="green" icon={ShieldCheck} />
-          <ExecutiveKpiCard title={t.kpi_standby_title} value={`${data.equipos_standby ?? standbyRows.length}`} subtitle={t.kpi_standby_subtitle} trend={t.kpi_standby_trend} tone="slate" icon={Timer} />
-          <ExecutiveKpiCard title={t.kpi_maint_title} value={`${data.equipos_mantencion + data.equipos_en_demora}`} subtitle={t.kpi_maint_subtitle(data.equipos_mantencion, data.equipos_en_demora)} trend={t.kpi_maint_trend(number(data.disponibilidad_pct, 1))} tone="amber" icon={Wrench} />
-        </section>
+        <StatCluster title={t.kpi_cluster_title}>
+          <CompactStat label={t.kpi_caex_total_title} value={data.total_equipos} meta={t.kpi_caex_total_trend(filteredRows.length)} tone="cyan" />
+          <CompactStat label={t.kpi_active_title} value={data.equipos_activos} meta={t.kpi_active_trend(number(data.utilizacion_pct, 1))} tone="green" />
+          <CompactStat label={t.kpi_standby_title} value={data.equipos_standby ?? standbyRows.length} meta={t.kpi_standby_trend} tone="slate" />
+          <CompactStat label={t.kpi_maint_title} value={data.equipos_mantencion + data.equipos_en_demora} meta={t.kpi_maint_trend(number(data.disponibilidad_pct, 1))} tone="amber" />
+        </StatCluster>
 
         <section className="fleet-status-board">
           {statusFilters.map((item) => (

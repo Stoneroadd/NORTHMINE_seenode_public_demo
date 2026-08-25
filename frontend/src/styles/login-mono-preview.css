@@ -1,0 +1,208 @@
+/*
+ * PRUEBA LOCAL — no comitear a main sin aprobación.
+ * Dirección "full black" tipo OpenAI: monocromo casi puro, sin rojo/navy
+ * de marca, mismas curvas generosas que la revisión anterior. Aplicada
+ * solo a /login mediante la clase .login-preview-mono. Se puede quitar
+ * por completo borrando este archivo y el import en Login.tsx.
+ */
+
+.login-preview-mono.login-page.nm-login-shell {
+  background: var(--m-bg) !important;
+}
+.login-preview-mono.login-page.nm-login-shell::before {
+  background-image: none !important;
+}
+
+.login-preview-mono {
+  --m-bg: #0d0d0d;
+  --m-surface: #171717;
+  --m-surface-raised: #212121;
+  --m-border: #2a2a2a;
+  --m-border-soft: #232323;
+  --m-text: #ececec;
+  --m-text-muted: #8e8ea0;
+  --m-text-faint: #565869;
+  --m-white: #ffffff;
+  --m-critical: #b3492f;
+  --m-critical-tint: rgba(179,73,47,0.14);
+  --m-font: 'IBM Plex Sans', -apple-system, 'Segoe UI', sans-serif;
+  font-family: var(--m-font) !important;
+  background: var(--m-bg) !important;
+}
+
+.login-preview-mono .login-backdrop,
+.login-preview-mono .command-center-canvas,
+.login-preview-mono canvas.command-center-canvas {
+  opacity: 0 !important;
+}
+
+.login-preview-mono .login-command-layout {
+  gap: 20px !important;
+  padding: 20px !important;
+}
+
+/* ---- Visual panel: black, curved, fine grid backdrop, no color accent ---- */
+.login-preview-mono .login-canvas-panel {
+  border-radius: 32px !important;
+  border: 1px solid var(--m-border) !important;
+  background-color: var(--m-surface) !important;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.16) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.16) 1px, transparent 1px) !important;
+  background-size: 22px 22px !important;
+  background-position: 0 0 !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: flex-end !important;
+  padding: 44px !important;
+}
+.login-preview-mono .login-pit-canvas,
+.login-preview-mono .login-pit-canvas-fallback {
+  opacity: 0.9 !important;
+}
+.login-preview-mono .mine-pit-hud {
+  position: relative !important;
+  inset: auto !important;
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  clip-path: none !important;
+  border: none !important;
+  padding: 0 !important;
+  z-index: 2;
+}
+.login-preview-mono .mine-pit-hud span {
+  font-family: var(--m-font) !important;
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+  color: var(--m-text-muted) !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.06em !important;
+}
+.login-preview-mono .mine-pit-hud strong {
+  display: block;
+  font-family: var(--m-font) !important;
+  font-weight: 700 !important;
+  font-size: 27px !important;
+  line-height: 1.3 !important;
+  color: var(--m-white) !important;
+  margin: 10px 0 6px !important;
+  max-width: 320px;
+}
+.login-preview-mono .mine-pit-hud small {
+  font-family: var(--m-font) !important;
+  font-size: 13px !important;
+  color: var(--m-text-muted) !important;
+}
+
+.login-preview-mono .cst-trust-row {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  gap: 32px;
+  margin-top: 26px;
+}
+.login-preview-mono .cst-trust-row > div { color: var(--m-white); white-space: nowrap; }
+.login-preview-mono .cst-trust-row .n {
+  font-family: var(--m-font);
+  font-weight: 700;
+  font-size: 24px;
+  line-height: 1.3;
+}
+.login-preview-mono .cst-trust-row .l {
+  font-family: var(--m-font);
+  font-size: 11.5px;
+  color: var(--m-text-muted);
+  white-space: nowrap;
+}
+
+/* ---- Card: same near-black, curved ---- */
+.login-preview-mono .login-card.nm-login-panel {
+  border-radius: 32px !important;
+  border: 1px solid var(--m-border) !important;
+  background: var(--m-surface) !important;
+  box-shadow: 0 30px 70px rgba(0,0,0,0.55) !important;
+  padding: 46px 44px !important;
+}
+.login-preview-mono .login-card.nm-login-panel::before {
+  background: var(--m-border) !important;
+  opacity: 1 !important;
+}
+
+.login-preview-mono .brand-hero,
+.login-preview-mono .login-brand-name,
+.login-preview-mono .brand-intelligence,
+.login-preview-mono .nm-brand-system-subtitle {
+  color: var(--m-white) !important;
+  font-family: var(--m-font) !important;
+  text-shadow: none !important;
+  border-color: var(--m-border) !important;
+}
+.login-preview-mono .login-brand-name { font-weight: 700 !important; }
+.login-preview-mono .brand-intelligence,
+.login-preview-mono .nm-brand-system-subtitle {
+  color: var(--m-text-muted) !important;
+}
+
+.login-preview-mono .login-copy h2 {
+  font-family: var(--m-font) !important;
+  font-weight: 700 !important;
+  color: var(--m-white) !important;
+}
+
+.login-preview-mono .login-form label {
+  font-family: var(--m-font) !important;
+  color: var(--m-text-muted) !important;
+  font-weight: 600 !important;
+  font-size: 12.5px !important;
+}
+
+.login-preview-mono .login-form input {
+  border-radius: 100px !important;
+  border: 1.5px solid var(--m-border) !important;
+  background: var(--m-surface-raised) !important;
+  color: var(--m-text) !important;
+  font-family: var(--m-font) !important;
+  padding: 13px 22px !important;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.login-preview-mono .login-form input::placeholder { color: var(--m-text-faint) !important; }
+.login-preview-mono .login-form input:focus {
+  outline: none !important;
+  border-color: var(--m-white) !important;
+  box-shadow: 0 0 0 3px rgba(255,255,255,0.12) !important;
+}
+
+.login-preview-mono .login-error {
+  border-radius: 16px !important;
+  background: var(--m-critical-tint) !important;
+  color: #e8836b !important;
+  border: none !important;
+  font-family: var(--m-font) !important;
+}
+
+/* High-contrast white-on-black primary action -- the one OpenAI-style gesture. */
+.login-preview-mono .login-form button[type='submit'] {
+  border-radius: 100px !important;
+  background: var(--m-white) !important;
+  border: none !important;
+  color: #0d0d0d !important;
+  font-family: var(--m-font) !important;
+  font-weight: 700 !important;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+.login-preview-mono .login-form button[type='submit']:hover:not(:disabled) {
+  background: #d9d9d9 !important;
+}
+.login-preview-mono .login-form button[type='submit']:active:not(:disabled) {
+  transform: scale(0.99);
+}
+
+.login-preview-mono .login-status,
+.login-preview-mono .login-status span {
+  font-family: var(--m-font) !important;
+  color: var(--m-text-faint) !important;
+  font-size: 12.5px !important;
+}
+.login-preview-mono .login-status svg { color: var(--m-text-muted) !important; }

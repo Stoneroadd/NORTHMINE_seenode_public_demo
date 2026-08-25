@@ -60,7 +60,7 @@ function shouldReduceMotion(): boolean {
   return typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
 }
 
-function useAnimatedNumber<T extends HTMLElement = HTMLElement>(value: number, animationId: string, duration = 900) {
+function useAnimatedNumber<T extends HTMLElement = HTMLElement>(value: number, animationId: string, duration = 2000) {
   const { ref, inView } = useInView<T>()
   const [displayValue, setDisplayValue] = useState(0)
 
@@ -135,7 +135,7 @@ export function MonthlyTargetPanel({
     ? `${data.generated_at}-${data.period.end_date}-${data.mov_real_acumulado}-${data.mov_programado_acumulado}`
     : 'monthly-target-empty'
   const progress = data ? Math.max(0, Math.min(data.cumplimiento_pct ?? 0, 140)) : 0
-  const { value: rawAnimatedProgress, ref: progressRef } = useAnimatedNumber<HTMLDivElement>(progress, `${animationId}-progress`, 950)
+  const { value: rawAnimatedProgress, ref: progressRef } = useAnimatedNumber<HTMLDivElement>(progress, `${animationId}-progress`, 2100)
   const animatedProgress = Math.max(0, Math.min(rawAnimatedProgress, 140))
 
   if (loading) {

@@ -13,7 +13,7 @@ export function ShiftSummary({ data }: { data: CockpitViewModel }) {
   return (
     <section className="nmcp-shift-card">
       <div className="nmcp-shift-main">
-        <span className="nmcp-shift-icon" aria-hidden="true"><Icon size={24} /></span>
+        <span className={`nmcp-shift-icon ${isNight ? 'is-night' : 'is-day'}`} aria-hidden="true"><Icon size={24} /></span>
         <div>
           <span className="nmcp-section-kicker">{t.shift_summary_kicker}</span>
           <h2>{data.shiftLabel}</h2>

@@ -18,7 +18,7 @@ function easeOutCubic(value: number) {
  */
 export function useAnimatedNumber<T extends HTMLElement = HTMLElement>(
   target: number,
-  { durationMs = 720, enabled = true, initialValue }: AnimatedNumberOptions = {},
+  { durationMs = 1800, enabled = true, initialValue }: AnimatedNumberOptions = {},
 ) {
   const { ref, inView } = useInView<T>()
   const [value, setValue] = useState(initialValue ?? target)

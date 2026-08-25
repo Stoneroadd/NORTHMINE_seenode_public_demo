@@ -12,6 +12,7 @@ import { LoadingEquipmentCard } from '../components/cockpit/LoadingEquipmentCard
 import { LoadingEquipmentDetailModal } from '../components/cockpit/LoadingEquipmentDetailModal'
 import { MonthlyTargetPanel } from '../components/cockpit/MonthlyTargetPanel'
 import { OperationalNlpPanel } from '../components/cockpit/OperationalNlpPanel'
+import { OperationalTourOverlay, type TourStep, type TourReport, type TourReportLine } from '../components/cockpit/OperationalTourOverlay'
 import { ProductionHourlyChart } from '../components/cockpit/ProductionHourlyChart'
 import { ProductionTable } from '../components/cockpit/ProductionTable'
 import { ProfitOptimizationPanel } from '../components/cockpit/ProfitOptimizationPanel'
@@ -349,6 +350,7 @@ export function DecisionCockpit() {
   const [selectedLoadingUnitId, setSelectedLoadingUnitId] = useState<string | null>(null)
   const [selectedLoadingUnitAnchor, setSelectedLoadingUnitAnchor] = useState<DetailModalAnchor | null>(null)
   const [downloadingExecutiveReport, setDownloadingExecutiveReport] = useState(false)
+  const [tourOpen, setTourOpen] = useState(false)
   const selectedDateParam = selectedDate || undefined
   const query = useQuery({
     queryKey: ['decision-cockpit', 'v1', selectedDate, selectedShift],
@@ -581,6 +583,74 @@ export function DecisionCockpit() {
   const rankedEquipmentCards = [...data.equipmentCards].sort((left, right) => (right.tonnes ?? -1) - (left.tonnes ?? -1))
   const leaderEquipmentTonnes = rankedEquipmentCards[0]?.tonnes ?? null
 
+  const criticalEquipmentCount = data.equipmentCards.filter((item) => item.tone === 'bad').length
+  const cautionEquipmentCount = data.equipmentCards.filter((item) => item.tone === 'warn').length
+  const complianceGapTons = data.targetTonnes - data.actualTonnes
+  const complianceTone: TourReportLine['tone'] = complianceGapTons > 0 ? 'caution' : 'nominal'
+
+  const tourSteps: TourStep[] = [
+    {
+      targetSelector: '.nmcp-opening-read',
+      title: 'Lectura del turno',
+      description: `Producción actual ${formatTons(data.actualTonnes)} vs. meta ${formatTons(data.targetTonnes)}. Proyección de cierre: ${formatTons(data.forecastTonnes)}.`,
+      highlightSelectors: ['.nmcp-opening-read-grid > article'],
+    },
+    {
+      targetSelector: '#sec-produccion',
+      title: 'Producción',
+      description: `Costo por tonelada ${formatMoney(data.costPerTonne)}. Meta diaria ${formatTons(data.dailyTargetTonnes)}.`,
+      highlightSelectors: ['.nmcp-panel-tag'],
+    },
+    {
+      targetSelector: '#sec-equipos',
+      title: 'Equipos y carguío',
+      description: criticalEquipmentCount > 0
+        ? `${criticalEquipmentCount} equipo${criticalEquipmentCount === 1 ? '' : 's'} en estado crítico ahora mismo. Revisar antes de continuar.`
+        : `Sin equipos críticos. ${cautionEquipmentCount} con demora o saturación.`,
+      highlightSelectors: ['.nmcp-equipment-row'],
+    },
+    {
+      targetSelector: '#sec-flota',
+      title: 'Flota CAEX',
+      description: `${data.activeCaex.value} camiones activos · ciclo promedio ${data.averageCycle.value} · disponibilidad de dato ${availabilityLabel(data.activeCaex.availability, t)}.`,
+      highlightSelectors: ['.nmcp-equipment-card-grid > *'],
+    },
+    {
+      targetSelector: '#sec-decisiones',
+      title: 'Inteligencia de decisión',
+      description: data.recommendation.title,
+      highlightSelectors: ['.nmcp-risk-chip', '.nmcp-dispatcher-impact-grid > *', '.nmcp-mode-pill'],
+    },
+  ]
+
+  const tourReport: TourReport = {
+    title: `Reporte operacional — ${data.shiftLabel} ${data.shiftDate}`,
+    generatedAt: new Date().toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' }),
+    lines: [
+      { label: 'Producción actual', value: formatTons(data.actualTonnes), tone: 'nominal' },
+      { label: 'Meta del turno', value: formatTons(data.targetTonnes) },
+      { label: 'Brecha vs. meta', value: formatTons(Math.abs(complianceGapTons)), tone: complianceTone },
+      { label: 'Proyección de cierre', value: formatTons(data.forecastTonnes) },
+      { label: 'Costo por tonelada', value: formatMoney(data.costPerTonne) },
+      { label: 'CAEX activos', value: String(data.activeCaex.value) },
+      {
+        label: 'Equipos críticos',
+        value: String(criticalEquipmentCount),
+        tone: criticalEquipmentCount > 0 ? 'critical' : 'nominal',
+      },
+      { label: 'Equipos con demora', value: String(cautionEquipmentCount), tone: cautionEquipmentCount > 0 ? 'caution' : 'nominal' },
+    ],
+    recommendation: [
+      data.recommendation.title,
+      data.recommendation.impact_tons
+        ? `Impacto estimado: ${formatTons(data.recommendation.impact_tons)}${data.recommendation.impact_usd ? ` (${formatMoney(data.recommendation.impact_usd)})` : ''}.`
+        : null,
+      criticalEquipmentCount > 0
+        ? `Atención prioritaria: ${criticalEquipmentCount} equipo${criticalEquipmentCount === 1 ? '' : 's'} crítico${criticalEquipmentCount === 1 ? '' : 's'} requieren intervención antes de que impacten el cierre de turno.`
+        : null,
+    ].filter(Boolean).join(' '),
+  }
+
   return (
     <div className="nmcp-shell">
       <div className="nmcp-main">
@@ -588,7 +658,12 @@ export function DecisionCockpit() {
           data={data}
           downloadingReport={downloadingExecutiveReport}
           onDownloadReport={downloadExecutiveReport}
+          onStartTour={() => setTourOpen(true)}
         />
+
+        {tourOpen && (
+          <OperationalTourOverlay steps={tourSteps} report={tourReport} onClose={() => setTourOpen(false)} />
+        )}
 
         <main className="nmcp-content">
           <SectionNav />

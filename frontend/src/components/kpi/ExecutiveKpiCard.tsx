@@ -50,7 +50,7 @@ function AnimatedKpiValue({ value }: { value: string }) {
   const { value: animated, ref } = useAnimatedNumber(parsed?.numeric ?? 0, {
     enabled: Boolean(parsed) && !reducedMotion,
     initialValue: 0,
-    durationMs: 900,
+    durationMs: 2000,
   })
 
   if (!parsed) return <>{value}</>

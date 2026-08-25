@@ -18,7 +18,7 @@ function RotatingPit() {
 
   return (
     <group ref={groupRef}>
-      <PitShell radius={280} position={[0, 40, 0]} />
+      <PitShell radius={280} position={[0, 40, 0]} rimColor="#ffffff" deepColor="#9a9a9a" />
     </group>
   )
 }
@@ -32,8 +32,8 @@ export function PitShellVisual() {
       gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
       style={{ pointerEvents: 'none' }}
     >
-      <color attach="background" args={['#050b14']} />
-      <fog attach="fog" args={['#050b14', 500, 1400]} />
+      <color attach="background" args={['#0d0d0d']} />
+      <fog attach="fog" args={['#0d0d0d', 500, 1400]} />
       <ambientLight intensity={0.48} color="#b9dcf5" />
       <directionalLight position={[320, 360, 280]} intensity={1.25} color="#2fd4ff" />
       <pointLight position={[-280, -80, -220]} intensity={0.58} color="#7c3aed" />

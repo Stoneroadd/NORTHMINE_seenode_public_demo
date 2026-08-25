@@ -14,6 +14,7 @@ export interface FleetT {
   status_label: (filter: string) => string
 
   // FleetPage - KPI cards
+  kpi_cluster_title: string
   kpi_caex_total_title: string
   kpi_caex_total_subtitle: string
   kpi_caex_total_trend: (visible: number) => string
@@ -106,6 +107,7 @@ export const fleetT: ModuleDict<FleetT> = {
       'SIN ACTIVIDAD': 'SIN ACTIVIDAD',
     } as Record<string, string>)[filter] ?? filter,
 
+    kpi_cluster_title: 'Estado de flota',
     kpi_caex_total_title: 'CAEX totales',
     kpi_caex_total_subtitle: 'Flota con registro WENCO',
     kpi_caex_total_trend: (visible) => `${visible} visibles`,
@@ -194,6 +196,7 @@ export const fleetT: ModuleDict<FleetT> = {
       'SIN ACTIVIDAD': 'NO ACTIVITY',
     } as Record<string, string>)[filter] ?? filter,
 
+    kpi_cluster_title: 'Fleet status',
     kpi_caex_total_title: 'Total CAEX',
     kpi_caex_total_subtitle: 'Fleet with WENCO record',
     kpi_caex_total_trend: (visible) => `${visible} visible`,
@@ -282,6 +285,7 @@ export const fleetT: ModuleDict<FleetT> = {
       'SIN ACTIVIDAD': 'KEINE AKTIVITÄT',
     } as Record<string, string>)[filter] ?? filter,
 
+    kpi_cluster_title: 'Flottenstatus',
     kpi_caex_total_title: 'CAEX gesamt',
     kpi_caex_total_subtitle: 'Flotte mit WENCO-Datensatz',
     kpi_caex_total_trend: (visible) => `${visible} sichtbar`,

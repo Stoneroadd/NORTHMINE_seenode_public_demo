@@ -1,4 +1,4 @@
-import { Clock3, Database, Download, ShieldCheck } from 'lucide-react'
+import { Clock3, Compass, Database, Download, ShieldCheck } from 'lucide-react'
 import type { CockpitViewModel } from './cockpitModel'
 import { useModuleT } from '../../i18n/useModuleT'
 import { cockpitT } from '../../i18n/modules/cockpit'
@@ -26,10 +26,12 @@ export function CockpitHeader({
   data,
   downloadingReport = false,
   onDownloadReport,
+  onStartTour,
 }: {
   data: CockpitViewModel
   downloadingReport?: boolean
   onDownloadReport?: () => void
+  onStartTour?: () => void
 }) {
   const t = useModuleT(cockpitT)
   const modeLabel = data.isDemo ? t.header_modo_demo : data.stale ? t.header_cache_real : t.header_datos_reales
@@ -62,6 +64,18 @@ export function CockpitHeader({
         </Badge>
         <span>{t.header_calidad} <strong className="text-text-primary">{quality}</strong></span>
         {freshness && <span>{t.header_frescura} <strong className="text-text-primary">{freshness}</strong></span>}
+        {onStartTour && (
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={onStartTour}
+            aria-label="Iniciar recorrido operacional automático"
+            title="Recorre los aspectos más importantes de la operación y arma un reporte"
+          >
+            <Compass size={14} />
+            <span>Navegar</span>
+          </Button>
+        )}
         {onDownloadReport && (
           <Button
             variant="secondary"

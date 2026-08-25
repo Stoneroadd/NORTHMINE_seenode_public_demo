@@ -17,9 +17,6 @@ export interface PitShellData {
   polylines: PitShellPolyline[]
 }
 
-const PIT_RIM_COLOR = new THREE.Color('#2FD4FF')
-const PIT_DEEP_COLOR = new THREE.Color('#7C3AED')
-
 function buildSyntheticPit(): PitShellData {
   const polylines: PitShellPolyline[] = []
   const benches = 12
@@ -93,7 +90,12 @@ function usePitShellData(): PitShellData | null {
   return data
 }
 
-function buildPitGeometry(data: PitShellData, radius: number): THREE.BufferGeometry | null {
+function buildPitGeometry(
+  data: PitShellData,
+  radius: number,
+  rimColor: THREE.Color,
+  deepColor: THREE.Color,
+): THREE.BufferGeometry | null {
   const box = new THREE.Box3()
   const probe = new THREE.Vector3()
   for (const line of data.polylines) {
@@ -123,7 +125,7 @@ function buildPitGeometry(data: PitShellData, radius: number): THREE.BufferGeome
         // DXF: x=este, y=norte, z=cota. Escena: y arriba, -y para mantener orientacion.
         positions.push((x - centerX) * scale, (z - topZ) * scale, -(y - centerY) * scale)
         const depth = (topZ - z) / depthRange
-        mixed.copy(PIT_RIM_COLOR).lerp(PIT_DEEP_COLOR, depth).multiplyScalar(1 - depth * 0.2)
+        mixed.copy(rimColor).lerp(deepColor, depth).multiplyScalar(1 - depth * 0.2)
         colors.push(mixed.r, mixed.g, mixed.b)
       }
     }
@@ -139,12 +141,19 @@ function buildPitGeometry(data: PitShellData, radius: number): THREE.BufferGeome
 export function PitShell({
   radius = 300,
   position = [0, -206, 0],
+  rimColor = '#2FD4FF',
+  deepColor = '#7C3AED',
 }: {
   radius?: number
   position?: [number, number, number]
+  rimColor?: string
+  deepColor?: string
 }) {
   const data = usePitShellData()
-  const geometry = useMemo(() => (data ? buildPitGeometry(data, radius) : null), [data, radius])
+  const geometry = useMemo(
+    () => (data ? buildPitGeometry(data, radius, new THREE.Color(rimColor), new THREE.Color(deepColor)) : null),
+    [data, radius, rimColor, deepColor],
+  )
 
   useEffect(() => () => {
     geometry?.dispose()

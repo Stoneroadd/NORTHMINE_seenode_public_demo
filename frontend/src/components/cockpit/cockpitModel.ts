@@ -140,6 +140,19 @@ function toneFromStatus(status: string): CockpitEquipmentRow['tone'] {
   return 'neutral'
 }
 
+const EQUIPMENT_TONE_PRIORITY: Record<CockpitEquipmentRow['tone'], number> = {
+  bad: 0,
+  warn: 1,
+  neutral: 2,
+  good: 3,
+}
+
+function byCriticality(rows: CockpitEquipmentRow[]): CockpitEquipmentRow[] {
+  // Equipo que requiere atencion primero (averia > sin actividad > operativo), para que el
+  // triage del turno no dependa de scrollear hasta encontrar la fila critica.
+  return [...rows].sort((left, right) => EQUIPMENT_TONE_PRIORITY[left.tone] - EQUIPMENT_TONE_PRIORITY[right.tone])
+}
+
 function accumulatedHourly(points: CockpitResponse['hourly_production']): CockpitHourlyPoint[] {
   let accumulated = 0
   return points.map((point) => {
@@ -272,8 +285,8 @@ export function buildCockpitViewModel(response: CockpitResponse): CockpitViewMod
     sectorBreakdown,
     hourly,
     shovelHourly,
-    caexRows,
-    shovelRows,
+    caexRows: byCriticality(caexRows),
+    shovelRows: byCriticality(shovelRows),
     equipmentCards,
     events: response.events ?? [],
     warnings: response.warnings ?? [],

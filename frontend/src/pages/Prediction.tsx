@@ -170,7 +170,7 @@ export function Prediction() {
     refetchInterval: FAST_PUBLIC_DEMO ? false : 60000,
   })
 
-  const { value: animActual } = useAnimatedNumber(query.data?.production.actual_tonnes ?? 0, { durationMs: 700 })
+  const { value: animActual } = useAnimatedNumber(query.data?.production.actual_tonnes ?? 0, { durationMs: 1600 })
 
   const hourlyOption = useMemo(
     () => (query.data ? buildHourlyOption(query.data.hourly_production, query.data.production.target_tonnes, t) : null),

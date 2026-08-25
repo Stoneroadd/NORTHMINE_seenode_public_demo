@@ -1,11 +1,11 @@
 ﻿import { useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Download, Factory, Gauge, Route, Timer } from 'lucide-react'
+import { Download, Factory } from 'lucide-react'
 import { motion, useReducedMotion } from 'framer-motion'
 import { ModuleHeader } from '../components/common/ModuleHeader'
 import { LoadingState } from '../components/common/LoadingState'
 import { ErrorState } from '../components/common/ErrorState'
-import { ExecutiveKpiCard } from '../components/kpi/ExecutiveKpiCard'
+import { CompactStat, StatCluster } from '../components/kpi/CompactStat'
 import { getLoadingUnitDistanceCycle, getLoadingUnitHourly, getLoadingUnitRanking, getLoadingUnitRoutes, getShiftExport } from '../lib/api'
 import { useModuleT } from '../i18n/useModuleT'
 import { loadingUnitsT } from '../i18n/modules/loadingUnits'
@@ -38,7 +38,7 @@ async function downloadCsv(setLoading: (value: boolean) => void) {
 function AnimatedMetric({ value, digits = 0, suffix = '', delay = 0 }: { value: number; digits?: number; suffix?: string; delay?: number }) {
   const reducedMotion = useReducedMotion()
   const { value: animated, ref } = useAnimatedNumber(value, {
-    durationMs: 900 + delay,
+    durationMs: 2000 + delay,
     initialValue: 0,
     enabled: !reducedMotion,
   })
@@ -159,12 +159,12 @@ export function LoadingUnitsPage() {
         actions={<button className="command-button command-button-secondary" type="button" onClick={() => downloadCsv(setExporting)} disabled={exporting}><Download size={15} /> {exporting ? t.exporting : t.export_csv}</button>}
       />
 
-      <section className="kpi-grid compact loading-kpi-grid">
-        <ExecutiveKpiCard title={t.kpi_tonnage_title} value={tons(data.ranking.total_toneladas)} subtitle={t.kpi_tonnage_subtitle(data.ranking.count)} trend={t.kpi_tonnage_trend} tone="green" icon={Factory} />
-        <ExecutiveKpiCard title={t.kpi_performance_title} value={`${number(data.ranking.rendimiento_promedio_tph, 1)} tph`} subtitle={t.kpi_performance_subtitle} trend={t.kpi_performance_trend} tone="cyan" icon={Gauge} />
-        <ExecutiveKpiCard title={t.kpi_top_unit_title} value={top?.carguio_id ?? '-'} subtitle={top ? tons(top.toneladas) : t.kpi_top_unit_no_data} trend={top ? t.kpi_top_unit_trend(top.ciclos) : '-'} tone="green" icon={Timer} />
-        <ExecutiveKpiCard title={t.kpi_distance_title} value={`${number(data.distance.items.reduce((acc, item) => acc + item.distance_km, 0), 1)} km`} subtitle={t.kpi_distance_subtitle} trend={t.kpi_distance_trend(number(hourlyTotal, 0))} tone="slate" icon={Route} />
-      </section>
+      <StatCluster title={t.kpi_cluster_title}>
+        <CompactStat label={t.kpi_tonnage_title} value={tons(data.ranking.total_toneladas)} meta={`${t.kpi_tonnage_subtitle(data.ranking.count)} · ${t.kpi_tonnage_trend}`} tone="green" />
+        <CompactStat label={t.kpi_performance_title} value={`${number(data.ranking.rendimiento_promedio_tph, 1)} tph`} meta={`${t.kpi_performance_subtitle} · ${t.kpi_performance_trend}`} tone="cyan" />
+        <CompactStat label={t.kpi_top_unit_title} value={top?.carguio_id ?? '-'} meta={top ? `${tons(top.toneladas)} · ${t.kpi_top_unit_trend(top.ciclos)}` : t.kpi_top_unit_no_data} tone="green" />
+        <CompactStat label={t.kpi_distance_title} value={`${number(data.distance.items.reduce((acc, item) => acc + item.distance_km, 0), 1)} km`} meta={`${t.kpi_distance_subtitle} · ${t.kpi_distance_trend(number(hourlyTotal, 0))}`} tone="slate" />
+      </StatCluster>
 
       <section className="two-column loading-visual-grid">
         <div className={`panel loading-animated-panel ${rateGuidance ? 'is-agent-data-highlight' : ''}`} ref={loadingRateWidget.ref} data-agent-highlight={rateGuidance ?? undefined}>

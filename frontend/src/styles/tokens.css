@@ -19,6 +19,9 @@
   --red: #ff5c5c;
   --blue: #5b9dff;
   --purple: #c98bff;
+  /* Identidad fija de turno dia -- no varia por tema (igual que --purple para turno noche),
+     para que dia/noche siempre se distingan aunque el tema active un --cyan neutro/gris. */
+  --shift-day: #38BDF8;
   --orange: #ff9d4d;
   --steel: #7c8fa1;
   --shadow: 0 20px 60px rgba(0, 0, 0, 0.45), 0 4px 16px rgba(0, 0, 0, 0.3);
@@ -531,6 +534,76 @@ button {
 
 .kpi-bottomline strong {
   color: currentColor;
+}
+
+/* Grupo de estadisticas compactas: alternativa densa a .kpi-card para paginas con muchos
+   numeros relacionados (averias, flota) -- una franja de color a la izquierda comunica
+   criticidad de un vistazo, sin el tamano "hero" de las 4 metricas del cockpit. */
+.stat-cluster {
+  margin-bottom: 16px;
+}
+
+.stat-cluster-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.stat-cluster-head h3 {
+  margin: 0;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.compact-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
+  gap: 8px;
+}
+
+.compact-stat {
+  display: grid;
+  gap: 3px;
+  min-height: 66px;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-left: 3px solid currentColor;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--bg-card) 62%, transparent);
+}
+
+.compact-stat-label {
+  color: var(--muted);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.compact-stat-value {
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.05;
+}
+
+.compact-stat.tone-green .compact-stat-value,
+.compact-stat.tone-amber .compact-stat-value,
+.compact-stat.tone-red .compact-stat-value,
+.compact-stat.tone-cyan .compact-stat-value {
+  color: currentColor;
+}
+
+.compact-stat-meta {
+  color: var(--muted);
+  font-size: 10.5px;
+  line-height: 1.3;
 }
 
 .chart-grid,

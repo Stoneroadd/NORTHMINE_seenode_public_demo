@@ -29,6 +29,7 @@
   --nm-orange: var(--orange);
   --nm-red: var(--red);
   --nm-purple: var(--purple);
+  --nm-shift-day: var(--shift-day);
   --nm-ease-out: var(--ease-out);
   --nm-shadow-soft: 0 16px 38px rgba(0, 0, 0, 0.26);
   --nm-shadow-glow-cyan: 0 0 18px color-mix(in srgb, var(--cyan) 16%, transparent);
@@ -485,11 +486,24 @@
   place-items: center;
   width: 48px;
   height: 48px;
-  border: 1px solid color-mix(in srgb, var(--cyan) 36%, transparent);
   border-radius: 10px;
-  background: color-mix(in srgb, var(--cyan) 9%, transparent);
-  box-shadow: 0 0 16px color-mix(in srgb, var(--cyan) 14%, transparent);
-  color: var(--nm-cyan);
+}
+
+/* Dia/noche llevan un acento fijo (celeste/morado, --nm-shift-day / --nm-purple) en vez de
+   heredar --cyan del tema -- en el tema mono esa variable se vuelve gris a proposito, pero
+   el turno necesita distinguirse a simple vista sin importar el tema activo. */
+.nmcp-shift-icon.is-day {
+  border: 1px solid color-mix(in srgb, var(--nm-shift-day) 40%, transparent);
+  background: color-mix(in srgb, var(--nm-shift-day) 12%, transparent);
+  box-shadow: 0 0 16px color-mix(in srgb, var(--nm-shift-day) 18%, transparent);
+  color: var(--nm-shift-day);
+}
+
+.nmcp-shift-icon.is-night {
+  border: 1px solid color-mix(in srgb, var(--nm-purple) 40%, transparent);
+  background: color-mix(in srgb, var(--nm-purple) 12%, transparent);
+  box-shadow: 0 0 16px color-mix(in srgb, var(--nm-purple) 18%, transparent);
+  color: var(--nm-purple);
 }
 
 .nmcp-shift-main h2 {
@@ -1163,7 +1177,7 @@
 }
 
 .nmcp-tooltip-row.is-day i {
-  background: var(--cyan);
+  background: var(--nm-shift-day);
 }
 
 .nmcp-tooltip-row.is-night i {
@@ -1199,7 +1213,7 @@
 }
 
 .nmcp-tooltip-delta.is-day strong {
-  color: var(--cyan);
+  color: var(--nm-shift-day);
 }
 
 .nmcp-tooltip-delta.is-night strong {
@@ -3295,11 +3309,11 @@
 }
 
 .nmcp-shift-summary-card.is-day {
-  border-color: color-mix(in srgb, var(--cyan) 30%, transparent);
+  border-color: color-mix(in srgb, var(--nm-shift-day) 30%, transparent);
 }
 
 .nmcp-shift-summary-card.is-day strong {
-  color: var(--nm-cyan);
+  color: var(--nm-shift-day);
 }
 
 .nmcp-shift-summary-card.is-night {
@@ -3319,9 +3333,9 @@
 }
 
 .nmcp-shift-summary-card.is-day.is-focused {
-  border-color: color-mix(in srgb, var(--cyan) 60%, transparent);
-  background: color-mix(in srgb, var(--cyan) 7%, transparent);
-  box-shadow: 0 0 18px color-mix(in srgb, var(--cyan) 16%, transparent);
+  border-color: color-mix(in srgb, var(--nm-shift-day) 60%, transparent);
+  background: color-mix(in srgb, var(--nm-shift-day) 7%, transparent);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--nm-shift-day) 16%, transparent);
 }
 
 .nmcp-shift-summary-card.is-night.is-focused {
@@ -3679,7 +3693,7 @@
 }
 
 .nmcp-shift-hourly-total.is-day strong {
-  color: var(--nm-cyan);
+  color: var(--nm-shift-day);
 }
 
 .nmcp-shift-hourly-total.is-night strong {
@@ -3835,7 +3849,7 @@
 }
 
 .nmcp-shift-hourly-values .is-day {
-  color: var(--nm-cyan);
+  color: var(--nm-shift-day);
 }
 
 .nmcp-shift-hourly-values .is-night {
@@ -3967,7 +3981,7 @@
 
 .nmcp-shift-diff-list article.is-day-leading strong,
 .nmcp-shift-equipment-row.is-day-leading b {
-  color: var(--nm-cyan);
+  color: var(--nm-shift-day);
 }
 
 .nmcp-shift-diff-list article.is-night-leading strong,
@@ -4071,7 +4085,7 @@
 }
 
 .nmcp-shift-equipment-row.is-day-leading .nmcp-equipment-visual {
-  border-color: color-mix(in srgb, var(--nm-cyan) 26%, transparent);
+  border-color: color-mix(in srgb, var(--nm-shift-day) 26%, transparent);
 }
 
 .nmcp-shift-equipment-row.is-night-leading .nmcp-equipment-visual {
@@ -4315,8 +4329,8 @@
 }
 
 .nmcp-shift-equipment-bars .is-day {
-  background: linear-gradient(90deg, color-mix(in srgb, var(--nm-cyan) 28%, transparent), var(--nm-cyan));
-  box-shadow: 0 0 12px color-mix(in srgb, var(--nm-cyan) 16%, transparent);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--nm-shift-day) 28%, transparent), var(--nm-shift-day));
+  box-shadow: 0 0 12px color-mix(in srgb, var(--nm-shift-day) 16%, transparent);
 }
 
 .nmcp-shift-equipment-bars .is-night {
@@ -4964,8 +4978,8 @@
 }
 
 .nmcp-operator-compare-grid article.is-day {
-  border-color: color-mix(in srgb, var(--cyan) 24%, transparent);
-  background: linear-gradient(145deg, color-mix(in srgb, var(--cyan) 9%, transparent), color-mix(in srgb, var(--bg-card) 68%, transparent));
+  border-color: color-mix(in srgb, var(--nm-shift-day) 24%, transparent);
+  background: linear-gradient(145deg, color-mix(in srgb, var(--nm-shift-day) 9%, transparent), color-mix(in srgb, var(--bg-card) 68%, transparent));
 }
 
 .nmcp-operator-compare-grid article.is-night {

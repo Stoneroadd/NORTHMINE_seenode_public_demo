@@ -20,6 +20,7 @@ interface Props {
 
 // ── Theme previews (hardcoded, NOT using CSS vars of active theme) ─────────
 const THEME_PREVIEWS: Record<ThemeId, { bg: string; mid: string; accent: string; text: string }> = {
+  mono:        { bg: '#0D0D0D', mid: '#171717', accent: '#FFFFFF', text: 'rgba(236,236,236,0.94)' },
   copper:      { bg: '#0C0B0A', mid: '#191613', accent: '#C58A58', text: 'rgba(244,238,230,0.94)' },
   dark:        { bg: '#050810', mid: '#0C1220', accent: '#00FF88', text: 'rgba(255,255,255,0.9)' },
   operational: { bg: '#050607', mid: '#17191C', accent: '#B8C0C8', text: 'rgba(245,247,250,0.94)' },
@@ -52,7 +53,7 @@ function themeLabel(t: Translations, id: ThemeId): string {
   const map: Record<ThemeId, string> = {
     copper: 'COBRE MATE',
     dark: t.settings.tema_dark, operational: 'OSCURO NEGRO', light: t.settings.tema_light, futuristic: t.settings.tema_futuristic,
-    minimal: t.settings.tema_minimal, carbon: t.settings.tema_carbon,
+    minimal: t.settings.tema_minimal, carbon: t.settings.tema_carbon, mono: 'FULL BLACK',
   }
   return map[id]
 }
@@ -62,6 +63,7 @@ function themeDesc(t: Translations, id: ThemeId): string {
     copper: 'Grafito cálido, cobre y contraste operacional',
     dark: t.settings.tema_dark_desc, operational: 'Negro, gris y superficies transparentes', light: t.settings.tema_light_desc, futuristic: t.settings.tema_futuristic_desc,
     minimal: t.settings.tema_minimal_desc, carbon: t.settings.tema_carbon_desc,
+    mono: 'Negro puro, curvas suaves, sin azules',
   }
   return map[id]
 }
@@ -547,7 +549,7 @@ export function SettingsPanel({ open, onClose }: Props) {
               background: 'transparent', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: 12,
             }}
             onClick={() => {
-              setTheme('copper')
+              setTheme('mono')
               resetEffects()
               setLang('es')
             }}

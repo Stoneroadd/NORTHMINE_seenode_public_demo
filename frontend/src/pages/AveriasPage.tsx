@@ -2,12 +2,12 @@
 import { useAgentWidget } from '../lib/agentRegistry/useAgentWidget'
 import { useAgentEntityHandler } from '../lib/agentRegistry/useAgentEntityHandler'
 import { useQuery } from '@tanstack/react-query'
-import { Activity, AlertTriangle, ChevronDown, Clock, CircleDollarSign, Gauge, Mail, RefreshCw, ShieldAlert, Timer, Upload, Wrench } from 'lucide-react'
+import { ChevronDown, Mail, RefreshCw, Upload, Wrench } from 'lucide-react'
 import { ModuleHeader } from '../components/common/ModuleHeader'
 import { LoadingState } from '../components/common/LoadingState'
 import { ErrorState } from '../components/common/ErrorState'
 import { EmptyState } from '../components/common/EmptyState'
-import { ExecutiveKpiCard } from '../components/kpi/ExecutiveKpiCard'
+import { CompactStat, StatCluster } from '../components/kpi/CompactStat'
 import { formatMoney } from '../components/cockpit/cockpitModel'
 import { useModuleT } from '../i18n/useModuleT'
 import { averiasT, type AveriasT } from '../i18n/modules/averias'
@@ -433,12 +433,32 @@ export function AveriasPage() {
         description="Averias, mantenciones programadas y desglose del reporte diario de mantencion."
       />
 
-      <section className="kpi-grid compact">
-        <ExecutiveKpiCard title="Averias activas" value={`${data.summary.active_breakdowns}`} subtitle="Eventos abiertos WENCO" trend={`${data.summary.maintenance_equipment} en mantencion`} tone={data.summary.active_breakdowns ? 'amber' : 'green'} icon={Wrench} />
-        <ExecutiveKpiCard title="Averias / mantenciones" value={`${maintenanceHistory.length}`} subtitle="Eventos WENCO recientes" trend="turno vigente" tone={maintenanceHistory.length ? 'amber' : 'green'} icon={AlertTriangle} />
-        <ExecutiveKpiCard title="Equipos F/S" value={`${equiposFs}`} subtitle="Fuera de servicio (reporte)" trend={fleetDetail ? `${fleetDetail.count_equipment} con eventos` : 'sin reporte'} tone={equiposFs ? 'red' : 'green'} icon={ShieldAlert} />
-        <ExecutiveKpiCard title="Horas detenidas" value={fleetDetail ? minutes(Math.round(fleetDetail.total_min)) : '-'} subtitle={`Flota / ultimos ${fleetDetail?.days ?? 31} dias`} trend={`${fleetDetail?.count_events ?? 0} eventos`} tone="slate" icon={Clock} />
-      </section>
+      <StatCluster title="Estado actual">
+        <CompactStat
+          label="Averias activas"
+          value={data.summary.active_breakdowns}
+          meta={`${data.summary.maintenance_equipment} en mantencion`}
+          tone={data.summary.active_breakdowns ? 'amber' : 'green'}
+        />
+        <CompactStat
+          label="Averias / mantenciones"
+          value={maintenanceHistory.length}
+          meta="Eventos WENCO / turno vigente"
+          tone={maintenanceHistory.length ? 'amber' : 'green'}
+        />
+        <CompactStat
+          label="Equipos F/S"
+          value={equiposFs}
+          meta={fleetDetail ? `${fleetDetail.count_equipment} equipos con eventos` : 'Sin reporte'}
+          tone={equiposFs ? 'red' : 'green'}
+        />
+        <CompactStat
+          label="Horas detenidas"
+          value={fleetDetail ? minutes(Math.round(fleetDetail.total_min)) : '-'}
+          meta={`Flota / ultimos ${fleetDetail?.days ?? 31} dias · ${fleetDetail?.count_events ?? 0} eventos`}
+          tone="slate"
+        />
+      </StatCluster>
 
       <section className="panel">
         <div className="panel-header"><div><span className="panel-kicker">WENCO en vivo</span><h2>Averias y mantenciones recientes</h2></div><span className="panel-tag">{maintenanceHistory.length} eventos</span></div>
@@ -451,77 +471,144 @@ export function AveriasPage() {
         )}
       </section>
 
-      <section className="panel">
-        <div className="panel-header">
-          <div>
-            <span className="panel-kicker">Reporte externo</span>
-            <h2>Desglose de averias de la flota (XLS del correo)</h2>
-          </div>
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-            <span className="panel-tag">
-              <Mail size={12} style={{ verticalAlign: 'text-top', marginRight: 4 }} />
-              {fleetQuery.data?.mailStatus.mail_configured
-                ? `Casilla: ${fleetQuery.data.mailStatus.mail_user}`
-                : 'Outlook via tarea programada'}
-            </span>
-            {fleetQuery.data?.mailStatus.auto_sync?.enabled && (
-              <span className="panel-tag" style={{ borderColor: 'rgba(74,222,128,0.5)', color: '#4ADE80' }}>
-                Auto cada {fleetQuery.data.mailStatus.auto_sync.interval_min} min
-                {fleetQuery.data.mailStatus.auto_sync.last_run
-                  ? ` / ultima ${fleetQuery.data.mailStatus.auto_sync.last_run.slice(11, 16)}`
-                  : ''}
-              </span>
-            )}
-            <button className="command-button command-button-secondary" type="button" onClick={handleMailSync} disabled={syncing}>
-              <RefreshCw size={15} /> {syncing ? 'Sincronizando...' : 'Sincronizar correo'}
-            </button>
-            <button className="command-button" type="button" onClick={() => fileInputRef.current?.click()} disabled={importing}>
-              <Upload size={15} /> {importing ? 'Importando...' : 'Cargar XLS'}
-            </button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".xls,.xlsx,.xlsm"
-              style={{ display: 'none' }}
-              onChange={(event) => handleUpload(event.target.files?.[0])}
-            />
-          </div>
-        </div>
+      {!FAST_PUBLIC_DEMO && fleetQuery.isLoading && <EmptyState title="Cargando desglose importado..." />}
+      {fleetQuery.data && fleetQuery.data.detail.count_events === 0 && (
+        <EmptyState title="Aun no hay reportes XLS importados. Carga uno mas abajo en 'Administrar datos' o configura la casilla / carpeta vigilada." />
+      )}
 
-        {importMessage && (
-          <p style={{ color: 'var(--nm-muted)', fontSize: '0.82rem', marginBottom: 12 }}>{importMessage}</p>
-        )}
+      {fleetQuery.data && fleetQuery.data.detail.count_events > 0 && (
+        <>
+          {insightsQuery.data && (
+            <section className="panel">
+              <div className="panel-header" style={{ marginBottom: 10 }}>
+                <div>
+                  <span className="panel-kicker">Analisis inteligente</span>
+                  <h2>Que vigilar: equipos en riesgo, tendencias y fallas recurrentes</h2>
+                </div>
+                <span className="panel-tag">
+                  {insightsQuery.data.averias_analizadas} averias analizadas / {insightsQuery.data.days} dias
+                </span>
+              </div>
 
-        {!FAST_PUBLIC_DEMO && fleetQuery.isLoading && <EmptyState title="Cargando desglose importado..." />}
-        {fleetQuery.data && fleetQuery.data.detail.count_events === 0 && (
-          <EmptyState title="Aun no hay reportes XLS importados. Carga uno con el boton o configura la casilla / carpeta vigilada." />
-        )}
+              {insightsQuery.data.equipos_riesgo.length > 0 && (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 10, marginBottom: 14 }}>
+                  {insightsQuery.data.equipos_riesgo.slice(0, 4).map((equipo) => {
+                    const color = equipo.nivel === 'CRITICO' ? '#F87171' : equipo.nivel === 'ALTO' ? '#FBBF24' : '#94A3B8'
+                    return (
+                      <article key={equipo.equipment_id} style={{ border: `1px solid ${color}55`, borderLeft: `3px solid ${color}`, borderRadius: 10, padding: '10px 12px', background: `${color}0D` }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                          <strong style={{ color: 'var(--nm-text)' }}>{equipo.equipment_id}</strong>
+                          <span className="panel-tag" style={{ borderColor: color, color }}>{equipo.nivel}</span>
+                        </div>
+                        <small style={{ color: 'var(--nm-muted)', display: 'block', lineHeight: 1.45 }}>
+                          {equipo.model ?? ''} · {equipo.razones.join(' · ')}
+                        </small>
+                      </article>
+                    )
+                  })}
+                </div>
+              )}
 
-        {fleetQuery.data && fleetQuery.data.detail.count_events > 0 && (
-          <>
-            <section className="kpi-grid compact" style={{ marginBottom: 14 }}>
-              <ExecutiveKpiCard title="Equipos afectados" value={`${fleetQuery.data.detail.count_equipment}`} subtitle={`Ultimos ${fleetQuery.data.detail.days} dias`} trend={`${fleetQuery.data.detail.count_events} eventos`} tone="amber" icon={Wrench} />
-              <ExecutiveKpiCard title="Tiempo detenido" value={minutes(Math.round(fleetQuery.data.detail.total_min))} subtitle="Flota completa" trend="XLS importado" tone="red" icon={Clock} />
-              <ExecutiveKpiCard title="Eventos" value={`${fleetQuery.data.detail.count_events}`} subtitle="Registros del reporte" trend={`${fleetQuery.data.mailStatus.total_events} historicos`} tone="cyan" icon={AlertTriangle} />
+              {insightsQuery.data.tendencias_sistema.length > 0 && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 14 }}>
+                  {insightsQuery.data.tendencias_sistema.slice(0, 6).map((trend) => {
+                    const up = trend.direccion === 'SUBE'
+                    const color = up ? '#F87171' : trend.direccion === 'BAJA' ? '#4ADE80' : '#94A3B8'
+                    return (
+                      <span key={trend.sistema} className="panel-tag" style={{ borderColor: `${color}88`, color }}>
+                        {up ? '▲' : trend.direccion === 'BAJA' ? '▼' : '•'} {trend.sistema}: {trend.primera_mitad}→{trend.segunda_mitad} averias
+                      </span>
+                    )
+                  })}
+                </div>
+              )}
+
+              {insightsQuery.data.recurrentes.length ? insightsQuery.data.recurrentes.slice(0, 8).map((patron) => {
+                const key = `${patron.equipment_id}|${patron.sistema}`
+                const isOpen = openInsight === key
+                const trendColor = patron.tendencia === 'EN AUMENTO' ? '#F87171' : patron.tendencia === 'A LA BAJA' ? '#4ADE80' : '#94A3B8'
+                return (
+                  <div key={key} style={{ borderTop: '1px solid rgba(148,163,184,0.14)' }}>
+                    <button
+                      type="button"
+                      onClick={() => setOpenInsight(isOpen ? null : key)}
+                      style={{
+                        display: 'flex', width: '100%', alignItems: 'center', gap: 10, padding: '9px 4px',
+                        background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', color: 'var(--nm-text)', fontSize: '0.82rem',
+                      }}
+                    >
+                      <ChevronDown size={14} className="nm-avr-chevron" style={isOpen ? { transform: 'rotate(180deg)', color: '#7DD3FC' } : undefined} />
+                      <strong>{patron.equipment_id}</strong>
+                      <span style={{ color: 'var(--nm-muted)' }}>{patron.sistema}</span>
+                      <span className="panel-tag">{patron.eventos} veces</span>
+                      <span className="panel-tag" style={{ borderColor: trendColor, color: trendColor }}>{patron.tendencia}</span>
+                      <span style={{ marginLeft: 'auto', color: 'var(--nm-muted)', fontSize: '0.74rem', whiteSpace: 'nowrap' }}>
+                        {patron.gap_promedio_dias != null ? `cada ~${patron.gap_promedio_dias} dias / ` : ''}ultima {formatFecha(patron.ultima_fecha)}
+                      </span>
+                    </button>
+                    {isOpen && (
+                      <div style={{ padding: '2px 4px 12px 28px', animation: 'nm-avr-fade-up 0.25s both' }}>
+                        {patron.ultima_descripcion && (
+                          <p style={{ color: 'var(--nm-text)', fontSize: '0.8rem', margin: '0 0 8px' }}>
+                            Ultimo evento: {patron.ultima_descripcion}
+                          </p>
+                        )}
+                        <p style={{ color: 'var(--nm-muted)', fontSize: '0.8rem', margin: '0 0 6px', lineHeight: 1.5 }}>
+                          <strong style={{ color: '#FBBF24' }}>Causa probable:</strong> {patron.causa_probable}
+                        </p>
+                        <p style={{ color: 'var(--nm-muted)', fontSize: '0.8rem', margin: 0, lineHeight: 1.5 }}>
+                          <strong style={{ color: '#4ADE80' }}>Solucion sugerida:</strong> {patron.solucion_sugerida}
+                          <span className="panel-tag" style={{ marginLeft: 8 }}>confianza {patron.confianza}</span>
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )
+              }) : (
+                <small style={{ color: 'var(--nm-muted)' }}>Sin fallas recurrentes detectadas en la ventana analizada.</small>
+              )}
             </section>
+          )}
 
-            {fleetQuery.data.detail.costos && (() => {
-              const costos = fleetQuery.data.detail.costos
-              return (
-                <section className="kpi-grid compact" style={{ marginBottom: 14 }}>
-                  <ExecutiveKpiCard
-                    title="Costo de indisponibilidad"
-                    value={formatMoney(costos.total_usd)}
-                    subtitle={`Ultimos ${fleetQuery.data.detail.days} dias, flota completa`}
-                    trend={`${formatMoney(costos.correctiva_usd)} correctiva / ${formatMoney(costos.programada_usd)} programada`}
-                    tone={costos.correctiva_usd > costos.programada_usd ? 'red' : 'amber'}
-                    icon={CircleDollarSign}
-                  />
-                </section>
-              )
-            })()}
+          <section className="panel">
+            <div className="panel-header">
+              <div>
+                <span className="panel-kicker">Reporte externo</span>
+                <h2>Eficiencia y costo de la flota (XLS del correo)</h2>
+              </div>
+              <span className="panel-tag">Ultimos {fleetQuery.data.detail.days} dias</span>
+            </div>
+
+            <StatCluster title="Impacto y costo" tag={`Ultimos ${fleetQuery.data.detail.days} dias`}>
+              <CompactStat
+                label="Equipos afectados"
+                value={fleetQuery.data.detail.count_equipment}
+                meta={`${fleetQuery.data.detail.count_events} eventos`}
+                tone="amber"
+              />
+              <CompactStat
+                label="Tiempo detenido"
+                value={minutes(Math.round(fleetQuery.data.detail.total_min))}
+                meta="Flota completa · XLS importado"
+                tone="red"
+              />
+              <CompactStat
+                label="Eventos"
+                value={fleetQuery.data.detail.count_events}
+                meta={`${fleetQuery.data.mailStatus.total_events} historicos`}
+                tone="cyan"
+              />
+              {fleetQuery.data.detail.costos && (
+                <CompactStat
+                  label="Costo de indisponibilidad"
+                  value={formatMoney(fleetQuery.data.detail.costos.total_usd)}
+                  meta={`${formatMoney(fleetQuery.data.detail.costos.correctiva_usd)} correctiva / ${formatMoney(fleetQuery.data.detail.costos.programada_usd)} programada`}
+                  tone={fleetQuery.data.detail.costos.correctiva_usd > fleetQuery.data.detail.costos.programada_usd ? 'red' : 'amber'}
+                />
+              )}
+            </StatCluster>
             {fleetQuery.data.detail.costos && (
-              <p style={{ color: 'var(--nm-muted)', fontSize: '0.78rem', margin: '-8px 0 14px' }}>
+              <p style={{ color: 'var(--nm-muted)', fontSize: '0.78rem', margin: '-4px 0 14px' }}>
                 Estimado a USD {costFormatRate(fleetQuery.data.detail.costos.tasa_usd_por_min)}/min de indisponibilidad ({fleetQuery.data.detail.costos.fuente_tasa}). {fleetQuery.data.detail.costos.nota}
               </p>
             )}
@@ -530,40 +617,32 @@ export function AveriasPage() {
               const kpis = fleetQuery.data.detail.kpis
               const dfTone = kpis.disponibilidad_fisica_pct >= 90 ? 'green' : kpis.disponibilidad_fisica_pct >= 85 ? 'amber' : 'red'
               return (
-                <section className="kpi-grid compact" style={{ marginBottom: 14 }}>
-                  <ExecutiveKpiCard
-                    title="Disponibilidad fisica"
+                <StatCluster title="Eficiencia de mantencion">
+                  <CompactStat
+                    label="Disponibilidad fisica"
                     value={`${kpis.disponibilidad_fisica_pct.toLocaleString('es-CL')}%`}
-                    subtitle={`${kpis.equipos} equipos / ${kpis.dias_observados} dias con reporte`}
-                    trend={kpis.peor_equipo ? `Peor: ${kpis.peor_equipo.equipment_id} (${kpis.peor_equipo.disponibilidad_pct}%)` : ''}
+                    meta={kpis.peor_equipo ? `Peor: ${kpis.peor_equipo.equipment_id} (${kpis.peor_equipo.disponibilidad_pct}%)` : `${kpis.equipos} equipos / ${kpis.dias_observados} dias`}
                     tone={dfTone}
-                    icon={Gauge}
                   />
-                  <ExecutiveKpiCard
-                    title="MTTR"
+                  <CompactStat
+                    label="MTTR"
                     value={kpis.mttr_horas != null ? `${kpis.mttr_horas.toLocaleString('es-CL')} h` : '-'}
-                    subtitle="Tiempo medio de reparacion"
-                    trend={`${kpis.num_averias} averias correctivas`}
+                    meta={`${kpis.num_averias} averias correctivas`}
                     tone={kpis.mttr_horas != null && kpis.mttr_horas > 8 ? 'amber' : 'cyan'}
-                    icon={Timer}
                   />
-                  <ExecutiveKpiCard
-                    title="MTBF"
+                  <CompactStat
+                    label="MTBF"
                     value={kpis.mtbf_horas != null ? `${kpis.mtbf_horas.toLocaleString('es-CL')} h` : '-'}
-                    subtitle="Tiempo medio entre fallas"
-                    trend={`${Math.round(kpis.horas_correctiva)} h en averias`}
+                    meta={`${Math.round(kpis.horas_correctiva)} h en averias`}
                     tone="slate"
-                    icon={Activity}
                   />
-                  <ExecutiveKpiCard
-                    title="Mantencion programada"
+                  <CompactStat
+                    label="Mantencion programada"
                     value={`${kpis.pct_programada.toLocaleString('es-CL')}%`}
-                    subtitle="De la detencion total"
-                    trend={`${kpis.pct_correctiva.toLocaleString('es-CL')}% correctiva`}
+                    meta={`${kpis.pct_correctiva.toLocaleString('es-CL')}% correctiva`}
                     tone={kpis.pct_programada >= 60 ? 'green' : 'amber'}
-                    icon={ShieldAlert}
                   />
-                </section>
+                </StatCluster>
               )
             })()}
 
@@ -721,98 +800,6 @@ export function AveriasPage() {
               })()}
             </div>
 
-            {insightsQuery.data && (
-              <div className="nm-avr-chart-card" style={{ marginBottom: 14, '--d': '280ms' } as CSSProperties}>
-                <div className="panel-header" style={{ marginBottom: 10 }}>
-                  <div>
-                    <span className="panel-kicker">Analisis inteligente</span>
-                    <h2 style={{ fontSize: '0.95rem' }}>Patrones de averias: recurrencias, tendencias y equipos en riesgo</h2>
-                  </div>
-                  <span className="panel-tag">
-                    {insightsQuery.data.averias_analizadas} averias analizadas / {insightsQuery.data.days} dias
-                  </span>
-                </div>
-
-                {insightsQuery.data.equipos_riesgo.length > 0 && (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 10, marginBottom: 14 }}>
-                    {insightsQuery.data.equipos_riesgo.slice(0, 4).map((equipo) => {
-                      const color = equipo.nivel === 'CRITICO' ? '#F87171' : equipo.nivel === 'ALTO' ? '#FBBF24' : '#94A3B8'
-                      return (
-                        <article key={equipo.equipment_id} style={{ border: `1px solid ${color}55`, borderLeft: `3px solid ${color}`, borderRadius: 10, padding: '10px 12px', background: `${color}0D` }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                            <strong style={{ color: 'var(--nm-text)' }}>{equipo.equipment_id}</strong>
-                            <span className="panel-tag" style={{ borderColor: color, color }}>{equipo.nivel}</span>
-                          </div>
-                          <small style={{ color: 'var(--nm-muted)', display: 'block', lineHeight: 1.45 }}>
-                            {equipo.model ?? ''} · {equipo.razones.join(' · ')}
-                          </small>
-                        </article>
-                      )
-                    })}
-                  </div>
-                )}
-
-                {insightsQuery.data.tendencias_sistema.length > 0 && (
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 14 }}>
-                    {insightsQuery.data.tendencias_sistema.slice(0, 6).map((trend) => {
-                      const up = trend.direccion === 'SUBE'
-                      const color = up ? '#F87171' : trend.direccion === 'BAJA' ? '#4ADE80' : '#94A3B8'
-                      return (
-                        <span key={trend.sistema} className="panel-tag" style={{ borderColor: `${color}88`, color }}>
-                          {up ? '▲' : trend.direccion === 'BAJA' ? '▼' : '•'} {trend.sistema}: {trend.primera_mitad}→{trend.segunda_mitad} averias
-                        </span>
-                      )
-                    })}
-                  </div>
-                )}
-
-                {insightsQuery.data.recurrentes.length ? insightsQuery.data.recurrentes.slice(0, 8).map((patron) => {
-                  const key = `${patron.equipment_id}|${patron.sistema}`
-                  const isOpen = openInsight === key
-                  const trendColor = patron.tendencia === 'EN AUMENTO' ? '#F87171' : patron.tendencia === 'A LA BAJA' ? '#4ADE80' : '#94A3B8'
-                  return (
-                    <div key={key} style={{ borderTop: '1px solid rgba(148,163,184,0.14)' }}>
-                      <button
-                        type="button"
-                        onClick={() => setOpenInsight(isOpen ? null : key)}
-                        style={{
-                          display: 'flex', width: '100%', alignItems: 'center', gap: 10, padding: '9px 4px',
-                          background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', color: 'var(--nm-text)', fontSize: '0.82rem',
-                        }}
-                      >
-                        <ChevronDown size={14} className="nm-avr-chevron" style={isOpen ? { transform: 'rotate(180deg)', color: '#7DD3FC' } : undefined} />
-                        <strong>{patron.equipment_id}</strong>
-                        <span style={{ color: 'var(--nm-muted)' }}>{patron.sistema}</span>
-                        <span className="panel-tag">{patron.eventos} veces</span>
-                        <span className="panel-tag" style={{ borderColor: trendColor, color: trendColor }}>{patron.tendencia}</span>
-                        <span style={{ marginLeft: 'auto', color: 'var(--nm-muted)', fontSize: '0.74rem', whiteSpace: 'nowrap' }}>
-                          {patron.gap_promedio_dias != null ? `cada ~${patron.gap_promedio_dias} dias / ` : ''}ultima {formatFecha(patron.ultima_fecha)}
-                        </span>
-                      </button>
-                      {isOpen && (
-                        <div style={{ padding: '2px 4px 12px 28px', animation: 'nm-avr-fade-up 0.25s both' }}>
-                          {patron.ultima_descripcion && (
-                            <p style={{ color: 'var(--nm-text)', fontSize: '0.8rem', margin: '0 0 8px' }}>
-                              Ultimo evento: {patron.ultima_descripcion}
-                            </p>
-                          )}
-                          <p style={{ color: 'var(--nm-muted)', fontSize: '0.8rem', margin: '0 0 6px', lineHeight: 1.5 }}>
-                            <strong style={{ color: '#FBBF24' }}>Causa probable:</strong> {patron.causa_probable}
-                          </p>
-                          <p style={{ color: 'var(--nm-muted)', fontSize: '0.8rem', margin: 0, lineHeight: 1.5 }}>
-                            <strong style={{ color: '#4ADE80' }}>Solucion sugerida:</strong> {patron.solucion_sugerida}
-                            <span className="panel-tag" style={{ marginLeft: 8 }}>confianza {patron.confianza}</span>
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  )
-                }) : (
-                  <small style={{ color: 'var(--nm-muted)' }}>Sin fallas recurrentes detectadas en la ventana analizada.</small>
-                )}
-              </div>
-            )}
-
             <div className="panel-header"><div><span className="panel-kicker">Flota</span><h2>Tabla global de equipos</h2></div><span className="panel-tag">{sortedEquipment.length} equipos / clic para desplegar detalle</span></div>
             <div className="nm-avr-table-wrap">
               <table className="nm-avr-table">
@@ -905,7 +892,48 @@ export function AveriasPage() {
                 </tbody>
               </table>
             </div>
-          </>
+          </section>
+        </>
+      )}
+
+      <section className="panel nm-avr-import-panel">
+        <div className="panel-header">
+          <div>
+            <span className="panel-kicker">Administrar datos</span>
+            <h2>Importar y sincronizar reporte de averias</h2>
+          </div>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+            <span className="panel-tag">
+              <Mail size={12} style={{ verticalAlign: 'text-top', marginRight: 4 }} />
+              {fleetQuery.data?.mailStatus.mail_configured
+                ? `Casilla: ${fleetQuery.data.mailStatus.mail_user}`
+                : 'Outlook via tarea programada'}
+            </span>
+            {fleetQuery.data?.mailStatus.auto_sync?.enabled && (
+              <span className="panel-tag" style={{ borderColor: 'rgba(74,222,128,0.5)', color: '#4ADE80' }}>
+                Auto cada {fleetQuery.data.mailStatus.auto_sync.interval_min} min
+                {fleetQuery.data.mailStatus.auto_sync.last_run
+                  ? ` / ultima ${fleetQuery.data.mailStatus.auto_sync.last_run.slice(11, 16)}`
+                  : ''}
+              </span>
+            )}
+            <button className="command-button command-button-secondary" type="button" onClick={handleMailSync} disabled={syncing}>
+              <RefreshCw size={15} /> {syncing ? 'Sincronizando...' : 'Sincronizar correo'}
+            </button>
+            <button className="command-button" type="button" onClick={() => fileInputRef.current?.click()} disabled={importing}>
+              <Upload size={15} /> {importing ? 'Importando...' : 'Cargar XLS'}
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".xls,.xlsx,.xlsm"
+              style={{ display: 'none' }}
+              onChange={(event) => handleUpload(event.target.files?.[0])}
+            />
+          </div>
+        </div>
+        {importMessage && (
+          <p style={{ color: 'var(--nm-muted)', fontSize: '0.82rem', margin: 0 }}>{importMessage}</p>
         )}
       </section>
     </div>

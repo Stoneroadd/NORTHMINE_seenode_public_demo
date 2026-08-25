@@ -218,7 +218,7 @@ function shouldReduceMotion(): boolean {
   return typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
 }
 
-function useAnimatedNumber<T extends HTMLElement = HTMLElement>(value: number, animationId?: string, duration = 850) {
+function useAnimatedNumber<T extends HTMLElement = HTMLElement>(value: number, animationId?: string, duration = 1900) {
   const { ref, inView } = useInView<T>()
   const [displayValue, setDisplayValue] = useState(0)
 
@@ -261,7 +261,7 @@ function AnimatedTons({
 }
 
 function AnimatedCompactTons({ value, animationId }: { value: number; animationId?: string }) {
-  const { value: animated, ref } = useAnimatedNumber<HTMLSpanElement>(value, animationId, 760)
+  const { value: animated, ref } = useAnimatedNumber<HTMLSpanElement>(value, animationId, 1700)
   return <span ref={ref}>{compactTons(animated)}</span>
 }
 
@@ -398,29 +398,22 @@ function HourlyTonnesTotal({
   nightTotal,
   focusShift,
   animationId,
-  projectedFinal,
 }: {
   dayTotal: number
   nightTotal: number
   focusShift: ShiftFocus
   animationId?: string
-  projectedFinal?: number | null
 }) {
   const t = useModuleT(cockpitT)
-  const projectedNode = typeof projectedFinal === 'number'
-    ? (
-        <small className="nmcp-shift-projected-final">
-          <span>{t.sc_proyectado}</span>
-          <AnimatedTons value={projectedFinal} animationId={`${animationId ?? 'total'}-projected-${projectedFinal}`} as="b" />
-        </small>
-      )
-    : null
+  // La proyeccion a fin de turno ya se muestra con contexto completo (vs. referencia,
+  // delta) en la tarjeta "Comparacion justa" -- repetirla aca como numero suelto era
+  // el mismo calculo (liveRate * SHIFT_HOURS) mostrado dos veces.
   if (focusShift === 'DIA') {
     return (
       <div className="nmcp-shift-hourly-total is-day">
         <span>{t.sc_suma_tonelaje}</span>
         <AnimatedTons value={dayTotal} animationId={`${animationId ?? 'total'}-day`} />
-        <em>{t.sc_turno_dia_em}{projectedNode}</em>
+        <em>{t.sc_turno_dia_em}</em>
       </div>
     )
   }
@@ -429,7 +422,7 @@ function HourlyTonnesTotal({
       <div className="nmcp-shift-hourly-total is-night">
         <span>{t.sc_suma_tonelaje}</span>
         <AnimatedTons value={nightTotal} animationId={`${animationId ?? 'total'}-night`} />
-        <em>{t.sc_turno_noche_em}{projectedNode}</em>
+        <em>{t.sc_turno_noche_em}</em>
       </div>
     )
   }
@@ -437,7 +430,7 @@ function HourlyTonnesTotal({
     <div className="nmcp-shift-hourly-total is-combined">
       <span>{t.sc_suma_tonelaje}</span>
       <AnimatedTons value={dayTotal + nightTotal} animationId={`${animationId ?? 'total'}-both`} />
-      <em>{t.sc_dia_noche_em(formatTons(dayTotal), formatTons(nightTotal))}{projectedNode}</em>
+      <em>{t.sc_dia_noche_em(formatTons(dayTotal), formatTons(nightTotal))}</em>
     </div>
   )
 }
@@ -843,20 +836,6 @@ function performanceTone(dayValue: number, nightValue: number, shift: 'DIA' | 'N
     return shift === 'DIA' ? 'is-day-leading' : 'is-night-leading'
   }
   return shift === 'DIA' ? 'is-night-leading' : 'is-day-leading'
-}
-
-function formatContextDate(value: string | null | undefined, t: CockpitT): string {
-  if (!value) return t.sc_sin_fecha
-  const [year, month, day] = value.slice(0, 10).split('-')
-  if (!year || !month || !day) return value
-  return `${day}-${month}-${year}`
-}
-
-function formatContextDateTime(value: string | null | undefined, t: CockpitT): string {
-  if (!value) return t.sc_sin_periodo
-  const [datePart, timePart = ''] = value.split('T')
-  const time = timePart.slice(0, 5)
-  return `${formatContextDate(datePart, t)}${time ? ` ${time}` : ''}`
 }
 
 function EquipmentVisual({ item, type }: { item: ShiftComparisonEquipmentPoint; type: 'loader' | 'truck' }) {
@@ -1868,14 +1847,6 @@ export function ShiftComparisonVisionPanel({
         </div>
       </div>
 
-      <div className="nmcp-shift-vision-actions" aria-label={t.sc_contexto_operacional_aria}>
-        <span className="nmcp-panel-tag">{t.sc_fecha_operacional(formatContextDate(data.operational_context?.fecha_operacional ?? data.selected_date, t))}</span>
-        <span className="nmcp-panel-tag">{t.sc_turno_actual(data.operational_context?.turno_nombre ?? t.common_sin_dato)}</span>
-        <span className="nmcp-panel-tag">
-          {t.sc_periodo_actual(formatContextDateTime(data.operational_context?.turno_inicio, t), formatContextDateTime(data.operational_context?.turno_fin, t))}
-        </span>
-      </div>
-
       <div className="nmcp-shift-summary-grid">
         <SummaryCard
           label={t.sc_turno_dia_label}
@@ -1920,7 +1891,6 @@ export function ShiftComparisonVisionPanel({
             nightTotal={hourlyNightTotal}
             focusShift={focusShift}
             animationId={`${mainHourlyAnimationId}-total`}
-            projectedFinal={shiftProjectedFinal}
           />
           <div className="nmcp-shift-hourly-chart" role="img" aria-label={t.sc_barras_comparativas_aria}>
             <ResponsiveContainer width="100%" height="100%">
@@ -2025,7 +1995,11 @@ export function ShiftComparisonVisionPanel({
               </ComposedChart>
             </ResponsiveContainer>
           </div>
-          <HourlyValuesStrip rows={visualHourlyRows} focusShift={focusShift} animationId={`${mainHourlyAnimationId}-strip`} />
+          {/* Con Dia o Noche enfocado, cada barra ya lleva su valor encima (showHourlyBarLabels);
+              la tira de texto solo aporta cuando "Ambos" apaga esas etiquetas por densidad. */}
+          {!showHourlyBarLabels && (
+            <HourlyValuesStrip rows={visualHourlyRows} focusShift={focusShift} animationId={`${mainHourlyAnimationId}-strip`} />
+          )}
           <PhaseSplitBar split={phaseSplit} focusShift={focusShift} />
         </div>
 

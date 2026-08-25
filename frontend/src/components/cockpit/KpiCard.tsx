@@ -103,7 +103,7 @@ function AnimatedMetricToken({ value, reducedMotion }: { value: string; reducedM
   const enabled = Boolean(parsed) && !reducedMotion
   const { value: animated, ref } = useAnimatedNumber(parsed?.numeric ?? 0, {
     initialValue: enabled ? 0 : parsed?.numeric ?? 0,
-    durationMs: 980,
+    durationMs: 2100,
     enabled,
   })
 

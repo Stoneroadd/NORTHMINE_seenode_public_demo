@@ -37,23 +37,35 @@ interface SidebarItem {
   icon: LucideIcon
 }
 
-const items: SidebarItem[] = [
+// Orden por criticidad/departamento, no alfabético ni de implementación:
+// 1) mando en vivo (lo primero que debe mirar cualquier turno), 2) produccion
+// (el departamento que genera valor dia a dia), 3) analisis y planificacion
+// (menos urgente, mas estrategico). Cada grupo tiene su propia etiqueta de
+// navegacion mas abajo.
+const COMMAND_ITEMS: SidebarItem[] = [
   { id: 'cockpit', label: 'Decision Cockpit', caption: 'Costos, riesgo y accion', icon: Gauge },
+  { id: 'turno', label: 'Turno Actual', caption: 'Ops en tiempo real', icon: Activity },
+  { id: 'alertas', label: 'Alertas', caption: 'Riesgo y seguridad', icon: ShieldAlert },
+  { id: 'averias', label: 'Averías', caption: 'Inactividad y fallas', icon: Wrench },
+]
+
+const PRODUCTION_ITEMS: SidebarItem[] = [
+  { id: 'produccion', label: 'Producción', caption: 'Tonelaje y plan diario', icon: TrendingUp },
+  { id: 'flota', label: 'Flota', caption: 'CAEX — estado y ciclos', icon: Truck },
+  { id: 'carguio', label: 'Carguío', caption: 'Palas y frentes activos', icon: Pickaxe },
+  { id: 'rendimiento', label: 'Rendimiento', caption: 'Horas y demoras', icon: BarChart3 },
+]
+
+const PLANNING_ITEMS: SidebarItem[] = [
+  { id: 'analisis', label: 'Análisis Experto', caption: 'Producción x mantención', icon: Brain },
   { id: 'operationalFlow', label: 'Operational Flow', caption: 'Impacto y propagación', icon: Waypoints },
   { id: 'operationalMap3d', label: 'Mapa Operacional 3D', caption: 'Constelacion de datos', icon: Network },
   { id: 'dashboard', label: 'Resumen', caption: 'Executive overview', icon: LayoutDashboard },
-  { id: 'turno', label: 'Turno Actual', caption: 'Ops en tiempo real', icon: Activity },
-  { id: 'produccion', label: 'Producción', caption: 'Tonelaje y plan diario', icon: TrendingUp },
-  { id: 'rendimiento', label: 'Rendimiento', caption: 'Horas y demoras', icon: BarChart3 },
-  { id: 'flota', label: 'Flota', caption: 'CAEX — estado y ciclos', icon: Truck },
-  { id: 'carguio', label: 'Carguío', caption: 'Palas y frentes activos', icon: Pickaxe },
-  { id: 'averias', label: 'Averías', caption: 'Inactividad y fallas', icon: Wrench },
-  { id: 'analisis', label: 'Análisis Experto', caption: 'Producción x mantención', icon: Brain },
   { id: 'aerea', label: 'Vista Aérea', caption: 'Ortomosaicos y estado', icon: Map },
-  { id: 'alertas', label: 'Alertas', caption: 'Riesgo y seguridad', icon: ShieldAlert },
   { id: 'reportes', label: 'Reportes', caption: 'Turno y período', icon: ClipboardList },
-  { id: 'admin', label: 'Admin', caption: 'Acceso y config', icon: Settings },
 ]
+
+const ADMIN_ITEM: SidebarItem = { id: 'admin', label: 'Admin', caption: 'Acceso y config', icon: Settings }
 
 interface Props {
   active: SectionId
@@ -70,12 +82,37 @@ export function Sidebar({ active, onSelect, mobileOpen = false, onNavigate, acti
   const sidebarCollapsed = useAppStore(s => s.sidebarCollapsed)
   const toggleSidebar = useAppStore(s => s.toggleSidebar)
   const canViewOperatorRanking = usuario?.rol === 'admin' || usuario?.rol === 'supervisor'
-  const visibleItems = items.filter((item) => item.id !== 'admin' || usuario?.rol === 'admin')
   const handleInternalLink = (event: MouseEvent<HTMLAnchorElement>, path: string) => {
     onNavigate?.()
     if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
     event.preventDefault()
     onPathSelect(path)
+  }
+
+  const renderNavButton = (item: SidebarItem) => {
+    const Icon = item.icon
+    const isActive = active === item.id
+    const label = item.labelKey ? t.nav[item.labelKey] : item.label
+    return (
+      <button
+        key={item.id}
+        className={`nav-item ${isActive ? 'is-active' : ''}`}
+        data-agent-guidance-target={`module:${item.id}`}
+        type="button"
+        title={`${label}: ${item.caption}`}
+        onClick={() => {
+          onNavigate?.()
+          onSelect(item.id)
+        }}
+      >
+        <span className="nav-active-line" />
+        <span className="nav-icon"><Icon size={18} /></span>
+        <span>
+          <span className="nav-label">{label}</span>
+          <span className="nav-caption">{item.caption}</span>
+        </span>
+      </button>
+    )
   }
 
   return (
@@ -104,32 +141,14 @@ export function Sidebar({ active, onSelect, mobileOpen = false, onNavigate, acti
       </button>
 
       <nav className="sidebar-nav" id="sidebar-nav">
-        <span className="nav-group-label">OPERACIÓN EN TIEMPO REAL</span>
-        {visibleItems.map((item) => {
-          const Icon = item.icon
-          const isActive = active === item.id
-          const label = item.labelKey ? t.nav[item.labelKey] : item.label
-          return (
-            <button
-              key={item.id}
-              className={`nav-item ${isActive ? 'is-active' : ''}`}
-              data-agent-guidance-target={`module:${item.id}`}
-              type="button"
-              title={`${label}: ${item.caption}`}
-              onClick={() => {
-                onNavigate?.()
-                onSelect(item.id)
-              }}
-            >
-              <span className="nav-active-line" />
-              <span className="nav-icon"><Icon size={18} /></span>
-              <span>
-                <span className="nav-label">{label}</span>
-                <span className="nav-caption">{item.caption}</span>
-              </span>
-            </button>
-          )
-        })}
+        <span className="nav-group-label">MANDO EN VIVO</span>
+        {COMMAND_ITEMS.map(renderNavButton)}
+
+        <span className="nav-group-label" style={{ marginTop: 12 }}>PRODUCCIÓN</span>
+        {PRODUCTION_ITEMS.map(renderNavButton)}
+
+        <span className="nav-group-label" style={{ marginTop: 12 }}>ANÁLISIS Y PLANIFICACIÓN</span>
+        {PLANNING_ITEMS.map(renderNavButton)}
 
         <span className="nav-group-label" style={{ marginTop: 12 }}>ANÁLISIS</span>
         {canViewOperatorRanking && (
@@ -170,6 +189,7 @@ export function Sidebar({ active, onSelect, mobileOpen = false, onNavigate, acti
         {usuario?.rol === 'admin' && (
           <>
             <span className="nav-group-label" style={{ marginTop: 12 }}>HERRAMIENTAS</span>
+            {renderNavButton(ADMIN_ITEM)}
             <a className={`nav-item ${activePath === appPaths.adminUsers ? 'is-active' : ''}`} href={appPaths.adminUsers} title="Usuarios: Roles y acceso" onClick={(event) => handleInternalLink(event, appPaths.adminUsers)}>
               <span className="nav-active-line" />
               <span className="nav-icon"><Users size={18} /></span>

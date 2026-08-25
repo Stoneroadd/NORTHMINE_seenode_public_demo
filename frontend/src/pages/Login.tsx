@@ -14,6 +14,7 @@ import { loginT } from '../i18n/modules/login'
 import { publicPagesT } from '../i18n/modules/publicPages'
 import '../styles/demo-brand-system.css'
 import '../styles/demo-access-entry.css'
+import '../styles/login-mono-preview.css'
 
 // Purely decorative (rotating 3D pit-shell background, no data/interaction),
 // so it's split off `three`/`@react-three/fiber` (~280KB gzip) as its own
@@ -72,7 +73,7 @@ export function Login({ onAuthenticated }: Props) {
   }
 
   return (
-    <main className={`login-page nm-login-shell nm-responsive-compact${isPublicDemoAccess ? ' nm-demo-entry' : ''}`}>
+    <main className={`login-page nm-login-shell nm-responsive-compact login-preview-mono${isPublicDemoAccess ? ' nm-demo-entry' : ''}`}>
       {isPublicDemoAccess && (
         <a className="nm-demo-entry__return" href="/">
           {tp.login.back}
@@ -90,6 +91,10 @@ export function Login({ onAuthenticated }: Props) {
             <span>RAJO DEMO / COMPAÑÍA DEMO</span>
             <strong>{tl.hud_diseno_mina_real}</strong>
             <small>{tl.hud_dxf_vista_3d}</small>
+            <div className="cst-trust-row">
+              <div><div className="n">98.4%</div><div className="l">Disponibilidad</div></div>
+              <div><div className="n">34/36</div><div className="l">Equipos activos</div></div>
+            </div>
           </div>
         </section>
 

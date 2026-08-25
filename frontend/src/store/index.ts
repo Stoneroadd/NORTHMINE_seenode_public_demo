@@ -6,7 +6,7 @@ import type { LangId } from '../i18n/translations'
 export type Lang = LangId
 
 // ── TIPOS TEMA ─────────────────────────────────────────────────────────────
-export type ThemeId = 'copper' | 'dark' | 'operational' | 'light' | 'futuristic' | 'minimal' | 'carbon'
+export type ThemeId = 'copper' | 'dark' | 'operational' | 'light' | 'futuristic' | 'minimal' | 'carbon' | 'mono'
 
 export interface Effects {
   scanlines:  boolean
@@ -126,7 +126,7 @@ const filtroDefault: FiltroGlobal = {
 }
 
 const VALID_LANGS: LangId[] = ['es', 'en', 'fr', 'de', 'pt', 'zh', 'ar', 'ru']
-const VALID_THEMES: ThemeId[] = ['copper', 'dark', 'operational', 'light', 'futuristic', 'minimal', 'carbon']
+const VALID_THEMES: ThemeId[] = ['copper', 'dark', 'operational', 'light', 'futuristic', 'minimal', 'carbon', 'mono']
 const VALID_SHIFTS: TurnoId[] = ['DIA', 'NOCHE', 'AMBOS']
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -151,7 +151,7 @@ export const useAppStore = create<AppStore>()(
       toggleLang: () => set({ lang: get().lang === 'es' ? 'en' : 'es' }),
 
       // Tema
-      themeId: 'copper',
+      themeId: 'mono',
       setTheme: (id) => set({ themeId: id }),
 
       // Efectos
@@ -210,20 +210,29 @@ export const useAppStore = create<AppStore>()(
     }),
     {
       name: 'northmine-store',
-      version: 3,
+      version: 4,
       migrate: (persistedState, version) => {
-        if (!isRecord(persistedState) || version >= 3) return persistedState
-        return {
-          ...persistedState,
-          themeId: persistedState.themeId === 'dark' ? 'copper' : persistedState.themeId,
-          effects: {
-            ...(isRecord(persistedState.effects) ? persistedState.effects : {}),
-            scanlines: false,
-            hexgrid: false,
-            glow: false,
-            cursor: false,
-          },
+        if (!isRecord(persistedState)) return persistedState
+        let state = persistedState
+        if (version < 3) {
+          state = {
+            ...state,
+            themeId: state.themeId === 'dark' ? 'copper' : state.themeId,
+            effects: {
+              ...(isRecord(state.effects) ? state.effects : {}),
+              scanlines: false,
+              hexgrid: false,
+              glow: false,
+              cursor: false,
+            },
+          }
         }
+        if (version < 4) {
+          // Full Black (mono) paso a ser el tema por defecto del Command Center;
+          // quienes seguian en el default anterior (copper) migran al nuevo default.
+          state = { ...state, themeId: state.themeId === 'copper' ? 'mono' : state.themeId }
+        }
+        return state
       },
       merge: (persistedState, currentState) => {
         const persisted = isRecord(persistedState) ? persistedState : {}

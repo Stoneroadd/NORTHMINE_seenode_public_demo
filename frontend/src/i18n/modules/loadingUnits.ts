@@ -10,6 +10,7 @@ export interface LoadingUnitsT {
   exporting: string
   export_csv: string
 
+  kpi_cluster_title: string
   kpi_tonnage_title: string
   kpi_tonnage_subtitle: (count: number) => string
   kpi_tonnage_trend: string
@@ -45,6 +46,7 @@ export const loadingUnitsT: ModuleDict<LoadingUnitsT> = {
     exporting: 'Exportando...',
     export_csv: 'Export UC CSV',
 
+    kpi_cluster_title: 'Rendimiento del turno',
     kpi_tonnage_title: 'Ton carguio',
     kpi_tonnage_subtitle: (count) => `${count} unidades`,
     kpi_tonnage_trend: 'turno actual',
@@ -78,6 +80,7 @@ export const loadingUnitsT: ModuleDict<LoadingUnitsT> = {
     exporting: 'Exporting...',
     export_csv: 'Export UC CSV',
 
+    kpi_cluster_title: 'Shift performance',
     kpi_tonnage_title: 'Loading tonnage',
     kpi_tonnage_subtitle: (count) => `${count} units`,
     kpi_tonnage_trend: 'current shift',
@@ -111,6 +114,7 @@ export const loadingUnitsT: ModuleDict<LoadingUnitsT> = {
     exporting: 'Export wird ausgeführt...',
     export_csv: 'UC-CSV exportieren',
 
+    kpi_cluster_title: 'Schichtleistung',
     kpi_tonnage_title: 'Beladungs-Tonnage',
     kpi_tonnage_subtitle: (count) => `${count} Einheiten`,
     kpi_tonnage_trend: 'aktuelle Schicht',

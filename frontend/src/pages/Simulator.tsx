@@ -317,7 +317,7 @@ export function Simulator() {
 
   // Animated production value
   const { value: animProd, ref: animProdRef } = useAnimatedNumber<HTMLDivElement>(result?.resultado.produccion_estimada ?? 0, {
-    durationMs: prefersReduced ? 0 : 600,
+    durationMs: prefersReduced ? 0 : 1400,
   })
 
   // Derived state from result
