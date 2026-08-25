@@ -237,6 +237,7 @@
 .op-tour-report footer {
   display: flex;
   justify-content: flex-end;
+  gap: 10px;
 }
 
 @media (max-width: 720px) {

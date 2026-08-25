@@ -18,6 +18,18 @@ const POSITIONS: Record<string, Position> = {
   'cost-impact': { x: 898, y: 440 },
 }
 
+// Mismo orden lectura (arriba-abajo, izquierda-derecha) que usa el lienzo para
+// dibujar los nodos -- se reutiliza para que el recorrido guiado siga la
+// cadena operacional en el mismo sentido en que ya se ve en pantalla.
+export function orderNodesForReading(nodes: FlowNode[]): FlowNode[] {
+  return [...nodes].sort((left, right) => {
+    const leftPosition = POSITIONS[left.node_id]
+    const rightPosition = POSITIONS[right.node_id]
+    if (!leftPosition || !rightPosition) return 0
+    return leftPosition.y - rightPosition.y || leftPosition.x - rightPosition.x
+  })
+}
+
 function edgePath(edge: FlowRelationship): string {
   const source = POSITIONS[edge.source_node_id]
   const target = POSITIONS[edge.target_node_id]
@@ -82,11 +94,7 @@ export function OperationalFlowCanvas({
       </div>
     )
   }
-  const orderedNodes = [...snapshot.nodes].sort((left, right) => {
-    const leftPosition = POSITIONS[left.node_id]
-    const rightPosition = POSITIONS[right.node_id]
-    return leftPosition.y - rightPosition.y || leftPosition.x - rightPosition.x
-  })
+  const orderedNodes = orderNodesForReading(snapshot.nodes)
   const eventHasActiveImpact = snapshot.active_event
     && !['NORMALIZED', 'CLOSED'].includes(snapshot.active_event.status)
   const impactedNodeIds = new Set(eventHasActiveImpact ? snapshot.active_event?.affected_node_ids ?? [] : [])
@@ -166,6 +174,7 @@ export function OperationalFlowCanvas({
             return (
               <g
                 key={node.node_id}
+                data-node-id={node.node_id}
                 className={`mc-flow-node mc-flow-node--${node.condition.toLowerCase()} mc-flow-node--${node.node_role.toLowerCase()}${selected ? ' is-selected' : ''}`}
                 transform={`translate(${position.x} ${position.y})`}
                 role="button"

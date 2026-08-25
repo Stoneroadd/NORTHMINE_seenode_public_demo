@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { AlertTriangle, CheckCircle2, CircleDot, Database, GitBranch, Layers3, Radio, RotateCcw } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, CircleDot, Compass, Database, GitBranch, Layers3, Radio, RotateCcw } from 'lucide-react'
 import { MissionState, StatusIndicator } from '../mission-control/design-system'
-import { OperationalFlowCanvas } from '../mission-control/operational-flow/OperationalFlowCanvas'
+import { OperationalFlowCanvas, orderNodesForReading } from '../mission-control/operational-flow/OperationalFlowCanvas'
 import { getOperationalFlowSnapshot } from '../mission-control/operational-flow/service'
 import {
   assertionDetailLabel,
@@ -16,6 +16,22 @@ import {
 } from '../mission-control/operational-flow/presentation'
 import type { FlowDetail, FlowNode, OperationalCondition } from '../mission-control/operational-flow/types'
 import { sourceDisplayName } from '../lib/presentationSafety'
+import { OperationalTourOverlay, type TourReport, type TourReportLine, type TourStep } from '../components/cockpit/OperationalTourOverlay'
+import { downloadOperationalFlowReport } from '../lib/operationalFlowReportPdf'
+
+const CONDITION_TOUR_LABEL: Record<OperationalCondition, string> = {
+  CRITICAL: 'Critico',
+  ATTENTION: 'Atencion',
+  RECOVERING: 'Recuperando',
+  UNKNOWN: 'Sin dato',
+  NORMAL: 'Normal',
+}
+
+function conditionTourTone(condition: OperationalCondition): TourReportLine['tone'] {
+  if (condition === 'CRITICAL') return 'critical'
+  if (condition === 'ATTENTION') return 'caution'
+  return 'nominal'
+}
 
 const EXPECTED_SCHEMA = 'mission-control.operational-flow.v2'
 const DEFAULT_AT = '2026-08-20T10:45:00-04:00'
@@ -53,6 +69,7 @@ export function OperationalFlowPage() {
   const [showImpact, setShowImpact] = useState(true)
   const [showAssertions, setShowAssertions] = useState(true)
   const [technicalDetailsOpen, setTechnicalDetailsOpen] = useState(false)
+  const [tourOpen, setTourOpen] = useState(false)
   const query = useQuery({
     queryKey: ['mission-control', 'operational-flow', selectedAt],
     queryFn: () => getOperationalFlowSnapshot(selectedAt),
@@ -96,6 +113,27 @@ export function OperationalFlowPage() {
   const nodesById = new Map(snapshot.nodes.map((node) => [node.node_id, node]))
   const event = snapshot.active_event
   const operationStable = !event
+
+  const tourNodes = orderNodesForReading(snapshot.nodes)
+  const tourSteps: TourStep[] = tourNodes.map((node) => ({
+    targetSelector: `[data-node-id="${node.node_id}"]`,
+    title: node.label,
+    description: node.summary,
+    onEnter: () => {
+      setSelectedNodeId(node.node_id)
+      if (node.technical_details.length > 0) setTechnicalDetailsOpen(true)
+    },
+  }))
+  const tourReport: TourReport = {
+    title: `Recorrido operacional — ${snapshot.shift_label} · ${snapshot.site_id.toUpperCase()}`,
+    generatedAt: new Date().toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' }),
+    lines: tourNodes.map((node): TourReportLine => ({
+      label: node.label,
+      value: CONDITION_TOUR_LABEL[node.condition],
+      tone: conditionTourTone(node.condition),
+    })),
+    recommendation: operationStable ? snapshot.stable_summary : snapshot.impact_summary,
+  }
 
   return (
     <div className="mc-surface mc-flow-page">
@@ -156,8 +194,22 @@ export function OperationalFlowPage() {
           <button type="button" aria-pressed={showImpact} onClick={() => setShowImpact((value) => !value)}>Impacto</button>
           <button type="button" aria-pressed={showAssertions} onClick={() => setShowAssertions((value) => !value)}>Afirmaciones</button>
         </div>
-        <p><Radio aria-hidden="true" size={14} /> {dataQualityLabel(snapshot.data_quality)} · lectura operacional verificada</p>
+        <div className="mc-flow-toolbar__right">
+          <button type="button" className="mc-flow-tour-trigger" onClick={() => setTourOpen(true)}>
+            <Compass aria-hidden="true" size={15} /> Recorrido
+          </button>
+          <p><Radio aria-hidden="true" size={14} /> {dataQualityLabel(snapshot.data_quality)} · lectura operacional verificada</p>
+        </div>
       </div>
+
+      {tourOpen && (
+        <OperationalTourOverlay
+          steps={tourSteps}
+          report={tourReport}
+          onClose={() => setTourOpen(false)}
+          onDownload={() => downloadOperationalFlowReport(snapshot, tourNodes)}
+        />
+      )}
 
       <div className="mc-flow-workspace">
         <section className="mc-flow-stage" aria-label="Visualización Operational Flow">

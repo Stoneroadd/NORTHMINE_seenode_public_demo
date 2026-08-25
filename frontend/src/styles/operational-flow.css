@@ -184,6 +184,24 @@
 
 .mc-flow-toolbar > div { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .mc-flow-toolbar__label { display: inline-flex; align-items: center; gap: 7px; margin-right: 6px; color: var(--mc-text-secondary); font-size: 12px; font-weight: 600; }
+.mc-flow-toolbar__right { gap: 16px !important; }
+
+.mc-flow-tour-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 36px;
+  border: 1px solid color-mix(in srgb, var(--mc-brand) 50%, var(--mc-line));
+  border-radius: 999px;
+  padding: 0 14px;
+  background: color-mix(in srgb, var(--mc-brand) 10%, transparent);
+  color: var(--mc-brand-strong);
+  cursor: pointer;
+  font: 600 11px/1 var(--mc-font-sans);
+  transition: background var(--mc-duration-state) var(--mc-ease-out), border-color var(--mc-duration-state) var(--mc-ease-out);
+}
+.mc-flow-tour-trigger:hover { background: color-mix(in srgb, var(--mc-brand) 18%, transparent); border-color: var(--mc-brand-strong); }
+.mc-flow-tour-trigger:focus-visible { outline: 2px solid var(--mc-focus); outline-offset: 2px; }
 
 .mc-flow-toolbar button {
   min-height: 36px;
@@ -246,15 +264,40 @@
 .mc-flow-edge-label { fill: var(--mc-text-tertiary); font: 500 9px var(--mc-font-mono); text-anchor: middle; }
 
 .mc-flow-node { color: var(--mc-normal); cursor: pointer; outline: none; }
-.mc-flow-node__surface { fill: #151918; stroke: var(--mc-line); stroke-width: 1.2; transition: fill var(--mc-duration-state) var(--mc-ease-out), stroke var(--mc-duration-state) var(--mc-ease-out); }
+.mc-flow-node__surface {
+  fill: #151918;
+  stroke: var(--mc-line);
+  stroke-width: 1.2;
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: fill var(--mc-duration-state) var(--mc-ease-out), stroke var(--mc-duration-state) var(--mc-ease-out), transform 180ms var(--mc-ease-out);
+}
 .mc-flow-node--attention { color: var(--mc-attention); }
 .mc-flow-node--critical { color: var(--mc-critical); }
 .mc-flow-node--recovering { color: var(--mc-recovering); }
 .mc-flow-node--unknown { color: var(--mc-unknown); }
 .mc-flow-node--outcome .mc-flow-node__surface { fill: #121515; stroke-dasharray: 5 4; }
-.mc-flow-node:hover .mc-flow-node__surface { fill: var(--mc-surface-active); stroke: var(--mc-text-tertiary); }
+.mc-flow-node:hover .mc-flow-node__surface { fill: var(--mc-surface-active); stroke: var(--mc-text-tertiary); transform: scale(1.025); }
 .mc-flow-node.is-selected .mc-flow-node__surface { fill: #1c201f; stroke: var(--mc-brand-strong); stroke-width: 2; }
 .mc-flow-node:focus-visible .mc-flow-node__surface { stroke: var(--mc-focus); stroke-width: 2.5; }
+
+/* Glow por condicion: los nodos que necesitan atencion se distinguen sin
+   tener que leer la forma/texto primero -- criticos ademas laten suave
+   para que el ojo los encuentre de inmediato en un lienzo con 9 nodos. */
+.mc-flow-node--attention .mc-flow-node__surface {
+  filter: drop-shadow(0 0 7px color-mix(in srgb, var(--mc-attention) 42%, transparent));
+}
+.mc-flow-node--critical .mc-flow-node__surface {
+  animation: mc-flow-node-pulse 2.3s var(--mc-ease-out) infinite;
+}
+.mc-flow-node--recovering .mc-flow-node__surface {
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--mc-recovering) 36%, transparent));
+}
+
+@keyframes mc-flow-node-pulse {
+  0%, 100% { filter: drop-shadow(0 0 5px color-mix(in srgb, var(--mc-critical) 40%, transparent)); }
+  50% { filter: drop-shadow(0 0 15px color-mix(in srgb, var(--mc-critical) 75%, transparent)); }
+}
 .mc-flow-node__mark { fill: currentColor; }
 .mc-flow-node__label { fill: var(--mc-text); font: 560 17px var(--mc-font-sans); letter-spacing: -0.01em; }
 .mc-flow-node__summary { fill: var(--mc-text-secondary); font: 500 12px var(--mc-font-sans); }
@@ -445,4 +488,9 @@
 
 @media (prefers-reduced-motion: reduce) {
   .mc-flow-edge.is-impacted { animation: none; }
+  .mc-flow-node--critical .mc-flow-node__surface {
+    animation: none;
+    filter: drop-shadow(0 0 8px color-mix(in srgb, var(--mc-critical) 55%, transparent));
+  }
+  .mc-flow-node:hover .mc-flow-node__surface { transform: none; }
 }

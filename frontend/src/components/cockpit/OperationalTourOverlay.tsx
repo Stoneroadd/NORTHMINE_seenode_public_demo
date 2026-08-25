@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { ChevronRight, Pause, Play, X } from 'lucide-react'
+import { ChevronRight, Download, Pause, Play, X } from 'lucide-react'
 import '../../styles/operational-tour.css'
 
 export interface TourStep {
@@ -9,6 +9,8 @@ export interface TourStep {
   description: string
   /** Selectores CSS, evaluados dentro del target, de las tarjetas/filas cuyo color real hay que resaltar mientras se explica este paso. */
   highlightSelectors?: string[]
+  /** Efecto secundario al entrar al paso -- p.ej. sincronizar la seleccion de un nodo/tab externo para que su panel de detalle se abra junto con el resaltado. */
+  onEnter?: () => void
 }
 
 export interface TourReportLine {
@@ -28,6 +30,8 @@ interface Props {
   steps: TourStep[]
   report: TourReport
   onClose: () => void
+  /** Si se entrega, la pantalla final del reporte muestra un boton para descargarlo (PDF, etc). */
+  onDownload?: () => void
 }
 
 const STEP_DURATION_MS = 4200
@@ -54,7 +58,7 @@ function sampleAccentColor(el: HTMLElement): string | null {
   return getComputedStyle(probe).color || null
 }
 
-export function OperationalTourOverlay({ steps, report, onClose }: Props) {
+export function OperationalTourOverlay({ steps, report, onClose, onDownload }: Props) {
   const [stepIndex, setStepIndex] = useState(0)
   const [paused, setPaused] = useState(false)
   const [rect, setRect] = useState<DOMRect | null>(null)
@@ -72,6 +76,7 @@ export function OperationalTourOverlay({ steps, report, onClose }: Props) {
 
   useEffect(() => {
     if (showReport || !step) return
+    step.onEnter?.()
     const target = document.querySelector<HTMLElement>(step.targetSelector)
     if (!target) {
       // Seccion no montada (tab distinto, etc.): saltar automaticamente.
@@ -211,6 +216,11 @@ export function OperationalTourOverlay({ steps, report, onClose }: Props) {
           </section>
 
           <footer>
+            {onDownload && (
+              <button type="button" className="op-tour-btn" onClick={onDownload}>
+                <Download size={16} /> Descargar reporte
+              </button>
+            )}
             <button type="button" className="op-tour-btn op-tour-btn-primary" onClick={onClose}>Cerrar recorrido</button>
           </footer>
         </div>
