@@ -2,12 +2,12 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import ReactECharts from 'echarts-for-react'
 import type { EChartsOption } from 'echarts'
-import { BarChart3, CalendarDays, Gauge, Mountain, Timer, TrendingDown, TrendingUp } from 'lucide-react'
+import { BarChart3, CalendarDays } from 'lucide-react'
 import { getPerformanceSummary } from '../services/performanceService'
 import { ModuleHeader } from '../components/common/ModuleHeader'
 import { LoadingState } from '../components/common/LoadingState'
 import { ErrorState } from '../components/common/ErrorState'
-import { ExecutiveKpiCard } from '../components/kpi/ExecutiveKpiCard'
+import { CompactStat, StatCluster } from '../components/kpi/CompactStat'
 import { EquipmentDetailDrawer } from '../components/equipment/detail/EquipmentDetailDrawer'
 import { EQUIPMENT_DETAIL_DRAWER_ID } from '../components/equipment/equipmentDetailA11y'
 import {
@@ -360,13 +360,13 @@ export function Performance() {
           </section>
         )}
 
-        <section className="kpi-grid compact">
-          <ExecutiveKpiCard title="Total periodo" value={formatTons(data.kpis.total_periodo)} subtitle="Toneladas" trend={`${data.daily.length} dias`} tone="green" icon={Mountain} />
-          <ExecutiveKpiCard title="Ciclos" value={formatNumber(data.kpis.ciclos)} subtitle="Total periodo" trend="WENCO" tone="cyan" icon={Timer} />
-          <ExecutiveKpiCard title="Prom/dia" value={formatTons(data.kpis.promedio_dia)} subtitle="Media diaria" trend="periodo" tone="slate" icon={Gauge} />
-          <ExecutiveKpiCard title="Mejor dia" value={formatDate(data.kpis.mejor_dia?.fecha)} subtitle={formatTons(data.kpis.mejor_dia?.toneladas ?? 0)} trend={`${data.kpis.mejor_dia?.cumplimiento_pct ?? 0}%`} tone="green" icon={TrendingUp} />
-          <ExecutiveKpiCard title="Peor dia" value={formatDate(data.kpis.peor_dia?.fecha)} subtitle={formatTons(data.kpis.peor_dia?.toneladas ?? 0)} trend={`${data.kpis.peor_dia?.cumplimiento_pct ?? 0}% plan`} tone={worstTone} icon={TrendingDown} />
-        </section>
+        <StatCluster title="Resumen del periodo">
+          <CompactStat label="Total periodo" value={formatTons(data.kpis.total_periodo)} meta={`Toneladas · ${data.daily.length} dias`} tone="green" />
+          <CompactStat label="Ciclos" value={formatNumber(data.kpis.ciclos)} meta="Total periodo · WENCO" tone="cyan" />
+          <CompactStat label="Prom/dia" value={formatTons(data.kpis.promedio_dia)} meta="Media diaria · periodo" tone="slate" />
+          <CompactStat label="Mejor dia" value={formatDate(data.kpis.mejor_dia?.fecha)} meta={`${formatTons(data.kpis.mejor_dia?.toneladas ?? 0)} · ${data.kpis.mejor_dia?.cumplimiento_pct ?? 0}%`} tone="green" />
+          <CompactStat label="Peor dia" value={formatDate(data.kpis.peor_dia?.fecha)} meta={`${formatTons(data.kpis.peor_dia?.toneladas ?? 0)} · ${data.kpis.peor_dia?.cumplimiento_pct ?? 0}% plan`} tone={worstTone} />
+        </StatCluster>
 
         <section className="panel">
           <div className="panel-header">

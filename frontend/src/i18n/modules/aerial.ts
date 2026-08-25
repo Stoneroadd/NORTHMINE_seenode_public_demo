@@ -29,6 +29,7 @@ export interface AerialT {
   checked_suffix: (folder: string) => string
   sync_failed: string
 
+  kpi_cluster_title: string
   kpi_status_title: string
   kpi_files_title: string
   kpi_files_subtitle: string
@@ -87,6 +88,7 @@ export const aerialT: ModuleDict<AerialT> = {
     checked_suffix: (folder) => ` (${folder})`,
     sync_failed: 'No se pudo sincronizar. Reintenta.',
 
+    kpi_cluster_title: 'Estado del vuelo',
     kpi_status_title: 'Estado',
     kpi_files_title: 'Archivos',
     kpi_files_subtitle: 'Ortomosaicos detectados',
@@ -143,6 +145,7 @@ export const aerialT: ModuleDict<AerialT> = {
     checked_suffix: (folder) => ` (${folder})`,
     sync_failed: 'Could not sync. Retry.',
 
+    kpi_cluster_title: 'Flight status',
     kpi_status_title: 'Status',
     kpi_files_title: 'Files',
     kpi_files_subtitle: 'Orthomosaics detected',
@@ -199,6 +202,7 @@ export const aerialT: ModuleDict<AerialT> = {
     checked_suffix: (folder) => ` (${folder})`,
     sync_failed: 'Synchronisierung fehlgeschlagen. Bitte erneut versuchen.',
 
+    kpi_cluster_title: 'Flugstatus',
     kpi_status_title: 'Status',
     kpi_files_title: 'Dateien',
     kpi_files_subtitle: 'Erkannte Orthomosaike',

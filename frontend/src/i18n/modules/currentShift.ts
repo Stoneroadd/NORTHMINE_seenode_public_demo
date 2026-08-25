@@ -35,6 +35,7 @@ export interface CurrentShiftT {
   hueco_de: string
   esperado_min: (n: number) => string
   uc_prefix: (id: string) => string
+  kpi_cluster_title: string
   kpi_ton_turno: string
   kpi_ton_turno_sub: string
   kpi_cumplimiento: string
@@ -114,6 +115,7 @@ export const currentShiftT: ModuleDict<CurrentShiftT> = {
     hueco_de: 'Hueco de',
     esperado_min: (n) => `(esperado ~${n} min)`,
     uc_prefix: (id) => `/ UC ${id}`,
+    kpi_cluster_title: 'Estado del turno',
     kpi_ton_turno: 'Ton turno',
     kpi_ton_turno_sub: 'Produccion acumulada',
     kpi_cumplimiento: 'Cumplimiento',
@@ -191,6 +193,7 @@ export const currentShiftT: ModuleDict<CurrentShiftT> = {
     hueco_de: 'Gap of',
     esperado_min: (n) => `(expected ~${n} min)`,
     uc_prefix: (id) => `/ Loader ${id}`,
+    kpi_cluster_title: 'Shift status',
     kpi_ton_turno: 'Shift tonnes',
     kpi_ton_turno_sub: 'Accumulated production',
     kpi_cumplimiento: 'Compliance',
@@ -268,6 +271,7 @@ export const currentShiftT: ModuleDict<CurrentShiftT> = {
     hueco_de: 'Luecke von',
     esperado_min: (n) => `(erwartet ~${n} min)`,
     uc_prefix: (id) => `/ Schaufelbagger ${id}`,
+    kpi_cluster_title: 'Schichtstatus',
     kpi_ton_turno: 'Tonnen Schicht',
     kpi_ton_turno_sub: 'Kumulierte Produktion',
     kpi_cumplimiento: 'Zielerreichung',

@@ -1,11 +1,11 @@
 ﻿import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { FileStack, Mail, Map, RefreshCw, ShieldCheck, Truck, ZoomIn, ZoomOut } from 'lucide-react'
+import { Mail, Map, RefreshCw, ZoomIn, ZoomOut } from 'lucide-react'
 import { ModuleHeader } from '../components/common/ModuleHeader'
 import { LoadingState } from '../components/common/LoadingState'
 import { ErrorState } from '../components/common/ErrorState'
 import { EmptyState } from '../components/common/EmptyState'
-import { ExecutiveKpiCard } from '../components/kpi/ExecutiveKpiCard'
+import { CompactStat, StatCluster } from '../components/kpi/CompactStat'
 import { getAerialFiles, getAerialMailStatus, getAerialPreviewUrl, getAerialStatus, postAerialMailSync } from '../lib/api'
 import { FAST_DEMO_AERIAL, FAST_PUBLIC_DEMO } from '../demo/fastDemo'
 import { useModuleT } from '../i18n/useModuleT'
@@ -335,12 +335,12 @@ export function AerialPage() {
 
       {activeImageFile && <OrthomosaicViewer fileName={activeImageFile} />}
 
-      <section className="kpi-grid compact">
-        <ExecutiveKpiCard title={t.kpi_status_title} value={status.status.replace(/_/g, ' ')} subtitle={status.viewer_status} trend={status.heavy_tif_loaded ? t.tif_loaded : t.tif_not_loaded} tone={latestImage ? 'amber' : 'slate'} icon={ShieldCheck} />
-        <ExecutiveKpiCard title={t.kpi_files_title} value={`${status.files_count}`} subtitle={t.kpi_files_subtitle} trend={latestImage?.extension.toUpperCase() ?? t.kpi_files_trend_none} tone="cyan" icon={FileStack} />
-        <ExecutiveKpiCard title={t.kpi_caex_title} value={`${status.equipment_counts.caex ?? 0}`} subtitle={t.kpi_caex_subtitle} trend={t.kpi_caex_trend(status.equipment_counts.palas ?? 0)} tone="green" icon={Truck} />
-        <ExecutiveKpiCard title={t.kpi_last_title} value={latestImage?.file_name ?? '-'} subtitle={latestImage ? mb(latestImage.size_mb) : t.kpi_last_subtitle_none} trend={latestImage ? dateLabel(latestImage.updated_at) : t.kpi_last_trend_validating} tone="slate" icon={Map} />
-      </section>
+      <StatCluster title={t.kpi_cluster_title}>
+        <CompactStat label={t.kpi_status_title} value={status.status.replace(/_/g, ' ')} meta={`${status.viewer_status} · ${status.heavy_tif_loaded ? t.tif_loaded : t.tif_not_loaded}`} tone={latestImage ? 'amber' : 'slate'} />
+        <CompactStat label={t.kpi_files_title} value={status.files_count} meta={`${t.kpi_files_subtitle} · ${latestImage?.extension.toUpperCase() ?? t.kpi_files_trend_none}`} tone="cyan" />
+        <CompactStat label={t.kpi_caex_title} value={status.equipment_counts.caex ?? 0} meta={`${t.kpi_caex_subtitle} · ${t.kpi_caex_trend(status.equipment_counts.palas ?? 0)}`} tone="green" />
+        <CompactStat label={t.kpi_last_title} value={latestImage?.file_name ?? '-'} meta={`${latestImage ? mb(latestImage.size_mb) : t.kpi_last_subtitle_none} · ${latestImage ? dateLabel(latestImage.updated_at) : t.kpi_last_trend_validating}`} tone="slate" />
+      </StatCluster>
 
       <section className="two-column">
         <div className="panel">

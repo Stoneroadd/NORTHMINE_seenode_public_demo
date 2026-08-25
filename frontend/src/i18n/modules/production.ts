@@ -54,6 +54,7 @@ export interface ProductionT {
   sin_ciclos_kicker: string
   sin_produccion_title: (fecha: string, turno: string) => string
   sin_produccion_message: (system: string) => string
+  kpi_cluster_title: string
   kpi_toneladas_turno: string
   kpi_meta_turno: (value: string) => string
   kpi_proyeccion_cierre: string
@@ -137,6 +138,7 @@ export const productionT: ModuleDict<ProductionT> = {
     sin_ciclos_kicker: 'Sin ciclos para el filtro',
     sin_produccion_title: (fecha, turno) => `No hay produccion para ${fecha} / ${turno}`,
     sin_produccion_message: (system) => `No hay produccion para el turno actual. La información disponible corresponde a ${system}; no se muestran datos sinteticos automaticamente.`,
+    kpi_cluster_title: 'Estado de produccion',
     kpi_toneladas_turno: 'Toneladas turno',
     kpi_meta_turno: (value) => `Meta turno ${value}`,
     kpi_proyeccion_cierre: 'Proyeccion cierre',
@@ -218,6 +220,7 @@ export const productionT: ModuleDict<ProductionT> = {
     sin_ciclos_kicker: 'No cycles for the filter',
     sin_produccion_title: (fecha, turno) => `No production for ${fecha} / ${turno}`,
     sin_produccion_message: (system) => `There is no production for the current shift. The available information comes from ${system}; synthetic data is not shown automatically.`,
+    kpi_cluster_title: 'Production status',
     kpi_toneladas_turno: 'Shift tonnage',
     kpi_meta_turno: (value) => `Shift target ${value}`,
     kpi_proyeccion_cierre: 'Closing projection',
@@ -299,6 +302,7 @@ export const productionT: ModuleDict<ProductionT> = {
     sin_ciclos_kicker: 'Keine Zyklen fuer den Filter',
     sin_produccion_title: (fecha, turno) => `Keine Produktion fuer ${fecha} / ${turno}`,
     sin_produccion_message: (system) => `Fuer die aktuelle Schicht gibt es keine Produktion. Die verfügbaren Informationen stammen aus ${system}; synthetische Daten werden nicht automatisch angezeigt.`,
+    kpi_cluster_title: 'Produktionsstatus',
     kpi_toneladas_turno: 'Tonnen Schicht',
     kpi_meta_turno: (value) => `Schichtziel ${value}`,
     kpi_proyeccion_cierre: 'Abschlussprognose',

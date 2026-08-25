@@ -1,11 +1,11 @@
 import { useMemo, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Activity, AlertTriangle, Download, FileText, Filter, Gauge, History, Timer, Truck } from 'lucide-react'
+import { Activity, AlertTriangle, Download, FileText, Filter, History } from 'lucide-react'
 import { ModuleHeader } from '../components/common/ModuleHeader'
 import { LoadingState } from '../components/common/LoadingState'
 import { ErrorState } from '../components/common/ErrorState'
 import { EmptyState } from '../components/common/EmptyState'
-import { ExecutiveKpiCard } from '../components/kpi/ExecutiveKpiCard'
+import { CompactStat, StatCluster } from '../components/kpi/CompactStat'
 import { EquipmentActivityModal, type EquipmentActivityTarget } from '../components/shift/EquipmentActivityModal'
 import { EQUIPMENT_ACTIVITY_DIALOG_ID } from '../components/shift/equipmentActivityA11y'
 import { getEquipmentImage, getEquipmentLabel } from '../data/equipmentAssets'
@@ -509,12 +509,12 @@ export function CurrentShiftPage() {
         </section>
       )}
 
-      <section className="kpi-grid compact">
-        <ExecutiveKpiCard title={t.kpi_ton_turno} value={tons(data.toneladas_turno)} subtitle={t.kpi_ton_turno_sub} trend={tons(data.brecha_ton)} tone={tone} icon={Activity} />
-        <ExecutiveKpiCard title={t.kpi_cumplimiento} value={pct(data.cumplimiento_pct)} subtitle={t.kpi_cumplimiento_sub} trend={tons(data.meta_turno)} tone={tone} icon={Gauge} />
-        <ExecutiveKpiCard title={t.kpi_ciclos} value={data.ciclos.toLocaleString('es-CL')} subtitle={t.kpi_ciclos_sub} trend={t.kpi_ciclos_trend(data.promedio_ton_ciclo)} tone="cyan" icon={Timer} />
-        <ExecutiveKpiCard title={t.kpi_caex_activos} value={`${data.caex_activos}`} subtitle={t.kpi_caex_sin_actividad(data.caex_sin_actividad)} trend={t.kpi_caex_averia(data.caex_posible_averia)} tone={data.caex_posible_averia ? 'amber' : 'green'} icon={Truck} />
-      </section>
+      <StatCluster title={t.kpi_cluster_title}>
+        <CompactStat label={t.kpi_ton_turno} value={tons(data.toneladas_turno)} meta={`${t.kpi_ton_turno_sub} · ${tons(data.brecha_ton)}`} tone={tone} />
+        <CompactStat label={t.kpi_cumplimiento} value={pct(data.cumplimiento_pct)} meta={`${t.kpi_cumplimiento_sub} · ${tons(data.meta_turno)}`} tone={tone} />
+        <CompactStat label={t.kpi_ciclos} value={data.ciclos.toLocaleString('es-CL')} meta={`${t.kpi_ciclos_sub} · ${t.kpi_ciclos_trend(data.promedio_ton_ciclo)}`} tone="cyan" />
+        <CompactStat label={t.kpi_caex_activos} value={data.caex_activos} meta={`${t.kpi_caex_sin_actividad(data.caex_sin_actividad)} · ${t.kpi_caex_averia(data.caex_posible_averia)}`} tone={data.caex_posible_averia ? 'amber' : 'green'} />
+      </StatCluster>
 
       <section className="nm-shift-overview-grid">
         <div className="panel nm-shift-narrative-panel">

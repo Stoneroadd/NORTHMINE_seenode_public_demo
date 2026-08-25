@@ -1,12 +1,12 @@
 import { useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Activity, AlertTriangle, CheckCircle2, Clock3, RefreshCcw, Target, TrendingUp } from 'lucide-react'
+import { Activity, AlertTriangle, CheckCircle2, RefreshCcw } from 'lucide-react'
 import { ApiError } from '../lib/api'
 import { getProductionShift } from '../services/productionService'
 import { ModuleHeader } from '../components/common/ModuleHeader'
 import { LoadingState } from '../components/common/LoadingState'
 import { ErrorState } from '../components/common/ErrorState'
-import { ExecutiveKpiCard } from '../components/kpi/ExecutiveKpiCard'
+import { CompactStat, StatCluster } from '../components/kpi/CompactStat'
 import { PremiumGaugeChart, PremiumHeatmapChart, PremiumLineAreaChart } from '../components/charts/premium'
 import { useAppStore } from '../store'
 import { useModuleT } from '../i18n/useModuleT'
@@ -257,46 +257,38 @@ export function Production() {
         </section>
       )}
 
-      <section className="kpi-grid compact">
-        <ExecutiveKpiCard
-          title={t.kpi_toneladas_turno}
+      <StatCluster title={t.kpi_cluster_title}>
+        <CompactStat
+          label={t.kpi_toneladas_turno}
           value={tons(data.toneladas_turno)}
-          subtitle={t.kpi_meta_turno(targetLabel)}
-          trend={data.tendencia}
-          status={typeof data.elapsed_pct === 'number' ? t.avance_pct(data.elapsed_pct.toFixed(1)) : undefined}
+          meta={[t.kpi_meta_turno(targetLabel), data.tendencia, typeof data.elapsed_pct === 'number' ? t.avance_pct(data.elapsed_pct.toFixed(1)) : null].filter(Boolean).join(' · ')}
           tone="green"
-          icon={TrendingUp}
-          featured
         />
-        <ExecutiveKpiCard
-          title={t.kpi_proyeccion_cierre}
+        <CompactStat
+          label={t.kpi_proyeccion_cierre}
           value={tons(projectedFinal)}
-          subtitle={hasTarget && projectedGap !== null ? t.kpi_vs_meta_final(signedTons(projectedGap)) : t.kpi_meta_no_evaluable}
-          trend={projectionLabel}
-          trendDirection={isProjectedGreen ? 'up' : hasTarget ? 'down' : 'flat'}
+          meta={`${hasTarget && projectedGap !== null ? t.kpi_vs_meta_final(signedTons(projectedGap)) : t.kpi_meta_no_evaluable} · ${projectionLabel}`}
           tone={isProjectedGreen ? 'green' : hasTarget ? 'amber' : 'slate'}
-          icon={Activity}
         />
-        <ExecutiveKpiCard
-          title={t.kpi_cumplimiento}
+        <CompactStat
+          label={t.kpi_cumplimiento}
           value={hasTarget ? `${data.cumplimiento_pct.toFixed(1)}%` : t.kpi_sin_meta}
-          subtitle={t.kpi_contra_meta_final(dailyTargetLabel)}
-          trend={typeof data.ritmo_actual_tph === 'number' ? `${Math.round(data.ritmo_actual_tph).toLocaleString('es-CL')} t/h` : undefined}
-          trendDirection={isProjectedGreen ? 'up' : 'flat'}
+          meta={[t.kpi_contra_meta_final(dailyTargetLabel), typeof data.ritmo_actual_tph === 'number' ? `${Math.round(data.ritmo_actual_tph).toLocaleString('es-CL')} t/h` : null].filter(Boolean).join(' · ')}
           tone={hasTarget ? 'cyan' : 'slate'}
-          icon={Target}
         />
-        <ExecutiveKpiCard
-          title={t.kpi_brecha_hora}
+        <CompactStat
+          label={t.kpi_brecha_hora}
           value={currentGap === null ? t.kpi_sin_meta : signedTons(currentGap)}
-          subtitle={expectedNow === null ? t.kpi_esperado_no_disponible : t.kpi_esperado(tons(expectedNow))}
-          trend={currentGap === null ? t.kpi_no_evaluable : currentGap >= 0 ? t.kpi_sobre_ritmo : t.kpi_bajo_ritmo}
-          trendDirection={currentGap === null ? 'flat' : currentGap >= 0 ? 'up' : 'down'}
+          meta={`${expectedNow === null ? t.kpi_esperado_no_disponible : t.kpi_esperado(tons(expectedNow))} · ${currentGap === null ? t.kpi_no_evaluable : currentGap >= 0 ? t.kpi_sobre_ritmo : t.kpi_bajo_ritmo}`}
           tone={currentGap === null ? 'slate' : currentGap >= 0 ? 'green' : 'red'}
-          icon={Clock3}
         />
-        <ExecutiveKpiCard title={t.kpi_mejor_hora} value={data.mejor_hora ? formatHourLabel(data.mejor_hora.hora) : '-'} subtitle={data.mejor_hora ? tons(data.mejor_hora.toneladas) : t.kpi_sin_data} trend={t.kpi_pico} tone="cyan" icon={Clock3} />
-      </section>
+        <CompactStat
+          label={t.kpi_mejor_hora}
+          value={data.mejor_hora ? formatHourLabel(data.mejor_hora.hora) : '-'}
+          meta={`${data.mejor_hora ? tons(data.mejor_hora.toneladas) : t.kpi_sin_data} · ${t.kpi_pico}`}
+          tone="cyan"
+        />
+      </StatCluster>
 
       {hasProductionRows && <section className="chart-grid">
         <div className={`panel ${chartGuidance ? 'is-agent-data-highlight' : ''}`} ref={hourlyChartWidget.ref} data-agent-highlight={chartGuidance ?? undefined}>
