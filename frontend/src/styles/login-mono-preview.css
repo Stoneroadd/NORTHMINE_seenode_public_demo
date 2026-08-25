@@ -17,7 +17,11 @@
   --m-bg: #0d0d0d;
   --m-surface: #171717;
   --m-surface-raised: #212121;
-  --m-border: #2a2a2a;
+  /* Antes #2a2a2a: contra la tarjeta #171717 quedaba en ~19 puntos RGB de
+     diferencia, y encima el borde se reportaba a 0.8px en pantalla -- el
+     contorno redondeado practicamente no se veia. Mas contraste + 1.5px
+     para que la curva se perciba con claridad sin importar el DPI. */
+  --m-border: #3d3d3d;
   --m-border-soft: #232323;
   --m-text: #ececec;
   --m-text-muted: #8e8ea0;
@@ -44,7 +48,7 @@
 /* ---- Visual panel: black, curved, fine grid backdrop, no color accent ---- */
 .login-preview-mono .login-canvas-panel {
   border-radius: 32px !important;
-  border: 1px solid var(--m-border) !important;
+  border: 1.5px solid var(--m-border) !important;
   background-color: var(--m-surface) !important;
   background-image:
     linear-gradient(rgba(255,255,255,0.16) 1px, transparent 1px),
@@ -120,7 +124,7 @@
 /* ---- Card: same near-black, curved ---- */
 .login-preview-mono .login-card.nm-login-panel {
   border-radius: 32px !important;
-  border: 1px solid var(--m-border) !important;
+  border: 1.5px solid var(--m-border) !important;
   background: var(--m-surface) !important;
   box-shadow: 0 30px 70px rgba(0,0,0,0.55) !important;
   padding: 46px 44px !important;
