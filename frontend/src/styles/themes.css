@@ -280,6 +280,26 @@ html[data-theme="mono"] .compact-stat {
   border-radius: 14px !important;
 }
 
+/* Botones-fila multilinea (cola de alertas, CAEX bajo promedio, KPI con onClick):
+   el radio de 100px de la regla generica de arriba los convierte en una forma
+   de estadio rota cuando el contenido es ancho/alto. Misma logica que las
+   tarjetas nmcp-* de mas arriba: un radio pequeno y fijo, no un pill. */
+html[data-theme="mono"] .alerts-action-item,
+html[data-theme="mono"] .alert-metric-card {
+  border-radius: 14px !important;
+}
+
+html[data-theme="mono"] .low-caex-list button,
+html[data-theme="mono"] .operational-alert-row,
+html[data-theme="mono"] .fleet-standby-list button,
+html[data-theme="mono"] .nmcp-monthly-detail-toggle {
+  border-radius: 12px !important;
+}
+
+html[data-theme="mono"] .alert-machine-thumb {
+  border-radius: 8px !important;
+}
+
 html[data-theme="mono"] .nmcp-detail-header h2 {
   font-size: 24px !important;
 }
