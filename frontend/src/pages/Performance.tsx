@@ -7,6 +7,7 @@ import { getPerformanceSummary } from '../services/performanceService'
 import { ModuleHeader } from '../components/common/ModuleHeader'
 import { LoadingState } from '../components/common/LoadingState'
 import { ErrorState } from '../components/common/ErrorState'
+import { EmptyState } from '../components/common/EmptyState'
 import { CompactStat, StatCluster } from '../components/kpi/CompactStat'
 import { EquipmentDetailDrawer } from '../components/equipment/detail/EquipmentDetailDrawer'
 import { EQUIPMENT_DETAIL_DRAWER_ID } from '../components/equipment/equipmentDetailA11y'
@@ -332,6 +333,13 @@ export function Performance() {
 
   const data = query.data
   const worstTone = (data.kpis.peor_dia?.cumplimiento_pct ?? 100) < 80 ? 'red' : 'amber'
+  // El heatmap cruza 7 dias x 24 horas (168 celdas). Con un rango corto (7-14 dias) los
+  // ciclos reales caen sobre todo en 1-3 dias de la semana -- el resto del grafico queda
+  // vacio y solo se ve el patron de franjas del fondo del eje, no datos. Bajo ese umbral
+  // no se puede leer "que dia rinde mas", asi que se explica en vez de mostrar un grafico
+  // que no se entiende.
+  const heatmapWeekdaysCovered = new Set(data.heatmap.map((item) => item.weekday)).size
+  const heatmapReadable = heatmapWeekdaysCovered >= 4
 
   return (
     <>
@@ -418,12 +426,22 @@ export function Performance() {
 
         <section className="panel performance-heatmap-panel">
           <div className="panel-header">
-            <div><span className="panel-kicker">Heatmap operacional</span><h2>Produccion por hora y dia de semana</h2></div>
-            <span className="panel-tag">Max {data.heatmap_max.weekday_label} {data.heatmap_max.label}</span>
+            <div>
+              <span className="panel-kicker">Heatmap operacional</span>
+              <h2>Produccion por hora y dia de semana</h2>
+            </div>
+            {heatmapReadable && <span className="panel-tag">Max {data.heatmap_max.weekday_label} {data.heatmap_max.label}</span>}
           </div>
-          <div className="performance-heatmap">
-            {heatmapOption && <ReactECharts option={heatmapOption} notMerge lazyUpdate style={{ width: '100%', height: '100%' }} />}
-          </div>
+          {heatmapReadable ? (
+            <div className="performance-heatmap">
+              {heatmapOption && <ReactECharts option={heatmapOption} notMerge lazyUpdate style={{ width: '100%', height: '100%' }} />}
+            </div>
+          ) : (
+            <EmptyState
+              title="Aun no hay suficiente historial para este cruce"
+              detail={`Este grafico compara produccion por dia de la semana y hora para encontrar, por ejemplo, si los martes en la manana rinden menos que el resto. Con el rango elegido solo hay registros en ${heatmapWeekdaysCovered} de los 7 dias de la semana, asi que la comparacion todavia no es confiable. Elige "Este mes" o un rango personalizado mas amplio para completarlo.`}
+            />
+          )}
         </section>
       </div>
 
