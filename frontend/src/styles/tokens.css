@@ -3431,10 +3431,6 @@ html[data-theme] .command-card-critical:hover {
   grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
 }
 
-.performance-heatmap {
-  height: 620px;
-}
-
 .loader-phase-legend {
   display: flex;
   flex-wrap: wrap;
@@ -4072,9 +4068,6 @@ html[data-theme] .command-card-critical:hover {
     grid-template-columns: 1fr;
   }
 
-  .performance-heatmap {
-    height: 520px;
-  }
 }
 
 .fleet-podium-grid {

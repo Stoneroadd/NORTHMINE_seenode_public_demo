@@ -1420,33 +1420,6 @@ def build_performance_summary(
     top_hour_set = {row["hora"] for row in top_hours}
     top_concentration = round(sum(row["porcentaje_total"] for row in top_hours), 1)
 
-    # Heatmap fecha x hora en vez de dia-de-semana x hora: agrupar por dia de
-    # semana necesita meses de historial para llenar las 168 celdas (7x24), y
-    # con una ventana de dias/semanas casi todo cae en 1-3 dias de semana,
-    # dejando el resto del grid vacio y sin poder leerse. Reutiliza
-    # hourly_by_day (ya calculado arriba para hourly_profile) para que cada
-    # fecha del rango elegido tenga su propia fila con datos reales, sin
-    # depender de que el rango cubra varias semanas.
-    date_heat_raw = [
-        {"fecha": row["fecha"], "hour": hour, "toneladas": hourly_by_day[row["fecha"]][hour]}
-        for row in daily_rows
-        for hour in range(24)
-        if hourly_by_day[row["fecha"]][hour] > 0
-    ]
-    max_heat = max(date_heat_raw, key=lambda row: row["toneladas"], default={"fecha": start.isoformat(), "hour": 0, "toneladas": 0})
-    sorted_heat = sorted(date_heat_raw, key=lambda row: row["toneladas"], reverse=True)
-    rank_lookup = {(row["fecha"], row["hour"]): index + 1 for index, row in enumerate(sorted_heat)}
-    heatmap = [
-        {
-            "fecha": row["fecha"],
-            "hora": row["hour"],
-            "label": _hour_label(row["hour"]),
-            "toneladas": row["toneladas"],
-            "ranking": rank_lookup[(row["fecha"], row["hour"])],
-        }
-        for row in date_heat_raw
-    ]
-
     by_loader: dict[str, dict[str, Any]] = {}
     for record in records:
         loader_id = record["carguio_id"]
@@ -1494,13 +1467,6 @@ def build_performance_summary(
         "top_hour_set": sorted(top_hour_set),
         "top_concentration_pct": top_concentration,
         "peak_title": peak_title,
-        "heatmap": heatmap,
-        "heatmap_max": {
-            "fecha": max_heat["fecha"],
-            "hora": max_heat["hour"],
-            "label": _hour_label(max_heat["hour"]),
-            "toneladas": max_heat["toneladas"],
-        },
         "loader_performance": loader_performance,
         "generated_at": datetime.now().isoformat(timespec="seconds"),
     }

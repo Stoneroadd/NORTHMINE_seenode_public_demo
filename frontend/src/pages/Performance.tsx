@@ -7,7 +7,6 @@ import { getPerformanceSummary } from '../services/performanceService'
 import { ModuleHeader } from '../components/common/ModuleHeader'
 import { LoadingState } from '../components/common/LoadingState'
 import { ErrorState } from '../components/common/ErrorState'
-import { EmptyState } from '../components/common/EmptyState'
 import { CompactStat, StatCluster } from '../components/kpi/CompactStat'
 import { EquipmentDetailDrawer } from '../components/equipment/detail/EquipmentDetailDrawer'
 import { EQUIPMENT_DETAIL_DRAWER_ID } from '../components/equipment/equipmentDetailA11y'
@@ -24,7 +23,6 @@ import {
   useChartPaletteKey,
 } from '../components/charts/premium/chartTheme'
 import type { LoaderPerformance, PerformanceSummary } from '../lib/api'
-import { formatHourLabel } from '../lib/time/operationalHour'
 import { useAgentWidget } from '../lib/agentRegistry/useAgentWidget'
 import { useAgentEntityHandler } from '../lib/agentRegistry/useAgentEntityHandler'
 
@@ -155,63 +153,6 @@ function buildAverageCurveOption(data: PerformanceSummary): EChartsOption {
   } as EChartsOption
 }
 
-function buildHeatmapOption(data: PerformanceSummary): EChartsOption {
-  // Fecha x hora en vez de dia-de-semana x hora, y solo con las fechas que
-  // realmente tienen ciclos: usar el rango completo elegido (data.daily)
-  // dejaba la mayoria de columnas vacias cuando el dataset no cubre todo el
-  // rango, y esas columnas vacias son las que se ven como el patron a
-  // cuadros del fondo del eje en vez de datos. Mostrando solo fechas con
-  // datos, el grid siempre queda denso y legible sin importar cuantos dias
-  // realmente tienen ciclos registrados.
-  const dateKeys = [...new Set(data.heatmap.map((item) => item.fecha))].sort()
-  const dateLabels = dateKeys.map((fecha) => formatDate(fecha))
-  const dateIndex = new Map(dateKeys.map((fecha, index) => [fecha, index]))
-  const hours = Array.from({ length: 24 }, (_, hour) => formatHourLabel(hour))
-  // Solo [x, y, valor]: un 4to elemento (ranking) en la tupla confunde la
-  // dimension que visualMap usa para calcular el color, dejando el color
-  // "en negro" incluso para el valor mas alto del rango. El ranking se
-  // consulta aparte via rankingByCell, no dentro de la tupla del punto.
-  const values = data.heatmap.map((item) => [dateIndex.get(item.fecha)!, item.hora, item.toneladas])
-  const rankingByCell = new Map(data.heatmap.map((item) => [`${dateIndex.get(item.fecha)}-${item.hora}`, item.ranking]))
-  const maxValue = Math.max(...data.heatmap.map((item) => item.toneladas), 1)
-
-  return {
-    animationDuration: 850,
-    grid: { top: 22, right: 22, bottom: 52, left: 74 },
-    tooltip: {
-      ...tooltipBase(),
-      formatter: (params: unknown) => {
-        const value = firstChartParam(params)?.value
-        if (!Array.isArray(value)) return ''
-        const ranking = rankingByCell.get(`${value[0]}-${value[1]}`)
-        const rankingLine = ranking != null ? `<br/>Ranking: <strong>#${ranking}</strong>` : ''
-        return `<strong>${dateLabels[Number(value[0])]} ${hours[Number(value[1])]}</strong><br/>Produccion: <strong>${formatTons(Number(value[2]))}</strong>${rankingLine}`
-      },
-    },
-    xAxis: { type: 'category', data: dateLabels, splitArea: { show: true }, axisLabel },
-    yAxis: { type: 'category', data: hours, splitArea: { show: true }, axisLabel },
-    visualMap: {
-      min: 0,
-      max: maxValue,
-      calculable: false,
-      orient: 'horizontal',
-      left: 'center',
-      bottom: 0,
-      textStyle: { color: premiumPalette.muted },
-      inRange: { color: [premiumPalette.panel, premiumPalette.cyan, premiumPalette.mineral] },
-    },
-    series: [
-      {
-        type: 'heatmap',
-        // El propio color de visualMap ya distingue el pico (es la celda mas
-        // verde); no hace falta un borde condicional por dato para marcarlo.
-        data: values.map((value) => ({ value })),
-        emphasis: { itemStyle: { borderColor: '#FFFFFF', borderWidth: 1 } },
-      },
-    ],
-  } as EChartsOption
-}
-
 function buildLoaderOption(data: LoaderPerformance[]): EChartsOption {
   const rows = [...data].sort((a, b) => a.toneladas - b.toneladas)
 
@@ -288,7 +229,6 @@ export function Performance() {
 
   const peakOption = useMemo(() => query.data ? buildPeakHoursOption(query.data) : undefined, [query.data, themeId])
   const curveOption = useMemo(() => query.data ? buildAverageCurveOption(query.data) : undefined, [query.data, themeId])
-  const heatmapOption = useMemo(() => query.data ? buildHeatmapOption(query.data) : undefined, [query.data, themeId])
   const loaderOption = useMemo(() => query.data ? buildLoaderOption(query.data.loader_performance) : undefined, [query.data, themeId])
 
   const performanceDataRef = useRef(query.data)
@@ -427,25 +367,6 @@ export function Performance() {
               ))}
             </div>
           </div>
-        </section>
-
-        <section className="panel performance-heatmap-panel">
-          <div className="panel-header">
-            <div>
-              <span className="panel-kicker">Heatmap operacional</span>
-              <h2>Produccion por fecha y hora</h2>
-            </div>
-            {data.heatmap.length > 0 && (
-              <span className="panel-tag">Pico {formatDate(data.heatmap_max.fecha)} {data.heatmap_max.label}</span>
-            )}
-          </div>
-          {data.heatmap.length > 0 ? (
-            <div className="performance-heatmap">
-              {heatmapOption && <ReactECharts option={heatmapOption} notMerge lazyUpdate style={{ width: '100%', height: '100%' }} />}
-            </div>
-          ) : (
-            <EmptyState title="Sin ciclos registrados en este rango" detail="Elige otro rango de fechas para ver la produccion por hora." />
-          )}
         </section>
       </div>
 

@@ -992,14 +992,6 @@ export interface PerformanceHourlyProfile {
   porcentaje_total: number
 }
 
-export interface PerformanceHeatmapCell {
-  fecha: string
-  hora: number
-  label: string
-  toneladas: number
-  ranking?: number
-}
-
 export interface LoaderPerformance {
   carguio_id: string
   modelo: string
@@ -1026,8 +1018,6 @@ export interface PerformanceSummary {
   top_hour_set: number[]
   top_concentration_pct: number
   peak_title: string
-  heatmap: PerformanceHeatmapCell[]
-  heatmap_max: PerformanceHeatmapCell
   loader_performance: LoaderPerformance[]
   generated_at: string
 }
