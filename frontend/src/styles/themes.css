@@ -312,6 +312,11 @@ html[data-theme="mono"] .operator-productivity-row {
   border-radius: 9px !important;
 }
 
+html[data-theme="mono"] .nm-map-fallback-list button,
+html[data-theme="mono"] .nm-map-search-results button {
+  border-radius: 8px !important;
+}
+
 html[data-theme="mono"] .nmcp-detail-header h2 {
   font-size: 24px !important;
 }
