@@ -993,12 +993,11 @@ export interface PerformanceHourlyProfile {
 }
 
 export interface PerformanceHeatmapCell {
-  weekday: number
-  weekday_label: string
+  fecha: string
   hora: number
   label: string
-  promedio_ton: number
-  ranking: number
+  toneladas: number
+  ranking?: number
 }
 
 export interface LoaderPerformance {
