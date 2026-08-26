@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import * as echarts from 'echarts'
 import type { EChartsOption } from 'echarts'
 import { useAppStore } from '../../../store'
 
@@ -113,6 +114,54 @@ export function firstChartParam(params: unknown): Record<string, unknown> | unde
 export function chartDataIndex(params: unknown): number | undefined {
   const value = firstChartParam(params)?.dataIndex
   return typeof value === 'number' && Number.isInteger(value) && value >= 0 ? value : undefined
+}
+
+function hexToRgb(hex: string): [number, number, number] | null {
+  const clean = hex.trim().replace('#', '')
+  const normalized = clean.length === 3 ? clean.split('').map((c) => c + c).join('') : clean
+  if (!/^[0-9a-fA-F]{6}$/.test(normalized)) return null
+  const value = parseInt(normalized, 16)
+  return [(value >> 16) & 255, (value >> 8) & 255, value & 255]
+}
+
+function mixTowards(hex: string, target: [number, number, number], amount: number): string {
+  const rgb = hexToRgb(hex)
+  if (!rgb) return hex
+  const [r, g, b] = rgb
+  const [tr, tg, tb] = target
+  const mixed = [r, g, b].map((channel, i) => Math.round(channel + ([tr, tg, tb][i] - channel) * amount))
+  return `rgb(${mixed[0]}, ${mixed[1]}, ${mixed[2]})`
+}
+
+/**
+ * Mismo lenguaje visual de "velas" que las barras del Decision Cockpit
+ * (RisingBarShape en ShiftComparisonVisionPanel): degradado vertical oscuro
+ * -> color -> brillo, mas un halo. Se construye a partir del color del tema
+ * activo (no valores fijos) para que funcione igual bajo cualquier apariencia.
+ */
+export function candleBarStyle(
+  color: string,
+  radius: [number, number, number, number] = [7, 7, 0, 0],
+  orientation: 'vertical' | 'horizontal' = 'vertical',
+) {
+  const stops = [
+    { offset: 0, color: mixTowards(color, [0, 0, 0], 0.5) },
+    { offset: 0.58, color },
+    { offset: 1, color: mixTowards(color, [255, 255, 255], 0.6) },
+  ]
+  return {
+    color: orientation === 'vertical'
+      ? new echarts.graphic.LinearGradient(0, 1, 0, 0, stops)
+      : new echarts.graphic.LinearGradient(0, 0, 1, 0, stops),
+    borderRadius: radius,
+    shadowBlur: 14,
+    shadowColor: mixTowards(color, [255, 255, 255], 0.15),
+  }
+}
+
+/** Retraso de entrada escalonado por indice, mismo timing que RisingBarShape (70ms + 55ms/barra). */
+export function candleBarDelay(dataIndex: number): number {
+  return Math.min(70 + dataIndex * 55, 760)
 }
 
 // useTheme() aplica html[data-theme] dentro de un useLayoutEffect (para

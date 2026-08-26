@@ -12,6 +12,8 @@ import { EquipmentDetailDrawer } from '../components/equipment/detail/EquipmentD
 import { EQUIPMENT_DETAIL_DRAWER_ID } from '../components/equipment/equipmentDetailA11y'
 import {
   axisLabel,
+  candleBarDelay,
+  candleBarStyle,
   chartDataIndex,
   firstChartParam,
   formatNumber,
@@ -85,12 +87,11 @@ function buildPeakHoursOption(data: PerformanceSummary): EChartsOption {
       {
         type: 'bar',
         barMaxWidth: 24,
+        animationDelay: (index: number) => candleBarDelay(index),
         data: data.hourly_profile.map((item) => ({
           value: item.promedio_ton,
-          itemStyle: {
-            borderRadius: [6, 6, 0, 0],
-            color: topSet.has(item.hora) ? premiumPalette.mineral : premiumPalette.cyan,
-          },
+          itemStyle: candleBarStyle(topSet.has(item.hora) ? premiumPalette.mineral : premiumPalette.cyan),
+          emphasis: { itemStyle: { shadowBlur: 22 } },
         })),
       },
     ],
@@ -229,12 +230,11 @@ function buildLoaderOption(data: LoaderPerformance[]): EChartsOption {
       {
         type: 'bar',
         barMaxWidth: 24,
+        animationDelay: (index: number) => candleBarDelay(index),
         data: rows.map((item) => ({
           value: item.toneladas,
-          itemStyle: {
-            borderRadius: [0, 7, 7, 0],
-            color: item.fase === 'F02' ? premiumPalette.amber : premiumPalette.cyan,
-          },
+          itemStyle: candleBarStyle(item.fase === 'F02' ? premiumPalette.amber : premiumPalette.cyan, [0, 7, 7, 0], 'horizontal'),
+          emphasis: { itemStyle: { shadowBlur: 22 } },
         })),
         label: {
           show: true,
