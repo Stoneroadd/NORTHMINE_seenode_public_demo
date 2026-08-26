@@ -11237,6 +11237,7 @@ button:disabled,
 
   .operator-ranking-page .analysis-filter-actions {
     justify-content: flex-start;
+    flex-wrap: wrap !important;
   }
 
   .operator-ranking-page .analysis-filter-actions .command-button {

@@ -300,6 +300,18 @@ html[data-theme="mono"] .alert-machine-thumb {
   border-radius: 8px !important;
 }
 
+html[data-theme="mono"] .mc-flow-mobile-node {
+  border-radius: 6px !important;
+}
+
+html[data-theme="mono"] .nm-map-lite-summary button {
+  border-radius: 8px !important;
+}
+
+html[data-theme="mono"] .operator-productivity-row {
+  border-radius: 9px !important;
+}
+
 html[data-theme="mono"] .nmcp-detail-header h2 {
   font-size: 24px !important;
 }
