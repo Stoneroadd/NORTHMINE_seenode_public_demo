@@ -55,6 +55,11 @@
 
 .lang-switcher button {
   appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
   border: 0;
   background: transparent;
   color: var(--lang-text);
