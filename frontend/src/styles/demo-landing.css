@@ -860,6 +860,9 @@
 }
 
 .nm-public-footer nav a {
+  display: inline-block;
+  padding-block: 14px;
+  margin-block: -14px;
   color: var(--nm-public-muted);
   font-size: 13px;
 }
