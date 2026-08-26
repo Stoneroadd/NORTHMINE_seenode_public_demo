@@ -8703,19 +8703,19 @@
 
 .alerts-action-list {
   display: grid;
-  gap: 8px;
+  gap: 12px;
 }
 
 .alerts-action-item {
   display: grid;
-  grid-template-columns: 36px minmax(190px, 0.8fr) minmax(240px, 1fr) minmax(160px, 0.55fr) auto;
-  gap: 10px;
+  grid-template-columns: 40px minmax(200px, 0.8fr) minmax(240px, 1fr) minmax(160px, 0.55fr) auto;
+  gap: 14px;
   align-items: center;
   width: 100%;
   border: 1px solid color-mix(in srgb, var(--nm-border) 82%, transparent);
-  border-left-width: 3px;
-  border-radius: 10px;
-  padding: 10px;
+  border-left-width: 4px;
+  border-radius: 14px;
+  padding: 16px;
   background: color-mix(in srgb, var(--bg-card) 68%, transparent);
   color: inherit;
   text-align: left;
@@ -8741,12 +8741,12 @@
 .alerts-action-rank {
   display: grid;
   place-items: center;
-  width: 28px;
-  height: 28px;
+  width: 36px;
+  height: 36px;
   border-radius: 999px;
   background: color-mix(in srgb, var(--nm-cyan) 12%, transparent);
   color: var(--nm-cyan);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 900;
 }
 
@@ -8754,30 +8754,30 @@
 .alerts-action-next,
 .alerts-action-impact {
   display: grid;
-  gap: 3px;
+  gap: 4px;
 }
 
 .alerts-action-copy strong {
   color: var(--nm-text-strong);
-  font-size: 13px;
+  font-size: 14.5px;
 }
 
 .alerts-action-copy small,
 .alerts-action-next,
 .alerts-action-impact {
   color: var(--nm-text-muted);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .alerts-action-next {
   border-left: 1px solid color-mix(in srgb, var(--nm-border) 82%, transparent);
-  padding-left: 10px;
+  padding-left: 12px;
 }
 
 .alerts-action-impact {
   border: 1px solid color-mix(in srgb, var(--cyan) 16%, transparent);
   border-radius: 999px;
-  padding: 5px 8px;
+  padding: 7px 12px;
   background: color-mix(in srgb, var(--bg-elevated) 42%, transparent);
   color: var(--nm-text);
   font-weight: 800;
@@ -8790,7 +8790,7 @@
   }
 
   .alerts-action-item {
-    grid-template-columns: 32px minmax(0, 1fr);
+    grid-template-columns: 40px minmax(0, 1fr);
   }
 
   .alerts-action-next,

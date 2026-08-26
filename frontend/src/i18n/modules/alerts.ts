@@ -84,6 +84,7 @@ export interface AlertsT {
 
   kicker_alertas_ordenadas: string
   h2_plan_accion: string
+  subcopy_plan_accion: string
   tag_visibles: (n: number) => string
 
   kicker_caex_bajo_promedio: string
@@ -205,8 +206,9 @@ export const alertsT: ModuleDict<AlertsT> = {
     empty_sin_acciones: 'Sin acciones abiertas para el filtro activo.',
     sin_equipo: 'sin equipo',
 
-    kicker_alertas_ordenadas: 'Alertas ordenadas',
+    kicker_alertas_ordenadas: 'Agrupado por dominio',
     h2_plan_accion: 'Plan de accion por dominio',
+    subcopy_plan_accion: 'Todas las alertas abiertas organizadas por area operacional, para revisar equipo por equipo dentro de cada dominio.',
     tag_visibles: (n) => `${n} visibles`,
 
     kicker_caex_bajo_promedio: 'CAEX bajo promedio',
@@ -324,8 +326,9 @@ export const alertsT: ModuleDict<AlertsT> = {
     empty_sin_acciones: 'No open actions for the active filter.',
     sin_equipo: 'no equipment',
 
-    kicker_alertas_ordenadas: 'Sorted alerts',
+    kicker_alertas_ordenadas: 'Grouped by domain',
     h2_plan_accion: 'Action plan by domain',
+    subcopy_plan_accion: 'All open alerts organized by operational area, for equipment-by-equipment review within each domain.',
     tag_visibles: (n) => `${n} visible`,
 
     kicker_caex_bajo_promedio: 'CAEX below average',
@@ -443,8 +446,9 @@ export const alertsT: ModuleDict<AlertsT> = {
     empty_sin_acciones: 'Keine offenen Maßnahmen für den aktiven Filter.',
     sin_equipo: 'ohne Gerät',
 
-    kicker_alertas_ordenadas: 'Sortierte Warnungen',
+    kicker_alertas_ordenadas: 'Nach Bereich gruppiert',
     h2_plan_accion: 'Maßnahmenplan nach Bereich',
+    subcopy_plan_accion: 'Alle offenen Warnungen nach Betriebsbereich geordnet, zur Pruefung Geraet fuer Geraet innerhalb jedes Bereichs.',
     tag_visibles: (n) => `${n} sichtbar`,
 
     kicker_caex_bajo_promedio: 'CAEX unter dem Durchschnitt',

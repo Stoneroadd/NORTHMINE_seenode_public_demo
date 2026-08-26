@@ -632,8 +632,12 @@ export function Alerts() {
         <section className="alerts-work-grid">
           <div className="panel">
             <div className="panel-header">
-              <div><span className="panel-kicker">Alertas ordenadas</span><h2>Plan de accion por dominio</h2></div>
-              <span className="panel-tag">{filtered.length} visibles</span>
+              <div>
+                <span className="panel-kicker">{t.kicker_alertas_ordenadas}</span>
+                <h2>{t.h2_plan_accion}</h2>
+                <p className="alerts-section-subcopy">{t.subcopy_plan_accion}</p>
+              </div>
+              <span className="panel-tag">{t.tag_visibles(filtered.length)}</span>
             </div>
             {!filtered.length ? <EmptyState /> : (
               <div className="alert-domain-grid">
