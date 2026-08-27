@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { AlertTriangle, CheckCircle2, CircleDot, Compass, Database, GitBranch, Layers3, Radio, RotateCcw } from 'lucide-react'
 import { MissionState, StatusIndicator } from '../mission-control/design-system'
@@ -70,10 +70,21 @@ export function OperationalFlowPage() {
   const [showAssertions, setShowAssertions] = useState(true)
   const [technicalDetailsOpen, setTechnicalDetailsOpen] = useState(false)
   const [tourOpen, setTourOpen] = useState(false)
+  const inspectorRef = useRef<HTMLElement>(null)
+  const focusRelationNodeIdRef = useRef<string | null>(null)
   const query = useQuery({
     queryKey: ['mission-control', 'operational-flow', selectedAt],
     queryFn: () => getOperationalFlowSnapshot(selectedAt),
   })
+
+  useEffect(() => {
+    const wantedNodeId = focusRelationNodeIdRef.current
+    if (!wantedNodeId || !inspectorRef.current) return
+    const target = inspectorRef.current.querySelector<HTMLButtonElement>(`[data-relation-target="${wantedNodeId}"]`)
+    if (!target) return
+    target.focus()
+    focusRelationNodeIdRef.current = null
+  }, [selectedNodeId, query.data])
 
   if (query.isLoading) {
     return (
@@ -228,7 +239,7 @@ export function OperationalFlowPage() {
         </section>
 
         {selectedNode && (
-          <aside className="mc-flow-inspector" aria-labelledby="mc-flow-inspector-title">
+          <aside className="mc-flow-inspector" aria-labelledby="mc-flow-inspector-title" ref={inspectorRef}>
             <div className="mc-flow-inspector__heading">
               <StatusIndicator tone={toneFromCondition(selectedNode.condition)} compact />
               <p>{entityKindLabel(selectedNode.entity_kind)}</p>
@@ -255,7 +266,11 @@ export function OperationalFlowPage() {
                         <button
                           type="button"
                           className="mc-flow-inspector__relation-link"
-                          onClick={() => setSelectedNodeId(counterpartNodeId)}
+                          data-relation-target={counterpartNodeId}
+                          onClick={() => {
+                            focusRelationNodeIdRef.current = selectedNode.node_id
+                            setSelectedNodeId(counterpartNodeId)
+                          }}
                           disabled={!nodesById.has(counterpartNodeId)}
                         >
                           {isOutgoing ? 'Hacia' : 'Desde'} {counterpartLabel}
