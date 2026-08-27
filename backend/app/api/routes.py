@@ -3,6 +3,7 @@ from functools import lru_cache
 from typing import Annotated
 
 from fastapi import APIRouter, BackgroundTasks, Cookie, Depends, File, HTTPException, Query, Request, Response, UploadFile, status
+from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import FileResponse, JSONResponse
 
 from app.ai.investigation_router import router as ai_investigations_router
@@ -960,7 +961,9 @@ async def averias_import_xls(request: Request, file: UploadFile = File(...), use
         chunks.append(chunk)
     data = b"".join(chunks)
     try:
-        return averias_import_service.import_workbook_bytes(data, file.filename or "reporte.xlsx", origen="manual")
+        return await run_in_threadpool(
+            averias_import_service.import_workbook_bytes, data, file.filename or "reporte.xlsx", origen="manual"
+        )
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
 
