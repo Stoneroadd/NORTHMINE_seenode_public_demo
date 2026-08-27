@@ -23,7 +23,7 @@ export function OperationalFlowOverview() {
 
         <figure className="ns-flow-overview__frame" data-flow-overview-reveal>
           <img
-            src="/assets/landing/saas/operational-flow-overview.png"
+            src="/assets/landing/saas/operational-flow-overview.webp"
             alt={overview.imageAlt}
             width={1672}
             height={846}

@@ -9,12 +9,12 @@ interface NorthmineLogoProps extends Omit<ImgHTMLAttributes<HTMLImageElement>, '
 
 const logoAssets: Record<NorthmineLogoVariant, { src: string; width: number; height: number }> = {
   full: {
-    src: '/assets/brand/northmine-logo-master.png',
+    src: '/assets/brand/northmine-logo-master.webp',
     width: 1536,
     height: 1024,
   },
   horizontal: {
-    src: '/assets/brand/northmine-logo-master.png',
+    src: '/assets/brand/northmine-logo-master.webp',
     width: 1536,
     height: 1024,
   },

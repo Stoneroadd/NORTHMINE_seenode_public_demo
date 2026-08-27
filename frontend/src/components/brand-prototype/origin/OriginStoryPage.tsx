@@ -57,7 +57,7 @@ export function OriginStoryPage() {
   const heroRef = useRef<HTMLElement>(null)
   const questionsRef = useSectionReveal<HTMLElement>({ targets: '[data-question]', stagger: 0.07, distance: 18 })
   const productRef = useSectionReveal<HTMLElement>({ targets: '[data-product]', stagger: 0.06, distance: 24 })
-  const chapterImages = ['/assets/landing/origin/planta-concentradora.png', '/assets/landing/origin/simon-operador.png', '/assets/landing/origin/simon-despacho.png']
+  const chapterImages = ['/assets/landing/origin/planta-concentradora.webp', '/assets/landing/origin/simon-operador.webp', '/assets/landing/origin/simon-despacho.webp']
   const chapterKeys = ['chapter01', 'chapter02', 'chapter03'] as const
 
   useGSAP(() => {

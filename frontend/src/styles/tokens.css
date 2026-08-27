@@ -1645,7 +1645,7 @@ body {
 .login-page {
   background-image:
     linear-gradient(color-mix(in srgb, var(--bg-elevated) 82%, transparent), color-mix(in srgb, var(--bg-elevated) 90%, transparent)),
-    url('/assets/brand/fondo_login.png');
+    url('/assets/brand/fondo_login.webp');
   background-size: cover;
   background-position: center;
 }
