@@ -118,7 +118,10 @@ function MFASection() {
       <SectionHeader icon={ShieldCheck} label={t.settings.mfa_titulo} />
       <button
         type="button"
-        onClick={() => setOpen(true)}
+        onClick={(event) => {
+          event.currentTarget.focus()
+          setOpen(true)
+        }}
         aria-haspopup="dialog"
         aria-controls={MFA_SETUP_DIALOG_ID}
         aria-expanded={open}

@@ -305,6 +305,7 @@ export function FleetPage() {
                             aria-expanded={selectedEquipmentId === item.caex_id}
                             onClick={(event) => {
                               event.stopPropagation()
+                              event.currentTarget.focus()
                               setSelectedEquipmentId(item.caex_id)
                             }}
                           >
@@ -364,7 +365,10 @@ export function FleetPage() {
                       aria-haspopup="dialog"
                       aria-controls={EQUIPMENT_DETAIL_DRAWER_ID}
                       aria-expanded={selectedEquipmentId === item.caex_id}
-                      onClick={() => setSelectedEquipmentId(item.caex_id)}
+                      onClick={(event) => {
+                        event.currentTarget.focus()
+                        setSelectedEquipmentId(item.caex_id)
+                      }}
                     >
                       <strong>{item.caex_id}</strong>
                       <span>{statusDetail(item, t)}</span>

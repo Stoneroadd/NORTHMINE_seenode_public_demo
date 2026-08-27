@@ -495,7 +495,10 @@ export function OperatorRanking() {
                 aria-haspopup="dialog"
                 aria-expanded={methodologyOpen}
                 aria-controls="operator-methodology-dialog"
-                onClick={() => setMethodologyOpen(true)}
+                onClick={(event) => {
+                  event.currentTarget.focus()
+                  setMethodologyOpen(true)
+                }}
               >
                 <BookOpen size={15} /> {t.btn_metodologia}
               </button>

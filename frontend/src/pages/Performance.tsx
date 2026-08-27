@@ -359,7 +359,10 @@ export function Performance() {
                   aria-haspopup="dialog"
                   aria-controls={EQUIPMENT_DETAIL_DRAWER_ID}
                   aria-expanded={selectedEquipmentId === item.carguio_id}
-                  onClick={() => setSelectedEquipmentId(item.carguio_id)}
+                  onClick={(event) => {
+                    event.currentTarget.focus()
+                    setSelectedEquipmentId(item.carguio_id)
+                  }}
                 >
                   <span className={`phase-badge phase-badge-${item.fase.toLowerCase()}`}>{item.fase}</span>
                   {item.carguio_id}

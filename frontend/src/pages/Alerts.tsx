@@ -391,7 +391,10 @@ function AlertRow({
         <button
           className="alert-machine-thumb compact"
           type="button"
-          onClick={() => onSelectEquipment(equipment.id)}
+          onClick={(event) => {
+            event.currentTarget.focus()
+            onSelectEquipment(equipment.id)
+          }}
           aria-label={`Ver detalle operacional ${equipment.id}`}
         >
           <img src={equipment.image} alt={equipment.label} loading="lazy" />
@@ -401,7 +404,11 @@ function AlertRow({
       <button
         className="operational-alert-main"
         type="button"
-        onClick={() => equipment && onSelectEquipment(equipment.id)}
+        onClick={(event) => {
+          if (!equipment) return
+          event.currentTarget.focus()
+          onSelectEquipment(equipment.id)
+        }}
       >
         <div className="operational-alert-copy">
           <div className="alert-row-meta">
@@ -608,7 +615,11 @@ export function Alerts() {
                     key={alert.id}
                     type="button"
                     className={`alerts-action-item is-${severityName.toLowerCase()}`}
-                    onClick={() => equipment && setSelectedEquipmentId(equipment.id)}
+                    onClick={(event) => {
+                      if (!equipment) return
+                      event.currentTarget.focus()
+                      setSelectedEquipmentId(equipment.id)
+                    }}
                     disabled={!equipment}
                     aria-haspopup={equipment ? 'dialog' : undefined}
                     aria-controls={equipment ? EQUIPMENT_DETAIL_DRAWER_ID : undefined}
@@ -680,7 +691,10 @@ export function Alerts() {
                   aria-haspopup="dialog"
                   aria-controls={EQUIPMENT_DETAIL_DRAWER_ID}
                   aria-expanded={selectedEquipmentId === item.caex_id}
-                  onClick={() => setSelectedEquipmentId(item.caex_id)}
+                  onClick={(event) => {
+                    event.currentTarget.focus()
+                    setSelectedEquipmentId(item.caex_id)
+                  }}
                 >
                   <span className="low-caex-rank">{index + 1}</span>
                   <span>

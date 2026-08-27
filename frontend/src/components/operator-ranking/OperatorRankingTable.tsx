@@ -117,6 +117,7 @@ export function OperatorRankingTable({ items, onSelect, onAudit }: Props) {
                   aria-controls="operator-detail-dialog"
                   onClick={(event) => {
                     event.stopPropagation()
+                    event.currentTarget.focus()
                     onSelect(item)
                   }}
                 >
@@ -130,6 +131,7 @@ export function OperatorRankingTable({ items, onSelect, onAudit }: Props) {
                   aria-controls="operator-audit-dialog"
                   onClick={(event) => {
                     event.stopPropagation()
+                    event.currentTarget.focus()
                     onAudit(item)
                   }}
                 >
