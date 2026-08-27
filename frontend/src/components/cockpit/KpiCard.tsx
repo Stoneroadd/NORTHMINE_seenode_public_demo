@@ -125,20 +125,6 @@ function AnimatedMetric({ value, reducedMotion }: { value: string; reducedMotion
   return <AnimatedMetricToken value={value} reducedMotion={reducedMotion} />
 }
 
-export function AnimatedMetricText({ value, reducedMotion }: { value: string; reducedMotion: boolean | null }) {
-  const parts = value.split(/([+-]?\d[\d.,]*)/g)
-
-  return (
-    <>
-      {parts.map((part, index) => (
-        /^[+-]?\d[\d.,]*$/.test(part)
-          ? <AnimatedMetricToken key={`${index}-${part}`} value={part} reducedMotion={reducedMotion} />
-          : part
-      ))}
-    </>
-  )
-}
-
 // La lectura principal del turno: un unico numero grande, sin caja ni
 // icono compitiendo por atencion. Todo lo demas en esta seccion es
 // secundario a esta cifra (DESIGN.md: jerarquia por tamano/peso, no color).

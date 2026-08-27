@@ -14,19 +14,6 @@ const hourMinuteFormatter = new Intl.DateTimeFormat('es-CL', {
   hour12: false,
 })
 
-const dayMonthFormatter = new Intl.DateTimeFormat('es-CL', {
-  timeZone: OPERATIONAL_TIME_ZONE,
-  day: '2-digit',
-  month: 'short',
-})
-
-const dayFormatter = new Intl.DateTimeFormat('es-CL', {
-  timeZone: OPERATIONAL_TIME_ZONE,
-  year: 'numeric',
-  month: '2-digit',
-  day: '2-digit',
-})
-
 /**
  * Formats a bucket's clock hour (0-23, as already returned by the backend)
  * as "HH:00". Does not invent an hour for missing/duplicate buckets --
@@ -47,28 +34,4 @@ export function formatShiftTime(iso: string | null | undefined): string | null {
   const parsed = new Date(iso)
   if (Number.isNaN(parsed.getTime())) return null
   return hourMinuteFormatter.format(parsed)
-}
-
-/**
- * Formats an ISO timestamp as "HH:mm" and appends "· DD mon" when its
- * calendar day (in the operational timezone) differs from `referenceIso`
- * (typically the shift's start date) -- e.g. a night shift's timestamps
- * that cross into the following day.
- */
-export function formatShiftTimestamp(
-  iso: string | null | undefined,
-  referenceIso?: string | null,
-): string | null {
-  const time = formatShiftTime(iso)
-  if (!time) return null
-  if (!referenceIso) return time
-
-  const parsed = new Date(iso as string)
-  const reference = new Date(referenceIso)
-  if (Number.isNaN(reference.getTime())) return time
-
-  const sameDay = dayFormatter.format(parsed) === dayFormatter.format(reference)
-  if (sameDay) return time
-
-  return `${time} · ${dayMonthFormatter.format(parsed)}`
 }

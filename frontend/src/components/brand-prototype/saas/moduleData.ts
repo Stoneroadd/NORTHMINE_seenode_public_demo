@@ -82,5 +82,3 @@ export const modules: Module[] = [
     imageAlt: 'Captura del módulo de Vista Aérea mostrando ortomosaicos, datos sintéticos',
   },
 ]
-
-export const moduleFilters = ['Todos', 'Operación', 'Producción', 'Equipos', 'Riesgo', 'Inteligencia'] as const

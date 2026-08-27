@@ -28,9 +28,3 @@ export const settingsService = {
   showDemoMode,
   demoLite,
 }
-
-export function isNorthmineApiHealth(value: unknown): boolean {
-  if (!value || typeof value !== 'object') return false
-  const health = value as { service?: unknown; status?: unknown }
-  return health.service === 'northmine-api' && health.status === 'ok'
-}

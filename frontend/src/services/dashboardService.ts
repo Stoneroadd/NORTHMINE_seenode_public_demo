@@ -5,12 +5,6 @@ import {
 } from '../lib/api'
 import type { AnalysisFilters } from '../components/filters/filterTypes'
 
-export { getSmartAlerts } from './alertsService'
-export { getFleetStatus } from './fleetService'
-export { getLoadingUnitsSummary } from './loadingUnitsService'
-export { getProductionShift } from './productionService'
-export { getShiftReport } from './reportsService'
-
 export function getHealth(): Promise<HealthResponse> {
   return northmineApi.health()
 }

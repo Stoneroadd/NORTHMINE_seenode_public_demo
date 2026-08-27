@@ -4,12 +4,9 @@ import type { AnalysisFilters } from '../components/filters/filterTypes'
 import type {
   OperatorDelayPatternsResponse,
   OperatorRankingAudit,
-  OperatorRankingAuditLogResponse,
   OperatorRankingDetail,
   OperatorRankingMethodology,
   OperatorRankingResponse,
-  OperatorRankingResponsibleUse,
-  OperatorRankingThresholds,
   OperatorTrendsResponse,
   ScoreExplanation,
 } from '../types/operatorRanking'
@@ -28,23 +25,8 @@ export async function getOperatorRankingMethodology(): Promise<OperatorRankingMe
   return data
 }
 
-export async function getOperatorRankingThresholds(): Promise<OperatorRankingThresholds> {
-  const { data } = await secureApi.get<OperatorRankingThresholds>('/api/operator-ranking/thresholds')
-  return data
-}
-
-export async function getOperatorRankingResponsibleUse(): Promise<OperatorRankingResponsibleUse> {
-  const { data } = await secureApi.get<OperatorRankingResponsibleUse>('/api/operator-ranking/responsible-use')
-  return data
-}
-
 export async function getOperatorRankingAudit(operatorId: string, filters?: AnalysisFilters): Promise<OperatorRankingAudit> {
   const { data } = await secureApi.get<OperatorRankingAudit>(withAnalysisQuery('/api/operator-ranking/audit', withOperator(filters, operatorId)))
-  return data
-}
-
-export async function getOperatorRankingAuditLog(filters?: AnalysisFilters): Promise<OperatorRankingAuditLogResponse> {
-  const { data } = await secureApi.get<OperatorRankingAuditLogResponse>(withAnalysisQuery('/api/operator-ranking/audit-log', filters))
   return data
 }
 

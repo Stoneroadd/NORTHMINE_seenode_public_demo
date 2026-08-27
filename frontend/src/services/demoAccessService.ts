@@ -50,10 +50,6 @@ export function listDemoAccessRequests(
   return apiFetch<DemoAccessRequestList>(`${API_PATH}${query}`)
 }
 
-export function getDemoAccessRequest(id: string): Promise<DemoAccessRequestAdminRecord> {
-  return apiFetch<DemoAccessRequestAdminRecord>(`${API_PATH}/${encodeURIComponent(id)}`)
-}
-
 export function reviewDemoAccessRequest(
   id: string,
   action: 'approve' | 'reject',

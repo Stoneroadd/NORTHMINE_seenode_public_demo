@@ -1760,8 +1760,6 @@ export const northmineApi = {
     apiFetch<ProductionShift>(withAnalysisQuery('/api/production/shift', filters, { turno })),
   fleetStatus: (turno = 'ACTUAL', filters?: AnalysisFilters) =>
     apiFetch<FleetStatus>(withAnalysisQuery('/api/fleet/status', filters, { turno })),
-  fleetFull: (dias = 7, filters?: AnalysisFilters) =>
-    apiFetch<FleetFullResponse>(withAnalysisQuery('/api/fleet/full', filters, { dias })),
   loadingUnits: (turno = 'ACTUAL', filters?: AnalysisFilters) =>
     apiFetch<LoadingUnitsSummary>(withAnalysisQuery('/api/loading-units/summary', filters, { turno })),
   alerts: (filters?: AnalysisFilters) => apiFetch<ListResponse<SmartAlert>>(withAnalysisQuery('/api/alerts', filters)),
@@ -1778,24 +1776,8 @@ export const northmineApi = {
   },
 }
 
-export function getOperationsSummary(): Promise<OperationsSummaryResponse> {
-  return apiFetch<OperationsSummaryResponse>('/api/operations/summary')
-}
-
-export function getDailyProduction(): Promise<DailyProduction[]> {
-  return apiFetch<DailyProduction[]>('/api/operations/daily-production')
-}
-
-export function getHourlyProduction(turno = 'ACTUAL'): Promise<HourlyProduction[]> {
-  return apiFetch<HourlyProduction[]>(`/api/operations/hourly-production?turno=${encodeURIComponent(turno)}`)
-}
-
 export function getCurrentShift(): Promise<ShiftCurrentResponse> {
   return apiFetch<ShiftCurrentResponse>('/api/shift/current')
-}
-
-export function getShiftHourlyTonnage(): Promise<OperationalCollection<CurrentShiftHourly>> {
-  return apiFetch<OperationalCollection<CurrentShiftHourly>>('/api/shift/hourly-tonnage')
 }
 
 export function getShiftLoadingUnits(): Promise<OperationalCollection<CurrentShiftLoadingUnit>> {
@@ -1849,26 +1831,6 @@ export async function getShiftExportXlsx(exportType: 'shift' | 'caex' | 'loading
   return response.data
 }
 
-export function getFleetCaexRanking(): Promise<OperationalCollection<FleetFullRankingItem>> {
-  return apiFetch<OperationalCollection<FleetFullRankingItem>>('/api/fleet/caex-ranking')
-}
-
-export function getFleetByModel(): Promise<OperationalCollection<FleetModelEfficiency>> {
-  return apiFetch<OperationalCollection<FleetModelEfficiency>>('/api/fleet/caex-by-model')
-}
-
-export function getFleetFastest(): Promise<OperationalCollection<FleetFullRankingItem>> {
-  return apiFetch<OperationalCollection<FleetFullRankingItem>>('/api/fleet/fastest')
-}
-
-export function getFleetSlowest(): Promise<OperationalCollection<FleetFullRankingItem>> {
-  return apiFetch<OperationalCollection<FleetFullRankingItem>>('/api/fleet/slowest')
-}
-
-export function getFleetCycleTime(): Promise<FleetCycleTimeResponse> {
-  return apiFetch<FleetCycleTimeResponse>('/api/fleet/cycle-time')
-}
-
 export function getFleetDistance(): Promise<DistanceSummary> {
   return apiFetch<DistanceSummary>('/api/fleet/distance')
 }
@@ -1893,16 +1855,8 @@ export function getAveriasSummary(): Promise<AveriaSummary> {
   return apiFetch<AveriaSummary>('/api/averias/summary')
 }
 
-export function getAveriasActive(): Promise<OperationalCollection<ActiveBreakdownItem>> {
-  return apiFetch<OperationalCollection<ActiveBreakdownItem>>('/api/averias/active')
-}
-
 export function getAveriasHistory(): Promise<OperationalCollection<ActiveBreakdownItem>> {
   return apiFetch<OperationalCollection<ActiveBreakdownItem>>('/api/averias/history')
-}
-
-export function getAveriasInactivityAlerts(): Promise<OperationalCollection<ActiveBreakdownItem>> {
-  return apiFetch<OperationalCollection<ActiveBreakdownItem>>('/api/averias/inactivity-alerts')
 }
 
 export interface AveriaImportedEvent {
@@ -2185,10 +2139,6 @@ export interface ShiftStatusSources {
     }>
   }
   generated_at?: string | null
-}
-
-export function getShiftStatusSources(): Promise<ShiftStatusSources> {
-  return apiFetch<ShiftStatusSources>('/api/fleet/shift-status-sources')
 }
 
 export function getExpertAnalysis(days = 90): Promise<ExpertAnalysis> {
