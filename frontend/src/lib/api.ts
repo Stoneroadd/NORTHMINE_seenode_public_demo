@@ -2,12 +2,8 @@
 import { secureApi } from './secureApi'
 import { withAnalysisQuery } from './queryParams'
 import type { AnalysisFilters } from '../components/filters/filterTypes'
-import { settingsService } from '../services/settingsService'
-
-export const API_BASE_URL = settingsService.apiBaseUrl
 
 export { secureApi }
-export { secureApi as apiClient }
 
 export type Role = 'admin' | 'supervisor' | 'operador' | 'viewer'
 
