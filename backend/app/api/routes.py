@@ -62,9 +62,7 @@ from app.core.webhooks import send_security_alert
 from app.models.schemas import (
     ChangePasswordRequest,
     DisableMFARequest,
-    EnableMFARequest,
     LoginRequest,
-    LoginResponse,
     ListResponse,
     MFASetupResponse,
     MFAVerifyRequest,
@@ -78,7 +76,6 @@ from app.models.schemas import (
     UserRoleUpdateRequest,
     UserStatusUpdateRequest,
     UserUpdateRequest,
-    ActiveBreakdownItem,
     AerialStatus,
     AveriaSummary,
     CurrentShiftSummary,

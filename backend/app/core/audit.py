@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from app.core.config import get_settings
-from app.core.database import close_db_connections, execute_query
+from app.core.database import close_db_connections
 
 logger = logging.getLogger(__name__)
 audit_logger = logging.getLogger("northmine.audit")
