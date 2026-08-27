@@ -38,15 +38,6 @@ def simulate(
         {
             "caex": n,
             "produccion": int(n * ciclos_hora * horas_turno * disponibilidad * dias * turnos_dia * ton_ciclo),
-            "sobre_meta": (n * per_caex / caex if caex > 0 else n * ciclos_hora * horas_turno * disponibilidad * dias * turnos_dia * ton_ciclo) >= META_MES,
-        }
-        for n in range(10, 43)
-    ]
-    # Recompute curva_caex correctly
-    curva_caex = [
-        {
-            "caex": n,
-            "produccion": int(n * ciclos_hora * horas_turno * disponibilidad * dias * turnos_dia * ton_ciclo),
             "sobre_meta": int(n * ciclos_hora * horas_turno * disponibilidad * dias * turnos_dia * ton_ciclo) >= META_MES,
         }
         for n in range(10, 43)
