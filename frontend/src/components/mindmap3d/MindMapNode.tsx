@@ -17,7 +17,3 @@ export function getMindMapNodeVisual(node: LayoutNode, selected: boolean, dimmed
     labelSize: clamp(10 + node.importance * 8 + (selected ? 3 : 0) + zoom * 1.5, 10, node.type === 'ROOT' ? 24 : 18),
   }
 }
-
-export function MindMapNode() {
-  return null
-}

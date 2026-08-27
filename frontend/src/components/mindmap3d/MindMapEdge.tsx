@@ -22,7 +22,3 @@ export function getMindMapEdgeVisual(edge: LayoutEdge, dimmed: boolean): EdgeVis
     particleAlpha: edge.active ? (dimmed ? 0.06 : 0.85) : 0,
   }
 }
-
-export function MindMapEdge() {
-  return null
-}
