@@ -562,9 +562,19 @@ def import_workbook_bytes(data: bytes, filename: str, origen: str) -> dict[str, 
     now = datetime.now().isoformat(timespec="seconds")
     updated = 0
     with _connect() as conn:
+        existing_ids: set[str] = set()
+        event_ids = [event["id"] for event in events]
+        for i in range(0, len(event_ids), 500):
+            chunk = event_ids[i:i + 500]
+            placeholders = ",".join("?" for _ in chunk)
+            existing_ids.update(
+                row["id"]
+                for row in conn.execute(
+                    f"SELECT id FROM averia_events WHERE id IN ({placeholders})", chunk
+                ).fetchall()
+            )
         for event in events:
-            exists = conn.execute("SELECT 1 FROM averia_events WHERE id = ?", (event["id"],)).fetchone()
-            if exists:
+            if event["id"] in existing_ids:
                 conn.execute(
                     """
                     UPDATE averia_events
