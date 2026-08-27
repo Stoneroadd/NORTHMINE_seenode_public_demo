@@ -5,6 +5,7 @@ import {
   ClipboardList,
   FlaskConical,
   Gauge,
+  GitBranch,
   LayoutDashboard,
   LockKeyhole,
   Map,
@@ -212,6 +213,14 @@ export function Sidebar({ active, onSelect, mobileOpen = false, onNavigate, acti
               <span>
                 <span className="nav-label">Auditoría</span>
                 <span className="nav-caption">Log de seguridad</span>
+              </span>
+            </a>
+            <a className={`nav-item ${activePath === appPaths.adminGitnexus ? 'is-active' : ''}`} href={appPaths.adminGitnexus} title="GitNexus: Inteligencia de código" onClick={(event) => handleInternalLink(event, appPaths.adminGitnexus)}>
+              <span className="nav-active-line" />
+              <span className="nav-icon"><GitBranch size={18} /></span>
+              <span>
+                <span className="nav-label">GitNexus</span>
+                <span className="nav-caption">Inteligencia de código</span>
               </span>
             </a>
           </>

@@ -39,6 +39,7 @@ const loadAlerts      = () => import('./pages/Alerts')
 const loadDemoAccessAdminPage = () => import('./pages/DemoAccessAdminPage')
 const loadMissionControlDesignSystemPage = () => import('./pages/MissionControlDesignSystemPage')
 const loadOperationalFlowPage = () => import('./pages/OperationalFlowPage')
+const loadGitNexusPage = () => import('./pages/GitNexusPage')
 
 const Prediction  = lazy(() => loadPrediction().then(m => ({ default: m.Prediction })))
 const Simulator   = lazy(() => loadSimulator().then(m => ({ default: m.Simulator })))
@@ -63,6 +64,7 @@ const Alerts      = lazy(() => loadAlerts().then(m => ({ default: m.Alerts })))
 const DemoAccessAdminPage = lazy(() => loadDemoAccessAdminPage().then(m => ({ default: m.DemoAccessAdminPage })))
 const MissionControlDesignSystemPage = lazy(() => loadMissionControlDesignSystemPage().then(m => ({ default: m.MissionControlDesignSystemPage })))
 const OperationalFlowPage = lazy(() => loadOperationalFlowPage().then(m => ({ default: m.OperationalFlowPage })))
+const GitNexusPage = lazy(() => loadGitNexusPage().then(m => ({ default: m.GitNexusPage })))
 import { Settings } from 'lucide-react'
 
 const ALL_MODULE_LOADERS = [
@@ -72,6 +74,7 @@ const ALL_MODULE_LOADERS = [
   loadPerformance, loadFleet, loadLoadingUnits, loadAveriasPage, loadExpertAnalysisPage,
   loadAlerts,
   loadOperationalFlowPage,
+  loadGitNexusPage,
 ]
 
 const FAST_DEMO_MODULE_LOADERS = [
@@ -170,6 +173,20 @@ function renderSection(section: SectionId, session: AuthSession, t: AppT) {
     return wrap(_S(<AdminUsersPage />), appPaths.adminUsers)
   }
   if (path === appPaths.adminAuditoria) return wrap(_S(<AuditLog />), appPaths.adminAuditoria)
+  if (path === appPaths.adminGitnexus) {
+    if (session.rol !== 'admin') {
+      return wrap(
+        <div className="section-placeholder">
+          <Settings size={34} />
+          <span>{t.acceso_restringido}</span>
+          <h2>Acceso restringido</h2>
+          <p>Solo un administrador puede usar GitNexus.</p>
+        </div>,
+        `${appPaths.adminGitnexus}-denied`,
+      )
+    }
+    return wrap(_S(<GitNexusPage />), appPaths.adminGitnexus)
+  }
   if (path === appPaths.comparativa) return wrap(_S(<Compare />), appPaths.comparativa)
   if (path === appPaths.operatorRanking) {
     if (!['admin', 'supervisor'].includes(session.rol)) {

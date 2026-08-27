@@ -1,0 +1,70 @@
+.gx-page {
+  display: grid;
+  gap: 18px;
+  min-height: calc(100vh - 116px);
+  padding: clamp(18px, 2.6vw, 38px);
+  border: 1px solid var(--mc-line-soft);
+  border-radius: var(--mc-radius-lg);
+  background: var(--mc-bg);
+}
+
+.gx-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--mc-line);
+  color: var(--mc-brand-strong);
+}
+
+.gx-header h1 { margin: 0; color: var(--mc-text); font-size: clamp(22px, 2.2vw, 30px); font-weight: 520; letter-spacing: -0.025em; }
+.gx-header p { margin: 4px 0 0; color: var(--mc-text-tertiary); font-size: 12px; }
+
+.gx-status-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 20px;
+  border: 1px solid var(--mc-line);
+  border-radius: var(--mc-radius-md);
+  background: var(--mc-surface);
+}
+
+.gx-status-card__meta { display: grid; gap: 3px; color: var(--mc-text-secondary); font-size: 12px; }
+.gx-status-card__meta strong { color: var(--mc-text); font-size: 13px; font-weight: 600; }
+
+.gx-query {
+  display: grid;
+  gap: 14px;
+  padding: 18px 20px;
+  border: 1px solid var(--mc-line);
+  border-radius: var(--mc-radius-md);
+  background: var(--mc-surface);
+}
+
+.gx-query form { display: flex; gap: 10px; }
+.gx-query input {
+  flex: 1;
+  min-height: 40px;
+  border: 1px solid var(--mc-line);
+  border-radius: var(--mc-radius-sm);
+  padding: 0 14px;
+  background: var(--mc-bg);
+  color: var(--mc-text);
+  font: 500 13px var(--mc-font-sans);
+}
+.gx-query input:focus-visible { outline: 2px solid var(--mc-focus); outline-offset: 1px; }
+
+.gx-results { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.gx-result {
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  border: 1px solid var(--mc-line-soft);
+  border-radius: var(--mc-radius-sm);
+  background: var(--mc-surface-raised);
+}
+.gx-result__label { color: var(--mc-text); font-size: 13px; font-weight: 600; }
+.gx-result__path { color: var(--mc-info); font: 500 11px var(--mc-font-mono); overflow-wrap: anywhere; }
+.gx-result__snippet { margin: 2px 0 0; color: var(--mc-text-secondary); font-size: 12px; line-height: 1.5; white-space: pre-wrap; }

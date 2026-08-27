@@ -218,6 +218,16 @@ class Settings:
     openai_realtime_tool_timeout_seconds: float
     openai_realtime_rate_limit_per_user_per_hour: int
     openai_realtime_max_output_tokens: int
+    # GitNexus code-intelligence module (admin-only) - GITNEXUS_BASE_URL points
+    # at the private gitnexus-server app; never taken from the caller (proxy
+    # routes always target this fixed origin, closing SSRF risk).
+    gitnexus_enabled: bool
+    gitnexus_base_url: str
+    gitnexus_timeout_seconds: float
+
+    @property
+    def gitnexus_available(self) -> bool:
+        return self.gitnexus_enabled and bool(self.gitnexus_base_url.strip())
 
     @property
     def elevenlabs_available(self) -> bool:
@@ -518,4 +528,7 @@ def get_settings() -> Settings:
         openai_realtime_tool_timeout_seconds=float(os.getenv("OPENAI_REALTIME_TOOL_TIMEOUT_SECONDS", "45")),
         openai_realtime_rate_limit_per_user_per_hour=int(os.getenv("OPENAI_REALTIME_RATE_LIMIT_PER_USER_PER_HOUR", "10")),
         openai_realtime_max_output_tokens=int(os.getenv("OPENAI_REALTIME_MAX_OUTPUT_TOKENS", "2048")),
+        gitnexus_enabled=os.getenv("GITNEXUS_ENABLED", "false").strip().lower() == "true",
+        gitnexus_base_url=os.getenv("GITNEXUS_BASE_URL", "").strip().rstrip("/"),
+        gitnexus_timeout_seconds=float(os.getenv("GITNEXUS_TIMEOUT_SECONDS", "30")),
     )

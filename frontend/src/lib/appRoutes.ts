@@ -36,6 +36,7 @@ export const appPaths = {
   adminUsers: '/admin/users',
   adminDemoAccess: '/admin/demo-access',
   adminAuditoria: '/admin/auditoria',
+  adminGitnexus: '/admin/gitnexus',
   missionControlDesignSystem: '/mission-control/design-system',
 } as const
 
