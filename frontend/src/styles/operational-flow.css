@@ -348,7 +348,11 @@
 .mc-flow-inspector__evidence { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
 .mc-flow-inspector__relations li { display: grid; gap: 4px; padding: 9px 0; border-bottom: 1px solid var(--mc-line-soft); }
 .mc-flow-inspector__relation-link {
+  display: flex;
   min-height: 44px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
   margin: -6px 0 -4px;
   padding: 6px 0;
   border: 0;
@@ -359,9 +363,12 @@
   font: 600 11px/1.35 var(--mc-font-sans);
   text-align: left;
 }
+.mc-flow-inspector__relation-link svg { flex: 0 0 auto; color: var(--mc-text-tertiary); transition: transform var(--mc-duration-state) var(--mc-ease-out); }
 .mc-flow-inspector__relation-link:hover { color: var(--mc-brand-strong); }
+.mc-flow-inspector__relation-link:hover svg { color: var(--mc-brand-strong); transform: translateX(2px); }
 .mc-flow-inspector__relation-link:focus-visible { outline: 2px solid var(--mc-focus); outline-offset: 2px; }
 .mc-flow-inspector__relation-link:disabled { cursor: default; color: var(--mc-text-tertiary); }
+.mc-flow-inspector__relation-link:disabled svg { display: none; }
 .mc-flow-inspector__relations span { color: var(--mc-text-secondary); font: 550 10px/1.35 var(--mc-font-mono); }
 .mc-flow-inspector__relations small { color: var(--mc-text-tertiary); font-size: 10px; }
 

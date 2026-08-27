@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { AlertTriangle, CheckCircle2, CircleDot, Compass, Database, GitBranch, Layers3, Radio, RotateCcw } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, ChevronRight, CircleDot, Compass, Database, GitBranch, Layers3, Radio, RotateCcw } from 'lucide-react'
 import { MissionState, StatusIndicator } from '../mission-control/design-system'
 import { OperationalFlowCanvas, orderNodesForReading } from '../mission-control/operational-flow/OperationalFlowCanvas'
 import { getOperationalFlowSnapshot } from '../mission-control/operational-flow/service'
@@ -273,7 +273,8 @@ export function OperationalFlowPage() {
                           }}
                           disabled={!nodesById.has(counterpartNodeId)}
                         >
-                          {isOutgoing ? 'Hacia' : 'Desde'} {counterpartLabel}
+                          <span>{isOutgoing ? 'Hacia' : 'Desde'} {counterpartLabel}</span>
+                          <ChevronRight aria-hidden="true" size={14} />
                         </button>
                         <span>{relationshipLabel(relationship.relationship_type, relationship.label)}</span>
                         <small>

@@ -57,6 +57,18 @@ function edgePath(edge: FlowRelationship): string {
   return `M ${sx} ${sy} C ${sx + bend} ${sy}, ${tx - bend} ${ty}, ${tx} ${ty}`
 }
 
+// textPath hace que cada glifo siga la tangente del trazo -- en un tramo
+// vertical eso apila las letras una sobre otra y el texto queda ilegible.
+// Para esos casos (source.x === target.x) el label se dibuja aparte, como
+// texto horizontal normal centrado en el punto medio del tramo.
+function verticalEdgeLabelPosition(edge: FlowRelationship): Position | null {
+  const source = POSITIONS[edge.source_node_id]
+  const target = POSITIONS[edge.target_node_id]
+  if (!source || !target || source.x !== target.x) return null
+  const sourceY = source.y + NODE_HEIGHT
+  return { x: source.x + NODE_WIDTH / 2, y: sourceY + (target.y - sourceY) / 2 }
+}
+
 function markerId(edge: FlowRelationship, showImpact: boolean): string {
   if (edge.assertion_type === 'HYPOTHESIS') return 'mc-arrow-hypothesis'
   if (showImpact && edge.impacted) return 'mc-arrow-impact'
@@ -155,11 +167,21 @@ export function OperationalFlowCanvas({
                   d={path}
                   markerEnd={`url(#${markerId(edge, showImpact)})`}
                 />
-                {showAssertions && (
-                  <text className="mc-flow-edge-label">
-                    <textPath href={`#label-${edge.relationship_id}`} startOffset="50%">{edge.label}</textPath>
-                  </text>
-                )}
+                {showAssertions && (() => {
+                  const verticalLabelPosition = verticalEdgeLabelPosition(edge)
+                  if (verticalLabelPosition) {
+                    return (
+                      <text className="mc-flow-edge-label" x={verticalLabelPosition.x} y={verticalLabelPosition.y}>
+                        {edge.label}
+                      </text>
+                    )
+                  }
+                  return (
+                    <text className="mc-flow-edge-label">
+                      <textPath href={`#label-${edge.relationship_id}`} startOffset="50%">{edge.label}</textPath>
+                    </text>
+                  )
+                })()}
                 <path id={`label-${edge.relationship_id}`} d={path} fill="none" stroke="none" />
               </g>
             )
