@@ -2830,9 +2830,6 @@ html[data-theme] .command-card-critical:hover {
 }
 
 @media (max-width: 860px) {
-  .equipment-detail-drawer {
-    width: 100vw;
-  }
 
   .equipment-detail-content {
     padding: 14px;
@@ -11770,11 +11767,11 @@ button:disabled,
 
 @media (max-width: 860px) {
   .equipment-detail-drawer {
-    top: 4vh;
-    right: 2.5vw;
-    width: 95vw;
-    max-width: 95vw;
-    max-height: 92vh;
+    top: 4%;
+    right: 2.5%;
+    width: 95%;
+    max-width: 95%;
+    max-height: 92%;
     border-radius: 10px;
   }
 

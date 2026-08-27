@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { expectNoHorizontalOverflow, loginAsDemo, navigateWithinApp } from './helpers/responsive'
+import { expectNoHorizontalOverflow, loginAsDemo, navigateWithinApp, waitForStableBox } from './helpers/responsive'
 
 async function openPerformance(page: import('@playwright/test').Page) {
   await loginAsDemo(page)
@@ -51,13 +51,12 @@ test.describe('shared equipment detail drawer', () => {
     await expectNoHorizontalOverflow(page)
 
     const viewport = page.viewportSize()
-    const dialogBox = await dialog.boundingBox()
+    const dialogBox = await waitForStableBox(dialog)
     const closeBox = await closeButton.boundingBox()
     expect(viewport).not.toBeNull()
-    expect(dialogBox).not.toBeNull()
     expect(closeBox).not.toBeNull()
-    expect(dialogBox!.x).toBeGreaterThanOrEqual(0)
-    expect(dialogBox!.x + dialogBox!.width).toBeLessThanOrEqual(viewport!.width)
+    expect(dialogBox.x).toBeGreaterThanOrEqual(0)
+    expect(dialogBox.x + dialogBox.width).toBeLessThanOrEqual(viewport!.width)
     expect(closeBox!.width).toBeGreaterThanOrEqual(44)
     expect(closeBox!.height).toBeGreaterThanOrEqual(44)
   })

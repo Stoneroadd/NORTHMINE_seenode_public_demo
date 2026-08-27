@@ -64,7 +64,7 @@ export function EquipmentDetailDrawer({ equipmentId, open, onClose }: Props) {
             initial={{ x: '100%', opacity: 0.7 }}
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: '100%', opacity: 0.7 }}
-            transition={{ type: 'spring', damping: 28, stiffness: 220 }}
+            transition={{ type: 'tween', duration: 0.32, ease: 'easeOut' }}
           >
             {query.isLoading && (
               <div className="equipment-drawer-state" role="status" aria-live="polite">

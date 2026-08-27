@@ -63,6 +63,35 @@ async function describeLocator(locator: Locator) {
   }
 }
 
+/**
+ * Polls a locator's bounding box until it stops changing between samples
+ * (100ms apart, up to 12 attempts). Use before asserting on final resting
+ * geometry of anything that animates in (slide-in drawers, springs) — a
+ * bare `boundingBox()` right after `toBeVisible()` can race the entrance
+ * transition and sample a mid-flight position.
+ */
+export async function waitForStableBox(locator: Locator) {
+  let previous = await locator.boundingBox()
+  expect(previous, 'element should have a bounding box').not.toBeNull()
+
+  for (let attempt = 0; attempt < 12; attempt += 1) {
+    await locator.page().waitForTimeout(100)
+    const current = await locator.boundingBox()
+    expect(current, 'element should have a bounding box').not.toBeNull()
+    if (
+      Math.abs(current!.x - previous!.x) < 0.25
+      && Math.abs(current!.y - previous!.y) < 0.25
+      && Math.abs(current!.width - previous!.width) < 0.25
+      && Math.abs(current!.height - previous!.height) < 0.25
+    ) {
+      return current!
+    }
+    previous = current
+  }
+
+  throw new Error('element did not reach stable geometry')
+}
+
 /** Waits for network + fonts + images so layout has actually settled before measuring. */
 export async function gotoAndSettle(page: Page, path: string, settleMs = 700) {
   await page.goto(path, { waitUntil: 'networkidle', timeout: 30000 })
