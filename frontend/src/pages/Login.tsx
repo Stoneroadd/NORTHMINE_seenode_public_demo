@@ -1,4 +1,4 @@
-import { FormEvent, lazy, Suspense, useState } from 'react'
+import { FormEvent, lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 import { LockKeyhole, RadioTower } from 'lucide-react'
 import { ApiError, type AuthSession } from '../lib/api'
@@ -37,6 +37,48 @@ export function Login({ onAuthenticated }: Props) {
   const [loading, setLoading] = useState(false)
   const reduceMotion = useReducedMotion()
   const isPublicDemoAccess = window.location.pathname.replace(/\/+$/, '') === '/acceso-demo'
+  const rootRef = useRef<HTMLElement>(null)
+
+  // login-mono-preview.css's !important rules keep losing individual
+  // properties (not whole rules) to the base theme's own !important input/
+  // panel/card styling once Vite bundles everything for production -- which
+  // stylesheet's declaration for a given property lands last isn't stable
+  // across builds, so a CSS-only fix (however specific the selector) can't
+  // be trusted here. Setting the same values via the CSSOM `important`
+  // priority is unconditionally the highest-priority declaration in the
+  // cascade (nothing in an external stylesheet can outrank it), so this is
+  // the one layer that actually stays correct build to build.
+  useEffect(() => {
+    const root = rootRef.current
+    if (!root) return
+    const set = (el: HTMLElement | null, props: Record<string, string>) => {
+      if (!el) return
+      for (const [prop, value] of Object.entries(props)) el.style.setProperty(prop, value, 'important')
+    }
+    set(root.querySelector<HTMLElement>('.login-canvas-panel'), {
+      'border-radius': '32px',
+      border: '1.5px solid #3d3d3d',
+      'background-color': '#171717',
+    })
+    set(root.querySelector<HTMLElement>('.login-card'), {
+      'border-radius': '32px',
+      border: '1.5px solid #3d3d3d',
+      background: '#171717',
+    })
+    root.querySelectorAll<HTMLElement>('.login-form input').forEach((input) => {
+      set(input, {
+        'border-radius': '100px',
+        border: '1.5px solid #3d3d3d',
+        'background-color': '#212121',
+        color: '#ececec',
+      })
+    })
+    set(root.querySelector<HTMLElement>('.login-form button[type="submit"]'), {
+      'border-radius': '100px',
+      background: '#ffffff',
+      color: '#0d0d0d',
+    })
+  }, [])
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -73,7 +115,10 @@ export function Login({ onAuthenticated }: Props) {
   }
 
   return (
-    <main className={`login-page nm-login-shell nm-responsive-compact login-preview-mono${isPublicDemoAccess ? ' nm-demo-entry' : ''}`}>
+    <main
+      ref={rootRef}
+      className={`login-page nm-login-shell nm-responsive-compact login-preview-mono${isPublicDemoAccess ? ' nm-demo-entry' : ''}`}
+    >
       {isPublicDemoAccess && (
         <a className="nm-demo-entry__return" href="/">
           {tp.login.back}
