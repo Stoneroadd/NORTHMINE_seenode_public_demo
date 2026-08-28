@@ -191,6 +191,24 @@
   box-shadow: 0 0 0 3px rgba(255,255,255,0.12) !important;
 }
 
+/* Chrome autofill (e.g. remembered "admin" username) paints its own
+   background at a browser-internal layer that no CSS declaration -- not
+   even inline style.setProperty(..., 'important') -- can override. The
+   box-shadow inset trick is the one sanctioned escape hatch: Chrome lets
+   :-webkit-autofill itself be styled, so we cover the autofill highlight
+   with an inset shadow the size of the field instead of fighting its
+   background-color directly. */
+.login-preview-mono .login-form input:-webkit-autofill,
+.login-preview-mono .login-form input:-webkit-autofill:hover,
+.login-preview-mono .login-form input:-webkit-autofill:focus,
+.login-preview-mono .login-form input:-webkit-autofill:active {
+  -webkit-text-fill-color: var(--m-text) !important;
+  caret-color: var(--m-text) !important;
+  box-shadow: 0 0 0 1000px var(--m-surface-raised) inset !important;
+  -webkit-box-shadow: 0 0 0 1000px var(--m-surface-raised) inset !important;
+  transition: background-color 5000s ease-in-out 0s !important;
+}
+
 .login-preview-mono .login-error {
   border-radius: 16px !important;
   background: var(--m-critical-tint) !important;
