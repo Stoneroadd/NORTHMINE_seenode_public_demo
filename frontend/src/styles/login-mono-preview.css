@@ -4,6 +4,19 @@
  * de marca, mismas curvas generosas que la revisión anterior. Aplicada
  * solo a /login mediante la clase .login-preview-mono. Se puede quitar
  * por completo borrando este archivo y el import en Login.tsx.
+ *
+ * Every contested rule below ends its selector in `:not(#_)`. The base
+ * theme (tokens.css) carries its own !important rules for these same
+ * elements -- some behind @media blocks -- and which file's rule lands
+ * last in Vite's production CSS bundle isn't stable across builds (it
+ * does not track each component's import order the way dev-mode HMR
+ * does). Stacking extra real classes to out-specify the competitor
+ * worked for some elements and silently failed for others depending on
+ * bundle order. `:not(#_)` adds one ID level of specificity instead --
+ * nothing built from classes alone can outrank an ID, so this wins
+ * unconditionally and stops depending on bundle order at all. `#_` never
+ * exists in the DOM; the :not() always matches and only ever contributes
+ * the specificity bump.
  */
 
 .login-preview-mono.login-page.nm-login-shell {
@@ -45,16 +58,8 @@
   padding: 20px !important;
 }
 
-/* ---- Visual panel: black, curved, fine grid backdrop, no color accent ----
-   Selector carries 4 classes (not 2) on purpose: on /acceso-demo the extra
-   .nm-demo-entry wrapper class makes demo-access-entry.css's older cyan-
-   wireframe rule (.nm-demo-entry .nm-wireframe-panel.login-canvas-panel,
-   3 classes) win the radius/border/background fight, leaving this panel
-   stuck at its old 6px corner while the card next to it correctly got the
-   32px mono treatment. Matching structure with one extra real class beats
-   it outright instead of relying on source-order (which a production CSS
-   bundle does not guarantee matches these files' import order). */
-.login-page.login-preview-mono .nm-wireframe-panel.login-canvas-panel {
+/* ---- Visual panel: black, curved, fine grid backdrop, no color accent ---- */
+.login-preview-mono .login-canvas-panel:not(#_) {
   border-radius: 32px !important;
   border: 1.5px solid var(--m-border) !important;
   background-color: var(--m-surface) !important;
@@ -130,14 +135,14 @@
 }
 
 /* ---- Card: same near-black, curved ---- */
-.login-preview-mono .login-card.nm-login-panel {
+.login-preview-mono .login-card:not(#_) {
   border-radius: 32px !important;
   border: 1.5px solid var(--m-border) !important;
   background: var(--m-surface) !important;
   box-shadow: 0 30px 70px rgba(0,0,0,0.55) !important;
   padding: 46px 44px !important;
 }
-.login-preview-mono .login-card.nm-login-panel::before {
+.login-preview-mono .login-card::before {
   background: var(--m-border) !important;
   opacity: 1 !important;
 }
@@ -170,12 +175,7 @@
   font-size: 12.5px !important;
 }
 
-/* .login-page prefix again (see the panel rule above): ties in specificity
-   with .nm-login-panel .login-form input from the base theme, and in the
-   production CSS bundle that rule was landing after this one, winning the
-   background/radius fight and leaving the field steel-blue instead of the
-   mono surface color. */
-.login-page.login-preview-mono .login-form input {
+.login-preview-mono .login-form input:not(#_) {
   border-radius: 100px !important;
   border: 1.5px solid var(--m-border) !important;
   background: var(--m-surface-raised) !important;
@@ -185,7 +185,7 @@
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 .login-preview-mono .login-form input::placeholder { color: var(--m-text-faint) !important; }
-.login-page.login-preview-mono .login-form input:focus {
+.login-preview-mono .login-form input:not(#_):focus {
   outline: none !important;
   border-color: var(--m-white) !important;
   box-shadow: 0 0 0 3px rgba(255,255,255,0.12) !important;
@@ -200,7 +200,7 @@
 }
 
 /* High-contrast white-on-black primary action -- the one OpenAI-style gesture. */
-.login-preview-mono .login-form button[type='submit'] {
+.login-preview-mono .login-form button[type='submit']:not(#_) {
   border-radius: 100px !important;
   background: var(--m-white) !important;
   border: none !important;
@@ -209,7 +209,7 @@
   font-weight: 700 !important;
   transition: background 0.15s ease, transform 0.1s ease;
 }
-.login-preview-mono .login-form button[type='submit']:hover:not(:disabled) {
+.login-preview-mono .login-form button[type='submit']:not(#_):hover:not(:disabled) {
   background: #d9d9d9 !important;
 }
 .login-preview-mono .login-form button[type='submit']:active:not(:disabled) {
