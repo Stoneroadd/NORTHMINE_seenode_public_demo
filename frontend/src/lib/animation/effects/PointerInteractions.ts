@@ -25,7 +25,7 @@ interface CharTarget {
  */
 function splitIntoChars(el: HTMLElement): HTMLElement[] {
   if (el.dataset.magneticSplit === 'true') {
-    return Array.from(el.querySelectorAll<HTMLElement>(':scope > span[aria-hidden="true"]'))
+    return Array.from(el.querySelectorAll<HTMLElement>(':scope span[aria-hidden="true"]'))
   }
   el.dataset.magneticSplit = 'true'
 
@@ -38,17 +38,31 @@ function splitIntoChars(el: HTMLElement): HTMLElement[] {
     if (node.nodeType === Node.TEXT_NODE) {
       const text = node.textContent ?? ''
       const frag = document.createDocumentFragment()
+      // Each word's letters get their own nowrap wrapper. Without it, the
+      // per-character spans are just adjacent inline-block boxes with no
+      // "these belong to one word" signal, so a narrow flex container
+      // (e.g. the nav bar on a 1280px-wide laptop screen) is free to wrap
+      // the line between two letters of the same word instead of only at
+      // the real spaces between words.
+      let wordWrapper: HTMLSpanElement | null = null
       for (const ch of text) {
         if (ch === ' ') {
+          wordWrapper = null
           frag.appendChild(document.createTextNode(' '))
           continue
+        }
+        if (!wordWrapper) {
+          wordWrapper = document.createElement('span')
+          wordWrapper.style.display = 'inline-block'
+          wordWrapper.style.whiteSpace = 'nowrap'
+          frag.appendChild(wordWrapper)
         }
         const span = document.createElement('span')
         span.textContent = ch
         span.setAttribute('aria-hidden', 'true')
         span.style.display = 'inline-block'
         span.style.willChange = 'transform'
-        frag.appendChild(span)
+        wordWrapper.appendChild(span)
         chars.push(span)
       }
       node.replaceWith(frag)
