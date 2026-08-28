@@ -29,6 +29,22 @@ const DEMO_NOW = '2026-07-29T06:53:00-04:00'
 const SHIFT_START = '2026-07-29T19:00:00-04:00'
 const SHIFT_END = '2026-07-30T07:00:00-04:00'
 
+// Nombres ficticios fijos por equipo (no genericos "OPERADOR NN"), consistentes
+// entre Cockpit y Averias -- el mismo CAEX/pala muestra el mismo operador en
+// ambos modulos, para que la demo cuente una historia coherente.
+const DEMO_OPERATORS = {
+  PALA1: 'Ricardo Fuentes',
+  PALA2: 'Camila Vergara',
+  CF2: 'Jorge Salinas',
+  CAEX01: 'Manuel Contreras',
+  CAEX07: 'Priscila Muñoz',
+  CAEX09: 'Luis Bahamondes',
+  CAEX12: 'Fernanda Rojas',
+  CAEX15: 'Daniela Pizarro',
+  CAEX18: 'Cristian Alarcón',
+  CAEX22: 'Valentina Soto',
+} as const
+
 const cockpitHours = [
   ['19:00', 8580, 38],
   ['20:00', 7920, 36],
@@ -58,9 +74,9 @@ const hourlyProduction = cockpitHours.map(([hour, tons, cycles]) => {
 })
 
 const loaders = [
-  { id: 'PALA 1', model: 'P&H 4100XPC AC', status: 'OPERANDO', tons: 46180, cycles: 64, operator: 'OPERADOR UC 02', front: 'F02/2296/135/DEMO', destination: 'BOTADERO DEMO', pct: 92 },
-  { id: 'PALA 2', model: 'P&H 4100XPC AC', status: 'OPERANDO', tons: 37620, cycles: 57, operator: 'OPERADOR UC 04', front: 'F01/2328/135/DEMO', destination: 'CHANCADO PRIMARIO DEMO', pct: 74 },
-  { id: 'CF 2', model: 'CAT 994K', status: 'REVISAR', tons: 23243, cycles: 46, operator: 'OPERADOR UC 01', front: 'F01/2280/135/DEMO', destination: 'BOTADERO DEMO', pct: 58 },
+  { id: 'PALA 1', model: 'P&H 4100XPC AC', status: 'OPERANDO', tons: 46180, cycles: 64, operator: DEMO_OPERATORS.PALA1, front: 'F02/2296/135/DEMO', destination: 'BOTADERO DEMO', pct: 92 },
+  { id: 'PALA 2', model: 'P&H 4100XPC AC', status: 'OPERANDO', tons: 37620, cycles: 57, operator: DEMO_OPERATORS.PALA2, front: 'F01/2328/135/DEMO', destination: 'CHANCADO PRIMARIO DEMO', pct: 74 },
+  { id: 'CF 2', model: 'CAT 994K', status: 'REVISAR', tons: 23243, cycles: 46, operator: DEMO_OPERATORS.CF2, front: 'F01/2280/135/DEMO', destination: 'BOTADERO DEMO', pct: 58 },
 ]
 
 const loaderHourly = loaders.flatMap((loader, loaderIndex) =>
@@ -163,11 +179,11 @@ export const FAST_DEMO_COCKPIT: CockpitResponse = {
     { type: 'Espera CAEX', minutes: 9 },
   ],
   caex_status: [
-    { caex_id: 'CAEX01', model: 'CAT 793F', status: 'OPERATIVO', tons: 7820, cycles: 34, minutes_inactive: 2, operator: 'OPERADOR CAEX 01', loading_unit: 'PALA 1', destination: 'BOTADERO DEMO' },
-    { caex_id: 'CAEX07', model: 'KOM 980E', status: 'OPERATIVO', tons: 7510, cycles: 32, minutes_inactive: 4, operator: 'OPERADOR CAEX 07', loading_unit: 'PALA 2', destination: 'CHANCADO PRIMARIO DEMO' },
-    { caex_id: 'CAEX12', model: 'CAT 798AC', status: 'OPERATIVO', tons: 8140, cycles: 35, minutes_inactive: 1, operator: 'OPERADOR CAEX 12', loading_unit: 'PALA 1', destination: 'BOTADERO DEMO' },
-    { caex_id: 'CAEX18', model: 'KOM 980E', status: 'STANDBY', tons: 4120, cycles: 18, minutes_inactive: 16, operator: 'OPERADOR CAEX 18', loading_unit: 'CF 2', destination: 'BOTADERO DEMO' },
-    { caex_id: 'CAEX22', model: 'CAT 793F', status: 'DEMORA', tons: 3680, cycles: 16, minutes_inactive: 22, operator: 'OPERADOR CAEX 22', loading_unit: 'CF 2', destination: 'BOTADERO DEMO' },
+    { caex_id: 'CAEX01', model: 'CAT 793F', status: 'OPERATIVO', tons: 7820, cycles: 34, minutes_inactive: 2, operator: DEMO_OPERATORS.CAEX01, loading_unit: 'PALA 1', destination: 'BOTADERO DEMO' },
+    { caex_id: 'CAEX07', model: 'KOM 980E', status: 'OPERATIVO', tons: 7510, cycles: 32, minutes_inactive: 4, operator: DEMO_OPERATORS.CAEX07, loading_unit: 'PALA 2', destination: 'CHANCADO PRIMARIO DEMO' },
+    { caex_id: 'CAEX12', model: 'CAT 798AC', status: 'OPERATIVO', tons: 8140, cycles: 35, minutes_inactive: 1, operator: DEMO_OPERATORS.CAEX12, loading_unit: 'PALA 1', destination: 'BOTADERO DEMO' },
+    { caex_id: 'CAEX18', model: 'KOM 980E', status: 'STANDBY', tons: 4120, cycles: 18, minutes_inactive: 16, operator: DEMO_OPERATORS.CAEX18, loading_unit: 'CF 2', destination: 'BOTADERO DEMO' },
+    { caex_id: 'CAEX22', model: 'CAT 793F', status: 'DEMORA', tons: 3680, cycles: 16, minutes_inactive: 22, operator: DEMO_OPERATORS.CAEX22, loading_unit: 'CF 2', destination: 'BOTADERO DEMO' },
   ],
   shovels: loaders.map((loader) => ({
     id: loader.id,
@@ -553,29 +569,78 @@ export const FAST_DEMO_SHIFT_COMPARISON: ShiftComparisonResponse = {
 
 export const FAST_DEMO_AVERIAS_SUMMARY: AveriaSummary = {
   source: 'fast-demo',
-  active_breakdowns: 1,
+  active_breakdowns: 3,
   inactive_equipment: 2,
-  maintenance_equipment: 3,
-  critical_alerts: 0,
+  maintenance_equipment: 2,
+  critical_alerts: 1,
   high_alerts: 1,
   items: [
-    { id: 'av-1', equipment_id: 'CAEX22', model: 'CAT 793F', status: 'DEMORA', severity: 'ALTA', started_at: DEMO_NOW, last_activity: DEMO_NOW, duration_min: 22, description: 'Revision combustible y cola de despacho', recommendation: 'Liberar o reasignar en 30 min' },
-    { id: 'av-2', equipment_id: 'CF 2', model: 'CAT 994K', status: 'MANTENCION', severity: 'MEDIA', started_at: DEMO_NOW, last_activity: DEMO_NOW, duration_min: 18, description: 'Inspeccion hidraulica corta', recommendation: 'Monitorear presion y cola' },
+    {
+      id: 'av-1',
+      equipment_id: 'CAEX09',
+      model: 'KOM980E-5',
+      status: 'MANTENCION',
+      severity: 'CRITICA',
+      started_at: '2026-07-29T05:03:00-04:00',
+      last_activity: DEMO_NOW,
+      duration_min: 110,
+      description: `AVERIA hidraulica recurrente (4a vez en 3 semanas), mismo circuito de direccion, turno de ${DEMO_OPERATORS.CAEX09}`,
+      recommendation: 'Detener y reemplazar el sello con especificacion certificada; no purgar como solucion temporal, el patron indica desgaste estructural, no aire en el circuito. Enviar el lote de sellos actual a control de calidad.',
+    },
+    {
+      id: 'av-2',
+      equipment_id: 'CAEX22',
+      model: 'CAT 793F',
+      status: 'DEMORA',
+      severity: 'ALTA',
+      started_at: DEMO_NOW,
+      last_activity: DEMO_NOW,
+      duration_min: 22,
+      description: `AVERIA de combustible y cola de despacho, turno de ${DEMO_OPERATORS.CAEX22}`,
+      recommendation: 'Liberar o reasignar en 30 min si no hay mejora de presion.',
+    },
+    {
+      id: 'av-3',
+      equipment_id: 'CF 2',
+      model: 'CAT 994K',
+      status: 'MANTENCION',
+      severity: 'MEDIA',
+      started_at: DEMO_NOW,
+      last_activity: DEMO_NOW,
+      duration_min: 18,
+      description: `MANTENCION hidraulica corta, turno de ${DEMO_OPERATORS.CF2}`,
+      recommendation: 'Monitorear presion y cola; sin patron previo en este equipo, no requiere escalar.',
+    },
   ],
   generated_at: DEMO_NOW,
 }
 
 export const FAST_DEMO_AVERIAS_HISTORY: OperationalCollection<ActiveBreakdownItem> = {
   source: 'fast-demo',
-  count: 2,
+  count: 3,
   generated_at: DEMO_NOW,
   items: FAST_DEMO_AVERIAS_SUMMARY.items ?? [],
 }
 
+// Historial de 3+ semanas con fallas repetidas en el mismo componente
+// (CAEX09 hidraulico, CAEX15 combustible, PALA 2 sensor de giro) para que
+// "Averias" muestre un patron real de recurrencia, no eventos aislados.
 const averiaEvents = [
-  { id: 'ev-1', equipment_id: 'CAEX22', model: 'CAT 793F', fecha: DEMO_DATE, inicio: '2026-07-29T06:31:00-04:00', fin: null, duracion_min: 22, sistema: 'Combustible', tipo: 'Averia propia', descripcion: 'Revision combustible por baja presion', ot: 'OT-9001', estado: 'F/S', severidad: 'ALTA', origen: 'correo', source_file: 'estatus_demo.xlsx', imported_at: DEMO_NOW },
-  { id: 'ev-2', equipment_id: 'CF 2', model: 'CAT 994K', fecha: DEMO_DATE, inicio: '2026-07-29T06:35:00-04:00', fin: '2026-07-29T06:53:00-04:00', duracion_min: 18, sistema: 'Hidraulico', tipo: 'Mantenimiento diario', descripcion: 'Chequeo de presion hidraulica', ot: 'OT-9002', estado: 'OP', severidad: 'MEDIA', origen: 'correo', source_file: 'estatus_demo.xlsx', imported_at: DEMO_NOW },
-  { id: 'ev-3', equipment_id: 'PALA 2', model: 'P&H 4100XPC AC', fecha: '2026-07-28', inicio: '2026-07-28T23:20:00-04:00', fin: '2026-07-29T00:05:00-04:00', duracion_min: 45, sistema: 'Electrico', tipo: 'M. Planificado', descripcion: 'Cambio preventivo sensor giro', ot: 'OT-8998', estado: 'OP', severidad: 'MEDIA', origen: 'correo', source_file: 'estatus_demo.xlsx', imported_at: DEMO_NOW },
+  { id: 'ev-caex09-1', equipment_id: 'CAEX09', model: 'KOM980E-5', fecha: '2026-07-08', inicio: '2026-07-08T09:12:00-04:00', fin: '2026-07-08T09:52:00-04:00', duracion_min: 40, sistema: 'Hidraulico', tipo: 'Averia propia', descripcion: `Fuga menor en sistema hidraulico de direccion, detectada en inspeccion de rutina (turno ${DEMO_OPERATORS.CAEX09})`, ot: 'OT-8912', estado: 'OP', severidad: 'MEDIA', origen: 'correo', source_file: 'estatus_demo.xlsx', imported_at: DEMO_NOW },
+  { id: 'ev-caex09-2', equipment_id: 'CAEX09', model: 'KOM980E-5', fecha: '2026-07-16', inicio: '2026-07-16T14:05:00-04:00', fin: '2026-07-16T15:10:00-04:00', duracion_min: 65, sistema: 'Hidraulico', tipo: 'Averia propia', descripcion: `Perdida de presion hidraulica en cilindro de tolva, requiere ajuste de sello (turno ${DEMO_OPERATORS.CAEX09})`, ot: 'OT-8951', estado: 'OP', severidad: 'ALTA', origen: 'correo', source_file: 'estatus_demo.xlsx', imported_at: DEMO_NOW },
+  { id: 'ev-caex09-3', equipment_id: 'CAEX09', model: 'KOM980E-5', fecha: '2026-07-24', inicio: '2026-07-24T02:40:00-04:00', fin: '2026-07-24T04:15:00-04:00', duracion_min: 95, sistema: 'Hidraulico', tipo: 'Averia propia', descripcion: `Falla de bomba hidraulica principal, cambio de sello y purga de circuito (turno ${DEMO_OPERATORS.CAEX09})`, ot: 'OT-8987', estado: 'OP', severidad: 'CRITICA', origen: 'correo', source_file: 'estatus_demo.xlsx', imported_at: DEMO_NOW },
+  { id: 'ev-caex09-4', equipment_id: 'CAEX09', model: 'KOM980E-5', fecha: DEMO_DATE, inicio: '2026-07-29T05:03:00-04:00', fin: null, duracion_min: 110, sistema: 'Hidraulico', tipo: 'Averia propia', descripcion: `Recurrencia de falla hidraulica, mismo circuito que el evento anterior, sello posiblemente de lote defectuoso (turno ${DEMO_OPERATORS.CAEX09})`, ot: 'OT-9003', estado: 'F/S', severidad: 'CRITICA', origen: 'correo', source_file: 'estatus_demo.xlsx', imported_at: DEMO_NOW },
+
+  { id: 'ev-caex15-1', equipment_id: 'CAEX15', model: 'CAT789D', fecha: '2026-07-10', inicio: '2026-07-10T11:20:00-04:00', fin: '2026-07-10T11:44:00-04:00', duracion_min: 24, sistema: 'Combustible', tipo: 'Averia propia', descripcion: `Filtro de combustible con restriccion, cambio preventivo (turno ${DEMO_OPERATORS.CAEX15})`, ot: 'OT-8921', estado: 'OP', severidad: 'MEDIA', origen: 'correo', source_file: 'estatus_demo.xlsx', imported_at: DEMO_NOW },
+  { id: 'ev-caex15-2', equipment_id: 'CAEX15', model: 'CAT789D', fecha: '2026-07-19', inicio: '2026-07-19T20:10:00-04:00', fin: '2026-07-19T20:40:00-04:00', duracion_min: 30, sistema: 'Combustible', tipo: 'Averia propia', descripcion: `Baja presion de combustible en arranque, purga de aire en la linea (turno ${DEMO_OPERATORS.CAEX15})`, ot: 'OT-8963', estado: 'OP', severidad: 'MEDIA', origen: 'correo', source_file: 'estatus_demo.xlsx', imported_at: DEMO_NOW },
+  { id: 'ev-caex15-3', equipment_id: 'CAEX15', model: 'CAT789D', fecha: '2026-07-27', inicio: '2026-07-27T03:15:00-04:00', fin: '2026-07-27T03:43:00-04:00', duracion_min: 28, sistema: 'Combustible', tipo: 'Averia propia', descripcion: `Repite baja presion, mismo sintoma del evento anterior, sospecha de bomba de combustible con desgaste (turno ${DEMO_OPERATORS.CAEX15})`, ot: 'OT-8996', estado: 'OP', severidad: 'ALTA', origen: 'correo', source_file: 'estatus_demo.xlsx', imported_at: DEMO_NOW },
+
+  { id: 'ev-pala2-1', equipment_id: 'PALA 2', model: 'P&H 4100XPC AC', fecha: '2026-07-14', inicio: '2026-07-13T23:20:00-04:00', fin: '2026-07-14T00:05:00-04:00', duracion_min: 45, sistema: 'Electrico', tipo: 'M. Planificado', descripcion: `Cambio preventivo sensor de giro (turno ${DEMO_OPERATORS.PALA2})`, ot: 'OT-8998', estado: 'OP', severidad: 'MEDIA', origen: 'correo', source_file: 'estatus_demo.xlsx', imported_at: DEMO_NOW },
+  { id: 'ev-pala2-2', equipment_id: 'PALA 2', model: 'P&H 4100XPC AC', fecha: '2026-07-25', inicio: '2026-07-25T16:50:00-04:00', fin: '2026-07-25T17:28:00-04:00', duracion_min: 38, sistema: 'Electrico', tipo: 'Averia propia', descripcion: `Falla intermitente en sensor de giro, mismo componente reemplazado en el evento anterior, posible instalacion defectuosa (turno ${DEMO_OPERATORS.PALA2})`, ot: 'OT-9000', estado: 'OP', severidad: 'MEDIA', origen: 'correo', source_file: 'estatus_demo.xlsx', imported_at: DEMO_NOW },
+
+  { id: 'ev-caex22-1', equipment_id: 'CAEX22', model: 'CAT 793F', fecha: DEMO_DATE, inicio: '2026-07-29T06:31:00-04:00', fin: null, duracion_min: 22, sistema: 'Combustible', tipo: 'Averia propia', descripcion: `Revision combustible por baja presion (turno ${DEMO_OPERATORS.CAEX22})`, ot: 'OT-9001', estado: 'F/S', severidad: 'ALTA', origen: 'correo', source_file: 'estatus_demo.xlsx', imported_at: DEMO_NOW },
+  { id: 'ev-cf2-1', equipment_id: 'CF 2', model: 'CAT 994K', fecha: DEMO_DATE, inicio: '2026-07-29T06:35:00-04:00', fin: '2026-07-29T06:53:00-04:00', duracion_min: 18, sistema: 'Hidraulico', tipo: 'Mantenimiento diario', descripcion: `Chequeo de presion hidraulica (turno ${DEMO_OPERATORS.CF2})`, ot: 'OT-9002', estado: 'OP', severidad: 'MEDIA', origen: 'correo', source_file: 'estatus_demo.xlsx', imported_at: DEMO_NOW },
+  { id: 'ev-caex01-1', equipment_id: 'CAEX01', model: 'CAT789D', fecha: '2026-07-12', inicio: '2026-07-12T08:05:00-04:00', fin: '2026-07-12T08:20:00-04:00', duracion_min: 15, sistema: 'Neumatico', tipo: 'Mantenimiento diario', descripcion: `Revision de presion de neumaticos, rutina de turno (turno ${DEMO_OPERATORS.CAEX01})`, ot: 'OT-8932', estado: 'OP', severidad: 'SIN DATO', origen: 'correo', source_file: 'estatus_demo.xlsx', imported_at: DEMO_NOW },
 ] satisfies AveriaFleetDetail['events']
 
 export const FAST_DEMO_AVERIAS_FLEET = {
@@ -583,14 +648,17 @@ export const FAST_DEMO_AVERIAS_FLEET = {
     source: 'fast-demo',
     days: 31,
     count_events: averiaEvents.length,
-    count_equipment: 3,
-    total_min: 85,
-    kpis: { dias_observados: 7, equipos: 24, disponibilidad_fisica_pct: 96.8, mttr_horas: 1.4, mtbf_horas: 42, num_averias: 2, horas_correctiva: 1.1, horas_programada: 0.8, pct_programada: 42, pct_correctiva: 58, peor_equipo: { equipment_id: 'CAEX22', disponibilidad_pct: 92.4 } },
-    costos: { tasa_usd_por_min: 610, total_usd: 51850, correctiva_usd: 24400, programada_usd: 27450, fuente_tasa: 'demo', nota: 'Valores ilustrativos para flujo de demo.' },
+    count_equipment: 6,
+    total_min: 530,
+    kpis: { dias_observados: 21, equipos: 24, disponibilidad_fisica_pct: 94.5, mttr_horas: 0.9, mtbf_horas: 38, num_averias: 9, horas_correctiva: 7.5, horas_programada: 1.3, pct_programada: 15, pct_correctiva: 85, peor_equipo: { equipment_id: 'CAEX09', disponibilidad_pct: 88.2 } },
+    costos: { tasa_usd_por_min: 610, total_usd: 323300, correctiva_usd: 275720, programada_usd: 47580, fuente_tasa: 'demo', nota: 'Valores ilustrativos para flujo de demo.' },
     equipment: [
+      { equipment_id: 'CAEX09', model: 'KOM980E-5', events: 4, total_min: 310, costo_usd: 189100, criticas: 2, disponibilidad_pct: 88.2, sistemas: [{ name: 'Hidraulico', events: 4, min: 310 }], tipos: [{ name: 'Averia propia', events: 4, min: 310 }], tipo_principal: 'Averia propia', last_event: '2026-07-29T05:03:00-04:00' },
+      { equipment_id: 'CAEX15', model: 'CAT789D', events: 3, total_min: 82, costo_usd: 50020, criticas: 1, disponibilidad_pct: 93.5, sistemas: [{ name: 'Combustible', events: 3, min: 82 }], tipos: [{ name: 'Averia propia', events: 3, min: 82 }], tipo_principal: 'Averia propia', last_event: '2026-07-27T03:15:00-04:00' },
+      { equipment_id: 'PALA 2', model: 'P&H 4100XPC AC', events: 2, total_min: 83, costo_usd: 50630, criticas: 0, disponibilidad_pct: 95.4, sistemas: [{ name: 'Electrico', events: 2, min: 83 }], tipos: [{ name: 'M. Planificado', events: 1, min: 45 }, { name: 'Averia propia', events: 1, min: 38 }], tipo_principal: 'Averia propia', last_event: '2026-07-25T16:50:00-04:00' },
       { equipment_id: 'CAEX22', model: 'CAT 793F', events: 1, total_min: 22, costo_usd: 13420, criticas: 0, disponibilidad_pct: 92.4, sistemas: [{ name: 'Combustible', events: 1, min: 22 }], tipos: [{ name: 'Averia propia', events: 1, min: 22 }], tipo_principal: 'Averia propia', last_event: DEMO_NOW },
       { equipment_id: 'CF 2', model: 'CAT 994K', events: 1, total_min: 18, costo_usd: 10980, criticas: 0, disponibilidad_pct: 95.1, sistemas: [{ name: 'Hidraulico', events: 1, min: 18 }], tipos: [{ name: 'Mantenimiento diario', events: 1, min: 18 }], tipo_principal: 'Mantenimiento diario', last_event: DEMO_NOW },
-      { equipment_id: 'PALA 2', model: 'P&H 4100XPC AC', events: 1, total_min: 45, costo_usd: 27450, criticas: 0, disponibilidad_pct: 97.8, sistemas: [{ name: 'Electrico', events: 1, min: 45 }], tipos: [{ name: 'M. Planificado', events: 1, min: 45 }], tipo_principal: 'M. Planificado', last_event: '2026-07-29T00:05:00-04:00' },
+      { equipment_id: 'CAEX01', model: 'CAT789D', events: 1, total_min: 15, costo_usd: 9150, criticas: 0, disponibilidad_pct: 98.1, sistemas: [{ name: 'Neumatico', events: 1, min: 15 }], tipos: [{ name: 'Mantenimiento diario', events: 1, min: 15 }], tipo_principal: 'Mantenimiento diario', last_event: '2026-07-12T08:05:00-04:00' },
     ],
     events: averiaEvents,
     generated_at: DEMO_NOW,
@@ -612,12 +680,62 @@ export const FAST_DEMO_AVERIAS_INSIGHTS: AveriaInsights = {
   source: 'fast-demo',
   days: 31,
   eventos_analizados: averiaEvents.length,
-  averias_analizadas: 2,
+  averias_analizadas: 9,
   recurrentes: [
-    { equipment_id: 'CAEX22', model: 'CAT 793F', sistema: 'Combustible', eventos: 1, total_min: 22, gap_promedio_dias: null, tendencia: 'ESTABLE', ultima_fecha: DEMO_DATE, ultima_descripcion: 'Revision combustible por baja presion', causa_probable: 'Filtro con restriccion', solucion_sugerida: 'Inspeccion rapida y liberacion operativa', confianza: 'MEDIA' },
+    {
+      equipment_id: 'CAEX09',
+      model: 'KOM980E-5',
+      sistema: 'Hidraulico',
+      eventos: 4,
+      total_min: 310,
+      gap_promedio_dias: 7,
+      tendencia: 'EN AUMENTO',
+      ultima_fecha: DEMO_DATE,
+      ultima_descripcion: 'Recurrencia de falla hidraulica, mismo circuito que el evento anterior',
+      causa_probable: 'Sello de cilindro/bomba con desgaste acelerado; posible lote de repuesto defectuoso (4 fallas en el mismo circuito en 3 semanas)',
+      solucion_sugerida: 'Reemplazar con sello de especificacion certificada y realizar prueba de presion post-instalacion. Enviar el lote actual a control de calidad antes de instalar en otro equipo.',
+      confianza: 'ALTA',
+    },
+    {
+      equipment_id: 'CAEX15',
+      model: 'CAT789D',
+      sistema: 'Combustible',
+      eventos: 3,
+      total_min: 82,
+      gap_promedio_dias: 8,
+      tendencia: 'ESTABLE',
+      ultima_fecha: '2026-07-27',
+      ultima_descripcion: 'Repite baja presion, mismo sintoma del evento anterior',
+      causa_probable: 'Bomba de combustible con desgaste; las purgas de aire son el sintoma, no la causa raiz',
+      solucion_sugerida: 'Programar cambio de bomba de combustible en la proxima ventana de mantencion en vez de seguir purgando linea.',
+      confianza: 'MEDIA',
+    },
+    {
+      equipment_id: 'PALA 2',
+      model: 'P&H 4100XPC AC',
+      sistema: 'Electrico',
+      eventos: 2,
+      total_min: 83,
+      gap_promedio_dias: 11,
+      tendencia: 'A LA BAJA',
+      ultima_fecha: '2026-07-25',
+      ultima_descripcion: 'Falla intermitente en sensor de giro, mismo componente reemplazado en el evento anterior',
+      causa_probable: 'Sensor de giro con instalacion o conexionado defectuoso desde el reemplazo preventivo anterior',
+      solucion_sugerida: 'Revisar instalacion y conexionado del sensor reemplazado antes de solicitar una pieza nueva; el patron sugiere error de montaje, no falla de fabrica.',
+      confianza: 'MEDIA',
+    },
   ],
-  tendencias_sistema: [{ sistema: 'Combustible', primera_mitad: 0, segunda_mitad: 22, variacion_pct: 100, direccion: 'SUBE' }],
-  equipos_riesgo: [{ equipment_id: 'CAEX22', model: 'CAT 793F', score: 68, nivel: 'MEDIO', razones: ['Evento abierto', 'Afecta asignacion CF 2'] }],
+  tendencias_sistema: [
+    { sistema: 'Hidraulico', primera_mitad: 105, segunda_mitad: 223, variacion_pct: 112, direccion: 'SUBE' },
+    { sistema: 'Combustible', primera_mitad: 24, segunda_mitad: 80, variacion_pct: 233, direccion: 'SUBE' },
+    { sistema: 'Electrico', primera_mitad: 45, segunda_mitad: 38, variacion_pct: -16, direccion: 'BAJA' },
+  ],
+  equipos_riesgo: [
+    { equipment_id: 'CAEX09', model: 'KOM980E-5', score: 82, nivel: 'CRITICO', razones: ['4 fallas hidraulicas en 3 semanas', 'Tendencia en aumento', 'Evento activo sin resolver'] },
+    { equipment_id: 'CAEX15', model: 'CAT789D', score: 61, nivel: 'ALTO', razones: ['3 fallas de combustible recurrentes', 'Mismo sintoma repetido cada evento'] },
+    { equipment_id: 'CAEX22', model: 'CAT 793F', score: 68, nivel: 'MEDIO', razones: ['Evento abierto', 'Afecta asignacion CF 2'] },
+    { equipment_id: 'PALA 2', model: 'P&H 4100XPC AC', score: 45, nivel: 'MEDIO', razones: ['Sensor de giro reincidente', 'Posible error de instalacion'] },
+  ],
   generated_at: DEMO_NOW,
 }
 
