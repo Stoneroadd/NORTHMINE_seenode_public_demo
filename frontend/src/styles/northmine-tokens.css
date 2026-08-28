@@ -44,41 +44,104 @@
   --lang-hover: #ffffff;
   --lang-active-bg: rgba(255, 255, 255, 0.9);
   --lang-active-text: #0b0d0e;
+  --lang-menu-bg: rgba(10, 11, 13, 0.97);
+  position: relative;
   display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  padding: 3px;
-  border: 1px solid var(--lang-border);
-  border-radius: 999px;
-  white-space: nowrap;
 }
 
-.lang-switcher button {
+.lang-switcher__trigger {
   appearance: none;
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  min-width: 44px;
+  gap: 6px;
   min-height: 44px;
-  border: 0;
+  border: 1px solid var(--lang-border);
+  border-radius: 999px;
   background: transparent;
   color: var(--lang-text);
   font-family: 'IBM Plex Mono', monospace;
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1;
-  padding: 6px 8px;
-  border-radius: 999px;
+  padding: 6px 12px 6px 10px;
   cursor: pointer;
-  transition: color 0.2s ease, background-color 0.2s ease;
+  white-space: nowrap;
+  transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
 }
 
-.lang-switcher button:hover {
+.lang-switcher__trigger:hover {
   color: var(--lang-hover);
 }
 
-.lang-switcher button.is-active {
+.lang-switcher__flag {
+  display: block;
+  width: 18px;
+  height: 13px;
+  border-radius: 2px;
+  object-fit: cover;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12);
+}
+
+.lang-switcher__chevron {
+  transition: transform 0.2s ease;
+}
+
+.lang-switcher__chevron[data-open='true'] {
+  transform: rotate(180deg);
+}
+
+.lang-switcher__menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 90;
+  margin: 0;
+  padding: 6px;
+  min-width: 168px;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  border: 1px solid var(--lang-border);
+  border-radius: 14px;
+  background: var(--lang-menu-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.45);
+}
+
+.lang-switcher__menu button {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 40px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--lang-text);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12.5px;
+  padding: 8px 10px;
+  cursor: pointer;
+  text-align: left;
+  transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+.lang-switcher__menu button:hover {
+  color: var(--lang-hover);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.lang-switcher__menu button.is-active {
   background: var(--lang-active-bg);
   color: var(--lang-active-text);
+}
+
+.lang-switcher__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .nmcp-shell {

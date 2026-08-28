@@ -268,7 +268,7 @@
   background: rgba(200, 121, 65, 0.08);
 }
 
-.ns-header .lang-switcher {
+.ns-header .lang-switcher__trigger {
   border-color: var(--ns-border);
 }
 
