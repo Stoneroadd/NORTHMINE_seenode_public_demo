@@ -45,8 +45,16 @@
   padding: 20px !important;
 }
 
-/* ---- Visual panel: black, curved, fine grid backdrop, no color accent ---- */
-.login-preview-mono .login-canvas-panel {
+/* ---- Visual panel: black, curved, fine grid backdrop, no color accent ----
+   Selector carries 4 classes (not 2) on purpose: on /acceso-demo the extra
+   .nm-demo-entry wrapper class makes demo-access-entry.css's older cyan-
+   wireframe rule (.nm-demo-entry .nm-wireframe-panel.login-canvas-panel,
+   3 classes) win the radius/border/background fight, leaving this panel
+   stuck at its old 6px corner while the card next to it correctly got the
+   32px mono treatment. Matching structure with one extra real class beats
+   it outright instead of relying on source-order (which a production CSS
+   bundle does not guarantee matches these files' import order). */
+.login-page.login-preview-mono .nm-wireframe-panel.login-canvas-panel {
   border-radius: 32px !important;
   border: 1.5px solid var(--m-border) !important;
   background-color: var(--m-surface) !important;
