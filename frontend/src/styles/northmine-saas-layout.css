@@ -249,6 +249,25 @@
   color: var(--ns-text);
 }
 
+/* Desktop-only ghost-button treatment (mirrors .ns-btn--ghost) so Acceder
+   reads as a clickable action next to the filled Solicitar demo CTA,
+   instead of blending into the nav as plain text. Scoped to .ns-header__inner
+   so it never reaches the portaled mobile nav, which already styles its
+   <a> children as a distinct list. */
+.ns-header__inner .ns-header__login {
+  padding: 0 16px;
+  border: 1px solid var(--ns-border-strong);
+  border-radius: var(--ns-radius-sm);
+  color: var(--ns-text);
+  transition: border-color var(--ns-t-micro) var(--ns-ease), background var(--ns-t-micro) var(--ns-ease), color var(--ns-t-micro) var(--ns-ease);
+}
+
+.ns-header__inner .ns-header__login:hover {
+  border-color: var(--ns-copper);
+  color: var(--ns-copper);
+  background: rgba(200, 121, 65, 0.08);
+}
+
 .ns-header .lang-switcher {
   border-color: var(--ns-border);
 }
