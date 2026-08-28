@@ -2,6 +2,7 @@ import { FormEvent, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { GitBranch, RotateCcw, Search } from 'lucide-react'
 import { MissionState, StatusIndicator } from '../mission-control/design-system'
+import { ApiError } from '../lib/api'
 import {
   getGitNexusReindexJob,
   getGitNexusStatus,
@@ -87,7 +88,27 @@ export function GitNexusPage() {
     )
   }
 
-  if (statusQuery.isError || !statusQuery.data?.available) {
+  if (statusQuery.isError) {
+    const error = statusQuery.error
+    const isForbidden = error instanceof ApiError && error.status === 403
+    return (
+      <div className="mc-surface gx-page">
+        <MissionState
+          kind="error"
+          title={isForbidden ? 'Cuenta sin acceso' : 'GitNexus no está disponible'}
+          detail={
+            isForbidden
+              ? 'Esta sección requiere una cuenta administrativa real. Las cuentas demo sembradas (admin/demo/supervisor/operador) no tienen acceso, aunque el rol diga "admin".'
+              : 'No se pudo consultar el módulo de inteligencia de código. Intenta de nuevo en unos segundos.'
+          }
+          actionLabel="Reintentar"
+          onAction={() => void statusQuery.refetch()}
+        />
+      </div>
+    )
+  }
+
+  if (!statusQuery.data?.available) {
     return (
       <div className="mc-surface gx-page">
         <MissionState
