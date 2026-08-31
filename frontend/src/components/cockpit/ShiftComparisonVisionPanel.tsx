@@ -1017,6 +1017,8 @@ function SummaryCard({
   focused = false,
   dimmed = false,
   live = false,
+  onSelect,
+  selectLabel,
 }: {
   label: string
   value: string
@@ -1025,16 +1027,43 @@ function SummaryCard({
   focused?: boolean
   dimmed?: boolean
   live?: boolean
+  // Solo las tarjetas Dia/Noche son seleccionables (tocar los numeros filtra
+  // el panel a ese turno, igual que el toggle de arriba); la tarjeta de
+  // diferencia no representa un turno propio, asi que no recibe onSelect.
+  onSelect?: () => void
+  selectLabel?: string
 }) {
   const t = useModuleT(cockpitT)
-  return (
-    <article className={`nmcp-shift-summary-card is-${tone} ${focused ? 'is-focused' : ''} ${dimmed ? 'is-dimmed' : ''}`}>
+  const content = (
+    <>
       <span>
         {label}
         {live && <em className="nmcp-live-badge"><i aria-hidden="true" /> {t.sc_en_curso_badge}</em>}
       </span>
       <strong>{value}</strong>
       <small>{detail}</small>
+    </>
+  )
+  const className = `nmcp-shift-summary-card is-${tone} ${focused ? 'is-focused' : ''} ${dimmed ? 'is-dimmed' : ''} ${onSelect ? 'is-selectable' : ''}`
+  if (!onSelect) {
+    return <article className={className}>{content}</article>
+  }
+  return (
+    <article
+      className={className}
+      role="button"
+      tabIndex={0}
+      aria-pressed={focused}
+      aria-label={selectLabel}
+      onClick={onSelect}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault()
+          onSelect()
+        }
+      }}
+    >
+      {content}
     </article>
   )
 }
@@ -1856,6 +1885,8 @@ export function ShiftComparisonVisionPanel({
           focused={focusShift === 'DIA'}
           dimmed={focusShift === 'NOCHE'}
           live={liveShift === 'DIA'}
+          onSelect={() => setFocusShift((current) => current === 'DIA' ? 'AMBOS' : 'DIA')}
+          selectLabel={t.sc_focus_dia}
         />
         <SummaryCard
           label={t.sc_turno_noche_label}
@@ -1865,6 +1896,8 @@ export function ShiftComparisonVisionPanel({
           focused={focusShift === 'NOCHE'}
           dimmed={focusShift === 'DIA'}
           live={liveShift === 'NOCHE'}
+          onSelect={() => setFocusShift((current) => current === 'NOCHE' ? 'AMBOS' : 'NOCHE')}
+          selectLabel={t.sc_focus_noche}
         />
         <SummaryCard
           label={t.sc_diferencia_label}

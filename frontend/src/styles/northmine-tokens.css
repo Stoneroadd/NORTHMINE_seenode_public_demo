@@ -3416,6 +3416,25 @@
   opacity: 0.55;
 }
 
+/* Tocar los numeros de la tarjeta Dia/Noche selecciona ese turno, sin
+   depender del toggle separado en el header (mismo estado, dos entradas). */
+.nmcp-shift-summary-card.is-selectable {
+  cursor: pointer;
+}
+
+.nmcp-shift-summary-card.is-selectable:hover {
+  border-color: color-mix(in srgb, var(--nm-text-strong) 22%, transparent);
+}
+
+.nmcp-shift-summary-card.is-selectable:active {
+  transform: scale(0.98);
+}
+
+.nmcp-shift-summary-card.is-selectable:focus-visible {
+  outline: 2px solid var(--nm-text-strong);
+  outline-offset: 2px;
+}
+
 .nmcp-shift-fair-card {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
