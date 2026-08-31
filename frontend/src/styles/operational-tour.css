@@ -120,6 +120,13 @@
   color: var(--text-primary);
 }
 
+.op-tour-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: transparent;
+  color: var(--text-secondary, currentColor);
+}
+
 .op-tour-btn-primary {
   background: var(--accent);
   color: var(--bg-void);
@@ -243,6 +250,26 @@
 @media (max-width: 720px) {
   .op-tour-caption { width: min(300px, calc(100vw - 40px)); }
   .op-tour-controls { bottom: 16px; }
+}
+
+@media (max-width: 480px) {
+  /* Con 4 botones (Cerrar/Anterior/Pausar/Siguiente) el ancho natural del
+     grupo (~520px) ya no cabe en un telefono angosto (~360px) -- se
+     compacta primero, y si aun asi no entra, se deja scrollear en vez de
+     recortarse fuera de pantalla en ambos bordes (position:fixed;left:50%
+     no tiene limite de ancho propio). */
+  .op-tour-controls {
+    max-width: calc(100vw - 24px);
+    overflow-x: auto;
+    gap: 4px;
+    padding: 6px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .op-tour-btn {
+    padding: 8px 10px;
+    font-size: 12px;
+    white-space: nowrap;
+  }
 }
 
 .op-tour-spotlight-item {

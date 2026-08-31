@@ -172,6 +172,16 @@
 .mc-flow-timebar button.is-active { color: var(--mc-brand-strong); }
 .mc-flow-timebar button.is-active::before { border-color: var(--mc-brand-strong); background: var(--mc-brand); transform: scale(1.25); }
 
+/* El snapshot anterior queda visible mientras se carga el siguiente instante
+   (placeholderData), asi que este pulso es la unica senal de que algo esta
+   cambiando -- sin el, pasar de un instante a otro no da ningun feedback. */
+.mc-flow-timebar button.is-fetching::before { animation: mc-flow-timebar-pulse 900ms ease-in-out infinite; }
+
+@keyframes mc-flow-timebar-pulse {
+  0%, 100% { transform: scale(1.25); opacity: 1; }
+  50% { transform: scale(1.6); opacity: 0.6; }
+}
+
 .mc-flow-toolbar {
   display: flex;
   align-items: center;
@@ -494,6 +504,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .mc-flow-timebar button.is-fetching::before { animation: none; opacity: 0.6; }
   .mc-flow-edge.is-impacted { animation: none; }
   .mc-flow-node--critical .mc-flow-node__surface {
     animation: none;

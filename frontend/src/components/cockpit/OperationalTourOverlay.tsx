@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { ChevronRight, Download, Pause, Play, X } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Download, Pause, Play, X } from 'lucide-react'
 import '../../styles/operational-tour.css'
 
 export interface TourStep {
@@ -144,13 +144,22 @@ export function OperationalTourOverlay({ steps, report, onClose, onDownload }: P
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [paused, showReport, stepIndex])
 
+  const goToPrevious = () => setStepIndex((i) => Math.max(0, i - 1))
+  const goToNext = () => (isLastStep ? setShowReport(true) : setStepIndex((i) => i + 1))
+
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') onClose()
+      // Flechas solo mientras se ve un paso -- en la pantalla de reporte no
+      // hay "pasos" que recorrer, y Escape sigue cerrando desde ahi.
+      if (showReport) return
+      if (event.key === 'ArrowRight') goToNext()
+      if (event.key === 'ArrowLeft') goToPrevious()
     }
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [onClose])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onClose, showReport, isLastStep])
 
   const progressPct = Math.min(100, (elapsedMs / STEP_DURATION_MS) * 100)
 
@@ -231,14 +240,13 @@ export function OperationalTourOverlay({ steps, report, onClose, onDownload }: P
           <button ref={showReport ? undefined : closeButtonRef} type="button" className="op-tour-btn" onClick={onClose} aria-label="Cerrar recorrido">
             <X size={16} /> Cerrar
           </button>
+          <button type="button" className="op-tour-btn" onClick={goToPrevious} disabled={stepIndex === 0} aria-label="Paso anterior">
+            <ChevronLeft size={16} /> Anterior
+          </button>
           <button type="button" className="op-tour-btn" onClick={() => setPaused((p) => !p)} aria-label={paused ? 'Reanudar' : 'Pausar'}>
             {paused ? <Play size={16} /> : <Pause size={16} />} {paused ? 'Reanudar' : 'Pausar'}
           </button>
-          <button
-            type="button"
-            className="op-tour-btn op-tour-btn-primary"
-            onClick={() => (isLastStep ? setShowReport(true) : setStepIndex((i) => i + 1))}
-          >
+          <button type="button" className="op-tour-btn op-tour-btn-primary" onClick={goToNext}>
             {isLastStep ? 'Ver reporte' : 'Siguiente'} <ChevronRight size={16} />
           </button>
         </div>

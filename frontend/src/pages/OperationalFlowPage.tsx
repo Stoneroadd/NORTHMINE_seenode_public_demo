@@ -75,6 +75,13 @@ export function OperationalFlowPage() {
   const query = useQuery({
     queryKey: ['mission-control', 'operational-flow', selectedAt],
     queryFn: () => getOperationalFlowSnapshot(selectedAt),
+    // Sin esto, cada clic en la barra de instantes ("Instantes del escenario")
+    // arma una queryKey nueva sin cache previo, así que isLoading vuelve a
+    // true y la página entera se reemplaza por la pantalla de carga -- grafo,
+    // inspector, todo -- para pasar de un instante al siguiente del mismo
+    // escenario. Mantener los datos anteriores visibles mientras llega el
+    // próximo instante evita ese parpadeo a pantalla en blanco.
+    placeholderData: (previousData) => previousData,
   })
 
   useEffect(() => {
@@ -188,7 +195,10 @@ export function OperationalFlowPage() {
           <button
             key={moment.effective_at}
             type="button"
-            className={selectedAt === moment.effective_at ? 'is-active' : ''}
+            className={[
+              selectedAt === moment.effective_at ? 'is-active' : '',
+              selectedAt === moment.effective_at && query.isFetching ? 'is-fetching' : '',
+            ].filter(Boolean).join(' ')}
             aria-pressed={selectedAt === moment.effective_at}
             onClick={() => setSelectedAt(moment.effective_at)}
           >
