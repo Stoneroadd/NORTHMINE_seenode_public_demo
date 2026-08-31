@@ -187,7 +187,11 @@ export function Sidebar({ active, onSelect, mobileOpen = false, onNavigate, acti
           </span>
         </a>
 
-        {usuario?.rol === 'admin' && (
+        {/* Cuentas demo sembradas llevan rol=admin pero el backend las
+            excluye de RequireAdmin -- mostrar estos accesos igual solo
+            anuncia herramientas internas que van a fallar con 403 al
+            hacer clic. Se ocultan por completo, no solo GitNexus. */}
+        {usuario?.rol === 'admin' && !usuario?.isDemo && (
           <>
             <span className="nav-group-label" style={{ marginTop: 12 }}>HERRAMIENTAS</span>
             {renderNavButton(ADMIN_ITEM)}

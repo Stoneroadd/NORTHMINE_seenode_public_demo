@@ -31,6 +31,10 @@ export interface Usuario {
   faena: string
   empresa: string
   token: string
+  // Cuentas demo sembradas (admin/demo/supervisor/operador) llevan rol=admin
+  // pero el backend las excluye de RequireAdmin -- el Sidebar necesita este
+  // campo para no anunciar herramientas admin que van a fallar con 403.
+  isDemo: boolean
 }
 
 export interface FiltroGlobal {

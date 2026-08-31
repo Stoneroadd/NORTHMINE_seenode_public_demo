@@ -131,7 +131,7 @@ function renderSection(section: SectionId, session: AuthSession, t: AppT) {
   const _S = (children: ReactNode) => <Suspense fallback={<div className="loading-state">{t.cargando}</div>}>{children}</Suspense>
   const path = normalizeAppPath(window.location.pathname)
   if (path === appPaths.adminSistema) {
-    if (session.rol !== 'admin') {
+    if (session.rol !== 'admin' || session.is_demo) {
       return wrap(
         <div className="section-placeholder">
           <Settings size={34} />
@@ -159,7 +159,7 @@ function renderSection(section: SectionId, session: AuthSession, t: AppT) {
     return wrap(_S(<DemoAccessAdminPage />), appPaths.adminDemoAccess)
   }
   if (path === appPaths.adminUsers) {
-    if (session.rol !== 'admin') {
+    if (session.rol !== 'admin' || session.is_demo) {
       return wrap(
         <div className="section-placeholder">
           <Settings size={34} />
@@ -172,9 +172,22 @@ function renderSection(section: SectionId, session: AuthSession, t: AppT) {
     }
     return wrap(_S(<AdminUsersPage />), appPaths.adminUsers)
   }
-  if (path === appPaths.adminAuditoria) return wrap(_S(<AuditLog />), appPaths.adminAuditoria)
+  if (path === appPaths.adminAuditoria) {
+    if (session.rol !== 'admin' || session.is_demo) {
+      return wrap(
+        <div className="section-placeholder">
+          <Settings size={34} />
+          <span>{t.acceso_restringido}</span>
+          <h2>Acceso restringido</h2>
+          <p>Solo un administrador puede revisar el log de seguridad.</p>
+        </div>,
+        `${appPaths.adminAuditoria}-denied`,
+      )
+    }
+    return wrap(_S(<AuditLog />), appPaths.adminAuditoria)
+  }
   if (path === appPaths.adminGitnexus) {
-    if (session.rol !== 'admin') {
+    if (session.rol !== 'admin' || session.is_demo) {
       return wrap(
         <div className="section-placeholder">
           <Settings size={34} />
@@ -323,6 +336,7 @@ function sessionToUsuario(s: AuthSession) {
     faena:   s.faena,
     empresa: s.empresa,
     token:   s.access_token,
+    isDemo:  Boolean(s.is_demo),
   }
 }
 
